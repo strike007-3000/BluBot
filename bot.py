@@ -107,6 +107,9 @@ def summarize_news(news_items):
     print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
 
+    # Include summary context for better output
+    news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
+    
     user_prompt = f"""
     Curation Task: Synthesize the following news into one professional and insightful Bluesky post.
     Do NOT just repeat the headlines. Extract one specific technical detail or impact point from the "Context" and explain why it matters to the industry.
