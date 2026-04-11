@@ -114,9 +114,9 @@ def summarize_news(news_items):
         max_output_tokens=150
     )
     
-    max_retries = 3
+    max_retries = 2 # Reduced to save daily quota
     last_summary = None
-    models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash-8b']
+    models_to_try = ['gemini-2.5-flash', 'gemma-3-27b']
 
     for model_id in models_to_try:
         print(f"Using model: {model_id}", flush=True)
@@ -141,14 +141,14 @@ def summarize_news(news_items):
                 error_msg = str(e)
                 # Check for transient errors
                 if any(x in error_msg for x in ["429", "503", "UNAVAILABLE", "Resource has been exhausted"]):
-                    wait_time = (attempt + 1) * 20
-                    print(f"Transient error with {model_id}: {error_msg}. Retrying in {wait_time}s...", flush=True)
+                    wait_time = (attempt + 1) * 30
+                    print(f"Transient error with {model_id}: {error_msg[:200]}... Retrying in {wait_time}s...", flush=True)
                     time.sleep(wait_time)
                 else:
                     print(f"Permanent error with {model_id}: {e}", flush=True)
-                    break # Try next model if it's not a generic retryable error
+                    break 
         
-        print(f"Model {model_id} failed after {max_retries} attempts.", flush=True)
+        print(f"Model {model_id} failed or exhausted.", flush=True)
     
     # Rescue logic: If we failed primarily due to missing hashtags, append them manually
     if last_summary:
