@@ -34,7 +34,7 @@ Your task is to summarize the latest AI news into a single, engaging post.
 
 Rules:
 1. Maximum 300 characters.
-2. Use bullet points or a concise 1-2 sentence summary.
+2. Provide a substantive summary (at least 2-3 sentences) of the key updates.
 3. Always include 1-2 relevant hashtags (e.g., #AI #Tech).
 4. Be exciting but professional.
 5. Provide ONLY the post content. No preambles like "Here is the summary".
@@ -50,8 +50,8 @@ def validate_summary(text):
     if re.search(r'(.)\1{4,}', text) or re.search(r'(\+\s*\d\s*){4,}', text):
         return False, "Detected repetitive patterns or gibberish"
     
-    # Check for reasonable length
-    if len(text) < 40:
+    # Check for reasonable length (lowered slightly to 30)
+    if len(text) < 30:
         return False, "Post too short"
     
     # Check for hashtags
@@ -113,7 +113,7 @@ def summarize_news(news_items):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-2.5-pro',
                 contents=user_prompt,
                 config=config
             )
