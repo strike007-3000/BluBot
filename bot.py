@@ -53,8 +53,8 @@ def validate_summary(text):
     if re.search(r'(.)\1{4,}', text) or re.search(r'(\+\s*\d\s*){4,}', text):
         return False, "Detected repetitive patterns or gibberish"
     
-    # Check for reasonable length (Raised to 80 to ensure insightfulness)
-    if len(text) < 80:
+    # Check for reasonable length (Adjusted to 60 for better first-try success)
+    if len(text) < 60:
         return False, "Post too short for an insightful update"
     
     # Check for hashtags
@@ -126,10 +126,10 @@ def summarize_news(news_items):
         max_output_tokens=150
     )
     
-    max_retries = 3
+    max_retries = 1 # Minimal retries to protect quota
     best_candidate = None # Best one regardless of hashtags
     longest_fallback = "" # Longest one found if everything is too short
-    model_id = 'gemini-2.5-flash'
+    model_id = 'gemma-3-27b-it'
 
     print(f"Using model: {model_id}", flush=True)
     for attempt in range(max_retries):
