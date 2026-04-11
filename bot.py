@@ -105,7 +105,7 @@ def summarize_news(news_items):
 
     print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
-    model_id = 'gemini-3.1-flash-lite'
+    model_id = 'gemini-3.1-flash-lite-preview'
 
     # Include summary context for better output
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
