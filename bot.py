@@ -5,6 +5,10 @@ from atproto import Client, client_utils
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import time
+import socket
+
+# Set a timeout for all network requests to prevent hanging on slow RSS feeds
+socket.setdefaulttimeout(15)
 
 # Load environment variables
 load_dotenv()
@@ -23,16 +27,16 @@ BLUESKY_PASSWORD = os.getenv("PASS")
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 
 def fetch_news():
-    print("Fetching news from RSS feeds...")
+    print("Fetching news from RSS feeds...", flush=True)
     all_entries = []
     now = datetime.now(timezone.utc)
     one_day_ago = now - timedelta(days=1)
 
     for url in RSS_FEEDS:
+        print(f"Checking {url}...", flush=True)
         try:
             feed = feedparser.parse(url)
             for entry in feed.entries:
-                # Some feeds use published_parsed, others might vary
                 pub_date = None
                 if hasattr(entry, 'published_parsed') and entry.published_parsed:
                     pub_date = datetime.fromtimestamp(time.mktime(entry.published_parsed), timezone.utc)
@@ -46,7 +50,7 @@ def fetch_news():
                         "source": feed.feed.title if hasattr(feed.feed, 'title') else url
                     })
         except Exception as e:
-            print(f"Error parsing {url}: {e}")
+            print(f"Error parsing {url}: {e}", flush=True)
     
     return all_entries
 
@@ -54,7 +58,7 @@ def summarize_news(news_items):
     if not news_items:
         return None
 
-    print(f"Summarizing {len(news_items)} news items...")
+    print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
 
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})" for item in news_items[:10]])
@@ -85,41 +89,38 @@ def summarize_news(news_items):
             return response.text.strip()
         except Exception as e:
             error_msg = str(e)
-            # Retry on 429 (Rate Limit) or 503 (Service Unavailable)
             if ("429" in error_msg or "503" in error_msg or "UNAVAILABLE" in error_msg) and attempt < max_retries - 1:
                 wait_time = (attempt + 1) * 30
-                print(f"Transient error ({error_msg[:50]}...). Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})")
+                print(f"Transient error detected. Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})", flush=True)
                 time.sleep(wait_time)
             else:
-                print(f"Error during summarization: {e}")
+                print(f"Error during summarization: {e}", flush=True)
                 return None
     return None
 
 def post_to_bluesky(text):
     if not text:
-        print("Nothing to post.")
+        print("Nothing to post.", flush=True)
         return
 
-    print("Posting to Bluesky...")
+    print("Posting to Bluesky...", flush=True)
     client = Client()
     client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
     
-    # Ensure text is within limit
     if len(text) > 300:
         text = text[:297] + "..."
         
     client.send_post(text=text)
-    print("Successfully posted!")
+    print("Successfully posted!", flush=True)
 
 def main():
     if not all([BLUESKY_HANDLE, BLUESKY_PASSWORD, GEMINI_API_KEY]):
-        print("Missing environment variables. Please check your .env file or GitHub Secrets.")
+        print("Missing environment variables.", flush=True)
         return
 
     news = fetch_news()
     if not news:
-        print("No new AI news found in the last 24 hours. Skipping post.")
-        # Optional: Post a 'Slow news day' update or just skip
+        print("No new AI news found in the last 24 hours.", flush=True)
         return
 
     summary = summarize_news(news)
