@@ -1,10 +1,10 @@
 # 🫯 BluBot: Daily AI News Curator
 
-Automated AI news curator that fetches daily updates, synthesizes them using **Google Gemini 3.1 Flash Lite**, and posts them to **Bluesky** and **Mastodon**—all running for free on **GitHub Actions**.
+Automated AI news curator that fetches daily updates, synthesizes them using **Google Gemini 3.1 Flash Lite**, and posts them to **Bluesky**, **Mastodon**, and **Threads**—all running for free on **GitHub Actions**.
 
 ## 🚀 Features
 
-- **Multi-Platform Support**: Automatically posts to both Bluesky and Mastodon.
+- **Multi-Platform Support**: Automatically posts to Bluesky, Mastodon, and Threads.
 - **Curated AI Feeds**: Pulls from high-quality sources including OpenAI, Hugging Face, TechCrunch AI, MIT Technology Review, and arXiv (cs.AI).
 - **Intelligent Summarization**: Uses **Gemini 3.1 Flash Lite (Preview)** with sophisticated system instructions to generate engaging, optimistic, and technical summaries.
 - **Robust Quality Control**:
@@ -24,6 +24,11 @@ Automated AI news curator that fetches daily updates, synthesizes them using **G
 - Go to `Preferences > Development > New Application`.
 - Select `write:statuses` scope and save to get your **Access Token**.
 
+#### Threads (Optional)
+- You will need a Meta Developer Account and a Threads App.
+- Use the included `setup_threads.py` script to generate your **Long-Lived Access Token**.
+- You will also need your **Threads User ID** (provided by the script).
+
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
 
@@ -40,6 +45,8 @@ Navigate to: `Settings > Secrets and variables > Actions > New repository secret
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token (if using Mastodon) |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL (e.g., `https://mastodon.social`) |
+| `THREADS_ACCESS_TOKEN` | No | Your Threads Long-Lived Access Token |
+| `THREADS_USER_ID` | No | Your Threads User ID |
 
 ### 🪄3. Enable Workflow Permissions
 Go to `Settings > Actions > General` and ensure **"Read and write permissions"** is selected under "Workflow permissions".

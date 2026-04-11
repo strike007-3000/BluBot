@@ -9,6 +9,7 @@ import time
 import socket
 import re
 from mastodon import Mastodon
+import requests
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
@@ -28,6 +29,8 @@ RSS_FEEDS = [
 BLUESKY_HANDLE = os.getenv("BSKY_HANDLE")
 BLUESKY_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
+THREADS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
+THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 
 SYSTEM_INSTRUCTION = """
 You are a high-engagement AI news curator for Bluesky with a focus on constructive optimism.
@@ -234,6 +237,42 @@ def post_to_mastodon(text):
     except Exception as e:
         print(f"Error posting to Mastodon: {e}", flush=True)
 
+def post_to_threads(text):
+    if not THREADS_TOKEN or not THREADS_USER_ID:
+        print("Skipping Threads: Credentials missing.", flush=True)
+        return
+
+    print("Posting to Threads...", flush=True)
+    try:
+        # Step 1: Create Media Container
+        container_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+        container_payload = {
+            "media_type": "TEXT",
+            "text": text[:500], # Threads limit is 500
+            "access_token": THREADS_TOKEN
+        }
+        
+        container_response = requests.post(container_url, data=container_payload)
+        container_response.raise_for_status()
+        creation_id = container_response.json().get("id")
+        
+        # Step 2: Publish Container
+        publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
+        publish_payload = {
+            "creation_id": creation_id,
+            "access_token": THREADS_TOKEN
+        }
+        
+        # Threads recommends waiting a bit, but for text-only it's usually instant
+        publish_response = requests.post(publish_url, data=publish_payload)
+        publish_response.raise_for_status()
+        print("Successfully posted to Threads!", flush=True)
+        
+    except Exception as e:
+        print(f"Error posting to Threads: {e}", flush=True)
+        if hasattr(e, 'response') and e.response is not None:
+             print(f"Threads API Error Trace: {e.response.text}", flush=True)
+
 def main():
     if not GEMINI_API_KEY:
         print("Missing Gemini API Key.", flush=True)
@@ -249,6 +288,7 @@ def main():
         # Post to all enabled platforms
         post_to_bluesky(summary)
         post_to_mastodon(summary)
+        post_to_threads(summary)
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 
