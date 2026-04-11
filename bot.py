@@ -120,11 +120,20 @@ def summarize_news(news_items):
     {news_text}
     """
     
-    config = types.GenerateContentConfig(
-        system_instruction=SYSTEM_INSTRUCTION,
-        temperature=0.7,
-        max_output_tokens=150
-    )
+    if model_id.startswith('gemma'):
+        # Gemma models often don't support separate system instructions in the SDK
+        full_prompt = f"{SYSTEM_INSTRUCTION}\n\n{user_prompt}"
+        config = types.GenerateContentConfig(
+            temperature=0.7,
+            max_output_tokens=250
+        )
+    else:
+        full_prompt = user_prompt
+        config = types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+            temperature=0.7,
+            max_output_tokens=250
+        )
     
     max_retries = 1 # Minimal retries to protect quota
     best_candidate = None # Best one regardless of hashtags
@@ -136,7 +145,7 @@ def summarize_news(news_items):
         try:
             response = client.models.generate_content(
                 model=model_id,
-                contents=user_prompt,
+                contents=full_prompt,
                 config=config
             )
             summary = response.text.strip()
