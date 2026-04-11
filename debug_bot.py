@@ -29,12 +29,12 @@ def test_gemini():
         print("[ERROR] GEMINI_KEY not found in environment variables.")
         return
 
-    print(f"\n--- Testing Gemini API (Model: gemini-2.0-flash) ---")
+    print(f"\n--- Testing Gemini API (Model: gemini-3.1-flash-lite-preview) ---")
     client = genai.Client(api_key=api_key)
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-3.1-flash-lite-preview',
             contents="Say hello and tell me one fun fact about AI."
         )
         print(f"[OK] SUCCESS! Response: {response.text.strip()}")

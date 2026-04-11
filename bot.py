@@ -25,8 +25,8 @@ RSS_FEEDS = [
     "https://export.arxiv.org/rss/cs.AI"
 ]
 
-BLUESKY_HANDLE = os.getenv("USERNAME")
-BLUESKY_PASSWORD = os.getenv("PASS")
+BLUESKY_HANDLE = os.getenv("BSKY_HANDLE")
+BLUESKY_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 
 SYSTEM_INSTRUCTION = """

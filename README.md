@@ -35,8 +35,8 @@ Navigate to: `Settings > Secrets and variables > Actions > New repository secret
 
 | Secret Name | Required | Description |
 |-------------|----------|-------------|
-| `USERNAME` | **Yes** | Your Bluesky handle (e.g., `user.bsky.social`) |
-| `PASS` | **Yes** | Your Bluesky App Password |
+| `BSKY_HANDLE` | **Yes** | Your Bluesky handle (e.g., `user.bsky.social`) |
+| `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky **App Password** (NOT your main account password) |
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token (if using Mastodon) |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL (e.g., `https://mastodon.social`) |

@@ -24,8 +24,8 @@ jobs:
 
       - name: Run bot
         env:
-          USERNAME: ${{ secrets.USERNAME }}
-          PASS: ${{ secrets.PASS }}
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
