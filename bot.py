@@ -1,3 +1,4 @@
+from google.genai import types
 import os
 import feedparser
 from google import genai
@@ -6,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import time
 import socket
+import re
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
@@ -25,6 +27,42 @@ RSS_FEEDS = [
 BLUESKY_HANDLE = os.getenv("USERNAME")
 BLUESKY_PASSWORD = os.getenv("PASS")
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
+
+SYSTEM_INSTRUCTION = """
+You are a professional AI news curator for Bluesky. 
+Your task is to summarize the latest AI news into a single, engaging post.
+
+Rules:
+1. Maximum 300 characters.
+2. Use bullet points or a concise 1-2 sentence summary.
+3. Always include 1-2 relevant hashtags (e.g., #AI #Tech).
+4. Be exciting but professional.
+5. Provide ONLY the post content. No preambles like "Here is the summary".
+6. Do not use excessive symbols, repeating characters, or emojis.
+7. NEVER include literal URLs.
+"""
+
+def validate_summary(text):
+    if not text:
+        return False, "Empty output"
+    
+    # Check for excessive repetition (e.g. + 9 + 9 + 9)
+    if re.search(r'(.)\1{4,}', text) or re.search(r'(\+\s*\d\s*){4,}', text):
+        return False, "Detected repetitive patterns or gibberish"
+    
+    # Check for reasonable length
+    if len(text) < 40:
+        return False, "Post too short"
+    
+    # Check for hashtags
+    if "#" not in text:
+        return False, "Missing hashtags"
+
+    # Check character variety (at least 10 unique characters)
+    if len(set(text)) < 10:
+        return False, "Low character variety"
+
+    return True, "Valid"
 
 def fetch_news():
     print("Fetching news from RSS feeds...", flush=True)
@@ -63,39 +101,42 @@ def summarize_news(news_items):
 
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})" for item in news_items[:10]])
     
-    prompt = f"""
-    You are an AI news curator. Below is a list of AI-related news from the last 24 hours.
-    Create a single, engaging Bluesky post summarizing the most important updates.
+    user_prompt = f"Summarize these news items into a single Bluesky post:\n\n{news_text}"
     
-    Rules:
-    1. Maximum 300 characters.
-    2. Use bullet points or a concise summary.
-    3. Include 1-2 relevant hashtags (e.g., #AI #Tech).
-    4. Make it sound exciting but professional.
-    5. Do not include literal links in the text, just the summary.
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_INSTRUCTION,
+        temperature=0.7,
+        max_output_tokens=150
+    )
     
-    News Items:
-    {news_text}
-    """
-    
-    # Retry logic for rate limits or transient server errors
-    max_retries = 5
+    max_retries = 3
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
-                contents=prompt
+                contents=user_prompt,
+                config=config
             )
-            return response.text.strip()
+            summary = response.text.strip()
+            
+            # Post-generation validation
+            is_valid, reason = validate_summary(summary)
+            if is_valid:
+                return summary
+            else:
+                print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
+                time.sleep(2)
         except Exception as e:
             error_msg = str(e)
             if ("429" in error_msg or "503" in error_msg or "UNAVAILABLE" in error_msg) and attempt < max_retries - 1:
                 wait_time = (attempt + 1) * 30
-                print(f"Transient error detected. Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})", flush=True)
+                print(f"Transient error detected. Retrying in {wait_time}s...", flush=True)
                 time.sleep(wait_time)
             else:
                 print(f"Error during summarization: {e}", flush=True)
                 return None
+    
+    print("Failed to generate a valid summary after multiple attempts.", flush=True)
     return None
 
 def post_to_bluesky(text):
@@ -124,7 +165,10 @@ def main():
         return
 
     summary = summarize_news(news)
-    post_to_bluesky(summary)
+    if summary:
+        post_to_bluesky(summary)
+    else:
+        print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 
 if __name__ == "__main__":
     main()
