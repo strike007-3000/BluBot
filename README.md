@@ -1,4 +1,4 @@
-# 🫯 BluBot: Daily AI News Curator
+# 🖲️ BluBot: Daily AI News Curator
 
 Automated AI news curator that fetches daily updates, synthesizes them using **Google Gemini 3.1 Flash Lite**, and posts them to **Bluesky**, **Mastodon**, and **Threads**—all running for free on **GitHub Actions**.
 
