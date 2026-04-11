@@ -3,3 +3,4 @@ google-genai
 feedparser
 python-dotenv
 requests
+Mastodon.py

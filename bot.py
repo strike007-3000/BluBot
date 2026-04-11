@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import time
 import socket
 import re
+from mastodon import Mastodon
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
@@ -189,24 +190,53 @@ def summarize_news(news_items):
     print("Failed to generate a valid summary after internal retries.", flush=True)
     return None
 
+MASTODON_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
+MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL")
+
 def post_to_bluesky(text):
-    if not text:
-        print("Nothing to post.", flush=True)
+    if not BLUESKY_HANDLE or not BLUESKY_PASSWORD:
+        print("Skipping Bluesky: Credentials missing.", flush=True)
         return
 
     print("Posting to Bluesky...", flush=True)
-    client = Client()
-    client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
-    
-    if len(text) > 300:
-        text = text[:297] + "..."
+    try:
+        client = Client()
+        client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
         
-    client.send_post(text=text)
-    print("Successfully posted!", flush=True)
+        # Bluesky has a 300 character limit
+        final_text = text
+        if len(final_text) > 300:
+            final_text = final_text[:297] + "..."
+            
+        client.send_post(text=final_text)
+        print("Successfully posted to Bluesky!", flush=True)
+    except Exception as e:
+        print(f"Error posting to Bluesky: {e}", flush=True)
+
+def post_to_mastodon(text):
+    if not MASTODON_TOKEN or not MASTODON_BASE_URL:
+        print("Skipping Mastodon: Credentials missing.", flush=True)
+        return
+
+    print("Posting to Mastodon...", flush=True)
+    try:
+        mastodon = Mastodon(
+            access_token=MASTODON_TOKEN,
+            api_base_url=MASTODON_BASE_URL
+        )
+        # Mastodon standard limit is 500 characters
+        final_text = text
+        if len(final_text) > 500:
+            final_text = final_text[:497] + "..."
+            
+        mastodon.status_post(final_text)
+        print("Successfully posted to Mastodon!", flush=True)
+    except Exception as e:
+        print(f"Error posting to Mastodon: {e}", flush=True)
 
 def main():
-    if not all([BLUESKY_HANDLE, BLUESKY_PASSWORD, GEMINI_API_KEY]):
-        print("Missing environment variables.", flush=True)
+    if not GEMINI_API_KEY:
+        print("Missing Gemini API Key.", flush=True)
         return
 
     news = fetch_news()
@@ -216,7 +246,9 @@ def main():
 
     summary = summarize_news(news)
     if summary:
+        # Post to all enabled platforms
         post_to_bluesky(summary)
+        post_to_mastodon(summary)
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 

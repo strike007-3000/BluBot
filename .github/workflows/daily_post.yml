@@ -27,4 +27,6 @@ jobs:
           USERNAME: ${{ secrets.USERNAME }}
           PASS: ${{ secrets.PASS }}
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
         run: python bot.py
