@@ -87,8 +87,13 @@ def fetch_news():
                     pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
                 
                 if pub_date and pub_date > one_day_ago:
+                    entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
+                    # Clean HTML tags if any from summary
+                    entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:300]
+                    
                     all_entries.append({
                         "title": entry.title,
+                        "summary": entry_summary,
                         "link": entry.link,
                         "source": feed.feed.title if hasattr(feed.feed, 'title') else url
                     })
@@ -104,16 +109,18 @@ def summarize_news(news_items):
     print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
 
-    news_text = "\n".join([f"- {item['title']} (Source: {item['source']})" for item in news_items[:10]])
+    # Include summary context for better output
+    news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
     
-    # Adjusted prompt to ensure substantive summary even for low news volume
     user_prompt = f"""
     Summarize these news items into a single, high-quality Bluesky post.
-    Even if there is only one news item, provide 2-3 substantive sentences explaining why it matters.
+    Use the provided "Context" to write a substantive update of 2-3 detailed sentences.
+    
+    Your summary MUST be at least 100 characters long to ensure quality.
     
     CRITICAL: You MUST include at least one hashtag (like #AI) at the very end of your response.
     
-    News Items:
+    News Data:
     {news_text}
     """
     
@@ -124,7 +131,8 @@ def summarize_news(news_items):
     )
     
     max_retries = 3
-    best_candidate = None
+    best_candidate = None # Best one regardless of hashtags
+    longest_fallback = "" # Longest one found if everything is too short
     model_id = 'gemini-2.5-flash'
 
     print(f"Using model: {model_id}", flush=True)
@@ -137,13 +145,16 @@ def summarize_news(news_items):
             )
             summary = response.text.strip()
             
+            if len(summary) > len(longest_fallback):
+                longest_fallback = summary
+
             # Post-generation validation
             is_valid, reason = validate_summary(summary)
             if is_valid:
                 return summary
             
-            # Tracking "best candidate" (Valid except for missing hashtags)
-            if reason == "Missing hashtags":
+            # Tracking "best candidate" (Valid length/quality except for missing hashtags)
+            if reason == "Missing hashtags" and len(summary) >= 30:
                 best_candidate = summary
             
             print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
@@ -158,13 +169,20 @@ def summarize_news(news_items):
                 print(f"Permanent error: {e}", flush=True)
                 break 
 
-    # Rescue logic: If we never got a perfect summary, use the best one we found
+    # Rescue logic:
     if best_candidate:
-        print("Applying Best Candidate Rescue (Manual hashtag appending)...", flush=True)
-        rescued_summary = best_candidate.strip() + " #AI #Tech"
-        if len(rescued_summary) > 300:
-            rescued_summary = rescued_summary[:297] + "..."
-        return rescued_summary
+        print("Applying Best Candidate Rescue (Hashtag fix)...", flush=True)
+        rescued = best_candidate.strip() + " #AI #Tech"
+        return rescued[:300]
+    
+    if len(longest_fallback) >= 20: # If it's almost long enough, we can rescue it
+        print("Applying Length Rescue (Expansion)...", flush=True)
+        rescued = longest_fallback.strip()
+        if "#" not in rescued:
+            rescued += " #AI #Tech"
+        if len(rescued) < 40: # If still too short, add a generic relevant sentence
+            rescued = "Latest updates in AI: " + rescued
+        return rescued[:300]
 
     print("Failed to generate a valid summary after internal retries.", flush=True)
     return None
