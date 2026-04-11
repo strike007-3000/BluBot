@@ -23,7 +23,12 @@ RSS_FEEDS = [
     "https://huggingface.co/blog/feed.xml",
     "https://techcrunch.com/category/artificial-intelligence/feed/",
     "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
-    "https://export.arxiv.org/rss/cs.AI"
+    "https://export.arxiv.org/rss/cs.AI",
+    "https://deepmind.google/blog/feed/",
+    "https://www.marktechpost.com/feed/",
+    "https://simonwillison.net/atom/everything/",
+    "https://engineering.fb.com/category/ml-ai/feed/",
+    "https://arstechnica.com/tag/ai/feed/"
 ]
 
 BLUESKY_HANDLE = os.getenv("BSKY_HANDLE")
