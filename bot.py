@@ -35,7 +35,7 @@ Your task is to summarize the latest AI news into a single, engaging post.
 Rules:
 1. Maximum 300 characters.
 2. Provide a substantive summary (at least 2-3 sentences) of the key updates.
-3. Always include 1-2 relevant hashtags (e.g., #AI #Tech).
+3. CRITICAL: You MUST include 1-2 relevant hashtags (e.g., #AI #Tech) in your post. If you don't include a hashtag, the system will fail.
 4. Be exciting but professional.
 5. Provide ONLY the post content. No preambles like "Here is the summary".
 6. Do not use excessive symbols, repeating characters, or emojis.
@@ -101,7 +101,7 @@ def summarize_news(news_items):
 
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})" for item in news_items[:10]])
     
-    user_prompt = f"Summarize these news items into a single Bluesky post:\n\n{news_text}"
+    user_prompt = f"Summarize these news items into a single Bluesky post. You MUST include at least one hashtag (like #AI) in your response:\n\n{news_text}"
     
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
