@@ -105,7 +105,7 @@ def summarize_news(news_items):
     
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
-        temperature=0.7,
+        temperature=0.3,
         max_output_tokens=150
     )
     
@@ -113,7 +113,7 @@ def summarize_news(news_items):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model='gemini-2.5-pro',
+                model='gemini-2.5-flash',
                 contents=user_prompt,
                 config=config
             )
