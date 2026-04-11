@@ -1,0 +1,112 @@
+import os
+import feedparser
+import google.generativeai as genai
+from atproto import Client, client_utils
+from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+import time
+
+# Load environment variables
+load_dotenv()
+
+# Configuration
+RSS_FEEDS = [
+    "https://openai.com/news/rss.xml",
+    "https://huggingface.co/blog/feed.xml",
+    "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
+    "https://export.arxiv.org/rss/cs.AI"
+]
+
+BLUESKY_HANDLE = os.getenv("BLUESKY_HANDLE")
+BLUESKY_PASSWORD = os.getenv("BLUESKY_PASSWORD")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+def fetch_news():
+    print("Fetching news from RSS feeds...")
+    all_entries = []
+    now = datetime.now(timezone.utc)
+    one_day_ago = now - timedelta(days=1)
+
+    for url in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(url)
+            for entry in feed.entries:
+                # Some feeds use published_parsed, others might vary
+                pub_date = None
+                if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                    pub_date = datetime.fromtimestamp(time.mktime(entry.published_parsed), timezone.utc)
+                elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                    pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
+                
+                if pub_date and pub_date > one_day_ago:
+                    all_entries.append({
+                        "title": entry.title,
+                        "link": entry.link,
+                        "source": feed.feed.title if hasattr(feed.feed, 'title') else url
+                    })
+        except Exception as e:
+            print(f"Error parsing {url}: {e}")
+    
+    return all_entries
+
+def summarize_news(news_items):
+    if not news_items:
+        return None
+
+    print(f"Summarizing {len(news_items)} news items...")
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+
+    news_text = "\n".join([f"- {item['title']} (Source: {item['source']})" for item in news_items[:10]])
+    
+    prompt = f"""
+    You are an AI news curator. Below is a list of AI-related news from the last 24 hours.
+    Create a single, engaging Bluesky post summarizing the most important updates.
+    
+    Rules:
+    1. Maximum 300 characters.
+    2. Use bullet points or a concise summary.
+    3. Include 1-2 relevant hashtags (e.g., #AI #Tech).
+    4. Make it sound exciting but professional.
+    5. Do not include literal links in the text, just the summary.
+    
+    News Items:
+    {news_text}
+    """
+    
+    response = model.generate_content(prompt)
+    return response.text.strip()
+
+def post_to_bluesky(text):
+    if not text:
+        print("Nothing to post.")
+        return
+
+    print("Posting to Bluesky...")
+    client = Client()
+    client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
+    
+    # Ensure text is within limit
+    if len(text) > 300:
+        text = text[:297] + "..."
+        
+    client.send_post(text=text)
+    print("Successfully posted!")
+
+def main():
+    if not all([BLUESKY_HANDLE, BLUESKY_PASSWORD, GEMINI_API_KEY]):
+        print("Missing environment variables. Please check your .env file or GitHub Secrets.")
+        return
+
+    news = fetch_news()
+    if not news:
+        print("No new AI news found in the last 24 hours. Skipping post.")
+        # Optional: Post a 'Slow news day' update or just skip
+        return
+
+    summary = summarize_news(news)
+    post_to_bluesky(summary)
+
+if __name__ == "__main__":
+    main()
