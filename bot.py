@@ -110,39 +110,45 @@ def summarize_news(news_items):
     
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
-        temperature=0.3,
+        temperature=0.7,
         max_output_tokens=150
     )
     
     max_retries = 3
     last_summary = None
+    models_to_try = ['gemini-2.0-flash', 'gemini-1.5-flash-8b']
 
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model='gemini-2.0-flash',
-                contents=user_prompt,
-                config=config
-            )
-            summary = response.text.strip()
-            last_summary = summary
-            
-            # Post-generation validation
-            is_valid, reason = validate_summary(summary)
-            if is_valid:
-                return summary
-            else:
-                print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
-                time.sleep(2)
-        except Exception as e:
-            error_msg = str(e)
-            if ("429" in error_msg or "503" in error_msg or "UNAVAILABLE" in error_msg) and attempt < max_retries - 1:
-                wait_time = (attempt + 1) * 30
-                print(f"Transient error detected. Retrying in {wait_time}s...", flush=True)
-                time.sleep(wait_time)
-            else:
-                print(f"Error during summarization: {e}", flush=True)
-                return None
+    for model_id in models_to_try:
+        print(f"Using model: {model_id}", flush=True)
+        for attempt in range(max_retries):
+            try:
+                response = client.models.generate_content(
+                    model=model_id,
+                    contents=user_prompt,
+                    config=config
+                )
+                summary = response.text.strip()
+                last_summary = summary
+                
+                # Post-generation validation
+                is_valid, reason = validate_summary(summary)
+                if is_valid:
+                    return summary
+                else:
+                    print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
+                    time.sleep(2)
+            except Exception as e:
+                error_msg = str(e)
+                # Check for transient errors
+                if any(x in error_msg for x in ["429", "503", "UNAVAILABLE", "Resource has been exhausted"]):
+                    wait_time = (attempt + 1) * 20
+                    print(f"Transient error with {model_id}: {error_msg}. Retrying in {wait_time}s...", flush=True)
+                    time.sleep(wait_time)
+                else:
+                    print(f"Permanent error with {model_id}: {e}", flush=True)
+                    break # Try next model if it's not a generic retryable error
+        
+        print(f"Model {model_id} failed after {max_retries} attempts.", flush=True)
     
     # Rescue logic: If we failed primarily due to missing hashtags, append them manually
     if last_summary:
@@ -150,12 +156,11 @@ def summarize_news(news_items):
         if reason == "Missing hashtags":
             print("Applying Hashtag Rescue...", flush=True)
             rescued_summary = last_summary.strip() + " #AI #Tech"
-            # Final check on character limit
             if len(rescued_summary) > 300:
                 rescued_summary = rescued_summary[:297] + "..."
             return rescued_summary
 
-    print("Failed to generate a valid summary after multiple attempts.", flush=True)
+    print("Failed to generate a valid summary after multiple attempts and model fallbacks.", flush=True)
     return None
 
 def post_to_bluesky(text):
