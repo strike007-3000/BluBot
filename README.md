@@ -14,7 +14,7 @@ Automated AI news curator that fetches daily updates, synthesizes them using **G
 
 ## 🛠️ Setup Instructions
 
-### 1. Platform Credentials
+### ⚙️1. Platform Credentials
 
 #### Bluesky
 - Go to `Settings > Advanced > App Passwords`.
@@ -27,7 +27,7 @@ Automated AI news curator that fetches daily updates, synthesizes them using **G
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
 
-### 2. Configure GitHub Secrets
+### 🤫2. Configure GitHub Secrets
 
 If you are forking this repository, you **must** configure these secrets for the bot to run:
 
@@ -41,7 +41,7 @@ Navigate to: `Settings > Secrets and variables > Actions > New repository secret
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token (if using Mastodon) |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL (e.g., `https://mastodon.social`) |
 
-### 3. Enable Workflow Permissions
+### 🪄3. Enable Workflow Permissions
 Go to `Settings > Actions > General` and ensure **"Read and write permissions"** is selected under "Workflow permissions".
 
 ## 📂 Project Structure
