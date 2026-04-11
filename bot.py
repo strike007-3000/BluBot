@@ -106,7 +106,16 @@ def summarize_news(news_items):
 
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})" for item in news_items[:10]])
     
-    user_prompt = f"Summarize these news items into a single Bluesky post. You MUST include at least one hashtag (like #AI) in your response:\n\n{news_text}"
+    # Adjusted prompt to ensure substantive summary even for low news volume
+    user_prompt = f"""
+    Summarize these news items into a single, high-quality Bluesky post.
+    Even if there is only one news item, provide 2-3 substantive sentences explaining why it matters.
+    
+    CRITICAL: You MUST include at least one hashtag (like #AI) at the very end of your response.
+    
+    News Items:
+    {news_text}
+    """
     
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
@@ -114,53 +123,50 @@ def summarize_news(news_items):
         max_output_tokens=150
     )
     
-    max_retries = 2 # Reduced to save daily quota
-    last_summary = None
-    models_to_try = ['gemini-2.5-flash', 'gemma-3-27b']
+    max_retries = 3
+    best_candidate = None
+    model_id = 'gemini-2.5-flash'
 
-    for model_id in models_to_try:
-        print(f"Using model: {model_id}", flush=True)
-        for attempt in range(max_retries):
-            try:
-                response = client.models.generate_content(
-                    model=model_id,
-                    contents=user_prompt,
-                    config=config
-                )
-                summary = response.text.strip()
-                last_summary = summary
-                
-                # Post-generation validation
-                is_valid, reason = validate_summary(summary)
-                if is_valid:
-                    return summary
-                else:
-                    print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
-                    time.sleep(2)
-            except Exception as e:
-                error_msg = str(e)
-                # Check for transient errors
-                if any(x in error_msg for x in ["429", "503", "UNAVAILABLE", "Resource has been exhausted"]):
-                    wait_time = (attempt + 1) * 30
-                    print(f"Transient error with {model_id}: {error_msg[:200]}... Retrying in {wait_time}s...", flush=True)
-                    time.sleep(wait_time)
-                else:
-                    print(f"Permanent error with {model_id}: {e}", flush=True)
-                    break 
-        
-        print(f"Model {model_id} failed or exhausted.", flush=True)
-    
-    # Rescue logic: If we failed primarily due to missing hashtags, append them manually
-    if last_summary:
-        is_valid, reason = validate_summary(last_summary)
-        if reason == "Missing hashtags":
-            print("Applying Hashtag Rescue...", flush=True)
-            rescued_summary = last_summary.strip() + " #AI #Tech"
-            if len(rescued_summary) > 300:
-                rescued_summary = rescued_summary[:297] + "..."
-            return rescued_summary
+    print(f"Using model: {model_id}", flush=True)
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model=model_id,
+                contents=user_prompt,
+                config=config
+            )
+            summary = response.text.strip()
+            
+            # Post-generation validation
+            is_valid, reason = validate_summary(summary)
+            if is_valid:
+                return summary
+            
+            # Tracking "best candidate" (Valid except for missing hashtags)
+            if reason == "Missing hashtags":
+                best_candidate = summary
+            
+            print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
+            time.sleep(2)
+        except Exception as e:
+            error_msg = str(e)
+            if any(x in error_msg for x in ["429", "503", "UNAVAILABLE", "Resource has been exhausted"]):
+                wait_time = (attempt + 1) * 30
+                print(f"Transient error: {error_msg[:200]}... Retrying in {wait_time}s...", flush=True)
+                time.sleep(wait_time)
+            else:
+                print(f"Permanent error: {e}", flush=True)
+                break 
 
-    print("Failed to generate a valid summary after multiple attempts and model fallbacks.", flush=True)
+    # Rescue logic: If we never got a perfect summary, use the best one we found
+    if best_candidate:
+        print("Applying Best Candidate Rescue (Manual hashtag appending)...", flush=True)
+        rescued_summary = best_candidate.strip() + " #AI #Tech"
+        if len(rescued_summary) > 300:
+            rescued_summary = rescued_summary[:297] + "..."
+        return rescued_summary
+
+    print("Failed to generate a valid summary after internal retries.", flush=True)
     return None
 
 def post_to_bluesky(text):
