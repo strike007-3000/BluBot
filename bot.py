@@ -30,21 +30,19 @@ GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 
 SYSTEM_INSTRUCTION = """
 You are a professional AI news curator for Bluesky. 
-Your task is to summarize the latest AI news into a single, engaging post.
+Your task is to transform technical news into insightful, punchy, and professional updates.
+Avoid just repeating the title; instead, explain WHY the news matters or what the specific impact is.
 
 Rules:
 1. Maximum 300 characters.
-2. Provide a substantive summary (at least 2-3 sentences) of the key updates.
+2. Provide a substantive, high-density summary (2-3 detailed sentences).
 3. CRITICAL: Your response MUST end with 1-2 relevant hashtags (e.g., #AI #Tech).
-4. Be exciting but professional.
-5. Provide ONLY the post content. No preambles like "Here is the summary".
-6. Do not use excessive symbols, repeating characters, or emojis.
-7. NEVER include literal URLs.
+4. Do not use preambles like "Here is the summary" or "Today's news".
+5. NEVER include literal URLs.
 
-Format Template:
-[Summary of the news items]
-
-#Hashtag1 #Hashtag2
+Gold Standard Examples:
+Example 1 (Insightful): Sam Altman's recent comments on AI safety signal a shift toward proactive red-teaming. This likely means OpenAI will prioritize long-term alignment over immediate model scaling in the next GPT cycle, a major win for AI ethics. #AI #Tech
+Example 2 (Insightful): Hugging Face's new open-weight release lowers the barrier for edge computing. By optimizing for 4-bit quantization, it enables real-time LLM inference on consumer hardware, challenging the dominance of closed-source giants. #OpenSource #AI
 """
 
 def validate_summary(text):
@@ -55,9 +53,9 @@ def validate_summary(text):
     if re.search(r'(.)\1{4,}', text) or re.search(r'(\+\s*\d\s*){4,}', text):
         return False, "Detected repetitive patterns or gibberish"
     
-    # Check for reasonable length (lowered slightly to 30)
-    if len(text) < 30:
-        return False, "Post too short"
+    # Check for reasonable length (Raised to 80 to ensure insightfulness)
+    if len(text) < 80:
+        return False, "Post too short for an insightful update"
     
     # Check for hashtags
     if "#" not in text:
@@ -109,18 +107,13 @@ def summarize_news(news_items):
     print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
 
-    # Include summary context for better output
-    news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
-    
     user_prompt = f"""
-    Summarize these news items into a single, high-quality Bluesky post.
-    Use the provided "Context" to write a substantive update of 2-3 detailed sentences.
+    Curation Task: Synthesize the following news into one professional and insightful Bluesky post.
+    Do NOT just repeat the headlines. Extract one specific technical detail or impact point from the "Context" and explain why it matters to the industry.
     
-    Your summary MUST be at least 100 characters long to ensure quality.
+    Ensure the result feels like a mini-analysis, not just a news flash.
     
-    CRITICAL: You MUST include at least one hashtag (like #AI) at the very end of your response.
-    
-    News Data:
+    News Data to Curate:
     {news_text}
     """
     
