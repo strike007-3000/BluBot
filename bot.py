@@ -74,8 +74,8 @@ def summarize_news(news_items):
     {news_text}
     """
     
-    # Retry logic for 429s or transient errors
-    max_retries = 3
+    # Retry logic for rate limits or transient server errors
+    max_retries = 5
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
@@ -84,9 +84,11 @@ def summarize_news(news_items):
             )
             return response.text.strip()
         except Exception as e:
-            if "429" in str(e) and attempt < max_retries - 1:
-                wait_time = (attempt + 1) * 20
-                print(f"Rate limited (429). Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})")
+            error_msg = str(e)
+            # Retry on 429 (Rate Limit) or 503 (Service Unavailable)
+            if ("429" in error_msg or "503" in error_msg or "UNAVAILABLE" in error_msg) and attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 30
+                print(f"Transient error ({error_msg[:50]}...). Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)
             else:
                 print(f"Error during summarization: {e}")
