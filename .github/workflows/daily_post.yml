@@ -24,7 +24,7 @@ jobs:
 
       - name: Run bot
         env:
-          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
-          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASS: ${{ secrets.PASS }}
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
         run: python bot.py

@@ -24,9 +24,9 @@ Navigate to your repository settings on GitHub:
 Add the following secrets:
 | Name | Description |
 |------|-------------|
-| `BLUESKY_HANDLE` | Your Bluesky handle (e.g., `user.bsky.social`) |
-| `BLUESKY_PASSWORD` | The App Password you generated |
-| `GEMINI_API_KEY` | Your Google Gemini API Key |
+| `USERNAME` | Your Bluesky handle (e.g., `user.bsky.social`) |
+| `PASS` | The App Password you generated |
+| `GEMINI_KEY` | Your Google Gemini API Key |
 
 ### 3. Enable Workflow Permissions
 Go to `Settings > Actions > General` and ensure **"Read and write permissions"** is selected under "Workflow permissions" (this allows the bot to run correctly).

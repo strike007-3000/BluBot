@@ -18,9 +18,9 @@ RSS_FEEDS = [
     "https://export.arxiv.org/rss/cs.AI"
 ]
 
-BLUESKY_HANDLE = os.getenv("BLUESKY_HANDLE")
-BLUESKY_PASSWORD = os.getenv("BLUESKY_PASSWORD")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+BLUESKY_HANDLE = os.getenv("USERNAME")
+BLUESKY_PASSWORD = os.getenv("PASS")
+GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 
 def fetch_news():
     print("Fetching news from RSS feeds...")
