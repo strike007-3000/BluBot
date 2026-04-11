@@ -1,6 +1,6 @@
 import os
 import feedparser
-import google.generativeai as genai
+from google import genai
 from atproto import Client, client_utils
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
@@ -55,8 +55,7 @@ def summarize_news(news_items):
         return None
 
     print(f"Summarizing {len(news_items)} news items...")
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})" for item in news_items[:10]])
     
@@ -75,7 +74,10 @@ def summarize_news(news_items):
     {news_text}
     """
     
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.0-flash',
+        contents=prompt
+    )
     return response.text.strip()
 
 def post_to_bluesky(text):
