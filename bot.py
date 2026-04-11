@@ -74,11 +74,24 @@ def summarize_news(news_items):
     {news_text}
     """
     
-    response = client.models.generate_content(
-        model='gemini-2.0-flash',
-        contents=prompt
-    )
-    return response.text.strip()
+    # Retry logic for 429s or transient errors
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            return response.text.strip()
+        except Exception as e:
+            if "429" in str(e) and attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 20
+                print(f"Rate limited (429). Retrying in {wait_time}s... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(wait_time)
+            else:
+                print(f"Error during summarization: {e}")
+                return None
+    return None
 
 def post_to_bluesky(text):
     if not text:
