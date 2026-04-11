@@ -25,9 +25,14 @@ Automated AI news curator that fetches daily updates, synthesizes them using **G
 - Select `write:statuses` scope and save to get your **Access Token**.
 
 #### Threads (Optional)
-- You will need a Meta Developer Account and a Threads App.
-- Use the included `setup_threads.py` script to generate your **Long-Lived Access Token**.
-- You will also need your **Threads User ID** (provided by the script).
+1.  **Create a Meta App**: Go to [Meta for Developers](https://developers.facebook.com/) and create a new app with the **Threads** use case.
+2.  **Configure Scopes**: Under **Use Cases > Threads API > Customize**, ensure both `threads_basic` and `threads_content_publish` are enabled.
+3.  **Add Redirect URI**: In the Threads App settings, add `https://localhost/` to the **Valid OAuth Redirect URIs**.
+4.  **Handle Sandbox/Development**: If your app is not yet live/reviewed:
+    - Go to **App Roles > Roles** and add your own account as a **Threads Tester**.
+    - Accept the invite in your Threads App (**Settings > Account > Website Permissions > Invites**).
+5.  **Generate Token**: Use the included `setup_threads.py` script. It will ask for your **Threads App ID** and **Threads App Secret** (found in your app's Basic settings).
+6.  **GitHub Secrets**: The script will provide your **Long-Lived Access Token** and **Threads User ID**. Add these to your GitHub repo secrets.
 
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
