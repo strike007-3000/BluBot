@@ -35,11 +35,16 @@ Your task is to summarize the latest AI news into a single, engaging post.
 Rules:
 1. Maximum 300 characters.
 2. Provide a substantive summary (at least 2-3 sentences) of the key updates.
-3. CRITICAL: You MUST include 1-2 relevant hashtags (e.g., #AI #Tech) in your post. If you don't include a hashtag, the system will fail.
+3. CRITICAL: Your response MUST end with 1-2 relevant hashtags (e.g., #AI #Tech).
 4. Be exciting but professional.
 5. Provide ONLY the post content. No preambles like "Here is the summary".
 6. Do not use excessive symbols, repeating characters, or emojis.
 7. NEVER include literal URLs.
+
+Format Template:
+[Summary of the news items]
+
+#Hashtag1 #Hashtag2
 """
 
 def validate_summary(text):
@@ -110,14 +115,17 @@ def summarize_news(news_items):
     )
     
     max_retries = 3
+    last_summary = None
+
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-2.0-flash',
                 contents=user_prompt,
                 config=config
             )
             summary = response.text.strip()
+            last_summary = summary
             
             # Post-generation validation
             is_valid, reason = validate_summary(summary)
@@ -136,6 +144,17 @@ def summarize_news(news_items):
                 print(f"Error during summarization: {e}", flush=True)
                 return None
     
+    # Rescue logic: If we failed primarily due to missing hashtags, append them manually
+    if last_summary:
+        is_valid, reason = validate_summary(last_summary)
+        if reason == "Missing hashtags":
+            print("Applying Hashtag Rescue...", flush=True)
+            rescued_summary = last_summary.strip() + " #AI #Tech"
+            # Final check on character limit
+            if len(rescued_summary) > 300:
+                rescued_summary = rescued_summary[:297] + "..."
+            return rescued_summary
+
     print("Failed to generate a valid summary after multiple attempts.", flush=True)
     return None
 
