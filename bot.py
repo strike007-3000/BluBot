@@ -287,8 +287,8 @@ def main():
     if summary:
         # Post to all enabled platforms
         post_to_bluesky(summary)
-        # post_to_mastodon(summary)
-        # post_to_threads(summary)
+        post_to_mastodon(summary)
+        post_to_threads(summary)
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 
