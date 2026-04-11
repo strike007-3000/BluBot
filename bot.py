@@ -106,6 +106,7 @@ def summarize_news(news_items):
 
     print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
+    model_id = 'gemma-3-27b-it'
 
     # Include summary context for better output
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
@@ -138,7 +139,6 @@ def summarize_news(news_items):
     max_retries = 1 # Minimal retries to protect quota
     best_candidate = None # Best one regardless of hashtags
     longest_fallback = "" # Longest one found if everything is too short
-    model_id = 'gemma-3-27b-it'
 
     print(f"Using model: {model_id}", flush=True)
     for attempt in range(max_retries):
