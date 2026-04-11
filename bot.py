@@ -29,20 +29,19 @@ BLUESKY_PASSWORD = os.getenv("PASS")
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 
 SYSTEM_INSTRUCTION = """
-You are a professional AI news curator for Bluesky. 
-Your task is to transform technical news into insightful, punchy, and professional updates.
-Avoid just repeating the title; instead, explain WHY the news matters or what the specific impact is.
+You are a high-engagement AI news curator for Bluesky. 
+Your goal is to turn technical news into "must-read" updates that stop the scroll.
 
-Rules:
-1. Maximum 300 characters.
-2. Provide a substantive, high-density summary (2-3 detailed sentences).
-3. CRITICAL: Your response MUST end with 1-2 relevant hashtags (e.g., #AI #Tech).
-4. Do not use preambles like "Here is the summary" or "Today's news".
-5. NEVER include literal URLs.
+Writing Style Guidelines:
+1. THE HOOK: Start with a punchy, interesting first sentence that highlights the most important shift.
+2. THE IMPACT: Briefly explain the "So What?" – how does this affect the industry or the user?
+3. THE INSIGHT: Offer a professional observation or a thought-provoking question.
+4. BREVITY: Keep it under 300 characters. Density is key. 
+5. NO REPETITION: Do not just list headlines. Curate the meaning.
 
 Gold Standard Examples:
-Example 1 (Insightful): Sam Altman's recent comments on AI safety signal a shift toward proactive red-teaming. This likely means OpenAI will prioritize long-term alignment over immediate model scaling in the next GPT cycle, a major win for AI ethics. #AI #Tech
-Example 2 (Insightful): Hugging Face's new open-weight release lowers the barrier for edge computing. By optimizing for 4-bit quantization, it enables real-time LLM inference on consumer hardware, challenging the dominance of closed-source giants. #OpenSource #AI
+Example 1: AI safety is reaching a tipping point. Altman's latest comments on "proactive red-teaming" suggest OpenAI is shifting from pure scaling to deep alignment. This could mean a slower but much more stable GPT-5 cycle. Is the industry finally prioritizing safety over speed? #AI #OpenAI
+Example 2: Edge AI just got a massive boost. Hugging Face's new 4-bit quantization tools mean you can now run serious LLMs on consumer hardware without a latency hit. The era of private, local AI isn't coming—it's already here. #OpenSource #EdgeComputing
 """
 
 def validate_summary(text):
@@ -106,35 +105,27 @@ def summarize_news(news_items):
 
     print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
-    model_id = 'gemma-3-27b-it'
+    model_id = 'gemini-3.1-flash-lite'
 
     # Include summary context for better output
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
     
     user_prompt = f"""
-    Curation Task: Synthesize the following news into one professional and insightful Bluesky post.
-    Do NOT just repeat the headlines. Extract one specific technical detail or impact point from the "Context" and explain why it matters to the industry.
+    Curation Task: Synthesize the following news into one high-engagement Bluesky post.
+    Start with a hook, explain the impact, and offer a specific insight.
     
-    Ensure the result feels like a mini-analysis, not just a news flash.
+    CRITICAL: Stay under 300 characters. End with 1-2 hashtags.
     
-    News Data to Curate:
+    News Data:
     {news_text}
     """
     
-    if model_id.startswith('gemma'):
-        # Gemma models often don't support separate system instructions in the SDK
-        full_prompt = f"{SYSTEM_INSTRUCTION}\n\n{user_prompt}"
-        config = types.GenerateContentConfig(
-            temperature=0.7,
-            max_output_tokens=250
-        )
-    else:
-        full_prompt = user_prompt
-        config = types.GenerateContentConfig(
-            system_instruction=SYSTEM_INSTRUCTION,
-            temperature=0.7,
-            max_output_tokens=250
-        )
+    # Re-enabling system instructions for Gemini models
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_INSTRUCTION,
+        temperature=0.7,
+        max_output_tokens=300
+    )
     
     max_retries = 1 # Minimal retries to protect quota
     best_candidate = None # Best one regardless of hashtags
@@ -145,7 +136,7 @@ def summarize_news(news_items):
         try:
             response = client.models.generate_content(
                 model=model_id,
-                contents=full_prompt,
+                contents=user_prompt,
                 config=config
             )
             summary = response.text.strip()
@@ -178,7 +169,9 @@ def summarize_news(news_items):
     if best_candidate:
         print("Applying Best Candidate Rescue (Hashtag fix)...", flush=True)
         rescued = best_candidate.strip() + " #AI #Tech"
-        return rescued[:300]
+        if len(rescued) > 300:
+            return rescued[:297] + "..."
+        return rescued
     
     if len(longest_fallback) >= 20: # If it's almost long enough, we can rescue it
         print("Applying Length Rescue (Expansion)...", flush=True)
@@ -187,7 +180,10 @@ def summarize_news(news_items):
             rescued += " #AI #Tech"
         if len(rescued) < 40: # If still too short, add a generic relevant sentence
             rescued = "Latest updates in AI: " + rescued
-        return rescued[:300]
+        
+        if len(rescued) > 300:
+            return rescued[:297] + "..."
+        return rescued
 
     print("Failed to generate a valid summary after internal retries.", flush=True)
     return None
