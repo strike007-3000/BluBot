@@ -34,7 +34,17 @@ RSS_FEEDS = [
     "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
     "https://blogs.microsoft.com/ai/feed/",
     "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
-    "https://www.anthropic.com/news.rss"
+    "https://www.anthropic.com/news.rss",
+    "https://www.semianalysis.com/feed",
+    "https://www.maginative.com/rss/",
+    "https://the-decoder.com/feed/",
+    "https://www.deeplearning.ai/the-batch/rss/",
+    "https://www.fastcompany.com/section/artificial-intelligence/rss",
+    "https://www.artificialintelligence-news.com/feed/",
+    "https://synthedia.substack.com/feed",
+    "https://towardsai.net/feed",
+    "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
+    "https://a16z.com/category/ai/feed/"
 ]
 
 SEEN_FILE = "seen_articles.json"
