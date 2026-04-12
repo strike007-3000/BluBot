@@ -141,6 +141,8 @@ def fetch_news(seen_links=None):
                         "link": entry.link,
                         "source": feed.feed.title if hasattr(feed.feed, 'title') else url
                     })
+        except Exception as e:
+            print(f"Error parsing {url}: {e}", flush=True)
 
     print(f"Found {len(all_entries)} articles after filtering.", flush=True)
     return all_entries
