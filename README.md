@@ -1,6 +1,6 @@
 # 👨‍🔧 BluBot: Daily AI News Curator
 
-Automated AI news curator that fetches daily updates, synthesizes them using **Google Gemini 3.1 Flash Lite**, and posts them to **Bluesky**, **Mastodon**, and **Threads**—all running for free on **GitHub Actions**.
+Automated AI news curator that fetches updates twice daily, synthesizes them using **Google Gemini 3.1 Flash Lite**, and posts them to **Bluesky**, **Mastodon**, and **Threads**—all running for free on **GitHub Actions**.
 
 ## 🚀 Features
 
@@ -12,7 +12,7 @@ Automated AI news curator that fetches daily updates, synthesizes them using **G
 - **Robust Quality Control**:
   - **Validation**: Filters out gibberish, repetitive patterns, and low-quality output.
   - **Rescue Logic**: Automatic "Best Candidate" and "Length Rescue" attempt to fix almost-perfect summaries.
-- **Scheduled & Free**: Runs daily at 9:00 AM UTC using GitHub Actions (zero hosting costs).
+- **Scheduled & Free**: Runs twice daily (9:00 AM and 3:00 PM local) using GitHub Actions.
 
 ## 🛠️ Setup Instructions
 

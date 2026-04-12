@@ -2,7 +2,7 @@ name: Daily AI News Post
 
 on:
   schedule:
-    - cron: '0 9 * * *' # 9:00 AM UTC daily
+    - cron: '0 7,13 * * *' # 9:00 AM and 3:00 PM (UTC+2)
   workflow_dispatch: # Allows manual triggering
 
 jobs:
