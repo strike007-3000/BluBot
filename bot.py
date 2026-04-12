@@ -127,22 +127,22 @@ def fetch_news(seen_links=None):
                 elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
                     pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
                 
-                    if entry.link in seen_links:
-                        continue
-                    if pub_date and pub_date > start_time:
-                        entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
-                        # Clean HTML tags if any from summary
-                        entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:300]
-                        
-                        all_entries.append({
-                            "title": entry.title,
-                            "summary": entry_summary,
-                            "link": entry.link,
-                            "source": feed.feed.title if hasattr(feed.feed, 'title') else url
-                        })
-        except Exception as e:
-            print(f"Error parsing {url}: {e}", flush=True)
-    
+                if entry.link in seen_links:
+                    continue
+
+                if pub_date and pub_date > start_time:
+                    entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
+                    # Clean HTML tags if any from summary
+                    entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:300]
+                    
+                    all_entries.append({
+                        "title": entry.title,
+                        "summary": entry_summary,
+                        "link": entry.link,
+                        "source": feed.feed.title if hasattr(feed.feed, 'title') else url
+                    })
+
+    print(f"Found {len(all_entries)} articles after filtering.", flush=True)
     return all_entries
 
 def summarize_news(news_items):
@@ -323,7 +323,7 @@ def main():
     news = fetch_news(seen_links)
     
     if not news:
-        print("No NEW AI news found in the last 24 hours.", flush=True)
+        print("No NEW AI news found in the last 48 hours. Bot is standing by.", flush=True)
         return
 
     summary = summarize_news(news)
