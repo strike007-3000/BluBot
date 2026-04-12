@@ -5,7 +5,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 ## 🚀 Features
 
 - **Multi-Platform Support**: Automatically posts to Bluesky, Mastodon, and Threads.
-- **Curated AI Feeds**: Pulls from 25+ high-quality sources including OpenAI, DeepMind, Anthropic, Hugging Face, TechCrunch, Verge AI, a16z, and arXiv.
+- **Curated AI Feeds**: Pulls from 25+ high-signal sources including OpenAI, DeepMind, Anthropic, Hugging Face, EE Times, Ahead of AI, SemiAnalysis, 404 Media, and arXiv.
 - **Smart Deduplication**: Tracks processed articles to ensure no repeats (persisted via `seen_articles.json`).
 - **48-Hour Coverage**: Scans the last 48 hours of news to ensure even slow news days have high-quality content.
 - **Premium Tech Persona**: Sophisticated, narrative-driven summaries focusing on industry maturation.

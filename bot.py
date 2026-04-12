@@ -32,19 +32,20 @@ RSS_FEEDS = [
     "https://arstechnica.com/tag/ai/feed/",
     "https://venturebeat.com/category/ai/feed/",
     "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
-    "https://blogs.microsoft.com/ai/feed/",
-    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
+    "https://www.404media.co/rss",
+    "https://www.eetimes.com/feed",
     "https://www.anthropic.com/news.rss",
     "https://www.semianalysis.com/feed",
     "https://www.maginative.com/rss/",
     "https://the-decoder.com/feed/",
     "https://www.deeplearning.ai/the-batch/rss/",
-    "https://www.fastcompany.com/section/artificial-intelligence/rss",
-    "https://www.artificialintelligence-news.com/feed/",
+    "https://aisnakeoil.substack.com/feed",
+    "https://aiacceleratorinstitute.com/rss/",
     "https://synthedia.substack.com/feed",
-    "https://towardsai.net/feed",
+    "https://magazine.sebastianraschka.com/feed",
     "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
-    "https://a16z.com/category/ai/feed/"
+    "https://stability.ai/blog?format=rss",
+    "https://siliconangle.com/category/ai/feed"
 ]
 
 SEEN_FILE = "seen_articles.json"
