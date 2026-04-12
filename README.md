@@ -6,10 +6,11 @@ Automated AI news curator that fetches daily updates, synthesizes them using **G
 
 - **Multi-Platform Support**: Automatically posts to Bluesky, Mastodon, and Threads.
 - **Curated AI Feeds**: Pulls from high-quality sources including OpenAI, Hugging Face, TechCrunch AI, MIT Technology Review, and arXiv (cs.AI).
-- **Intelligent Summarization**: Uses **Gemini 3.1 Flash Lite (Preview)** with sophisticated system instructions to generate engaging, optimistic, and technical summaries.
+- **Smart Deduplication**: Automatically tracks processed articles to ensure the same story is never summarized twice (persisted via `seen_articles.json`).
+- **Premium Tech Persona**: Sophisticated, narrative-driven summaries that focus on industry maturation and "Director's Cut" insights.
 - **Robust Quality Control**:
   - **Validation**: Filters out gibberish, repetitive patterns, and low-quality output.
-  - **Rescue Logic**: Automatic "Best Candidate" and "Length Rescue" attempt to fix almost-perfect summaries (e.g., adding missing hashtags or expanding short posts).
+  - **Rescue Logic**: Automatic "Best Candidate" and "Length Rescue" attempt to fix almost-perfect summaries.
 - **Scheduled & Free**: Runs daily at 9:00 AM UTC using GitHub Actions (zero hosting costs).
 
 ## 🛠️ Setup Instructions
@@ -59,6 +60,7 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 ## 📂 Project Structure
 
 - `bot.py`: Main logic (RSS fetching, Gemini synthesis, platform posting).
+- `seen_articles.json`: Persistent state file that stores IDs of previously posted news.
 - `requirements.txt`: Python dependencies.
 - `.github/workflows/daily_post.yml`: GitHub Actions schedule and environment setup.
 - `debug_bot.py`: Helper script for local testing without triggers.

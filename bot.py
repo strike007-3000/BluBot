@@ -9,6 +9,7 @@ import time
 import socket
 import re
 from mastodon import Mastodon
+import json
 import requests
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
@@ -31,6 +32,8 @@ RSS_FEEDS = [
     "https://arstechnica.com/tag/ai/feed/"
 ]
 
+SEEN_FILE = "seen_articles.json"
+
 BLUESKY_HANDLE = os.getenv("BSKY_HANDLE")
 BLUESKY_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
@@ -38,20 +41,24 @@ THREADS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 
 SYSTEM_INSTRUCTION = """
-You are a high-engagement AI news curator for Bluesky with a focus on constructive optimism.
-Your goal is to turn technical news into "must-read" updates that highlight the growth, maturation, and potential of AI.
+You are a "Premium Tech Curator" for Bluesky. Your voice is sophisticated, insightful, and slightly ahead of the curve.
+You don't just report news; you connect dots and provide a "Director's Cut" of the day's AI evolution.
 
-Writing Style Guidelines:
-1. THE HOOK: Start with a punchy, interesting first sentence that highlights a major shift.
-2. THE IMPACT: Briefly explain the "So What?" – focusing on how this advances the industry.
-3. THE INSIGHT: Offer a professional, constructive observation. Avoid "doom and gloom" or overly negative framing.
-4. POSITIVE ALIGNMENT: Even when news is about "scratches" or "bans," frame it as the industry maturing, becoming safer, or refining its boundaries. 
-5. BREVITY: Keep it under 300 characters. Density is key. 
-6. NO REPETITION: Do not just list headlines. Curate the meaning.
+CORE PERSONA:
+- Constructive Optimism: Every technical shift is a step toward a more capable future. 
+- Technical Authority: Use precise terms (e.g., "latency," "throughput," "alignment") but explain their weight.
+- Engagement First: Every post must survive the "Scroll Test."
 
-Gold Standard Examples:
-Example 1: AI safety is maturing fast. Altman's latest comments on "proactive red-teaming" signal a new era of responsible development. By prioritizing alignment over raw scaling, OpenAI is building the trust needed for mass adoption. Is this the blueprint for the next decade of AI ethics? #AI #OpenAI
-Example 2: Local AI just got a massive performance boost. Hugging Face's 4-bit quantization breakthrough means you can now run professional-grade LLMs on consumer hardware. This is a huge win for privacy and standardizes high-power AI at the edge. #OpenSource #EdgeComputing
+WRITING ARCHITECTURE:
+1. THE CATALYST (Hook): Start with a bold claim or a "hidden gem" from the news. Avoid generic "Latest news..." starts.
+2. THE SYNTHESIS (Impact): Synthesize news into a narrative. Focus on the *maturation* of the industry.
+3. THE INSIDER INSIGHT (The 'So What'): Provide a professional take on why this matters long-term.
+4. BREVITY: Max 280 characters. Every word must earn its place.
+
+Formatting: Use line breaks for readability. 1-2 hashtags. Max 1 emoji.
+
+Example 1: "The era of 'massive' AI is giving way to 'efficient' AI. With TriAttention boosting throughput by 2.5x, the focus has shifted to deployment at the edge. We're moving from model-building to model-application. This is where value is actually unlocked. ⚡ #AI #TechTrends"
+Example 2: "AI safety is maturing into AI governance. Recent 'proactive red-teaming' standards highlight a shift from reactive patches to systematic alignment. By setting these boundaries now, the industry is paving the way for enterprise-grade trust. Professionalization is here. #AISafety #Tech"
 """
 
 def validate_summary(text):
@@ -76,7 +83,28 @@ def validate_summary(text):
 
     return True, "Valid"
 
-def fetch_news():
+def load_seen_articles():
+    if not os.path.exists(SEEN_FILE):
+        return []
+    try:
+        with open(SEEN_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading seen articles: {e}")
+        return []
+
+def save_seen_articles(seen_links):
+    try:
+        # Keep only the last 200 links to manage file size
+        with open(SEEN_FILE, 'w') as f:
+            json.dump(seen_links[-200:], f, indent=2)
+    except Exception as e:
+        print(f"Error saving seen articles: {e}")
+
+def fetch_news(seen_links=None):
+    if seen_links is None:
+        seen_links = []
+        
     print("Fetching news from RSS feeds...", flush=True)
     all_entries = []
     now = datetime.now(timezone.utc)
@@ -93,7 +121,9 @@ def fetch_news():
                 elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
                     pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
                 
-                if pub_date and pub_date > one_day_ago:
+                    if entry.link in seen_links:
+                        continue
+
                     entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
                     # Clean HTML tags if any from summary
                     entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:300]
@@ -283,9 +313,11 @@ def main():
         print("Missing Gemini API Key.", flush=True)
         return
 
-    news = fetch_news()
+    seen_links = load_seen_articles()
+    news = fetch_news(seen_links)
+    
     if not news:
-        print("No new AI news found in the last 24 hours.", flush=True)
+        print("No NEW AI news found in the last 24 hours.", flush=True)
         return
 
     summary = summarize_news(news)
@@ -294,6 +326,11 @@ def main():
         post_to_bluesky(summary)
         post_to_mastodon(summary)
         post_to_threads(summary)
+        
+        # Save the new articles to seen list
+        new_links = [item['link'] for item in news[:10]]
+        seen_links.extend(new_links)
+        save_seen_articles(seen_links)
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 
