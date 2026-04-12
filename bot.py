@@ -29,7 +29,12 @@ RSS_FEEDS = [
     "https://www.marktechpost.com/feed/",
     "https://simonwillison.net/atom/everything/",
     "https://engineering.fb.com/category/ml-ai/feed/",
-    "https://arstechnica.com/tag/ai/feed/"
+    "https://arstechnica.com/tag/ai/feed/",
+    "https://venturebeat.com/category/ai/feed/",
+    "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
+    "https://blogs.microsoft.com/ai/feed/",
+    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
+    "https://www.anthropic.com/news.rss"
 ]
 
 SEEN_FILE = "seen_articles.json"
@@ -108,7 +113,8 @@ def fetch_news(seen_links=None):
     print("Fetching news from RSS feeds...", flush=True)
     all_entries = []
     now = datetime.now(timezone.utc)
-    one_day_ago = now - timedelta(days=1)
+    lookback_days = 2 # Increased from 1 to 2 for better coverage with dedup
+    start_time = now - timedelta(days=lookback_days)
 
     for url in RSS_FEEDS:
         print(f"Checking {url}...", flush=True)
@@ -123,17 +129,17 @@ def fetch_news(seen_links=None):
                 
                     if entry.link in seen_links:
                         continue
-
-                    entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
-                    # Clean HTML tags if any from summary
-                    entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:300]
-                    
-                    all_entries.append({
-                        "title": entry.title,
-                        "summary": entry_summary,
-                        "link": entry.link,
-                        "source": feed.feed.title if hasattr(feed.feed, 'title') else url
-                    })
+                    if pub_date and pub_date > start_time:
+                        entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
+                        # Clean HTML tags if any from summary
+                        entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:300]
+                        
+                        all_entries.append({
+                            "title": entry.title,
+                            "summary": entry_summary,
+                            "link": entry.link,
+                            "source": feed.feed.title if hasattr(feed.feed, 'title') else url
+                        })
         except Exception as e:
             print(f"Error parsing {url}: {e}", flush=True)
     
