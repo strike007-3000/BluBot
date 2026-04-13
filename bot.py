@@ -58,25 +58,44 @@ GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 THREADS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 
+# Relevance Scoring Constants
+SOURCE_TIERS = {
+    "openai.com": 10,
+    "anthropic.com": 10,
+    "deepmind.google": 10,
+    "huggingface.co": 10,
+    "engineering.fb.com": 10,
+    "simonwillison.net": 8,
+    "semianalysis.com": 8,
+    "the-decoder.com": 7,
+    "maginative.com": 7,
+    "techcrunch.com": 6,
+    "venturebeat.com": 6,
+    "404media.co": 6,
+    "export.arxiv.org": 5, # Low base but high 'Groundbreaking' keyword potential
+}
+
+PRODUCT_KEYWORDS = ["launch", "integrated", "available", "feature", "release", "app", "tool", "partnership", "api"]
+GROUNDBREAKING_KEYWORDS = ["sota", "benchmark", "breakthrough", "frontier", "reasoning", "efficiency", "architecture", "scaling", "open-source"]
+HIDDEN_GEM_SOURCES = ["export.arxiv.org", "arxiv.org"]
+
 SYSTEM_INSTRUCTION = """
-You are a "Premium Tech Curator" for Bluesky. Your voice is sophisticated, insightful, and slightly ahead of the curve.
+You are a "Premium Tech Curator" for Bluesky. Your voice is sophisticated, insightful, and grounded in industry reality.
 You don't just report news; you connect dots and provide a "Director's Cut" of the day's AI evolution.
 
 CORE PERSONA:
-- Constructive Optimism: Every technical shift is a step toward a more capable future. 
-- Technical Authority: Use precise terms (e.g., "latency," "throughput," "alignment") but explain their weight.
-- Engagement First: Every post must survive the "Scroll Test."
+- Product Focus: Prioritize actual launches and usable features over abstract hype.
+- Technical Authority: Use precise terms (e.g., "latency," "throughput," "reasoning") and explain their impact.
+- The Insider (Hidden Gem): Every post should reference at least one "hidden gem" or technical insight (likely from an arXiv paper or engineering blog) to show you are reading deeper than the mainstream.
+- Engagement First: Every post must survive the "Scroll Test" with a punchy hook.
 
 WRITING ARCHITECTURE:
-1. THE CATALYST (Hook): Start with a bold claim or a "hidden gem" from the news. Avoid generic "Latest news..." starts.
-2. THE SYNTHESIS (Impact): Synthesize news into a narrative. Focus on the *maturation* of the industry.
+1. THE CATALYST (Hook): Start with a bold claim or a "hidden gem" from the news.
+2. THE SYNTHESIS (Impact): Synthesize the 8 news items provided into a cohesive narrative. Focus on the *maturation* and *utility* of the industry.
 3. THE INSIDER INSIGHT (The 'So What'): Provide a professional take on why this matters long-term.
 4. BREVITY: Max 280 characters. Every word must earn its place.
 
 Formatting: Use line breaks for readability. 1-2 hashtags. Max 1 emoji.
-
-Example 1: "The era of 'massive' AI is giving way to 'efficient' AI. With TriAttention boosting throughput by 2.5x, the focus has shifted to deployment at the edge. We're moving from model-building to model-application. This is where value is actually unlocked. ⚡ #AI #TechTrends"
-Example 2: "AI safety is maturing into AI governance. Recent 'proactive red-teaming' standards highlight a shift from reactive patches to systematic alignment. By setting these boundaries now, the industry is paving the way for enterprise-grade trust. Professionalization is here. #AISafety #Tech"
 """
 
 def get_link_metadata(url):
@@ -121,6 +140,38 @@ def get_link_metadata(url):
     except Exception as e:
         print(f"Error scraping metadata: {e}", flush=True)
         return None
+
+def calculate_relevance_score(item, pub_date):
+    """Calculates a relevance score for an article."""
+    score = 0
+    title_lower = item['title'].lower()
+    summary_lower = item['summary'].lower()
+    content_text = f"{title_lower} {summary_lower}"
+    
+    # 1. Source Tier (Base Score)
+    source_domain = ""
+    for domain, base_score in SOURCE_TIERS.items():
+        if domain in item['link']:
+            score += base_score
+            source_domain = domain
+            break
+    if not source_domain:
+        score += 3 # Default score for unknown sources
+        
+    # 2. Product Boost
+    if any(word in content_text for word in PRODUCT_KEYWORDS):
+        score += 5
+        
+    # 3. Groundbreaking Boost
+    if any(word in content_text for word in GROUNDBREAKING_KEYWORDS):
+        score += 7
+        
+    # 4. Time Decay (Penalty for older articles)
+    now = datetime.now(timezone.utc)
+    age_hours = (now - pub_date).total_seconds() / 3600
+    score -= (age_hours * 0.5) # Lose 0.5 point per hour
+    
+    return score
 
 def validate_summary(text):
     if not text:
@@ -169,7 +220,7 @@ def fetch_news(seen_links=None):
     print("Fetching news from RSS feeds...", flush=True)
     all_entries = []
     now = datetime.now(timezone.utc)
-    lookback_days = 2 # Increased from 1 to 2 for better coverage with dedup
+    lookback_days = 2
     start_time = now - timedelta(days=lookback_days)
 
     for url in RSS_FEEDS:
@@ -183,25 +234,62 @@ def fetch_news(seen_links=None):
                 elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
                     pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
                 
+                if not pub_date or pub_date < start_time:
+                    continue
+                    
                 if entry.link in seen_links:
                     continue
 
-                if pub_date and pub_date > start_time:
-                    entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
-                    # Clean HTML tags if any from summary
-                    entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:300]
-                    
-                    all_entries.append({
-                        "title": entry.title,
-                        "summary": entry_summary,
-                        "link": entry.link,
-                        "source": feed.feed.title if hasattr(feed.feed, 'title') else url
-                    })
+                entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
+                # Clean HTML tags if any from summary
+                entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:500]
+                
+                item = {
+                    "title": entry.title,
+                    "summary": entry_summary,
+                    "link": entry.link,
+                    "source": feed.feed.title if hasattr(feed.feed, 'title') else url
+                }
+                
+                # Calculate relevance score
+                item["score"] = calculate_relevance_score(item, pub_date)
+                all_entries.append(item)
         except Exception as e:
             print(f"Error parsing {url}: {e}", flush=True)
 
-    print(f"Found {len(all_entries)} articles after filtering.", flush=True)
-    return all_entries
+    # Sort by score descending
+    all_entries.sort(key=lambda x: x["score"], reverse=True)
+    print(f"Ranked {len(all_entries)} articles.", flush=True)
+
+    if not all_entries:
+        return []
+
+    # Hidden Gem Injection Logic
+    # 1. Take top 7
+    top_articles = all_entries[:7]
+    remaining = all_entries[7:]
+    
+    # 2. Check if any top articles are already "Hidden Gems"
+    has_gem = any(any(gem_src in art['link'] for gem_src in HIDDEN_GEM_SOURCES) for art in top_articles)
+    
+    if not has_gem and remaining:
+        # 3. Find the best gem in the remaining list
+        for i, art in enumerate(remaining):
+            if any(gem_src in art['link'] for gem_src in HIDDEN_GEM_SOURCES):
+                print(f"Injecting Hidden Gem: {art['title']}", flush=True)
+                top_articles.append(art)
+                break
+    
+    # 4. Fill to 8 if still needed
+    if len(top_articles) < 8 and remaining:
+        # Avoid duplicates if we already injected one
+        for art in remaining:
+            if art not in top_articles:
+                top_articles.append(art)
+            if len(top_articles) == 8:
+                break
+
+    return top_articles[:8]
 
 def summarize_news(news_items):
     if not news_items:
@@ -211,15 +299,15 @@ def summarize_news(news_items):
     client = genai.Client(api_key=GEMINI_API_KEY)
     model_id = 'gemini-3.1-flash-lite-preview'
 
-    # The lead link is typically the first item (highest signal)
+    # The lead link is typically the highest scoring item (index 0)
     lead_link = news_items[0]['link'] if news_items else None
     
-    # Include summary context for better output
-    news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
+    # Include top 8 context for synthesis
+    news_text = "\n".join([f"- [{i+1}] {item['title']} (Source: {item['source']})\n  Context: {item['summary'][:300]}" for i, item in enumerate(news_items)])
     
     user_prompt = f"""
-    Curation Task: Synthesize the following news into one high-engagement Bluesky post.
-    Start with a hook, explain the impact, and offer a specific insight.
+    Curation Task: Synthesize these 8 news items into one high-engagement Bluesky post.
+    Identify the most groundbreaking product shift and weave in the "Hidden Gem" technical insight.
     
     CRITICAL: Stay under 300 characters. End with 1-2 hashtags.
     
