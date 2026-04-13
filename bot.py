@@ -113,22 +113,22 @@ def get_link_metadata(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
-    
+
     try:
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
-        
+
         soup = BeautifulSoup(response.text, 'html.parser')
-        
+
         # Extract OG tags
         og_title = soup.find("meta", property="og:title")
         og_description = soup.find("meta", property="og:description")
         og_image = soup.find("meta", property="og:image")
-        
+
         title = og_title['content'] if og_title else (soup.title.string if soup.title else "News Update")
         description = og_description['content'] if og_description else ""
         image_url = og_image['content'] if og_image else None
-        
+
         # Download image if exists
         image_data = None
         if image_url:
@@ -156,7 +156,7 @@ def calculate_relevance_score(item, pub_date, recent_topics=None):
     title_lower = item['title'].lower()
     summary_lower = item['summary'].lower()
     content_text = f"{title_lower} {summary_lower}"
-    
+
     # 1. Source Tier (Base Score)
     source_domain = ""
     for domain, base_score in SOURCE_TIERS.items():
@@ -166,15 +166,15 @@ def calculate_relevance_score(item, pub_date, recent_topics=None):
             break
     if not source_domain:
         score += 3 # Default score for unknown sources
-        
+
     # 2. Product Boost
     if any(word in content_text for word in PRODUCT_KEYWORDS):
         score += 5
-        
+
     # 3. Groundbreaking Boost
     if any(word in content_text for word in GROUNDBREAKING_KEYWORDS):
         score += 7
-        
+
     # 4. Topic Diversity Penalty
     if recent_topics:
         item_topic = "General"
@@ -182,7 +182,7 @@ def calculate_relevance_score(item, pub_date, recent_topics=None):
             if any(word in content_text for word in keywords):
                 item_topic = topic
                 break
-        
+
         # Apply penalty if this topic was recently used
         if item_topic in recent_topics:
             # -12 point penalty found through "good judgement" testing
@@ -193,7 +193,7 @@ def calculate_relevance_score(item, pub_date, recent_topics=None):
     now = datetime.now(timezone.utc)
     age_hours = (now - pub_date).total_seconds() / 3600
     score -= (age_hours * 0.5) # Lose 0.5 point per hour
-    
+
     return score
 
 def get_temporal_context():
@@ -201,14 +201,14 @@ def get_temporal_context():
     now = datetime.now(timezone.utc)
     day = now.strftime("%A")
     hour = now.hour
-    
+
     if hour < 12:
         session = "Morning Intelligence Briefing"
         theme = "Forward-looking, setting the week's pace" if day == "Monday" else "Mid-week progress"
     else:
         session = "Afternoon Deep Dive"
         theme = "Weekly Wrap-up and synthesis" if day == "Friday" else "Afternoon analysis"
-        
+
     if day in ["Saturday", "Sunday"]:
         theme = "Weekend High-Level Vision and long-term reflection"
 
@@ -221,15 +221,15 @@ def get_temporal_context():
 def validate_summary(text):
     if not text:
         return False, "Empty output"
-    
+
     # Check for excessive repetition (e.g. + 9 + 9 + 9)
     if re.search(r'(.)\1{4,}', text) or re.search(r'(\+\s*\d\s*){4,}', text):
         return False, "Detected repetitive patterns or gibberish"
-    
+
     # Check for reasonable length (Adjusted to 60 for better first-try success)
     if len(text) < 60:
         return False, "Post too short for an insightful update"
-    
+
     # Check for hashtags
     if "#" not in text:
         return False, "Missing hashtags"
@@ -260,7 +260,7 @@ def save_seen_articles(seen_data):
         seen_data["links"] = seen_data["links"][-200:]
         # Keep only the last 5 topics for memory
         seen_data["recent_topics"] = seen_data["recent_topics"][-5:]
-        
+
         with open(SEEN_FILE, 'w') as f:
             json.dump(seen_data, f, indent=2)
     except Exception as e:
@@ -269,7 +269,7 @@ def save_seen_articles(seen_data):
 def fetch_news(seen_links=None, recent_topics=None):
     if seen_links is None:
         seen_links = []
-        
+
     print("Fetching news from RSS feeds...", flush=True)
     all_entries = []
     now = datetime.now(timezone.utc)
@@ -286,24 +286,24 @@ def fetch_news(seen_links=None, recent_topics=None):
                     pub_date = datetime.fromtimestamp(time.mktime(entry.published_parsed), timezone.utc)
                 elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
                     pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
-                
+
                 if not pub_date or pub_date < start_time:
                     continue
-                    
+
                 if entry.link in seen_links:
                     continue
 
                 entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
                 # Clean HTML tags if any from summary
                 entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:500]
-                
+
                 item = {
                     "title": entry.title,
                     "summary": entry_summary,
                     "link": entry.link,
                     "source": feed.feed.title if hasattr(feed.feed, 'title') else url
                 }
-                
+
                 # Calculate relevance score (Considering Topic Penalties)
                 item["score"] = calculate_relevance_score(item, pub_date, recent_topics)
                 all_entries.append(item)
@@ -321,10 +321,10 @@ def fetch_news(seen_links=None, recent_topics=None):
     # 1. Take top 7
     top_articles = all_entries[:7]
     remaining = all_entries[7:]
-    
+
     # 2. Check if any top articles are already "Hidden Gems"
     has_gem = any(any(gem_src in art['link'] for gem_src in HIDDEN_GEM_SOURCES) for art in top_articles)
-    
+
     if not has_gem and remaining:
         # 3. Find the best gem in the remaining list
         for i, art in enumerate(remaining):
@@ -332,7 +332,7 @@ def fetch_news(seen_links=None, recent_topics=None):
                 print(f"Injecting Hidden Gem: {art['title']}", flush=True)
                 top_articles.append(art)
                 break
-    
+
     # 4. Fill to 8 if still needed
     if len(top_articles) < 8 and remaining:
         # Avoid duplicates if we already injected one
@@ -354,38 +354,38 @@ def summarize_news(news_items, context):
 
     # The lead link is typically the highest scoring item (index 0)
     lead_link = news_items[0]['link'] if news_items else None
-    
+
     # Include top 8 context for synthesis
     news_text = "\n".join([f"- [{i+1}] {item['title']} (Source: {item['source']})\n  Context: {item['summary'][:300]}" for i, item in enumerate(news_items)])
-    
+
     user_prompt = f"""
     Context: Today is {context['day']}. This is your {context['session']}.
     Current Theme: {context['theme']}.
-    
+
     Curation Task: Synthesize these 8 news items into one high-engagement Bluesky post.
     Identify the most groundbreaking product shift and weave in the "Hidden Gem" technical insight.
-    
+
     In addition to the post, you MUST identify the primary topic category for this synthesis.
     Choose exactly ONE from: LLMs, Vision/Robot, Compute/HW, Policy, Science, General.
-    
+
     Format your response as follows:
     TOPIC: [Selected Category]
     BODY:
     [Your Post Text]
-    
+
     CRITICAL: Adapt your tone to the {context['day']} theme. Stay under 300 characters for the BODY.
-    
+
     News Data:
     {news_text}
     """
-    
+
     # Re-enabling system instructions for Gemini models
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.7,
         max_output_tokens=500
     )
-    
+
     max_retries = 1 # Minimal retries to protect quota
     best_candidate = None # Best one regardless of hashtags
     longest_fallback = "" # Longest one found if everything is too short
@@ -399,7 +399,7 @@ def summarize_news(news_items, context):
                 config=config
             )
             raw_text = response.text.strip()
-            
+
             # Parsing Topic and Body
             topic = "General"
             summary = raw_text
@@ -416,11 +416,11 @@ def summarize_news(news_items, context):
             is_valid, reason = validate_summary(summary)
             if is_valid:
                 return summary, lead_link, topic
-            
+
             # Tracking "best candidate" (Valid length/quality except for missing hashtags)
             if reason == "Missing hashtags" and len(summary) >= 30:
                 best_candidate = summary
-            
+
             print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
             time.sleep(2)
         except Exception as e:
@@ -431,7 +431,7 @@ def summarize_news(news_items, context):
                 time.sleep(wait_time)
             else:
                 print(f"Permanent error: {e}", flush=True)
-                break 
+                break
 
     # Rescue logic:
     if best_candidate:
@@ -440,7 +440,7 @@ def summarize_news(news_items, context):
         if len(rescued) > 300:
             return rescued[:297] + "...", lead_link, "General"
         return rescued, lead_link, "General"
-    
+
     if len(longest_fallback) >= 20: # If it's almost long enough, we can rescue it
         print("Applying Length Rescue (Expansion)...", flush=True)
         rescued = longest_fallback.strip()
@@ -448,7 +448,7 @@ def summarize_news(news_items, context):
             rescued += " #AI #Tech"
         if len(rescued) < 40: # If still too short, add a generic relevant sentence
             rescued = "Latest updates in AI: " + rescued
-        
+
         if len(rescued) > 300:
             return rescued[:297] + "...", lead_link, "General"
         return rescued, lead_link, "General"
@@ -468,12 +468,12 @@ def post_to_bluesky(text, link=None):
     try:
         client = Client()
         client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
-        
+
         # Bluesky has a 300 character limit
         final_text = text
         if len(final_text) > 300:
             final_text = final_text[:297] + "..."
-            
+
         embed = None
         if link:
             meta = get_link_metadata(link)
@@ -485,7 +485,7 @@ def post_to_bluesky(text, link=None):
                         thumb_blob = upload.blob
                     except Exception as e:
                         print(f"Failed to upload thumbnail blob: {e}", flush=True)
-                
+
                 embed = models.AppBskyEmbedExternal.Main(
                     external=models.AppBskyEmbedExternal.External(
                         title=meta['title'],
@@ -515,7 +515,7 @@ def post_to_mastodon(text):
         final_text = text
         if len(final_text) > 500:
             final_text = final_text[:497] + "..."
-            
+
         mastodon.status_post(final_text)
         print("Successfully posted to Mastodon!", flush=True)
     except Exception as e:
@@ -535,23 +535,23 @@ def post_to_threads(text):
             "text": text[:500], # Threads limit is 500
             "access_token": THREADS_TOKEN
         }
-        
+
         container_response = requests.post(container_url, data=container_payload)
         container_response.raise_for_status()
         creation_id = container_response.json().get("id")
-        
+
         # Step 2: Publish Container
         publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
         publish_payload = {
             "creation_id": creation_id,
             "access_token": THREADS_TOKEN
         }
-        
+
         # Threads recommends waiting a bit, but for text-only it's usually instant
         publish_response = requests.post(publish_url, data=publish_payload)
         publish_response.raise_for_status()
         print("Successfully posted to Threads!", flush=True)
-        
+
     except Exception as e:
         print(f"Error posting to Threads: {e}", flush=True)
         if hasattr(e, 'response') and e.response is not None:
@@ -565,7 +565,7 @@ def main():
     # Temporal context and Weekend Skip logic
     context = get_temporal_context()
     now = datetime.now(timezone.utc)
-    
+
     # Skip the 3pm (13:00 UTC) run on weekends
     if now.weekday() >= 5 and now.hour >= 12:
         print(f"Skipping scheduled post: It's {context['day']} afternoon. Bot is resting.", flush=True)
@@ -573,7 +573,7 @@ def main():
 
     seen_data = load_seen_articles()
     news = fetch_news(seen_data["links"], seen_data["recent_topics"])
-    
+
     if not news:
         print("No NEW AI news found in the last 48 hours. Bot is standing by.", flush=True)
         return
@@ -584,15 +584,15 @@ def main():
         post_to_bluesky(summary, lead_link)
         post_to_mastodon(summary)
         post_to_threads(summary)
-        
+
         # Save the new articles to seen list
         new_links = [item['link'] for item in news[:10]]
         seen_data["links"].extend(new_links)
-        
+
         # Update topic memory
         if topic and topic != "General":
             seen_data["recent_topics"].append(topic)
-            
+
         save_seen_articles(seen_data)
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
