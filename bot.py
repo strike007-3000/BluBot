@@ -2,7 +2,7 @@ from google.genai import types
 import os
 import feedparser
 from google import genai
-from atproto import Client, client_utils, models
+from atproto import Client, models
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import time
@@ -12,7 +12,6 @@ from mastodon import Mastodon
 import json
 import requests
 from bs4 import BeautifulSoup
-import io
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
