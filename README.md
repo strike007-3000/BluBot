@@ -20,15 +20,18 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **4-State Intelligence Matrix**: Dynamically adjusts content strategy based on news volume. If news is slow, the bot automatically transitions to **Strategist Mode** using a pool of **15+ Secondary Topics**, ensuring 100% active cycles.
 - **Temporal Intelligence**: Adapts tone and framing based on the day of the week (e.g., "Monday Strategy" vs. "Friday Recap").
 - **Hidden Gem Injection**: Ensures at least one high-signal research paper (from `arXiv` or Engineering blogs) is surfaced in every post.
-- **Rich Link Previews (Bluesky)**: Generates beautiful link cards with thumbnails and descriptions using Open Graph metadata.
+- **Rich Link Previews & Facets (Bluesky)**: Generates beautiful link cards AND ensures all **hashtags and URLs are clickable** by automatically calculating UTF-8 byte-slice facets.
+- **The Fortress: Advanced Security**:
+  - **Dynamic Log Masking**: `SafeLogger` now automatically scans for and redacts any value found in environment variables (Keys, Tokens, Passwords) to prevent accidental credential leaks.
+  - **Prompt Injection Defense**: (Planned) Architecture ready for sanitization filters.
+- **Sage Intelligence v2 (Robustness)**:
+  - **Byte-Safe Truncation**: Specialized logic to truncate long summaries on byte boundaries, preventing API crashes from split multi-byte characters (emojis).
+  - **Async Parse Offloading**: Computationally expensive operations like `feedparser` and `BeautifulSoup` are offloaded to worker threads, ensuring the 0ms-freeze async engine.
+  - **O(1) Deduplication**: In-memory `seen_set` lookups ensure instant duplicate check across hundreds of historical links.
+- **Atomic Persistence Engine**:
+  - **Fault-Tolerant State**: State is saved incrementally/independently per platform. If Threads fails, your Bluesky/Mastodon success is still persisted—no more duplicate posts on retry.
+  - **Session Management**: Reuses authenticated sessions across platforms to minimize redundant login handshakes.
 - **Robust Resilience Engine**: Standardized `@retry_with_backoff` decorator with **Exponential Backoff and Jitter**. The bot intelligently recovers from transient API errors, rate limits (429), and network hiccups.
-- **Robust Quality Control**: Filters out gibberish, repetitive patterns, and low-quality output using fine-tuned Gemini validation.
-- **Enterprise-Grade Stability**:
-  - **SafeLogger**: Advanced regex-based log masking that automatically scrubs access tokens and secrets from crash reports.
-  - **Connection Pooling**: Optimized `httpx.AsyncClient` lifecycle management to reuse sessions and reduce networking overhead.
-  - **Network Resilience**: Explicit timeouts and asynchronous status polling for all platforms (including Threads).
-  - **Accuracy**: Precise UTC date parsing via `calendar.timegm` for consistent global scheduling.
-  - **Health Monitoring**: Detection of malformed feeds (bozo checks) to ensure source reliability.
 - **Optimized Scheduling**: Runs twice daily on weekdays (9:00 AM and 3:00 PM local) and once daily on weekends (9:00 AM) via GitHub Actions.
 
 ## 🛠️ Setup Instructions

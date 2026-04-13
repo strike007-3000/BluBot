@@ -7,16 +7,40 @@ from .config import (
     THREADS_TOKEN, THREADS_USER_ID,
     BLUESKY_LIMIT, MASTODON_LIMIT, THREADS_LIMIT
 )
-from .utils import retry_with_backoff, get_link_metadata, compress_image, SafeLogger
+from .utils import (
+    retry_with_backoff, get_link_metadata, compress_image, 
+    SafeLogger, truncate_bytes
+)
+import re
 
 @retry_with_backoff
-async def post_to_bluesky(client_shared, text, link=None):
-    """Posts to Bluesky with thread-safe image compression and absolute limit enforcement."""
-    if not BLUESKY_HANDLE or not BLUESKY_PASSWORD:
+async def post_to_bluesky(bsky_client, client_shared, text, link=None):
+    """Posts to Bluesky using an authenticated client, with Facets and byte-safe truncation."""
+    if not BLUESKY_HANDLE:
         return
 
-    client = AsyncClient()
-    await client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
+    # Expert Review Fix: Implement Rich Text Facets for clickable links/hashtags
+    facets = []
+    
+    # 1. URL Facets
+    url_regex = re.compile(r'https?://[^\s]+')
+    for match in url_regex.finditer(text):
+        start = len(text[:match.start()].encode('utf-8'))
+        end = len(text[:match.end()].encode('utf-8'))
+        facets.append(models.AppBskyRichTextFacet.Main(
+            features=[models.AppBskyRichTextFacet.Link(uri=match.group())],
+            index=models.AppBskyRichTextFacet.ByteSlice(byte_start=start, byte_end=end)
+        ))
+    
+    # 2. Hashtag Facets
+    tag_regex = re.compile(r'#(\w+)')
+    for match in tag_regex.finditer(text):
+        start = len(text[:match.start()].encode('utf-8'))
+        end = len(text[:match.end()].encode('utf-8'))
+        facets.append(models.AppBskyRichTextFacet.Main(
+            features=[models.AppBskyRichTextFacet.Tag(tag=match.group(1))],
+            index=models.AppBskyRichTextFacet.ByteSlice(byte_start=start, byte_end=end)
+        ))
 
     embed = None
     if link:
@@ -41,7 +65,10 @@ async def post_to_bluesky(client_shared, text, link=None):
                 )
             )
 
-    await client.send_post(text=text[:BLUESKY_LIMIT], embed=embed)
+    # Expert Review Fix: Use byte-safe truncation
+    safe_text = truncate_bytes(text, BLUESKY_LIMIT)
+    
+    await bsky_client.send_post(text=safe_text, embed=embed, facets=facets)
     SafeLogger.info("Successfully posted to Bluesky!")
 
 @retry_with_backoff

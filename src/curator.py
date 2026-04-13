@@ -58,7 +58,8 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         if response.status_code != 200:
             return []
             
-        feed = feedparser.parse(response.text)
+        # Expert Review Fix: Wrap CPU-bound feedparser in to_thread
+        feed = await asyncio.to_thread(feedparser.parse, response.text)
         
         # Expert Review Fix: Check for bozo (malformed feed)
         if feed.bozo:
@@ -92,11 +93,13 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
 async def fetch_news(client, seen_links=None, recent_topics=None):
     """Orchestrates parallel fetching of all RSS sources using a shared client."""
     if seen_links is None: seen_links = []
+    # Expert Review Fix: Performance optimization O(1) lookups
+    seen_set = set(seen_links)
     
     now_utc = datetime.now(timezone.utc)
     start_time = now_utc - timedelta(days=2)
     
-    tasks = [fetch_single_feed(client, url, start_time, now_utc, seen_links, recent_topics) for url in RSS_FEEDS]
+    tasks = [fetch_single_feed(client, url, start_time, now_utc, seen_set, recent_topics) for url in RSS_FEEDS]
     results = await asyncio.gather(*tasks)
 
     all_entries = [e for sublist in results for e in sublist]

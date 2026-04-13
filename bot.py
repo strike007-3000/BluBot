@@ -10,6 +10,8 @@ from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, get_temporal_context
 )
 from src.broadcaster import post_to_bluesky, post_to_mastodon, post_to_threads
+from src.config import BLUESKY_HANDLE, BLUESKY_PASSWORD
+from atproto import AsyncClient
 
 async def update_live_status(session_name):
     """Automatically update the README dashboard using absolute pathing."""
@@ -71,11 +73,33 @@ async def main():
 
         if summary:
             SafeLogger.info(f"Broadcasting in {topic} mode...")
-            await asyncio.gather(
-                post_to_bluesky(client, summary, lead_link),
-                post_to_mastodon(summary),
-                post_to_threads(client, summary)
-            )
+            
+            # Expert Review Fix: Redundant Auth - Login once
+            bsky_client = AsyncClient()
+            try:
+                await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
+            except Exception as e:
+                SafeLogger.error(f"Failed to authenticate with Bluesky: {e}")
+                bsky_client = None
+
+            # Expert Review Fix: Atomic Persistence & Exception Handling
+            # Using gather with return_exceptions=True to ensure one failure doesn't block state saving
+            broadcast_tasks = [
+                ("Bluesky", post_to_bluesky(bsky_client, client, summary, lead_link)) if bsky_client else None,
+                ("Mastodon", post_to_mastodon(summary)),
+                ("Threads", post_to_threads(client, summary))
+            ]
+            
+            # Filter out None tasks (e.g., if Bsky login failed)
+            active_tasks = [t for t in broadcast_tasks if t is not None]
+            
+            results = await asyncio.gather(*[t[1] for t in active_tasks], return_exceptions=True)
+            
+            for (name, _), res in zip(active_tasks, results):
+                if isinstance(res, Exception):
+                    SafeLogger.error(f"{name} broadcast failed: {res}")
+                else:
+                    SafeLogger.info(f"{name} broadcast successful.")
 
             # Persistence Bug Fix (Duplicate protection)
             if news:

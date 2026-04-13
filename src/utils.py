@@ -14,7 +14,7 @@ from .config import MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, SEEN_FILE_PAT
 class SafeLogger:
     """Utility to log messages while masking sensitive tokens and secrets."""
     
-    # Regex to catch access_token, app_password, or generic tokens in URLs/Strings
+    # Pre-compiled list of regexes for common token patterns
     FORBIDDEN_PATTERNS = [
         r"(access_token=)[^&]+",
         r"(access_token\":\s*\")[^\"]+",
@@ -25,8 +25,15 @@ class SafeLogger:
     @staticmethod
     def sanitize(message):
         text = str(message)
+        # 1. Static pattern masking
         for pattern in SafeLogger.FORBIDDEN_PATTERNS:
             text = re.sub(pattern, r"\1[MASKED]", text, flags=re.IGNORECASE)
+        
+        # 2. Dynamic environment variable masking
+        sensitive_keys = ["KEY", "TOKEN", "PASSWORD", "SECRET"]
+        for k, v in os.environ.items():
+            if any(s in k.upper() for s in sensitive_keys) and v and len(v) > 5:
+                text = text.replace(v, "[MASKED]")
         return text
 
     @staticmethod
@@ -87,6 +94,15 @@ def compress_image(image_bytes: bytes, max_size=900000) -> bytes:
         SafeLogger.error(f"Failed to compress image: {e}")
         return image_bytes
 
+def truncate_bytes(text: str, limit: int) -> str:
+    """UTF-8 byte-safe truncation to avoid splitting multi-byte characters."""
+    encoded = text.encode('utf-8')
+    if len(encoded) <= limit:
+        return text
+    
+    # Truncate and decode, ignoring errors (dropping partial trailing char)
+    return encoded[:limit].decode('utf-8', errors='ignore')
+
 def load_seen_articles():
     """Loads processing memory using absolute paths."""
     if os.path.exists(SEEN_FILE_PATH):
@@ -122,7 +138,9 @@ async def get_link_metadata(client, url):
     try:
         response = await client.get(url, headers=headers, timeout=10)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Expert Review Fix: Wrap CPU-bound Beautiful Soup in to_thread
+        soup = await asyncio.to_thread(BeautifulSoup, response.text, 'html.parser')
 
         og_title = soup.find("meta", property="og:title")
         og_description = soup.find("meta", property="og:description")
@@ -146,5 +164,7 @@ async def get_link_metadata(client, url):
             "image": image_data,
             "url": url
         }
-    except Exception:
-        return None
+    except Exception as e:
+        SafeLogger.warn(f"Partial metadata extraction for {url}: {e}")
+        # Expert Review Fix: Return at least the URL instead of None
+        return {"title": "News Update", "description": "", "image": None, "url": url}
