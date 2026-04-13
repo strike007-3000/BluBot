@@ -8,12 +8,15 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Curated AI Feeds**: Pulls from 25+ high-signal sources including OpenAI, DeepMind, Anthropic, Hugging Face, EE Times, Ahead of AI, SemiAnalysis, 404 Media, and arXiv.
 - **Smart Deduplication**: Tracks processed articles to ensure no repeats (persisted via `seen_articles.json`).
 - **48-Hour Coverage**: Scans the last 48 hours of news to ensure even slow news days have high-quality content.
-- **Rich Link Previews (Bluesky)**: Automatically generates beautiful link cards with thumbnails and descriptions using Open Graph metadata.
+- **Signal-to-Noise Engine**: Uses heuristic-based scoring (Source Tiers + Product Keywords) to prioritize groundbreaking AI news.
+- **Freshness Engine**: Automatically rotates through sub-topics (LLMs, Robotics, Compute, etc.) to ensure content stays diverse and non-repetitive.
+- **Temporal Intelligence**: Adapts tone and framing based on the day of the week (e.g., "Monday Strategy" vs. "Friday Recap").
+- **Hidden Gem Injection**: Ensures at least one high-signal research paper (from `arXiv` or Engineering blogs) is surfaced in every post.
+- **Rich Link Previews (Bluesky)**: Generates beautiful link cards with thumbnails and descriptions using Open Graph metadata.
 - **Robust Quality Control**:
   - **Metadata Scraping**: Uses `BeautifulSoup` to safely extract article previews.
   - **Validation**: Filters out gibberish, repetitive patterns, and low-quality output.
-  - **Rescue Logic**: Automatic "Best Candidate" and "Length Rescue" attempt to fix almost-perfect summaries.
-- **Scheduled & Free**: Runs twice daily (9:00 AM and 3:00 PM local) using GitHub Actions.
+- **Optimized Scheduling**: Runs twice daily on weekdays (9:00 AM and 3:00 PM local) and once daily on weekends (9:00 AM) via GitHub Actions.
 
 ## 🛠️ Setup Instructions
 
