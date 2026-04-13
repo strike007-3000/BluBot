@@ -8,7 +8,8 @@ from google.genai import types
 from google import genai
 from .config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
-    TOPIC_MAP, SYSTEM_INSTRUCTION, GEMINI_API_KEY
+    TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
+    SECONDARY_TOPICS, GEMINI_API_KEY
 )
 from .utils import retry_with_backoff
 
@@ -120,16 +121,20 @@ def validate_summary(text):
     return True, "Valid"
 
 @retry_with_backoff
-async def summarize_news(news_items, context):
-    """Synthesizes news using Gemini API."""
+async def summarize_news(news_items, context, mode="Curator"):
+    """Synthesizes news using Gemini API with a specific Persona mode."""
     if not news_items: return None, None, None
 
     client = genai.Client(api_key=GEMINI_API_KEY)
     news_text = "\n".join([f"- {i+1}. {item['title']} ({item['source']})" for i, item in enumerate(news_items)])
     
-    user_prompt = f"Day: {context['day']}, Session: {context['session']}\nNews:\n{news_text}"
-    config = types.GenerateContentConfig(system_instruction=SYSTEM_INSTRUCTION, temperature=0.7)
+    # Select Persona Instruction
+    instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
+    
+    user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
+    config = types.GenerateContentConfig(system_instruction=instruction, temperature=0.7)
 
+    print(f"Synthesizing in {mode} Mode...", flush=True)
     response = await client.aio.models.generate_content(model='gemini-3.1-flash-lite-preview', contents=user_prompt, config=config)
     raw_text = response.text.strip()
 
@@ -147,6 +152,31 @@ async def summarize_news(news_items, context):
         return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
         
     raise ValueError(f"AI Validation Failed: {reason}")
+
+@retry_with_backoff
+async def generate_mentor_insight(context):
+    """Fallback: Generates a standalone technical insight when news is insufficient."""
+    import random
+    topic = random.choice(SECONDARY_TOPICS)
+    print(f"Triggering Mentor Fallback: {topic}", flush=True)
+    
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    user_prompt = f"Current Time: {context['day']} {context['session']}\nStrategic Topic: {topic}\n\nTask: Provide a high-signal strategic insight about this topic for a senior technical audience."
+    
+    config = types.GenerateContentConfig(system_instruction=MENTOR_SYSTEM_INSTRUCTION, temperature=0.8)
+    
+    response = await client.aio.models.generate_content(model='gemini-3.1-flash-lite-preview', contents=user_prompt, config=config)
+    summary = response.text.strip()
+    
+    # Parsing if model still follows TOPIC/BODY format even for insights
+    if "BODY:" in summary:
+        summary = summary.split("BODY:", 1)[1].strip()
+
+    is_valid, reason = validate_summary(summary)
+    if is_valid: return summary, None, "Strategy"
+    
+    # Fallback if validation fails
+    return f"Strategy Insight: {topic}. Focus on long-term sustainability and architecture over hype. #AI #Strategy", None, "Strategy"
 
 def get_temporal_context():
     """Calculates the temporal branding for the current run."""

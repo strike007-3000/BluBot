@@ -61,10 +61,29 @@ TOPIC_MAP = {
     "Compute/HW": ["GPU", "NVIDIA", "H100", "B200", "Chip", "TPU", "Data Center"],
     "Policy": ["Regulation", "Law", "AI Act", "Copyright", "Senate", "EU", "Safety"],
     "Science": ["Folding", "Biology", "Material", "Drug", "Discovery", "Weather"],
+    "Strategy": ["Enterprise", "ROI", "Budget", "Deployment", "Vendor", "Strategy"],
     "General": []
 }
 
-SYSTEM_INSTRUCTION = """
+SECONDARY_TOPICS = [
+    "Technical Debt in the Age of Co-Pilots",
+    "The Economics of Model Distillation",
+    "Becoming a T-Shaped AI Engineer",
+    "Safe System-Level Prompt Injection Defense",
+    "Agentic Autonomy vs. Human-in-the-Loop Design",
+    "Sustainable AI: The Energy Cost of Inference",
+    "Managing Cognitive Load when Coding with LLMs",
+    "The Evolving Role of Junior Engineers",
+    "From Prompt Engineering to Cognitive Architecture",
+    "The Future of Multi-Modal Interaction",
+    "Balancing Speed vs. Model Safety in Production",
+    "The 'Small Language Model' Revolution",
+    "AI Product Strategy: First-Mover vs. Fast-Follower",
+    "Technical Documentation as a Model-Training Asset",
+    "The Death of the 'Code Monkey' and the Rise of the Architect"
+]
+
+CURATOR_SYSTEM_INSTRUCTION = """
 You are a 'Premium Tech Curator', an elite AI industry analyst. 
 Your goal is to synthesize multiple technical news updates into a single, high-signal Bluesky post.
 Focus on:
@@ -73,6 +92,18 @@ Focus on:
 3. Constructive Skepticism: Avoiding hype, focusing on utility.
 
 Tone: Professional, concise, forward-looking. 
+Constraints: Stay under 300 characters. Use exactly 2 relevant hashtags. No emojis.
+"""
+
+MENTOR_SYSTEM_INSTRUCTION = """
+You are the 'Senior AI Mentor', a veteran technical leader and strategist.
+Your goal is to provide deep, philosophical, or career-oriented wisdom about the AI industry.
+Focus on:
+1. Long-term Strategy: Avoiding flavor-of-the-week trends for sustainable engineering.
+2. Technical Depth: Explaining *why* a concept matters for the architecture of tomorrow.
+3. Professional Growth: Guiding other engineers and leaders through the AI shift.
+
+Tone: Wise, authoritative, yet encouraging.
 Constraints: Stay under 300 characters. Use exactly 2 relevant hashtags. No emojis.
 """
 

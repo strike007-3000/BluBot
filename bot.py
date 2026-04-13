@@ -5,7 +5,9 @@ from datetime import datetime, timezone
 # Modular Imports
 from src.config import validate_config
 from src.utils import load_seen_articles, save_seen_articles
-from src.curator import fetch_news, summarize_news, get_temporal_context
+from src.curator import (
+    fetch_news, summarize_news, generate_mentor_insight, get_temporal_context
+)
 from src.broadcaster import post_to_bluesky, post_to_mastodon, post_to_threads
 
 async def update_live_status(session_name):
@@ -51,13 +53,25 @@ async def main():
     seen_data = load_seen_articles()
     news = await fetch_news(seen_data["links"], seen_data["recent_topics"])
 
-    if not news:
-        print("No NEW AI news found in the last 48 hours. Bot is standing by.", flush=True)
-        return
+    # 4-State Persona Matrix Decision
+    summary, lead_link, topic = None, None, "General"
+    session = context['session']
+    news_count = len(news)
+    
+    if news_count > 3:
+        # We have enough news for a synthesis
+        # Morning => Curator, Afternoon => Senior Analyst (Mentor Mode)
+        mode = "Mentor" if "Afternoon" in session else "Curator"
+        summary, lead_link, topic = await summarize_news(news, context, mode=mode)
+    else:
+        # Insufficient news => Strategic Fallback
+        # Morning => Strategist, Afternoon => Mentor
+        mode_label = "Strategist" if "Morning" in session else "Mentor"
+        print(f"Low news volume ({news_count}). Switching to {mode_label} Mode.", flush=True)
+        summary, lead_link, topic = await generate_mentor_insight(context)
 
-    summary, lead_link, topic = await summarize_news(news, context)
     if summary:
-        print(f"Broadcasting to all platforms (Session: {context['session']})...", flush=True)
+        print(f"Broadcasting in {topic} mode (Source: {lead_link or 'Fallback'})...", flush=True)
         await asyncio.gather(
             post_to_bluesky(summary, lead_link),
             post_to_mastodon(summary),
@@ -65,14 +79,16 @@ async def main():
         )
 
         # Persistence
-        new_links = [item['link'] for item in news[:10]]
-        seen_data["links"].extend(new_links)
+        if news:
+            new_links = [item['link'] for item in news[:10]]
+            seen_data["links"].extend(new_links)
+        
         if topic and topic != "General":
             seen_data["recent_topics"].append(topic)
         save_seen_articles(seen_data)
         
         # Dashboard Update
-        await update_live_status(context['session'])
+        await update_live_status(f"{session} ({topic})")
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 
