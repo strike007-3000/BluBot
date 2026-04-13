@@ -1,5 +1,4 @@
 import requests
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -66,4 +65,4 @@ try:
 except Exception as e:
     print(f"\nError: {e}")
     if hasattr(e, 'response') and e.response is not None:
-        print(f"Response: {e.response.text}")
+        print(f"Status Code: {e.response.status_code}")

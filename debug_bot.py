@@ -2,7 +2,6 @@ import os
 import feedparser
 from google import genai
 from dotenv import load_dotenv
-import time
 
 load_dotenv()
 

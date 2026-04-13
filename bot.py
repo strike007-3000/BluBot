@@ -1,19 +1,18 @@
-import calendar
-from datetime import datetime, timedelta, timezone
-import json
+from google.genai import types
 import os
-import re
-import socket
-import time
-
-from atproto import Client, models
-from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 import feedparser
 from google import genai
-from google.genai import types
+from atproto import Client, client_utils, models
+from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+import time
+import socket
+import re
 from mastodon import Mastodon
+import json
 import requests
+from bs4 import BeautifulSoup
+import io
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
@@ -285,9 +284,9 @@ def fetch_news(seen_links=None, recent_topics=None):
             for entry in feed.entries:
                 pub_date = None
                 if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
+                    pub_date = datetime.fromtimestamp(time.mktime(entry.published_parsed), timezone.utc)
                 elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.updated_parsed), timezone.utc)
+                    pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
 
                 if not pub_date or pub_date < start_time:
                     continue
@@ -557,7 +556,7 @@ def post_to_threads(text):
     except Exception as e:
         print(f"Error posting to Threads: {e}", flush=True)
         if hasattr(e, 'response') and e.response is not None:
-            print(f"Threads API Error Trace: {e.response.text}", flush=True)
+             print(f"Status Code: {e.response.status_code}", flush=True)
 
 def main():
     if not GEMINI_API_KEY:
