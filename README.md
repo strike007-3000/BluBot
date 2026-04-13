@@ -16,6 +16,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Curated AI Feeds**: Pulls from 25+ high-signal sources including OpenAI, DeepMind, Anthropic, Hugging Face, EE Times, Ahead of AI, SemiAnalysis, 404 Media, and arXiv.
 - **Signal-to-Noise Engine**: Uses heuristic-based scoring (Source Tiers + Product Keywords) to prioritize groundbreaking AI news.
 - **Freshness Engine**: Automatically rotates through sub-topics (LLMs, Robotics, Compute, etc.) to ensure content stays diverse and non-repetitive.
+- **Dual-Mode Persona System**: Switches between **The Curator** (Morning news) and **The Senior Analyst/Mentor** (Afternoon wisdom). The bot adapts its tone and focus based on the time of day.
+- **4-State Intelligence Matrix**: Dynamically adjusts content strategy based on news volume. If news is slow, the bot automatically transitions to **Strategist Mode** using a pool of **15+ Secondary Topics**, ensuring 100% active cycles.
 - **Temporal Intelligence**: Adapts tone and framing based on the day of the week (e.g., "Monday Strategy" vs. "Friday Recap").
 - **Hidden Gem Injection**: Ensures at least one high-signal research paper (from `arXiv` or Engineering blogs) is surfaced in every post.
 - **Rich Link Previews (Bluesky)**: Generates beautiful link cards with thumbnails and descriptions using Open Graph metadata.
