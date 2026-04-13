@@ -1,8 +1,10 @@
 from google.genai import types
 import os
+import asyncio
+import httpx
 import feedparser
 from google import genai
-from atproto import Client, models
+from atproto import AsyncClient, models
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import time
@@ -13,6 +15,8 @@ import json
 import requests
 from bs4 import BeautifulSoup
 import calendar
+from PIL import Image
+import io
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
@@ -164,6 +168,38 @@ def get_link_metadata(url):
         print(f"Error scraping metadata: {e}", flush=True)
         return None
 
+def compress_image(image_bytes: bytes, max_size=900000) -> bytes:
+    """Compresses an image to stay under the specified max_size (default <1MB for Bluesky)."""
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        
+        # Convert to RGB if necessary (e.g., for PNG with transparency)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        
+        # Initial compression
+        quality = 85
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=quality, optimize=True)
+        
+        # If still too big, iteratively reduce quality AND resize
+        attempt = 0
+        while buffer.tell() > max_size and attempt < 5:
+            attempt += 1
+            quality -= 15
+            # Resize by 20% each time if quality isn't enough
+            width, height = img.size
+            img = img.resize((int(width * 0.8), int(height * 0.8)), Image.Resampling.LANCZOS)
+            
+            buffer = io.BytesIO()
+            img.save(buffer, format="JPEG", quality=max(quality, 30), optimize=True)
+            
+        print(f"Compressed image from {len(image_bytes)} to {buffer.tell()} bytes.", flush=True)
+        return buffer.getvalue()
+    except Exception as e:
+        print(f"Failed to compress image: {e}. Returning original.", flush=True)
+        return image_bytes
+
 def calculate_relevance_score(item, pub_date, recent_topics=None):
     """Calculates a relevance score for an article, penalizing recently covered topics."""
     score = 0
@@ -280,53 +316,67 @@ def save_seen_articles(seen_data):
     except Exception as e:
         print(f"Error saving seen articles: {e}")
 
-def fetch_news(seen_links=None, recent_topics=None):
+async def fetch_single_feed(client, url, start_time, seen_links, recent_topics):
+    """Fetches and parses a single RSS feed asynchronously."""
+    print(f"Checking {url}...", flush=True)
+    try:
+        response = await client.get(url, timeout=10)
+        # Check if 200 OK
+        if response.status_code != 200:
+            print(f"WARNING: Feed {url} returned status {response.status_code}. Skipping.", flush=True)
+            return []
+            
+        feed = feedparser.parse(response.text)
+        if feed.bozo:
+            # Bozo might be trivial, but we log it
+            pass
+            
+        items = []
+        for entry in feed.entries:
+            pub_date = None
+            if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
+            elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                pub_date = datetime.fromtimestamp(calendar.timegm(entry.updated_parsed), timezone.utc)
+
+            if not pub_date or pub_date < start_time:
+                continue
+
+            if entry.link in seen_links:
+                continue
+
+            entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
+            entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:500]
+
+            item = {
+                "title": entry.title,
+                "summary": entry_summary,
+                "link": entry.link,
+                "source": feed.feed.title if hasattr(feed.feed, 'title') else url
+            }
+            item["score"] = calculate_relevance_score(item, pub_date, recent_topics)
+            items.append(item)
+        return items
+    except Exception as e:
+        print(f"Error parsing {url}: {e}", flush=True)
+        return []
+
+async def fetch_news(seen_links=None, recent_topics=None):
     if seen_links is None:
         seen_links = []
 
-    print("Fetching news from RSS feeds...", flush=True)
-    all_entries = []
+    print(f"Fetching news from {len(RSS_FEEDS)} RSS feeds concurrently...", flush=True)
     now = datetime.now(timezone.utc)
     lookback_days = 2
     start_time = now - timedelta(days=lookback_days)
 
-    for url in RSS_FEEDS:
-        print(f"Checking {url}...", flush=True)
-        try:
-            feed = feedparser.parse(url)
-            if feed.bozo:
-                print(f"WARNING: Feed {url} is malformed or returned an error. Skipping.", flush=True)
-                continue
-            for entry in feed.entries:
-                pub_date = None
-                if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
-                elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.updated_parsed), timezone.utc)
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+        tasks = [fetch_single_feed(client, url, start_time, seen_links, recent_topics) for url in RSS_FEEDS]
+        results = await asyncio.gather(*tasks)
 
-                if not pub_date or pub_date < start_time:
-                    continue
-
-                if entry.link in seen_links:
-                    continue
-
-                entry_summary = entry.summary if hasattr(entry, 'summary') else (entry.description if hasattr(entry, 'description') else "")
-                # Clean HTML tags if any from summary
-                entry_summary = re.sub('<[^<]+?>', '', entry_summary)[:500]
-
-                item = {
-                    "title": entry.title,
-                    "summary": entry_summary,
-                    "link": entry.link,
-                    "source": feed.feed.title if hasattr(feed.feed, 'title') else url
-                }
-
-                # Calculate relevance score (Considering Topic Penalties)
-                item["score"] = calculate_relevance_score(item, pub_date, recent_topics)
-                all_entries.append(item)
-        except Exception as e:
-            print(f"Error parsing {url}: {e}", flush=True)
-
+    # Flatten results
+    all_entries = [entry for sublist in results for entry in sublist]
+    
     # Sort by score descending
     all_entries.sort(key=lambda x: x["score"], reverse=True)
     print(f"Ranked {len(all_entries)} articles.", flush=True)
@@ -361,7 +411,7 @@ def fetch_news(seen_links=None, recent_topics=None):
 
     return top_articles[:8]
 
-def summarize_news(news_items, context):
+async def summarize_news(news_items, context):
     if not news_items:
         return None, None, None
 
@@ -396,21 +446,20 @@ def summarize_news(news_items, context):
     {news_text}
     """
 
-    # Re-enabling system instructions for Gemini models
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.7,
         max_output_tokens=500
     )
 
-    max_retries = 1 # Minimal retries to protect quota
-    best_candidate = None # Best one regardless of hashtags
-    longest_fallback = "" # Longest one found if everything is too short
+    max_retries = 1
+    best_candidate = None
+    longest_fallback = ""
 
-    print(f"Using model: {model_id}", flush=True)
+    print(f"Using model: {model_id} (Async)", flush=True)
     for attempt in range(max_retries):
         try:
-            response = client.models.generate_content(
+            response = await client.aio.models.generate_content(
                 model=model_id,
                 contents=user_prompt,
                 config=config
@@ -434,18 +483,17 @@ def summarize_news(news_items, context):
             if is_valid:
                 return summary, lead_link, topic
 
-            # Tracking "best candidate" (Valid length/quality except for missing hashtags)
             if reason == "Missing hashtags" and len(summary) >= 30:
                 best_candidate = summary
 
             print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
-            time.sleep(2)
+            await asyncio.sleep(2)
         except Exception as e:
             error_msg = str(e)
             if any(x in error_msg for x in ["429", "503", "UNAVAILABLE", "Resource has been exhausted"]):
                 wait_time = (attempt + 1) * 30
                 print(f"Transient error: {error_msg[:200]}... Retrying in {wait_time}s...", flush=True)
-                time.sleep(wait_time)
+                await asyncio.sleep(wait_time)
             else:
                 print(f"Permanent error: {e}", flush=True)
                 break
@@ -476,29 +524,31 @@ def summarize_news(news_items, context):
 MASTODON_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
 MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL")
 
-def post_to_bluesky(text, link=None):
+async def post_to_bluesky(text, link=None):
     if not BLUESKY_HANDLE or not BLUESKY_PASSWORD:
         print("Skipping Bluesky: Credentials missing.", flush=True)
         return
 
-    print("Posting to Bluesky...", flush=True)
+    print("Posting to Bluesky (Async)...", flush=True)
     try:
-        client = Client()
-        client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
+        client = AsyncClient()
+        await client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
 
-        # Bluesky has a 300 character limit
         final_text = text
         if len(final_text) > 300:
             final_text = final_text[:297] + "..."
 
         embed = None
         if link:
-            meta = get_link_metadata(link)
+            # metadata scraping is still synchronous, wrap in thread
+            meta = await asyncio.to_thread(get_link_metadata, link)
             if meta:
                 thumb_blob = None
                 if meta['image']:
                     try:
-                        upload = client.com.atproto.repo.upload_blob(meta['image'])
+                        # NEW: Compress image to stay under 1MB Bluesky limit
+                        compressed_image = compress_image(meta['image'])
+                        upload = await client.upload_blob(compressed_image)
                         thumb_blob = upload.blob
                     except Exception as e:
                         print(f"Failed to upload thumbnail blob: {e}", flush=True)
@@ -512,110 +562,130 @@ def post_to_bluesky(text, link=None):
                     )
                 )
 
-        client.send_post(text=final_text, embed=embed)
+        await client.send_post(text=final_text, embed=embed)
         print("Successfully posted to Bluesky!", flush=True)
     except Exception as e:
         print(f"Error posting to Bluesky: {e}", flush=True)
-        if hasattr(e, 'response') and e.response is not None:
-             print(f"Status Code: {e.response.status_code}", flush=True)
 
-def post_to_mastodon(text):
+async def post_to_mastodon(text):
     if not MASTODON_TOKEN or not MASTODON_BASE_URL:
         print("Skipping Mastodon: Credentials missing.", flush=True)
         return
 
     print("Posting to Mastodon...", flush=True)
     try:
-        mastodon = Mastodon(
-            access_token=MASTODON_TOKEN,
-            api_base_url=MASTODON_BASE_URL
-        )
-        # Mastodon standard limit is 500 characters
-        final_text = text
-        if len(final_text) > 500:
-            final_text = final_text[:497] + "..."
-
-        mastodon.status_post(final_text)
+        def _post():
+            mastodon = Mastodon(
+                access_token=MASTODON_TOKEN,
+                api_base_url=MASTODON_BASE_URL
+            )
+            final_text = text
+            if len(final_text) > 500:
+                final_text = final_text[:497] + "..."
+            mastodon.status_post(final_text)
+        
+        await asyncio.to_thread(_post)
         print("Successfully posted to Mastodon!", flush=True)
     except Exception as e:
         print(f"Error posting to Mastodon: {e}", flush=True)
-        if hasattr(e, 'response') and e.response is not None:
-             print(f"Status Code: {e.response.status_code}", flush=True)
 
-def post_to_threads(text):
+async def post_to_threads(text):
     if not THREADS_TOKEN or not THREADS_USER_ID:
         print("Skipping Threads: Credentials missing.", flush=True)
         return
 
     print("Posting to Threads...", flush=True)
     try:
-        # Step 1: Create Media Container
-        container_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
-        container_payload = {
-            "media_type": "TEXT",
-            "text": text[:500], # Threads limit is 500
-            "access_token": THREADS_TOKEN
-        }
+        def _post():
+            container_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+            container_payload = {
+                "media_type": "TEXT",
+                "text": text[:500],
+                "access_token": THREADS_TOKEN
+            }
+            container_response = requests.post(container_url, data=container_payload, timeout=15)
+            container_response.raise_for_status()
+            creation_id = container_response.json().get("id")
 
-        container_response = requests.post(container_url, data=container_payload, timeout=15)
-        container_response.raise_for_status()
-        creation_id = container_response.json().get("id")
+            publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
+            publish_payload = {
+                "creation_id": creation_id,
+                "access_token": THREADS_TOKEN
+            }
+            publish_response = requests.post(publish_url, data=publish_payload, timeout=15)
+            publish_response.raise_for_status()
 
-        # Step 2: Publish Container
-        publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
-        publish_payload = {
-            "creation_id": creation_id,
-            "access_token": THREADS_TOKEN
-        }
-
-        # Threads recommends waiting a bit, but for text-only it's usually instant
-        publish_response = requests.post(publish_url, data=publish_payload, timeout=15)
-        publish_response.raise_for_status()
+        await asyncio.to_thread(_post)
         print("Successfully posted to Threads!", flush=True)
-
     except Exception as e:
         print(f"Error posting to Threads: {e}", flush=True)
-        if hasattr(e, 'response') and e.response is not None:
-             print(f"Status Code: {e.response.status_code}", flush=True)
 
-def main():
+async def main():
     if not validate_config():
         return
 
-    # Temporal context and Weekend Skip logic
     context = get_temporal_context()
     now = datetime.now(timezone.utc)
 
-    # Skip the 3pm (13:00 UTC) run on weekends
     if now.weekday() >= 5 and now.hour >= 12:
         print(f"Skipping scheduled post: It's {context['day']} afternoon. Bot is resting.", flush=True)
         return
 
     seen_data = load_seen_articles()
-    news = fetch_news(seen_data["links"], seen_data["recent_topics"])
+    news = await fetch_news(seen_data["links"], seen_data["recent_topics"])
 
     if not news:
         print("No NEW AI news found in the last 48 hours. Bot is standing by.", flush=True)
         return
 
-    summary, lead_link, topic = summarize_news(news, context)
+    summary, lead_link, topic = await summarize_news(news, context)
     if summary:
-        # Post to all enabled platforms
-        post_to_bluesky(summary, lead_link)
-        post_to_mastodon(summary)
-        post_to_threads(summary)
+        # Run all platform posts concurrently!
+        print("Broadcasting to all platforms concurrently...", flush=True)
+        await asyncio.gather(
+            post_to_bluesky(summary, lead_link),
+            post_to_mastodon(summary),
+            post_to_threads(summary)
+        )
 
-        # Save the new articles to seen list
         new_links = [item['link'] for item in news[:10]]
         seen_data["links"].extend(new_links)
-
-        # Update topic memory
         if topic and topic != "General":
             seen_data["recent_topics"].append(topic)
-
         save_seen_articles(seen_data)
+        
+        # New Feature: Update README Dashboard
+        await update_live_status(context['session'])
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 
+async def update_live_status(session_name):
+    """Automatically update the README dashboard status."""
+    try:
+        readme_path = "README.md"
+        if not os.path.exists(readme_path):
+            return
+
+        with open(readme_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        icon = "🚀" if "Morning" in session_name else "🔍"
+        
+        new_lines = []
+        for line in lines:
+            if "| **Broadcaster** |" in line:
+                new_lines.append(f"| **Broadcaster** | Operational | {today} | {icon} {session_name} |\n")
+            elif "| **Signal Strength** |" in line:
+                new_lines.append(f"| **Signal Strength** | Elite (Parallel) | -- | -- |\n")
+            else:
+                new_lines.append(line)
+
+        with open(readme_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+        print("Updated README Live Status Dashboard.", flush=True)
+    except Exception as e:
+        print(f"Failed to update README status: {e}", flush=True)
+
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
