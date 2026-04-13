@@ -8,8 +8,9 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Curated AI Feeds**: Pulls from 25+ high-signal sources including OpenAI, DeepMind, Anthropic, Hugging Face, EE Times, Ahead of AI, SemiAnalysis, 404 Media, and arXiv.
 - **Smart Deduplication**: Tracks processed articles to ensure no repeats (persisted via `seen_articles.json`).
 - **48-Hour Coverage**: Scans the last 48 hours of news to ensure even slow news days have high-quality content.
-- **Premium Tech Persona**: Sophisticated, narrative-driven summaries focusing on industry maturation.
+- **Rich Link Previews (Bluesky)**: Automatically generates beautiful link cards with thumbnails and descriptions using Open Graph metadata.
 - **Robust Quality Control**:
+  - **Metadata Scraping**: Uses `BeautifulSoup` to safely extract article previews.
   - **Validation**: Filters out gibberish, repetitive patterns, and low-quality output.
   - **Rescue Logic**: Automatic "Best Candidate" and "Length Rescue" attempt to fix almost-perfect summaries.
 - **Scheduled & Free**: Runs twice daily (9:00 AM and 3:00 PM local) using GitHub Actions.
