@@ -21,6 +21,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Temporal Intelligence**: Adapts tone and framing based on the day of the week (e.g., "Monday Strategy" vs. "Friday Recap").
 - **Hidden Gem Injection**: Ensures at least one high-signal research paper (from `arXiv` or Engineering blogs) is surfaced in every post.
 - **Rich Link Previews & Facets (Bluesky)**: Generates beautiful link cards AND ensures all **hashtags and URLs are clickable** by automatically calculating UTF-8 byte-slice facets.
+- **Stealth Metadata Scraper**: Upgraded for high-resilience extraction using browser-mimicry headers and intelligent redirection handling (fixing 403 Forbidden issues on sites like OpenAI).
 - **The Fortress: Advanced Security**:
   - **Dynamic Log Masking**: `SafeLogger` now automatically scans for and redacts any value found in environment variables (Keys, Tokens, Passwords) to prevent accidental credential leaks.
   - **Prompt Injection Defense**: (Planned) Architecture ready for sanitization filters.
@@ -28,6 +29,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
   - **Byte-Safe Truncation**: Specialized logic to truncate long summaries on byte boundaries, preventing API crashes from split multi-byte characters (emojis).
   - **Async Parse Offloading**: Computationally expensive operations like `feedparser` and `BeautifulSoup` are offloaded to worker threads, ensuring the 0ms-freeze async engine.
   - **O(1) Deduplication**: In-memory `seen_set` lookups ensure instant duplicate check across hundreds of historical links.
+- **Refined Signal Stream**: Optimized list of 25+ top-tier AI feeds, with unstable sources automatically pruned for 100% scheduled reliability.
 - **Atomic Persistence Engine**:
   - **Fault-Tolerant State**: State is saved incrementally/independently per platform. If Threads fails, your Bluesky/Mastodon success is still persisted—no more duplicate posts on retry.
   - **Session Management**: Reuses authenticated sessions across platforms to minimize redundant login handshakes.
