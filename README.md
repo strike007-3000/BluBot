@@ -24,8 +24,9 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Robust Resilience Engine**: Standardized `@retry_with_backoff` decorator with **Exponential Backoff and Jitter**. The bot intelligently recovers from transient API errors, rate limits (429), and network hiccups.
 - **Robust Quality Control**: Filters out gibberish, repetitive patterns, and low-quality output using fine-tuned Gemini validation.
 - **Enterprise-Grade Stability**:
-  - **Secure Logging**: Standardized "status code only" crash reports to prevent token exposure.
-  - **Network Resilience**: Explicit timeouts on all API and RSS requests to prevent workflow hangs.
+  - **SafeLogger**: Advanced regex-based log masking that automatically scrubs access tokens and secrets from crash reports.
+  - **Connection Pooling**: Optimized `httpx.AsyncClient` lifecycle management to reuse sessions and reduce networking overhead.
+  - **Network Resilience**: Explicit timeouts and asynchronous status polling for all platforms (including Threads).
   - **Accuracy**: Precise UTC date parsing via `calendar.timegm` for consistent global scheduling.
   - **Health Monitoring**: Detection of malformed feeds (bozo checks) to ensure source reliability.
 - **Optimized Scheduling**: Runs twice daily on weekdays (9:00 AM and 3:00 PM local) and once daily on weekends (9:00 AM) via GitHub Actions.

@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Absolute Path Management
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SEEN_FILE_PATH = os.path.join(BASE_DIR, "seen_articles.json")
+README_FILE_PATH = os.path.join(BASE_DIR, "README.md")
+
 # API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 BLUESKY_HANDLE = os.getenv("BSKY_HANDLE")
@@ -13,9 +18,15 @@ MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL")
 THREADS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 
+# Platform Constraints
+GEMINI_MODEL_ID = "gemini-3.1-flash-lite-preview"
+BLUESKY_LIMIT = 300
+MASTODON_LIMIT = 500
+THREADS_LIMIT = 500
+
 # Configuration Constants
 MAX_API_RETRIES = 3
-BACKOFF_FACTOR = 2.0
+BACKOFF_FACTOR = 3.0  # Increased from 2.0 per expert advice
 JITTER_RANGE = 2.0
 
 RSS_FEEDS = [
@@ -92,7 +103,7 @@ Focus on:
 3. Constructive Skepticism: Avoiding hype, focusing on utility.
 
 Tone: Professional, concise, forward-looking. 
-Constraints: Stay under 300 characters. Use exactly 2 relevant hashtags. No emojis.
+Constraints: No emojis. Stay under 300 characters. Use exactly 2 relevant hashtags.
 """
 
 MENTOR_SYSTEM_INSTRUCTION = """
@@ -104,16 +115,27 @@ Focus on:
 3. Professional Growth: Guiding other engineers and leaders through the AI shift.
 
 Tone: Wise, authoritative, yet encouraging.
-Constraints: Stay under 300 characters. Use exactly 2 relevant hashtags. No emojis.
+Constraints: No emojis. Stay under 300 characters. Use exactly 2 relevant hashtags.
 """
 
 def validate_config():
-    """Ensures all required environment variables are present before starting."""
-    required_vars = [
-        "BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY",
-    ]
-    missing = [v for v in required_vars if not os.getenv(v)]
-    if missing:
-        print(f"CRITICAL ERROR: Missing environment variables: {', '.join(missing)}")
+    """Ensures all required environment variables are present and valid."""
+    # Core essentials
+    core_vars = ["BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY"]
+    for v in core_vars:
+        if not os.getenv(v):
+            print(f"CRITICAL ERROR: Missing CORE variable: {v}")
+            return False
+            
+    # Platform-specific "Fail Fast" validation
+    # Mastodon
+    if (MASTODON_TOKEN or MASTODON_BASE_URL) and not (MASTODON_TOKEN and MASTODON_BASE_URL):
+        print("CRITICAL ERROR: Partial Mastodon configuration detected.")
         return False
+        
+    # Threads
+    if (THREADS_TOKEN or THREADS_USER_ID) and not (THREADS_TOKEN and THREADS_USER_ID):
+        print("CRITICAL ERROR: Partial Threads configuration detected.")
+        return False
+        
     return True

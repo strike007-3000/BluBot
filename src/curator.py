@@ -9,12 +9,12 @@ from google import genai
 from .config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
-    SECONDARY_TOPICS, GEMINI_API_KEY
+    SECONDARY_TOPICS, GEMINI_API_KEY, GEMINI_MODEL_ID
 )
-from .utils import retry_with_backoff
+from .utils import retry_with_backoff, SafeLogger
 
-def calculate_relevance_score(item, pub_date, recent_topics=None):
-    """Calculates a relevance score based on source tier, keywords, and topic diversity."""
+def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None):
+    """Calculates a relevance score using a consistent reference time."""
     score = 0
     content_text = f"{item['title']} {item['summary']}".lower()
 
@@ -44,21 +44,26 @@ def calculate_relevance_score(item, pub_date, recent_topics=None):
         if item_topic in recent_topics:
             score -= 12
 
-    # 4. Time Decay
-    age_hours = (datetime.now(timezone.utc) - pub_date).total_seconds() / 3600
+    # 4. Time Decay (Fixed: Uses passed now_utc)
+    age_hours = (now_utc - pub_date).total_seconds() / 3600
     score -= (age_hours * 0.5)
 
     return score
 
 @retry_with_backoff
-async def fetch_single_feed(client, url, start_time, seen_links, recent_topics):
-    """Fetches and parses a single RSS feed."""
+async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent_topics):
+    """Fetches and parses a single RSS feed with Bozo resilience."""
     try:
         response = await client.get(url, timeout=10)
         if response.status_code != 200:
             return []
             
         feed = feedparser.parse(response.text)
+        
+        # Expert Review Fix: Check for bozo (malformed feed)
+        if feed.bozo:
+            SafeLogger.warn(f"Feed {url} is malformed (Bozo detected). Parsing as-is.")
+
         items = []
         for entry in feed.entries:
             pub_date = None
@@ -77,22 +82,32 @@ async def fetch_single_feed(client, url, start_time, seen_links, recent_topics):
                 "link": entry.link,
                 "source": getattr(feed.feed, 'title', url)
             }
-            item["score"] = calculate_relevance_score(item, pub_date, recent_topics)
+            item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics)
             items.append(item)
         return items
-    except Exception:
+    except Exception as e:
+        SafeLogger.error(f"Error parsing feed {url}: {e}")
         return []
 
-async def fetch_news(seen_links=None, recent_topics=None):
-    """Orchestrates parallel fetching of all RSS sources."""
+async def fetch_news(client, seen_links=None, recent_topics=None):
+    """Orchestrates parallel fetching of all RSS sources using a shared client."""
     if seen_links is None: seen_links = []
     
-    start_time = datetime.now(timezone.utc) - timedelta(days=2)
-    async with httpx.AsyncClient(follow_redirects=True) as client:
-        tasks = [fetch_single_feed(client, url, start_time, seen_links, recent_topics) for url in RSS_FEEDS]
-        results = await asyncio.gather(*tasks)
+    now_utc = datetime.now(timezone.utc)
+    start_time = now_utc - timedelta(days=2)
+    
+    tasks = [fetch_single_feed(client, url, start_time, now_utc, seen_links, recent_topics) for url in RSS_FEEDS]
+    results = await asyncio.gather(*tasks)
 
     all_entries = [e for sublist in results for e in sublist]
+    
+    # Bug Fix: Ensure no internal duplicates if one feed has multiple entries for same link
+    unique_entries = {}
+    for e in all_entries:
+        if e['link'] not in unique_entries or e['score'] > unique_entries[e['link']]['score']:
+            unique_entries[e['link']] = e
+    
+    all_entries = list(unique_entries.values())
     all_entries.sort(key=lambda x: x["score"], reverse=True)
     
     if not all_entries: return []
@@ -110,7 +125,8 @@ async def fetch_news(seen_links=None, recent_topics=None):
     
     while len(top_articles) < 8 and remaining:
         art = remaining.pop(0)
-        if art not in top_articles: top_articles.append(art)
+        if not any(a['link'] == art['link'] for a in top_articles):
+            top_articles.append(art)
             
     return top_articles[:8]
 
@@ -122,20 +138,19 @@ def validate_summary(text):
 
 @retry_with_backoff
 async def summarize_news(news_items, context, mode="Curator"):
-    """Synthesizes news using Gemini API with a specific Persona mode."""
+    """Synthesizes news using Gemini API with standardized Model constant."""
     if not news_items: return None, None, None
 
     client = genai.Client(api_key=GEMINI_API_KEY)
     news_text = "\n".join([f"- {i+1}. {item['title']} ({item['source']})" for i, item in enumerate(news_items)])
     
-    # Select Persona Instruction
     instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
-    
     user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
+    
     config = types.GenerateContentConfig(system_instruction=instruction, temperature=0.7)
 
-    print(f"Synthesizing in {mode} Mode...", flush=True)
-    response = await client.aio.models.generate_content(model='gemini-3.1-flash-lite-preview', contents=user_prompt, config=config)
+    SafeLogger.info(f"Synthesizing in {mode} Mode via {GEMINI_MODEL_ID}...")
+    response = await client.aio.models.generate_content(model=GEMINI_MODEL_ID, contents=user_prompt, config=config)
     raw_text = response.text.strip()
 
     topic = "General"
@@ -155,31 +170,28 @@ async def summarize_news(news_items, context, mode="Curator"):
 
 @retry_with_backoff
 async def generate_mentor_insight(context):
-    """Fallback: Generates a standalone technical insight when news is insufficient."""
+    """Fallback insight generation using standardized Model constant."""
     import random
     topic = random.choice(SECONDARY_TOPICS)
-    print(f"Triggering Mentor Fallback: {topic}", flush=True)
+    SafeLogger.info(f"Triggering Mentor Fallback: {topic}")
     
     client = genai.Client(api_key=GEMINI_API_KEY)
-    user_prompt = f"Current Time: {context['day']} {context['session']}\nStrategic Topic: {topic}\n\nTask: Provide a high-signal strategic insight about this topic for a senior technical audience."
-    
+    user_prompt = f"Current Time: {context['day']} {context['session']}\nStrategic Topic: {topic}"
     config = types.GenerateContentConfig(system_instruction=MENTOR_SYSTEM_INSTRUCTION, temperature=0.8)
     
-    response = await client.aio.models.generate_content(model='gemini-3.1-flash-lite-preview', contents=user_prompt, config=config)
+    response = await client.aio.models.generate_content(model=GEMINI_MODEL_ID, contents=user_prompt, config=config)
     summary = response.text.strip()
     
-    # Parsing if model still follows TOPIC/BODY format even for insights
     if "BODY:" in summary:
         summary = summary.split("BODY:", 1)[1].strip()
 
     is_valid, reason = validate_summary(summary)
     if is_valid: return summary, None, "Strategy"
     
-    # Fallback if validation fails
     return f"Strategy Insight: {topic}. Focus on long-term sustainability and architecture over hype. #AI #Strategy", None, "Strategy"
 
 def get_temporal_context():
-    """Calculates the temporal branding for the current run."""
+    """Calculates branding context."""
     now = datetime.now(timezone.utc)
     day = now.strftime("%A")
     session = "Morning Intelligence" if now.hour < 12 else "Afternoon Deep Dive"
