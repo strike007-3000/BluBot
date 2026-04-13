@@ -84,6 +84,7 @@ You are a "Premium Tech Curator" for Bluesky. Your voice is sophisticated, insig
 You don't just report news; you connect dots and provide a "Director's Cut" of the day's AI evolution.
 
 CORE PERSONA:
+- Temporal Awareness: You know what day it is. Use the provided Day-of-Week context to frame your synthesis naturally (e.g., mention "setting the pace" on Mondays or "capping off the week" on Fridays). Never use hard-coded headers like [Monday Recap]; keep it in the prose.
 - Product Focus: Prioritize actual launches and usable features over abstract hype.
 - Technical Authority: Use precise terms (e.g., "latency," "throughput," "reasoning") and explain their impact.
 - The Insider (Hidden Gem): Every post should reference at least one "hidden gem" or technical insight (likely from an arXiv paper or engineering blog) to show you are reading deeper than the mainstream.
@@ -91,7 +92,7 @@ CORE PERSONA:
 
 WRITING ARCHITECTURE:
 1. THE CATALYST (Hook): Start with a bold claim or a "hidden gem" from the news.
-2. THE SYNTHESIS (Impact): Synthesize the 8 news items provided into a cohesive narrative. Focus on the *maturation* and *utility* of the industry.
+2. THE SYNTHESIS (Impact): Synthesize the 8 news items provided into a cohesive narrative. Focus on the *maturation* and *utility* of the industry, themed for the specific day of the week.
 3. THE INSIDER INSIGHT (The 'So What'): Provide a professional take on why this matters long-term.
 4. BREVITY: Max 280 characters. Every word must earn its place.
 
@@ -172,6 +173,28 @@ def calculate_relevance_score(item, pub_date):
     score -= (age_hours * 0.5) # Lose 0.5 point per hour
     
     return score
+
+def get_temporal_context():
+    """Returns the current day name and session type based on UTC time."""
+    now = datetime.now(timezone.utc)
+    day = now.strftime("%A")
+    hour = now.hour
+    
+    if hour < 12:
+        session = "Morning Intelligence Briefing"
+        theme = "Forward-looking, setting the week's pace" if day == "Monday" else "Mid-week progress"
+    else:
+        session = "Afternoon Deep Dive"
+        theme = "Weekly Wrap-up and synthesis" if day == "Friday" else "Afternoon analysis"
+        
+    if day in ["Saturday", "Sunday"]:
+        theme = "Weekend High-Level Vision and long-term reflection"
+
+    return {
+        "day": day,
+        "session": session,
+        "theme": theme
+    }
 
 def validate_summary(text):
     if not text:
@@ -291,11 +314,11 @@ def fetch_news(seen_links=None):
 
     return top_articles[:8]
 
-def summarize_news(news_items):
+def summarize_news(news_items, context):
     if not news_items:
         return None, None
 
-    print(f"Summarizing {len(news_items)} news items...", flush=True)
+    print(f"Summarizing {len(news_items)} news items for {context['day']}...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
     model_id = 'gemini-3.1-flash-lite-preview'
 
@@ -306,10 +329,13 @@ def summarize_news(news_items):
     news_text = "\n".join([f"- [{i+1}] {item['title']} (Source: {item['source']})\n  Context: {item['summary'][:300]}" for i, item in enumerate(news_items)])
     
     user_prompt = f"""
+    Context: Today is {context['day']}. This is your {context['session']}.
+    Current Theme: {context['theme']}.
+    
     Curation Task: Synthesize these 8 news items into one high-engagement Bluesky post.
     Identify the most groundbreaking product shift and weave in the "Hidden Gem" technical insight.
     
-    CRITICAL: Stay under 300 characters. End with 1-2 hashtags.
+    CRITICAL: Adapt your tone to the {context['day']} theme. Stay under 300 characters. End with 1-2 hashtags.
     
     News Data:
     {news_text}
@@ -489,6 +515,15 @@ def main():
         print("Missing Gemini API Key.", flush=True)
         return
 
+    # Temporal context and Weekend Skip logic
+    context = get_temporal_context()
+    now = datetime.now(timezone.utc)
+    
+    # Skip the 3pm (13:00 UTC) run on weekends
+    if now.weekday() >= 5 and now.hour >= 12:
+        print(f"Skipping scheduled post: It's {context['day']} afternoon. Bot is resting.", flush=True)
+        return
+
     seen_links = load_seen_articles()
     news = fetch_news(seen_links)
     
@@ -496,7 +531,7 @@ def main():
         print("No NEW AI news found in the last 48 hours. Bot is standing by.", flush=True)
         return
 
-    summary, lead_link = summarize_news(news)
+    summary, lead_link = summarize_news(news, context)
     if summary:
         # Post to all enabled platforms
         post_to_bluesky(summary, lead_link)
