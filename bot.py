@@ -79,6 +79,15 @@ PRODUCT_KEYWORDS = ["launch", "integrated", "available", "feature", "release", "
 GROUNDBREAKING_KEYWORDS = ["sota", "benchmark", "breakthrough", "frontier", "reasoning", "efficiency", "architecture", "scaling", "open-source"]
 HIDDEN_GEM_SOURCES = ["export.arxiv.org", "arxiv.org"]
 
+# Topic Classification Map (Keywords -> Topic)
+TOPIC_MAP = {
+    "LLMs": ["gpt", "claude", "llama", "reasoning", "prompt", "transformer", "7b", "70b", "llm", "gemini", "mistral", "multimodal"],
+    "Vision/Robot": ["sora", "vision", "robot", "humanoid", "image", "video", "figure", "tesla bot", "multimodal"],
+    "Compute/HW": ["nvidia", "h100", "tpu", "b200", "chip", "foundry", "semiconductor", "blackwell", "gpu", "cuda"],
+    "Policy/Society": ["regulation", "lawsuit", "governance", "open-weights", "court", "compliance", "copyright"],
+    "Science/Health": ["biotech", "drug", "physics", "folding", "climate", "discovery", "protein", "dna", "medical"],
+}
+
 SYSTEM_INSTRUCTION = """
 You are a "Premium Tech Curator" for Bluesky. Your voice is sophisticated, insightful, and grounded in industry reality.
 You don't just report news; you connect dots and provide a "Director's Cut" of the day's AI evolution.
@@ -142,8 +151,8 @@ def get_link_metadata(url):
         print(f"Error scraping metadata: {e}", flush=True)
         return None
 
-def calculate_relevance_score(item, pub_date):
-    """Calculates a relevance score for an article."""
+def calculate_relevance_score(item, pub_date, recent_topics=None):
+    """Calculates a relevance score for an article, penalizing recently covered topics."""
     score = 0
     title_lower = item['title'].lower()
     summary_lower = item['summary'].lower()
@@ -167,7 +176,21 @@ def calculate_relevance_score(item, pub_date):
     if any(word in content_text for word in GROUNDBREAKING_KEYWORDS):
         score += 7
         
-    # 4. Time Decay (Penalty for older articles)
+    # 4. Topic Diversity Penalty
+    if recent_topics:
+        item_topic = "General"
+        for topic, keywords in TOPIC_MAP.items():
+            if any(word in content_text for word in keywords):
+                item_topic = topic
+                break
+        
+        # Apply penalty if this topic was recently used
+        if item_topic in recent_topics:
+            # -12 point penalty found through "good judgement" testing
+            score -= 12
+            print(f"Penalty applied (-12) for recent topic '{item_topic}': {item['title'][:40]}...", flush=True)
+
+    # 5. Time Decay (Penalty for older articles)
     now = datetime.now(timezone.utc)
     age_hours = (now - pub_date).total_seconds() / 3600
     score -= (age_hours * 0.5) # Lose 0.5 point per hour
@@ -220,23 +243,31 @@ def validate_summary(text):
 
 def load_seen_articles():
     if not os.path.exists(SEEN_FILE):
-        return []
+        return {"links": [], "recent_topics": []}
     try:
         with open(SEEN_FILE, 'r') as f:
-            return json.load(f)
+            data = json.load(f)
+            # Migration logic
+            if isinstance(data, list):
+                return {"links": data, "recent_topics": []}
+            return data
     except Exception as e:
         print(f"Error loading seen articles: {e}")
-        return []
+        return {"links": [], "recent_topics": []}
 
-def save_seen_articles(seen_links):
+def save_seen_articles(seen_data):
     try:
-        # Keep only the last 200 links to manage file size
+        # Keep only the last 200 links
+        seen_data["links"] = seen_data["links"][-200:]
+        # Keep only the last 5 topics for memory
+        seen_data["recent_topics"] = seen_data["recent_topics"][-5:]
+        
         with open(SEEN_FILE, 'w') as f:
-            json.dump(seen_links[-200:], f, indent=2)
+            json.dump(seen_data, f, indent=2)
     except Exception as e:
         print(f"Error saving seen articles: {e}")
 
-def fetch_news(seen_links=None):
+def fetch_news(seen_links=None, recent_topics=None):
     if seen_links is None:
         seen_links = []
         
@@ -274,8 +305,8 @@ def fetch_news(seen_links=None):
                     "source": feed.feed.title if hasattr(feed.feed, 'title') else url
                 }
                 
-                # Calculate relevance score
-                item["score"] = calculate_relevance_score(item, pub_date)
+                # Calculate relevance score (Considering Topic Penalties)
+                item["score"] = calculate_relevance_score(item, pub_date, recent_topics)
                 all_entries.append(item)
         except Exception as e:
             print(f"Error parsing {url}: {e}", flush=True)
@@ -316,7 +347,7 @@ def fetch_news(seen_links=None):
 
 def summarize_news(news_items, context):
     if not news_items:
-        return None, None
+        return None, None, None
 
     print(f"Summarizing {len(news_items)} news items for {context['day']}...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
@@ -335,7 +366,15 @@ def summarize_news(news_items, context):
     Curation Task: Synthesize these 8 news items into one high-engagement Bluesky post.
     Identify the most groundbreaking product shift and weave in the "Hidden Gem" technical insight.
     
-    CRITICAL: Adapt your tone to the {context['day']} theme. Stay under 300 characters. End with 1-2 hashtags.
+    In addition to the post, you MUST identify the primary topic category for this synthesis.
+    Choose exactly ONE from: LLMs, Vision/Robot, Compute/HW, Policy, Science, General.
+    
+    Format your response as follows:
+    TOPIC: [Selected Category]
+    BODY:
+    [Your Post Text]
+    
+    CRITICAL: Adapt your tone to the {context['day']} theme. Stay under 300 characters for the BODY.
     
     News Data:
     {news_text}
@@ -345,7 +384,7 @@ def summarize_news(news_items, context):
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.7,
-        max_output_tokens=300
+        max_output_tokens=500
     )
     
     max_retries = 1 # Minimal retries to protect quota
@@ -360,15 +399,24 @@ def summarize_news(news_items, context):
                 contents=user_prompt,
                 config=config
             )
-            summary = response.text.strip()
+            raw_text = response.text.strip()
             
+            # Parsing Topic and Body
+            topic = "General"
+            summary = raw_text
+            if "TOPIC:" in raw_text and "BODY:" in raw_text:
+                parts = raw_text.split("BODY:", 1)
+                topic_part = parts[0].replace("TOPIC:", "").strip()
+                summary = parts[1].strip()
+                topic = topic_part if topic_part in TOPIC_MAP else "General"
+
             if len(summary) > len(longest_fallback):
                 longest_fallback = summary
 
             # Post-generation validation
             is_valid, reason = validate_summary(summary)
             if is_valid:
-                return summary, lead_link
+                return summary, lead_link, topic
             
             # Tracking "best candidate" (Valid length/quality except for missing hashtags)
             if reason == "Missing hashtags" and len(summary) >= 30:
@@ -391,8 +439,8 @@ def summarize_news(news_items, context):
         print("Applying Best Candidate Rescue (Hashtag fix)...", flush=True)
         rescued = best_candidate.strip() + " #AI #Tech"
         if len(rescued) > 300:
-            return rescued[:297] + "...", lead_link
-        return rescued, lead_link
+            return rescued[:297] + "...", lead_link, "General"
+        return rescued, lead_link, "General"
     
     if len(longest_fallback) >= 20: # If it's almost long enough, we can rescue it
         print("Applying Length Rescue (Expansion)...", flush=True)
@@ -403,11 +451,11 @@ def summarize_news(news_items, context):
             rescued = "Latest updates in AI: " + rescued
         
         if len(rescued) > 300:
-            return rescued[:297] + "...", lead_link
-        return rescued, lead_link
+            return rescued[:297] + "...", lead_link, "General"
+        return rescued, lead_link, "General"
 
     print("Failed to generate a valid summary after internal retries.", flush=True)
-    return None, None
+    return None, None, None
 
 MASTODON_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
 MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL")
@@ -524,14 +572,14 @@ def main():
         print(f"Skipping scheduled post: It's {context['day']} afternoon. Bot is resting.", flush=True)
         return
 
-    seen_links = load_seen_articles()
-    news = fetch_news(seen_links)
+    seen_data = load_seen_articles()
+    news = fetch_news(seen_data["links"], seen_data["recent_topics"])
     
     if not news:
         print("No NEW AI news found in the last 48 hours. Bot is standing by.", flush=True)
         return
 
-    summary, lead_link = summarize_news(news, context)
+    summary, lead_link, topic = summarize_news(news, context)
     if summary:
         # Post to all enabled platforms
         post_to_bluesky(summary, lead_link)
@@ -540,8 +588,13 @@ def main():
         
         # Save the new articles to seen list
         new_links = [item['link'] for item in news[:10]]
-        seen_links.extend(new_links)
-        save_seen_articles(seen_links)
+        seen_data["links"].extend(new_links)
+        
+        # Update topic memory
+        if topic and topic != "General":
+            seen_data["recent_topics"].append(topic)
+            
+        save_seen_articles(seen_data)
     else:
         print("Quality validation failed or error occurred. Post aborted for safety.", flush=True)
 
