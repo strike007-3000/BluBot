@@ -87,7 +87,7 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
             items.append(item)
         return items
     except Exception as e:
-        SafeLogger.error(f"Error parsing feed {url}: {e}")
+        SafeLogger.error(f"Feed error {url}: {type(e).__name__} - {e}")
         return []
 
 async def fetch_news(client, seen_links=None, recent_topics=None):

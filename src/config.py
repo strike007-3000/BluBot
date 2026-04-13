@@ -36,7 +36,6 @@ RSS_FEEDS = [
     "https://anthropic.com/news.rss",
     "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
     "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
-    "https://www.eetimes.com/category/artificial-intelligence/feed/",
     "https://aheadofai.substack.com/feed",
     "https://www.semianalysis.com/feed",
     "https://www.interconnects.ai/feed",

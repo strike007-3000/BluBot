@@ -130,13 +130,19 @@ def save_seen_articles(data):
         SafeLogger.error(f"Error saving seen articles: {e}")
 
 async def get_link_metadata(client, url):
-    """Scrapes OpenGraph metadata using a shared httpx client."""
+    """Scrapes OpenGraph metadata using a shared httpx client with modern browser headers."""
     SafeLogger.info(f"Scraping metadata: {url}")
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Sec-Ch-Ua': '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
     }
     try:
-        response = await client.get(url, headers=headers, timeout=10)
+        # Ensure we follow redirects (OpenAI often redirects to a trailing slash version)
+        response = await client.get(url, headers=headers, timeout=10, follow_redirects=True)
         response.raise_for_status()
         
         # Expert Review Fix: Wrap CPU-bound Beautiful Soup in to_thread
@@ -153,10 +159,12 @@ async def get_link_metadata(client, url):
         image_data = None
         if image_url:
             try:
-                img_res = await client.get(image_url, headers=headers, timeout=5)
+                # Use browser-like headers for the image request as well
+                img_res = await client.get(image_url, headers=headers, timeout=5, follow_redirects=True)
                 if img_res.status_code == 200:
                     image_data = img_res.content
-            except Exception: pass
+            except Exception as e:
+                SafeLogger.warn(f"Failed to fetch thumbnail data: {e}")
 
         return {
             "title": title[:100],
@@ -165,6 +173,6 @@ async def get_link_metadata(client, url):
             "url": url
         }
     except Exception as e:
-        SafeLogger.warn(f"Partial metadata extraction for {url}: {e}")
+        SafeLogger.warn(f"Partial metadata extraction for {url}: {type(e).__name__} - {e}")
         # Expert Review Fix: Return at least the URL instead of None
         return {"title": "News Update", "description": "", "image": None, "url": url}
