@@ -19,9 +19,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Temporal Intelligence**: Adapts tone and framing based on the day of the week (e.g., "Monday Strategy" vs. "Friday Recap").
 - **Hidden Gem Injection**: Ensures at least one high-signal research paper (from `arXiv` or Engineering blogs) is surfaced in every post.
 - **Rich Link Previews (Bluesky)**: Generates beautiful link cards with thumbnails and descriptions using Open Graph metadata.
-- **Robust Quality Control**:
-  - **Metadata Scraping**: Uses `BeautifulSoup` to safely extract article previews.
-  - **Validation**: Filters out gibberish, repetitive patterns, and low-quality output.
+- **Robust Resilience Engine**: Standardized `@retry_with_backoff` decorator with **Exponential Backoff and Jitter**. The bot intelligently recovers from transient API errors, rate limits (429), and network hiccups.
+- **Robust Quality Control**: Filters out gibberish, repetitive patterns, and low-quality output using fine-tuned Gemini validation.
 - **Enterprise-Grade Stability**:
   - **Secure Logging**: Standardized "status code only" crash reports to prevent token exposure.
   - **Network Resilience**: Explicit timeouts on all API and RSS requests to prevent workflow hangs.

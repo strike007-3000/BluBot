@@ -15,6 +15,8 @@ import json
 import requests
 from bs4 import BeautifulSoup
 import calendar
+import functools
+import random
 from PIL import Image
 import io
 
@@ -38,6 +40,30 @@ def validate_config():
     return True
 
 # Configuration
+MAX_API_RETRIES = 3
+BACKOFF_FACTOR = 2.0
+JITTER_RANGE = 2.0
+
+def retry_with_backoff(func):
+    """Decorator to retry an async function with exponential backoff and jitter."""
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        retries = 0
+        while retries < MAX_API_RETRIES:
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                retries += 1
+                if retries == MAX_API_RETRIES:
+                    print(f"ERROR: Ultimate failure in {func.__name__} after {MAX_API_RETRIES} attempts: {e}", flush=True)
+                    raise e
+                
+                # Calculate sleep with jitter
+                wait_time = (BACKOFF_FACTOR ** retries) + random.uniform(0, JITTER_RANGE)
+                print(f"WARNING: Retry {retries}/{MAX_API_RETRIES} for {func.__name__} in {wait_time:.2f}s... (Error: {str(e)[:100]})", flush=True)
+                await asyncio.sleep(wait_time)
+    return wrapper
+
 RSS_FEEDS = [
     "https://openai.com/news/rss.xml",
     "https://huggingface.co/blog/feed.xml",
@@ -316,6 +342,7 @@ def save_seen_articles(seen_data):
     except Exception as e:
         print(f"Error saving seen articles: {e}")
 
+@retry_with_backoff
 async def fetch_single_feed(client, url, start_time, seen_links, recent_topics):
     """Fetches and parses a single RSS feed asynchronously."""
     print(f"Checking {url}...", flush=True)
@@ -411,6 +438,7 @@ async def fetch_news(seen_links=None, recent_topics=None):
 
     return top_articles[:8]
 
+@retry_with_backoff
 async def summarize_news(news_items, context):
     if not news_items:
         return None, None, None
@@ -452,78 +480,43 @@ async def summarize_news(news_items, context):
         max_output_tokens=500
     )
 
-    max_retries = 1
-    best_candidate = None
-    longest_fallback = ""
+    print(f"Using model: {model_id} (Async w/ Backoff)", flush=True)
+    
+    response = await client.aio.models.generate_content(
+        model=model_id,
+        contents=user_prompt,
+        config=config
+    )
+    raw_text = response.text.strip()
 
-    print(f"Using model: {model_id} (Async)", flush=True)
-    for attempt in range(max_retries):
-        try:
-            response = await client.aio.models.generate_content(
-                model=model_id,
-                contents=user_prompt,
-                config=config
-            )
-            raw_text = response.text.strip()
+    # Parsing Topic and Body
+    topic = "General"
+    summary = raw_text
+    if "TOPIC:" in raw_text and "BODY:" in raw_text:
+        parts = raw_text.split("BODY:", 1)
+        topic_part = parts[0].replace("TOPIC:", "").strip()
+        summary = parts[1].strip()
+        topic = topic_part if topic_part in TOPIC_MAP else "General"
 
-            # Parsing Topic and Body
-            topic = "General"
-            summary = raw_text
-            if "TOPIC:" in raw_text and "BODY:" in raw_text:
-                parts = raw_text.split("BODY:", 1)
-                topic_part = parts[0].replace("TOPIC:", "").strip()
-                summary = parts[1].strip()
-                topic = topic_part if topic_part in TOPIC_MAP else "General"
+    # Post-generation validation
+    is_valid, reason = validate_summary(summary)
+    if is_valid:
+        return summary, lead_link, topic
 
-            if len(summary) > len(longest_fallback):
-                longest_fallback = summary
-
-            # Post-generation validation
-            is_valid, reason = validate_summary(summary)
-            if is_valid:
-                return summary, lead_link, topic
-
-            if reason == "Missing hashtags" and len(summary) >= 30:
-                best_candidate = summary
-
-            print(f"Validation failed (Attempt {attempt + 1}): {reason}. Text: {summary[:50]}...", flush=True)
-            await asyncio.sleep(2)
-        except Exception as e:
-            error_msg = str(e)
-            if any(x in error_msg for x in ["429", "503", "UNAVAILABLE", "Resource has been exhausted"]):
-                wait_time = (attempt + 1) * 30
-                print(f"Transient error: {error_msg[:200]}... Retrying in {wait_time}s...", flush=True)
-                await asyncio.sleep(wait_time)
-            else:
-                print(f"Permanent error: {e}", flush=True)
-                break
-
-    # Rescue logic:
-    if best_candidate:
+    # Specific rescue logic if hashtags are missing
+    if reason == "Missing hashtags" and len(summary) >= 30:
         print("Applying Best Candidate Rescue (Hashtag fix)...", flush=True)
-        rescued = best_candidate.strip() + " #AI #Tech"
-        if len(rescued) > 300:
-            return rescued[:297] + "...", lead_link, "General"
-        return rescued, lead_link, "General"
+        rescued = summary.strip() + " #AI #Tech"
+        return rescued if len(rescued) <= 300 else rescued[:297] + "...", lead_link, "General"
 
-    if len(longest_fallback) >= 20: # If it's almost long enough, we can rescue it
-        print("Applying Length Rescue (Expansion)...", flush=True)
-        rescued = longest_fallback.strip()
-        if "#" not in rescued:
-            rescued += " #AI #Tech"
-        if len(rescued) < 40: # If still too short, add a generic relevant sentence
-            rescued = "Latest updates in AI: " + rescued
-
-        if len(rescued) > 300:
-            return rescued[:297] + "...", lead_link, "General"
-        return rescued, lead_link, "General"
-
-    print("Failed to generate a valid summary after internal retries.", flush=True)
-    return None, None, None
+    print(f"Validation failed: {reason}. Text: {summary[:50]}...", flush=True)
+    # Raising an error to trigger the decorator retry if validation fails
+    raise ValueError(f"AI Output Validation Failed: {reason}")
 
 MASTODON_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
 MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL")
 
+@retry_with_backoff
 async def post_to_bluesky(text, link=None):
     if not BLUESKY_HANDLE or not BLUESKY_PASSWORD:
         print("Skipping Bluesky: Credentials missing.", flush=True)
@@ -567,6 +560,7 @@ async def post_to_bluesky(text, link=None):
     except Exception as e:
         print(f"Error posting to Bluesky: {e}", flush=True)
 
+@retry_with_backoff
 async def post_to_mastodon(text):
     if not MASTODON_TOKEN or not MASTODON_BASE_URL:
         print("Skipping Mastodon: Credentials missing.", flush=True)
@@ -589,6 +583,7 @@ async def post_to_mastodon(text):
     except Exception as e:
         print(f"Error posting to Mastodon: {e}", flush=True)
 
+@retry_with_backoff
 async def post_to_threads(text):
     if not THREADS_TOKEN or not THREADS_USER_ID:
         print("Skipping Threads: Credentials missing.", flush=True)
