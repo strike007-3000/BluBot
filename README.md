@@ -74,10 +74,15 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 📂 Project Structure
 
-- `bot.py`: Main logic (RSS fetching, Gemini synthesis, platform posting).
-- `seen_articles.json`: Persistent state file that stores IDs of previously posted news.
-- `requirements.txt`: Python dependencies.
-- `.github/workflows/daily_post.yml`: GitHub Actions schedule and environment setup.
+- `bot.py`: The entry point (Orchestrator) that coordinates the daily news cycle.
+- **`src/`**: The core package containing modular layers:
+  - `config.py`: Centralized configuration (RSS feeds, tiers, topic map).
+  - `utils.py`: Resilience Engine (@retry_with_backoff), Metadata scraping, and Image compression.
+  - `curator.py`: News discovery, relevance scoring, and Gemini synthesis.
+  - `broadcaster.py`: Social media posting logic for all platforms.
+- `seen_articles.json`: Persistent state file storing the memory of previously posted articles.
+- `requirements.txt`: Python dependencies (including `httpx` and `Pillow`).
+- `.github/workflows/daily_post.yml`: GitHub Actions schedule and CI/CD environment.
 - `debug_bot.py`: Helper script for local testing without triggers.
 
 ## 🧪 Local Testing
