@@ -556,7 +556,7 @@ def post_to_threads(text):
     except Exception as e:
         print(f"Error posting to Threads: {e}", flush=True)
         if hasattr(e, 'response') and e.response is not None:
-             print(f"Threads API Error Trace: {e.response.text}", flush=True)
+             print(f"Status Code: {e.response.status_code}", flush=True)
 
 def main():
     if not GEMINI_API_KEY:
