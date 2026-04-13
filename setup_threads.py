@@ -32,7 +32,7 @@ payload = {
 }
 
 try:
-    response = requests.post(url, data=payload)
+    response = requests.post(url, data=payload, timeout=15)
     response.raise_for_status()
     data = response.json()
     short_token = data.get("access_token")
@@ -49,7 +49,7 @@ try:
         "access_token": short_token
     }
     
-    ll_response = requests.get(ll_url, params=ll_params)
+    ll_response = requests.get(ll_url, params=ll_params, timeout=15)
     ll_response.raise_for_status()
     ll_data = ll_response.json()
     long_token = ll_data.get("access_token")

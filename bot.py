@@ -12,12 +12,26 @@ from mastodon import Mastodon
 import json
 import requests
 from bs4 import BeautifulSoup
+import calendar
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
 
 # Load environment variables
 load_dotenv()
+
+def validate_config():
+    """Ensures all required environment variables are present before starting."""
+    required_vars = [
+        "BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY",
+        "THREADS_ACCESS_TOKEN", "THREADS_USER_ID",
+        "MASTODON_ACCESS_TOKEN", "MASTODON_BASE_URL"
+    ]
+    missing = [v for v in required_vars if not os.getenv(v)]
+    if missing:
+        print(f"CRITICAL ERROR: Missing environment variables: {', '.join(missing)}", flush=True)
+        return False
+    return True
 
 # Configuration
 RSS_FEEDS = [
@@ -280,12 +294,15 @@ def fetch_news(seen_links=None, recent_topics=None):
         print(f"Checking {url}...", flush=True)
         try:
             feed = feedparser.parse(url)
+            if feed.bozo:
+                print(f"WARNING: Feed {url} is malformed or returned an error. Skipping.", flush=True)
+                continue
             for entry in feed.entries:
                 pub_date = None
                 if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                    pub_date = datetime.fromtimestamp(time.mktime(entry.published_parsed), timezone.utc)
+                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
                 elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                    pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed), timezone.utc)
+                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.updated_parsed), timezone.utc)
 
                 if not pub_date or pub_date < start_time:
                     continue
@@ -499,6 +516,8 @@ def post_to_bluesky(text, link=None):
         print("Successfully posted to Bluesky!", flush=True)
     except Exception as e:
         print(f"Error posting to Bluesky: {e}", flush=True)
+        if hasattr(e, 'response') and e.response is not None:
+             print(f"Status Code: {e.response.status_code}", flush=True)
 
 def post_to_mastodon(text):
     if not MASTODON_TOKEN or not MASTODON_BASE_URL:
@@ -520,6 +539,8 @@ def post_to_mastodon(text):
         print("Successfully posted to Mastodon!", flush=True)
     except Exception as e:
         print(f"Error posting to Mastodon: {e}", flush=True)
+        if hasattr(e, 'response') and e.response is not None:
+             print(f"Status Code: {e.response.status_code}", flush=True)
 
 def post_to_threads(text):
     if not THREADS_TOKEN or not THREADS_USER_ID:
@@ -536,7 +557,7 @@ def post_to_threads(text):
             "access_token": THREADS_TOKEN
         }
 
-        container_response = requests.post(container_url, data=container_payload)
+        container_response = requests.post(container_url, data=container_payload, timeout=15)
         container_response.raise_for_status()
         creation_id = container_response.json().get("id")
 
@@ -548,7 +569,7 @@ def post_to_threads(text):
         }
 
         # Threads recommends waiting a bit, but for text-only it's usually instant
-        publish_response = requests.post(publish_url, data=publish_payload)
+        publish_response = requests.post(publish_url, data=publish_payload, timeout=15)
         publish_response.raise_for_status()
         print("Successfully posted to Threads!", flush=True)
 
@@ -558,8 +579,7 @@ def post_to_threads(text):
              print(f"Status Code: {e.response.status_code}", flush=True)
 
 def main():
-    if not GEMINI_API_KEY:
-        print("Missing Gemini API Key.", flush=True)
+    if not validate_config():
         return
 
     # Temporal context and Weekend Skip logic

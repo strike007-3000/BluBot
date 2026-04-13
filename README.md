@@ -16,6 +16,11 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Robust Quality Control**:
   - **Metadata Scraping**: Uses `BeautifulSoup` to safely extract article previews.
   - **Validation**: Filters out gibberish, repetitive patterns, and low-quality output.
+- **Enterprise-Grade Stability**:
+  - **Secure Logging**: Standardized "status code only" crash reports to prevent token exposure.
+  - **Network Resilience**: Explicit timeouts on all API and RSS requests to prevent workflow hangs.
+  - **Accuracy**: Precise UTC date parsing via `calendar.timegm` for consistent global scheduling.
+  - **Health Monitoring**: Detection of malformed feeds (bozo checks) to ensure source reliability.
 - **Optimized Scheduling**: Runs twice daily on weekdays (9:00 AM and 3:00 PM local) and once daily on weekends (9:00 AM) via GitHub Actions.
 
 ## 🛠️ Setup Instructions
