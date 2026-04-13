@@ -27,9 +27,9 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None):
     for match in url_regex.finditer(text):
         start = len(text[:match.start()].encode('utf-8'))
         end = len(text[:match.end()].encode('utf-8'))
-        facets.append(models.AppBskyRichTextFacet.Main(
-            features=[models.AppBskyRichTextFacet.Link(uri=match.group())],
-            index=models.AppBskyRichTextFacet.ByteSlice(byte_start=start, byte_end=end)
+        facets.append(models.AppBskyRichtextFacet.Main(
+            features=[models.AppBskyRichtextFacet.Link(uri=match.group())],
+            index=models.AppBskyRichtextFacet.ByteSlice(byte_start=start, byte_end=end)
         ))
     
     # 2. Hashtag Facets
@@ -37,9 +37,9 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None):
     for match in tag_regex.finditer(text):
         start = len(text[:match.start()].encode('utf-8'))
         end = len(text[:match.end()].encode('utf-8'))
-        facets.append(models.AppBskyRichTextFacet.Main(
-            features=[models.AppBskyRichTextFacet.Tag(tag=match.group(1))],
-            index=models.AppBskyRichTextFacet.ByteSlice(byte_start=start, byte_end=end)
+        facets.append(models.AppBskyRichtextFacet.Main(
+            features=[models.AppBskyRichtextFacet.Tag(tag=match.group(1))],
+            index=models.AppBskyRichtextFacet.ByteSlice(byte_start=start, byte_end=end)
         ))
 
     embed = None
@@ -51,7 +51,7 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None):
                 try:
                     # Expert Review Fix: Wrap CPU-bound compression in to_thread
                     compressed = await asyncio.to_thread(compress_image, meta['image'])
-                    upload = await client.upload_blob(compressed)
+                    upload = await bsky_client.upload_blob(compressed)
                     thumb_blob = upload.blob
                 except Exception as e: 
                     SafeLogger.warn(f"Failed to upload Bluesky thumbnail: {e}")
