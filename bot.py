@@ -2,7 +2,7 @@ from google.genai import types
 import os
 import feedparser
 from google import genai
-from atproto import Client, client_utils
+from atproto import Client, client_utils, models
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import time
@@ -11,6 +11,8 @@ import re
 from mastodon import Mastodon
 import json
 import requests
+from bs4 import BeautifulSoup
+import io
 
 # Set a timeout for all network requests to prevent hanging on slow RSS feeds
 socket.setdefaulttimeout(15)
@@ -76,6 +78,49 @@ Formatting: Use line breaks for readability. 1-2 hashtags. Max 1 emoji.
 Example 1: "The era of 'massive' AI is giving way to 'efficient' AI. With TriAttention boosting throughput by 2.5x, the focus has shifted to deployment at the edge. We're moving from model-building to model-application. This is where value is actually unlocked. ⚡ #AI #TechTrends"
 Example 2: "AI safety is maturing into AI governance. Recent 'proactive red-teaming' standards highlight a shift from reactive patches to systematic alignment. By setting these boundaries now, the industry is paving the way for enterprise-grade trust. Professionalization is here. #AISafety #Tech"
 """
+
+def get_link_metadata(url):
+    """Scrapes OpenGraph metadata from a URL."""
+    print(f"Scraping metadata for: {url}", flush=True)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Extract OG tags
+        og_title = soup.find("meta", property="og:title")
+        og_description = soup.find("meta", property="og:description")
+        og_image = soup.find("meta", property="og:image")
+        
+        title = og_title['content'] if og_title else (soup.title.string if soup.title else "News Update")
+        description = og_description['content'] if og_description else ""
+        image_url = og_image['content'] if og_image else None
+        
+        # Download image if exists
+        image_data = None
+        if image_url:
+            try:
+                img_res = requests.get(image_url, headers=headers, timeout=5)
+                if img_res.status_code == 200:
+                    image_data = img_res.content
+            except Exception as e:
+                print(f"Failed to download thumbnail: {e}", flush=True)
+
+        return {
+            "title": title[:100], # Bluesky limit
+            "description": description[:200], # Bluesky limit
+            "image": image_data,
+            "url": url
+        }
+
+    except Exception as e:
+        print(f"Error scraping metadata: {e}", flush=True)
+        return None
 
 def validate_summary(text):
     if not text:
@@ -160,12 +205,15 @@ def fetch_news(seen_links=None):
 
 def summarize_news(news_items):
     if not news_items:
-        return None
+        return None, None
 
     print(f"Summarizing {len(news_items)} news items...", flush=True)
     client = genai.Client(api_key=GEMINI_API_KEY)
     model_id = 'gemini-3.1-flash-lite-preview'
 
+    # The lead link is typically the first item (highest signal)
+    lead_link = news_items[0]['link'] if news_items else None
+    
     # Include summary context for better output
     news_text = "\n".join([f"- {item['title']} (Source: {item['source']})\n  Context: {item['summary']}" for item in news_items[:10]])
     
@@ -206,7 +254,7 @@ def summarize_news(news_items):
             # Post-generation validation
             is_valid, reason = validate_summary(summary)
             if is_valid:
-                return summary
+                return summary, lead_link
             
             # Tracking "best candidate" (Valid length/quality except for missing hashtags)
             if reason == "Missing hashtags" and len(summary) >= 30:
@@ -229,8 +277,8 @@ def summarize_news(news_items):
         print("Applying Best Candidate Rescue (Hashtag fix)...", flush=True)
         rescued = best_candidate.strip() + " #AI #Tech"
         if len(rescued) > 300:
-            return rescued[:297] + "..."
-        return rescued
+            return rescued[:297] + "...", lead_link
+        return rescued, lead_link
     
     if len(longest_fallback) >= 20: # If it's almost long enough, we can rescue it
         print("Applying Length Rescue (Expansion)...", flush=True)
@@ -241,16 +289,16 @@ def summarize_news(news_items):
             rescued = "Latest updates in AI: " + rescued
         
         if len(rescued) > 300:
-            return rescued[:297] + "..."
-        return rescued
+            return rescued[:297] + "...", lead_link
+        return rescued, lead_link
 
     print("Failed to generate a valid summary after internal retries.", flush=True)
-    return None
+    return None, None
 
 MASTODON_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
 MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL")
 
-def post_to_bluesky(text):
+def post_to_bluesky(text, link=None):
     if not BLUESKY_HANDLE or not BLUESKY_PASSWORD:
         print("Skipping Bluesky: Credentials missing.", flush=True)
         return
@@ -265,7 +313,28 @@ def post_to_bluesky(text):
         if len(final_text) > 300:
             final_text = final_text[:297] + "..."
             
-        client.send_post(text=final_text)
+        embed = None
+        if link:
+            meta = get_link_metadata(link)
+            if meta:
+                thumb_blob = None
+                if meta['image']:
+                    try:
+                        upload = client.com.atproto.repo.upload_blob(meta['image'])
+                        thumb_blob = upload.blob
+                    except Exception as e:
+                        print(f"Failed to upload thumbnail blob: {e}", flush=True)
+                
+                embed = models.AppBskyEmbedExternal.Main(
+                    external=models.AppBskyEmbedExternal.External(
+                        title=meta['title'],
+                        description=meta['description'],
+                        uri=meta['url'],
+                        thumb=thumb_blob
+                    )
+                )
+
+        client.send_post(text=final_text, embed=embed)
         print("Successfully posted to Bluesky!", flush=True)
     except Exception as e:
         print(f"Error posting to Bluesky: {e}", flush=True)
@@ -339,10 +408,10 @@ def main():
         print("No NEW AI news found in the last 48 hours. Bot is standing by.", flush=True)
         return
 
-    summary = summarize_news(news)
+    summary, lead_link = summarize_news(news)
     if summary:
         # Post to all enabled platforms
-        post_to_bluesky(summary)
+        post_to_bluesky(summary, lead_link)
         post_to_mastodon(summary)
         post_to_threads(summary)
         
