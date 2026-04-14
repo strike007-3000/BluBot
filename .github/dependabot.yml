@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Maintain Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Grouping updates to keep your inbox quiet
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 10
+
+  # Maintain GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
