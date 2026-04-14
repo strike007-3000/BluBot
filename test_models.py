@@ -1,4 +1,5 @@
 import os
+import asyncio
 import feedparser
 from dotenv import load_dotenv
 from src.curator import summarize_news, generate_mentor_insight, SafeLogger
