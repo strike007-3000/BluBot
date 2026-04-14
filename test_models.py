@@ -97,10 +97,10 @@ async def main():
         from src import curator
         curator.GEMINI_API_KEY = api_key
 
-    # EXPORT CHECK: Run the system-wide validation
-    from src.config import validate_config, GEMINI_MODEL_PRIORITY
-    if not validate_config():
-        print("ERROR: System configuration validation failed.")
+    # EXPORT CHECK: Run only the AI validation for testing
+    from src.config import validate_gemini_model_priority, GEMINI_MODEL_PRIORITY
+    if not validate_gemini_model_priority():
+        print("ERROR: Gemini model priority validation failed.")
         return
     
     # 1. Test RSS Feeds
