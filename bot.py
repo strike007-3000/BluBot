@@ -65,7 +65,14 @@ async def main():
         
         if news_count > 3:
             mode = "Mentor" if "Afternoon" in session else "Curator"
-            summary, lead_link, topic = await summarize_news(news, context, mode=mode)
+            try:
+                summary, lead_link, topic = await summarize_news(news, context, mode=mode)
+            except Exception as e:
+                SafeLogger.warn(
+                    f"Summarization failed after model fallbacks ({e}). "
+                    "Degrading gracefully to mentor insight mode."
+                )
+                summary, lead_link, topic = await generate_mentor_insight(context)
         else:
             mode_label = "Strategist" if "Morning" in session else "Mentor"
             SafeLogger.info(f"Low news volume ({news_count}). Switching to {mode_label} Mode.")
