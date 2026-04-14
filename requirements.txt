@@ -9,7 +9,7 @@ httpx>=0.28.0
 Pillow==10.3.0
 
 # Security Hardening for Transitive Dependencies
-cryptography==46.0.6
+cryptography==46.0.7
 urllib3==2.6.3
 anyio==4.4.0
 zipp==3.19.1
