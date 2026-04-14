@@ -43,8 +43,8 @@ graph TD
 ```
 
 ### Impact Weighting
-- **Signal Boost (+12)**: Triggered by keywords like *SOTA, Agentic, World Model*.
-- **Momentum (+18)**: Triggered by flagship entities like *GPT-5, Llama 4, Claude 4*.
+- **Signal Boost (+12)**: Triggered by keywords like *SOTA, Agentic, World Model, Open Weights*.
+- **Momentum (+18)**: Triggered by flagship entities like *GPT-5, Llama 4, Gemini 3, Strawberry*.
 - **Consensus Synergy (+15)**: Automatically applied if the same story is found in multiple independent feeds.
 - **Diversity Penalty (-25)**: Applied if a topic or entity repeats too many times in the selection, forcing the Sage to broaden its perspective.
 
@@ -71,6 +71,65 @@ graph LR
 - **Atomic Persistence**: The Sage uses a `.tmp` swap method to save state. It writes the "Seen Articles" to a temporary file and then performs a system-level move. This prevents data corruption even if the server crashes mid-write.
 - **Gemma Compatibility Layer**: A specialized logic branch that translates standard system instructions into a prompt-prepended format for Gemma models, ensuring perfect persona consistency regardless of which AI is running.
 - **The Fortress**: A unified logging system that dynamically masks all environment secrets and tokens, keeping the diagnostic logs safe for public review.
+
+---
+
+## 🛰️ Page 4: Source Intelligence
+
+The Sage scans over **30 premium feeds** across the industry. Here is how we prioritize them.
+
+### Tier 1 Sources (Automatic +30 Boost)
+These are primary sources where "Original Truth" is released:
+- `openai.com`, `deepmind.google`, `anthropic.com`, `huggingface.co`, `mistral.ai`.
+
+### Hidden Gem Sources (Automatic +25 Boost)
+These are academic or deep-technical centers that the average news bot misses:
+- `arxiv.org` (CS.AI/CS.LG), `bair.berkeley.edu`, `ai.stanford.edu`, `blogs.nvidia.com`, `thegradient.pub`.
+
+### High-Signal Keywords
+Articles containing these words trigger an immediate **+12 Signal Boost**:
+> *Benchmark, Breakthrough, Agentic, Autonomous, Reasoning, Test-time compute, Scaling law.*
+
+---
+
+## 🛠️ Page 5: Technical Configuration
+
+Managing the Sage requires a properly configured environment.
+
+### Environment Secrets
+| Variable | Description | Requirement |
+| :--- | :--- | :--- |
+| `GEMINI_KEY` | Your Google AI Studio API Key | **Critical** |
+| `BSKY_HANDLE` | Your Bluesky handle (e.g., user.bsky.social) | **Critical** |
+| `BSKY_APP_PASSWORD` | App-specific password from Bluesky settings | **Critical** |
+| `MASTODON_TOKEN` | Access token from your Mastodon instance | Optional |
+| `THREADS_TOKEN` | Long-lived Facebook Graph API token | Optional |
+
+### Local Diagnostics
+You can test the Sage locally before a production run using:
+```bash
+python test_models.py
+```
+This script will:
+1. Validate your API keys and fetch available models.
+2. Run a "Dry Run" of the Scraper and Scoring Engine.
+3. Show you exactly how the Score was calculated for every article.
+
+---
+
+## 🎭 Page 6: The Persona Blueprint
+
+The Sage isn't just a news-poster; it's a **Mentor**. Our LLM prompts are designed with specific psychological anchors:
+
+### Core Instructions
+1. **First-Person Voice**: Always uses "I" and "Me" to build a relationship with the follower.
+2. **The "Mentor" Rule**: The Sage shares "findings," not "news reports." It focuses on why a change matters for engineers.
+3. **The Hook**: Every post MUST end with a question that invites technical experts to share their production experiences.
+
+### Post Constraints
+- **Character Limit**: Stays under 300 bytes (for cross-platform compatibility).
+- **Hashtags**: Exactly 2 relevant tags (e.g., `#AI #LLMs`).
+- **Emoji Limit**: Max 1-2 subtle, conversational emojis (e.g., 🛠️, 🚀).
 
 ---
 *Built with ❤️ for the AI Community*
