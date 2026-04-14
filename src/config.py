@@ -22,9 +22,9 @@ THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 # Platform Constraints
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.1-flash-lite-preview",
-    "models/gemma-4-31b",
-    "models/gemma-4-26b",
+    "models/gemini-2.5-flash",
     "models/gemma-3-27b-it",
+    "models/gemini-2.5-flash-lite",
 ]
 # Deprecated: kept temporarily for rollout compatibility. Prefer GEMINI_MODEL_PRIORITY.
 GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
