@@ -67,12 +67,27 @@ async def main():
             mode = "Mentor" if "Afternoon" in session else "Curator"
             try:
                 summary, lead_link, topic = await summarize_news(news, context, mode=mode)
+                SafeLogger.info(
+                    f"pipeline_failover_result stage=summarize_news success=true "
+                    f"failover_succeeded=false final_path=summarize_news"
+                )
             except Exception as e:
                 SafeLogger.warn(
                     f"Summarization failed after model fallbacks ({e}). "
                     "Degrading gracefully to mentor insight mode."
                 )
-                summary, lead_link, topic = await generate_mentor_insight(context)
+                try:
+                    summary, lead_link, topic = await generate_mentor_insight(context)
+                    SafeLogger.info(
+                        "pipeline_failover_result stage=summarize_news success=true "
+                        "failover_succeeded=true final_path=generate_mentor_insight"
+                    )
+                except Exception:
+                    SafeLogger.error(
+                        "pipeline_failover_result stage=summarize_news success=false "
+                        "failover_succeeded=false final_path=none"
+                    )
+                    raise
         else:
             mode_label = "Strategist" if "Morning" in session else "Mentor"
             SafeLogger.info(f"Low news volume ({news_count}). Switching to {mode_label} Mode.")
