@@ -12,7 +12,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 
 - **Sage Intelligence v3 (Self-Healing AI)**: 
     - **Multi-Model Failover**: Automatically rotates through prioritized models (`Gemini 3.1 Flash Lite`, `Gemma 3 27B`, `Gemini 2.5 Flash Lite`) if the primary provider is saturated or fails validation.
-    - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean post reliable.
+    - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
+    - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key, making it effortless to identify the correct identifiers for new releases (like Gemma 3).
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context to fetch 25+ RSS feeds concurrently. Processing time reduced by **90%**.
 - **Atomic Broadcasting Engine**: 
@@ -25,7 +26,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - Uses heuristic-based scoring (Source Tiers + Product Keywords) to prioritize groundbreaking technical shifts over generic news.
 - **4-State Intelligence Matrix**: Dynamically adjusts strategy based on the time of day and news volume. Switches between **The Curator** (Morning), **The Senior Analyst** (Afternoon), and **The Strategist** (Low-volume fallback).
 - **The Fortress: Advanced Security**:
-    - **Dynamic Log Masking**: `SafeLogger` automatically redacts sensitive tokens, keys, and passwords from logs using dynamic environment scanning.
+    - **Dynamic Log Masking**: `SafeLogger` automatically redacts sensitive tokens, keys, and passwords using dynamic environment scanning.
+    - **Secure Logging Engine**: All system layers (including configuration and startup) are routed through the `SafeLogger` engine to ensure the "Fortress" protection is active from the very first line of output.
     - **Byte-Safe Truncation**: Specialized logic to truncate long summaries on byte boundaries, preventing multi-byte character (emoji) corruption.
 
 ## 🧠 Sage Intelligence: Failover Architecture
