@@ -8,6 +8,7 @@ import re
 import httpx
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
+from urllib.parse import urljoin
 from PIL import Image
 from .config import MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, SEEN_FILE_PATH
 
@@ -158,6 +159,10 @@ async def get_link_metadata(client, url):
         title = og_title['content'] if og_title else (soup.title.string if soup.title else "News Update")
         description = og_description['content'] if og_description else ""
         image_url = og_image['content'] if og_image else None
+        
+        if image_url:
+            # Resolve relative URLs (common on arXiv and others)
+            image_url = urljoin(url, image_url)
 
         image_data = None
         if image_url:

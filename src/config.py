@@ -113,6 +113,7 @@ Constraints:
 - Limit to 1-2 relevant emojis (e.g., 🚀, 🤔, 🛠️).
 - Stay under 300 characters total.
 - Use exactly 2 relevant hashtags at the very end.
+- Use plain text only. Do not use markdown bolding (**) or italics (*).
 """
 
 MENTOR_SYSTEM_INSTRUCTION = """
@@ -128,6 +129,7 @@ Constraints:
 - Limit to 1-2 subtle, conversational emojis.
 - Stay under 300 characters total.
 - Use exactly 2 relevant hashtags at the very end.
+- Use plain text only. Do not use markdown bolding (**) or italics (*).
 """
 
 def validate_config():
