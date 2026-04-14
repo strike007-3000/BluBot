@@ -80,6 +80,22 @@ Navigate to: `Settings > Secrets and variables > Actions > New repository secret
 ### 🪄3. Enable Workflow Permissions
 Go to `Settings > Actions > General` and ensure **"Read and write permissions"** is selected under "Workflow permissions".
 
+
+## Model Failover (Free Tier)
+
+To improve reliability on the free tier, the bot uses automatic model failover for text generation.
+
+Failover priority:
+1. `gemini-3.1-flash-lite` (primary)
+2. `gemma-3-27b` (high-availability fallback)
+3. `gemini-2.5-flash-lite` (secondary fallback)
+
+Failover is triggered when transient provider/API saturation errors occur (for example `503 UNAVAILABLE`, and `429` where that retry path is enabled). The bot retries with the next model in priority order.
+
+If all configured models fail, the bot degrades to the mentor-insight generation path (when enabled) so scheduled runs can still complete instead of crashing.
+
+Runtime logs include the attempted model and selected fallback transitions to simplify troubleshooting in GitHub Actions.
+
 ## 📂 Project Structure
 
 - `bot.py`: The entry point (Orchestrator) that coordinates the daily news cycle.
@@ -105,6 +121,10 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
    ```bash
    python bot.py
    ```
+
+## 🗒️ Updates & History
+
+- **2026-04-14**: Introduced free-tier model failover with ordered fallback models for transient provider saturation resilience.
 
 ---
 *Built with ❤️ for the AI Community*
