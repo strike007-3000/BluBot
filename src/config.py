@@ -1,5 +1,5 @@
 import os
-from .utils import SafeLogger
+from .logger import SafeLogger
 from dotenv import load_dotenv
 
 # Load environment variables
