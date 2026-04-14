@@ -139,6 +139,34 @@ def validate_summary(text):
     if "#" not in text: return False, "No Hashtags"
     return True, "Valid"
 
+def _extract_error_code_and_message(error):
+    """Best-effort extraction of provider status details from SDK exceptions."""
+    code = None
+    for attr in ("status_code", "code", "http_status", "status"):
+        value = getattr(error, attr, None)
+        if value is not None:
+            code = str(value)
+            break
+
+    response = getattr(error, "response", None)
+    if code is None and response is not None:
+        status_code = getattr(response, "status_code", None)
+        if status_code is not None:
+            code = str(status_code)
+
+    message = str(error)
+    return code, message
+
+def _is_transient_model_error(error):
+    """Transient Gemini/provider failures that should trigger model failover."""
+    code, message = _extract_error_code_and_message(error)
+    message_upper = message.upper()
+
+    if code in {"503", "429"}:
+        return True
+
+    return "UNAVAILABLE" in message_upper
+
 async def generate_content_with_failover(client, user_prompt, config, mode):
     """Attempts content generation across prioritized Gemini models."""
     last_error = None
@@ -167,23 +195,68 @@ async def summarize_news(news_items, context, mode="Curator"):
     
     config = types.GenerateContentConfig(system_instruction=instruction, temperature=0.7)
 
-    response = await generate_content_with_failover(client, user_prompt, config, mode)
-    raw_text = response.text.strip()
+    attempted_models = []
+    last_error = None
 
-    topic = "General"
-    summary = raw_text
-    if "TOPIC:" in raw_text and "BODY:" in raw_text:
-        parts = raw_text.split("BODY:", 1)
-        topic = parts[0].replace("TOPIC:", "").strip()
-        summary = parts[1].strip()
+    for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
+        attempted_models.append(model_id)
+        SafeLogger.info(
+            f"gemini_attempt mode={mode} model={model_id} order={idx + 1}/{len(GEMINI_MODEL_PRIORITY)}"
+        )
 
-    is_valid, reason = validate_summary(summary)
-    if is_valid: return summary, news_items[0]['link'], topic
-    
-    if reason == "No Hashtags" and len(summary) >= 30:
-        return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
-        
-    raise ValueError(f"AI Validation Failed: {reason}")
+        try:
+            response = await client.aio.models.generate_content(
+                model=model_id,
+                contents=user_prompt,
+                config=config
+            )
+            raw_text = response.text.strip()
+
+            topic = "General"
+            summary = raw_text
+            if "TOPIC:" in raw_text and "BODY:" in raw_text:
+                parts = raw_text.split("BODY:", 1)
+                topic = parts[0].replace("TOPIC:", "").strip()
+                summary = parts[1].strip()
+
+            is_valid, reason = validate_summary(summary)
+            if is_valid:
+                return summary, news_items[0]['link'], topic
+
+            if reason == "No Hashtags" and len(summary) >= 30:
+                return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
+
+            last_error = ValueError(f"AI Validation Failed: {reason}")
+            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                SafeLogger.warn(
+                    f"Model {model_id} produced invalid output ({reason}), trying {next_model}"
+                )
+                continue
+            break
+        except Exception as e:
+            last_error = e
+            code, message = _extract_error_code_and_message(e)
+            if _is_transient_model_error(e):
+                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                    SafeLogger.warn(
+                        f"Model {model_id} failed with transient error code={code or 'unknown'} "
+                        f"message={message[:180]} - trying {next_model}"
+                    )
+                    continue
+                break
+
+            raise RuntimeError(
+                f"Non-transient Gemini failure on model {model_id} "
+                f"(code={code or 'unknown'}): {message}"
+            ) from e
+
+    raise RuntimeError(
+        "All Gemini models failed in summarize_news. "
+        f"Attempted models (in order): {attempted_models}. "
+        f"Final error: {type(last_error).__name__} - {last_error}"
+    ) from last_error
 
 @retry_with_backoff
 async def generate_mentor_insight(context):
