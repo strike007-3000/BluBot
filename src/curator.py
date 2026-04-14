@@ -217,11 +217,21 @@ async def summarize_news(news_items, context, mode="Curator"):
 
         for attempt in range(1, MODEL_ATTEMPT_RETRIES + 1):
             try:
-                response = await client.aio.models.generate_content(
-                    model=model_id,
-                    contents=user_prompt,
-                    config=config
-                )
+                # Instruction Adaptation for Gemma vs Gemini
+                if "gemma" in model_id.lower():
+                    # Gemma path: Prepend instruction to user prompt
+                    response = await client.aio.models.generate_content(
+                        model=model_id,
+                        contents=f"{instruction}\n\nUSER INPUT:\n{user_prompt}",
+                        config=types.GenerateContentConfig(temperature=0.7)
+                    )
+                else:
+                    # Gemini path: Use native system_instruction
+                    response = await client.aio.models.generate_content(
+                        model=model_id,
+                        contents=user_prompt,
+                        config=config
+                    )
                 raw_text = response.text.strip()
 
                 topic = "General"
@@ -328,11 +338,21 @@ async def generate_mentor_insight(context):
 
         for attempt in range(1, MODEL_ATTEMPT_RETRIES + 1):
             try:
-                response = await client.aio.models.generate_content(
-                    model=model_id,
-                    contents=user_prompt,
-                    config=config
-                )
+                # Instruction Adaptation for Gemma vs Gemini
+                if "gemma" in model_id.lower():
+                    # Gemma path: Prepend instruction to user prompt
+                    response = await client.aio.models.generate_content(
+                        model=model_id,
+                        contents=f"{instruction}\n\nUSER INPUT:\n{user_prompt}",
+                        config=types.GenerateContentConfig(temperature=0.7)
+                    )
+                else:
+                    # Gemini path: Use native system_instruction
+                    response = await client.aio.models.generate_content(
+                        model=model_id,
+                        contents=user_prompt,
+                        config=config
+                    )
                 summary = response.text.strip()
 
                 if "BODY:" in summary:
