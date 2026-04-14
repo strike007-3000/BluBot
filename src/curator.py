@@ -240,50 +240,49 @@ async def summarize_news(news_items, context, mode="Curator"):
                     return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
 
                 last_error = ValueError(f"AI Validation Failed: {reason}")
+                raise last_error
+            except ValueError as e:
+                last_error = e
+                attempt_errors.append({
+                    "model": model_id,
+                    "status": "validation_failed",
+                    "error_class": "ValueError",
+                    "message": str(e)
+                })
                 SafeLogger.warn(
-                    f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
-                    f"error=validation_failed reason={reason}"
+                    f"gemini_error mode={mode} model={model_id} "
+                    f"error_class=ValueError status=validation_failed reason={reason}"
                 )
-                return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
-
-            last_error = ValueError(f"AI Validation Failed: {reason}")
-            attempt_errors.append({
-                "model": model_id,
-                "status": "validation_failed",
-                "error_class": "ValueError",
-                "message": f"AI Validation Failed: {reason}"
-            })
-            SafeLogger.warn(
-                f"gemini_error mode={mode} model={model_id} "
-                f"error_class=ValueError status=validation_failed reason={reason}"
-            )
-            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
-                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                    SafeLogger.warn(
+                        f"Model {model_id} failed validation ({reason}) - trying {next_model}"
+                    )
+                continue
+            except Exception as e:
+                last_error = e
+                code, message = _extract_error_code_and_message(e)
                 SafeLogger.warn(
                     f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
                     f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
                 )
-            continue
-        except Exception as e:
-            last_error = e
-            code, message = _extract_error_code_and_message(e)
-            attempt_errors.append({
-                "model": model_id,
-                "status": code or "unknown",
-                "error_class": type(e).__name__,
-                "message": message
-            })
-            SafeLogger.warn(
-                f"gemini_error mode={mode} model={model_id} "
-                f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
-            )
-            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
-                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                attempt_errors.append({
+                    "model": model_id,
+                    "status": code or "unknown",
+                    "error_class": type(e).__name__,
+                    "message": message
+                })
                 SafeLogger.warn(
-                    f"Model {model_id} failed with error code={code or 'unknown'} "
-                    f"message={message[:180]} - trying {next_model}"
+                    f"gemini_error mode={mode} model={model_id} "
+                    f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
                 )
-            continue
+                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                    SafeLogger.warn(
+                        f"Model {model_id} failed with error code={code or 'unknown'} "
+                        f"message={message[:180]} - trying {next_model}"
+                    )
+                continue
 
     SafeLogger.error(
         f"gemini_failover_result mode={mode} success=false failover_succeeded=false "
@@ -348,50 +347,49 @@ async def generate_mentor_insight(context):
                     return summary.strip() + " #AI #Tech", None, "Strategy"
 
                 last_error = ValueError(f"AI Validation Failed: {reason}")
+                raise last_error
+            except ValueError as e:
+                last_error = e
+                attempt_errors.append({
+                    "model": model_id,
+                    "status": "validation_failed",
+                    "error_class": "ValueError",
+                    "message": str(e)
+                })
                 SafeLogger.warn(
-                    f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
-                    f"error=validation_failed reason={reason}"
+                    f"gemini_error mode={mode} model={model_id} "
+                    f"error_class=ValueError status=validation_failed reason={reason}"
                 )
-                return summary.strip() + " #AI #Tech", None, "Strategy"
-
-            last_error = ValueError(f"AI Validation Failed: {reason}")
-            attempt_errors.append({
-                "model": model_id,
-                "status": "validation_failed",
-                "error_class": "ValueError",
-                "message": f"AI Validation Failed: {reason}"
-            })
-            SafeLogger.warn(
-                f"gemini_error mode={mode} model={model_id} "
-                f"error_class=ValueError status=validation_failed reason={reason}"
-            )
-            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
-                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                    SafeLogger.warn(
+                        f"Model {model_id} failed validation ({reason}) - trying {next_model}"
+                    )
+                continue
+            except Exception as e:
+                last_error = e
+                code, message = _extract_error_code_and_message(e)
                 SafeLogger.warn(
                     f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
                     f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
                 )
-            continue
-        except Exception as e:
-            last_error = e
-            code, message = _extract_error_code_and_message(e)
-            attempt_errors.append({
-                "model": model_id,
-                "status": code or "unknown",
-                "error_class": type(e).__name__,
-                "message": message
-            })
-            SafeLogger.warn(
-                f"gemini_error mode={mode} model={model_id} "
-                f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
-            )
-            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
-                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                attempt_errors.append({
+                    "model": model_id,
+                    "status": code or "unknown",
+                    "error_class": type(e).__name__,
+                    "message": message
+                })
                 SafeLogger.warn(
-                    f"Model {model_id} failed with error code={code or 'unknown'} "
-                    f"message={message[:180]} - trying {next_model}"
+                    f"gemini_error mode={mode} model={model_id} "
+                    f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
                 )
-            continue
+                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                    SafeLogger.warn(
+                        f"Model {model_id} failed with error code={code or 'unknown'} "
+                        f"message={message[:180]} - trying {next_model}"
+                    )
+                continue
 
     SafeLogger.error(
         f"gemini_failover_result mode={mode} success=false failover_succeeded=false "
