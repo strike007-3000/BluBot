@@ -268,17 +268,66 @@ async def generate_mentor_insight(context):
     client = genai.Client(api_key=GEMINI_API_KEY)
     user_prompt = f"Current Time: {context['day']} {context['session']}\nStrategic Topic: {topic}"
     config = types.GenerateContentConfig(system_instruction=MENTOR_SYSTEM_INSTRUCTION, temperature=0.8)
-    
-    response = await generate_content_with_failover(client, user_prompt, config, "Mentor Fallback")
-    summary = response.text.strip()
-    
-    if "BODY:" in summary:
-        summary = summary.split("BODY:", 1)[1].strip()
 
-    is_valid, reason = validate_summary(summary)
-    if is_valid: return summary, None, "Strategy"
-    
-    return f"Strategy Insight: {topic}. Focus on long-term sustainability and architecture over hype. #AI #Strategy", None, "Strategy"
+    attempted_models = []
+    last_error = None
+    mode = "Mentor Fallback"
+
+    for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
+        attempted_models.append(model_id)
+        SafeLogger.info(
+            f"gemini_attempt mode={mode} model={model_id} order={idx + 1}/{len(GEMINI_MODEL_PRIORITY)}"
+        )
+
+        try:
+            response = await client.aio.models.generate_content(
+                model=model_id,
+                contents=user_prompt,
+                config=config
+            )
+            summary = response.text.strip()
+
+            if "BODY:" in summary:
+                summary = summary.split("BODY:", 1)[1].strip()
+
+            is_valid, reason = validate_summary(summary)
+            if is_valid:
+                return summary, None, "Strategy"
+
+            if reason == "No Hashtags" and len(summary) >= 30:
+                return summary.strip() + " #AI #Tech", None, "Strategy"
+
+            last_error = ValueError(f"AI Validation Failed: {reason}")
+            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                SafeLogger.warn(
+                    f"Model {model_id} produced invalid output ({reason}), trying {next_model}"
+                )
+                continue
+            break
+        except Exception as e:
+            last_error = e
+            code, message = _extract_error_code_and_message(e)
+            if _is_transient_model_error(e):
+                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                    SafeLogger.warn(
+                        f"Model {model_id} failed with transient error code={code or 'unknown'} "
+                        f"message={message[:180]} - trying {next_model}"
+                    )
+                    continue
+                break
+
+            raise RuntimeError(
+                f"Non-transient Gemini failure on model {model_id} "
+                f"(code={code or 'unknown'}): {message}"
+            ) from e
+
+    raise RuntimeError(
+        "All Gemini models failed in generate_mentor_insight. "
+        f"Attempted models (in order): {attempted_models}. "
+        f"Final error: {type(last_error).__name__} - {last_error}"
+    ) from last_error
 
 def get_temporal_context():
     """Calculates branding context."""
