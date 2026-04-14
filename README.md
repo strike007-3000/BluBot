@@ -117,6 +117,7 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - **Critical Dependency Lockdown**: Pinned all core and transitive dependencies (`Pillow`, `urllib3`, `cryptography`, `h11`) to safe versions to resolve 22+ security vulnerabilities.
     - **Advanced HTML Sanitization**: Refactored logic to use `BeautifulSoup` for high-fidelity, secure HTML stripping across 30+ feeds.
     - **Observability Overhaul**: Implemented granular exception handling to differentiate between network saturation, auth failures, and filesystem IO errors.
+    - **Community Hardening**: Established [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md) with "Signal Verification" guidelines.
 - **2026-04-13**: **Parallel Async & Security Overhaul**.
     - Re-engineered core as a high-performance `asyncio` engine with `httpx`.
     - Implemented **Atomic Broadcasting** to ensure platform-independent persistence.
@@ -131,4 +132,11 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - Implemented Tier-based source scoring and "Hidden Gem" injection logic.
 
 ---
+
+## 🤝 Community & Security
+
+- **Security**: Please read our [Security Policy](SECURITY.md) before reporting vulnerabilities.
+- **Contributing**: Check our [Contribution Guidelines](CONTRIBUTING.md) to help evolve the Sage persona.
+- **Wiki**: Find the full technical blueprint in the [Elite Sage Manual](docs/WIKI_MANUAL.md).
+
 *Built with ❤️ for the AI Community*

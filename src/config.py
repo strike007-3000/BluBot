@@ -219,6 +219,9 @@ def validate_gemini_model_priority():
     try:
         # Dynamic fetch to handle runtime-provided keys (e.g. in test_models.py)
         api_key = os.getenv("GEMINI_KEY") or GEMINI_API_KEY
+        if os.getenv("CI") == "true":
+            SafeLogger.info("CI Environment detected: Skipping live Gemini model validation.")
+            return True
         if not api_key:
             SafeLogger.error("Unable to call Gemini ListModels: No API key provided.")
             return False
