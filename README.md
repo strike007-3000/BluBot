@@ -98,7 +98,8 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
   - `utils.py`: Resilience (@retry_with_backoff), Metadata scraping, and Image optimization.
   - `broadcaster.py`: Async platform-specific posting logic.
 - `seen_articles.json`: Persistent memory of posted content.
-- `debug_bot.py`: Local testing entry point.
+- `test_models.py`: Unified diagnostic suite for RSS feeds & AI model validation.
+- `setup_threads.py`: Interactive setup script for Threads API access.
 
 ## 🗒️ Updates & History
 
