@@ -19,7 +19,11 @@ THREADS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 
 # Platform Constraints
-GEMINI_MODEL_PRIORITY = ["gemini-3.1-flash-lite", "gemma-3-27b", "gemini-2.5-flash-lite"]
+GEMINI_MODEL_PRIORITY = [
+    "models/gemini-3.1-flash-lite-preview",
+    "models/gemma-3-27b",
+    "models/gemini-2.5-flash-lite",
+]
 # Deprecated: kept temporarily for rollout compatibility. Prefer GEMINI_MODEL_PRIORITY.
 GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
 BLUESKY_LIMIT = 300
@@ -145,5 +149,75 @@ def validate_config():
     if (THREADS_TOKEN or THREADS_USER_ID) and not (THREADS_TOKEN and THREADS_USER_ID):
         print("CRITICAL ERROR: Partial Threads configuration detected.")
         return False
-        
+
+    if not validate_gemini_model_priority():
+        return False
+
+    return True
+
+
+def _model_variants(model_id):
+    """Returns equivalent model ID variants for matching."""
+    normalized = model_id.strip()
+    without_prefix = normalized.replace("models/", "", 1)
+    with_prefix = f"models/{without_prefix}"
+    return {normalized, without_prefix, with_prefix}
+
+
+def validate_gemini_model_priority():
+    """
+    Validates configured Gemini models against a single ListModels call.
+    Keeps only models that exist and support generateContent.
+    """
+    global GEMINI_MODEL_PRIORITY, GEMINI_MODEL_ID
+
+    try:
+        from google import genai
+    except Exception as e:
+        print(f"CRITICAL ERROR: Failed to import google.genai for model validation: {e}")
+        return False
+
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        listed_models = list(client.models.list())
+    except Exception as e:
+        print(f"CRITICAL ERROR: Unable to call Gemini ListModels for startup validation: {e}")
+        return False
+
+    supported_by_name = {}
+    for model in listed_models:
+        actions = getattr(model, "supported_actions", None) or getattr(
+            model, "supported_generation_methods", None
+        ) or []
+        if "generateContent" in actions and getattr(model, "name", None):
+            supported_by_name[model.name] = model.name
+            supported_by_name[model.name.replace("models/", "", 1)] = model.name
+
+    valid_models = []
+    for configured_model in GEMINI_MODEL_PRIORITY:
+        canonical = None
+        for variant in _model_variants(configured_model):
+            if variant in supported_by_name:
+                canonical = supported_by_name[variant]
+                break
+
+        if canonical:
+            valid_models.append(canonical)
+        else:
+            print(
+                "WARNING: Gemini model is invalid or lacks generateContent support; skipping: "
+                f"{configured_model}"
+            )
+
+    # Preserve order while removing duplicates
+    valid_models = list(dict.fromkeys(valid_models))
+    GEMINI_MODEL_PRIORITY[:] = valid_models
+
+    if not GEMINI_MODEL_PRIORITY:
+        print("CRITICAL ERROR: No valid Gemini models available after startup validation.")
+        GEMINI_MODEL_ID = None
+        return False
+
+    GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
+    print(f"INFO: Validated Gemini model priority: {GEMINI_MODEL_PRIORITY}")
     return True
