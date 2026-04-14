@@ -101,8 +101,23 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
-- **2026-04-14**: **Sage Intelligence v3** rollout. Introduced multi-model failover, self-healing validation, and atomic broadcasting logic for 100% reliability.
-- **2026-04-13**: Integrated `SafeLogger` for dynamic secret masking and byte-safe truncation.
+- **2026-04-14**: **Sage Intelligence v3** rollout. 
+    - Introduced multi-model failover and self-discovery diagnostics.
+    - Implemented self-healing post-formatting (markdown stripping).
+    - Fixed relative URL resolution for metadata scraping (academic/arXiv fix).
+    - Hardened the "Fortress" by migrating all system layers to `SafeLogger`.
+- **2026-04-13**: **Parallel Async & Security Overhaul**.
+    - Re-engineered core as a high-performance `asyncio` engine with `httpx`.
+    - Implemented **Atomic Broadcasting** to ensure platform-independent persistence.
+    - Introduced `SafeLogger` for dynamic, environment-aware secret masking.
+    - Added Pillow-powered image compression and byte-safe truncation.
+    - Optimized memory with O(1) deduplication lookups.
+- **2026-04-12**: **4-State Persona Matrix**.
+    - Added dynamic switching between Curator, Senior Analyst, and Strategist modes.
+    - Integrated multi-topic fallback pool for low-volume news days.
+- **2026-04-11**: **Threads Integration & High-Signal Scoring**.
+    - Added Threads as the third broadcasting platform.
+    - Implemented Tier-based source scoring and "Hidden Gem" injection logic.
 
 ---
 *Built with ❤️ for the AI Community*
