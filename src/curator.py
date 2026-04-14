@@ -196,6 +196,7 @@ async def summarize_news(news_items, context, mode="Curator"):
     config = types.GenerateContentConfig(system_instruction=instruction, temperature=0.7)
 
     attempted_models = []
+    attempt_errors = []
     last_error = None
 
     for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
@@ -235,6 +236,12 @@ async def summarize_news(news_items, context, mode="Curator"):
                 return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
 
             last_error = ValueError(f"AI Validation Failed: {reason}")
+            attempt_errors.append({
+                "model": model_id,
+                "status": "validation_failed",
+                "error_class": "ValueError",
+                "message": f"AI Validation Failed: {reason}"
+            })
             SafeLogger.warn(
                 f"gemini_error mode={mode} model={model_id} "
                 f"error_class=ValueError status=validation_failed reason={reason}"
@@ -244,37 +251,37 @@ async def summarize_news(news_items, context, mode="Curator"):
                 SafeLogger.warn(
                     f"Model {model_id} produced invalid output ({reason}), trying {next_model}"
                 )
-                continue
-            break
+            continue
         except Exception as e:
             last_error = e
             code, message = _extract_error_code_and_message(e)
+            attempt_errors.append({
+                "model": model_id,
+                "status": code or "unknown",
+                "error_class": type(e).__name__,
+                "message": message
+            })
             SafeLogger.warn(
                 f"gemini_error mode={mode} model={model_id} "
                 f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
             )
-            if _is_transient_model_error(e):
-                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
-                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
-                    SafeLogger.warn(
-                        f"Model {model_id} failed with transient error code={code or 'unknown'} "
-                        f"message={message[:180]} - trying {next_model}"
-                    )
-                    continue
-                break
-
-            raise RuntimeError(
-                f"Non-transient Gemini failure on model {model_id} "
-                f"(code={code or 'unknown'}): {message}"
-            ) from e
+            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                SafeLogger.warn(
+                    f"Model {model_id} failed with error code={code or 'unknown'} "
+                    f"message={message[:180]} - trying {next_model}"
+                )
+            continue
 
     SafeLogger.error(
         f"gemini_failover_result mode={mode} success=false failover_succeeded=false "
         f"final_model=none attempted_models={attempted_models}"
     )
+    attempt_statuses = [f"{a['model']}:{a['status']}" for a in attempt_errors]
     raise RuntimeError(
         "All Gemini models failed in summarize_news. "
         f"Attempted models (in order): {attempted_models}. "
+        f"Attempt statuses: {attempt_statuses}. "
         f"Final error: {type(last_error).__name__} - {last_error}"
     ) from last_error
 
@@ -290,6 +297,7 @@ async def generate_mentor_insight(context):
     config = types.GenerateContentConfig(system_instruction=MENTOR_SYSTEM_INSTRUCTION, temperature=0.8)
 
     attempted_models = []
+    attempt_errors = []
     last_error = None
     mode = "Mentor Fallback"
 
@@ -326,6 +334,12 @@ async def generate_mentor_insight(context):
                 return summary.strip() + " #AI #Tech", None, "Strategy"
 
             last_error = ValueError(f"AI Validation Failed: {reason}")
+            attempt_errors.append({
+                "model": model_id,
+                "status": "validation_failed",
+                "error_class": "ValueError",
+                "message": f"AI Validation Failed: {reason}"
+            })
             SafeLogger.warn(
                 f"gemini_error mode={mode} model={model_id} "
                 f"error_class=ValueError status=validation_failed reason={reason}"
@@ -335,37 +349,37 @@ async def generate_mentor_insight(context):
                 SafeLogger.warn(
                     f"Model {model_id} produced invalid output ({reason}), trying {next_model}"
                 )
-                continue
-            break
+            continue
         except Exception as e:
             last_error = e
             code, message = _extract_error_code_and_message(e)
+            attempt_errors.append({
+                "model": model_id,
+                "status": code or "unknown",
+                "error_class": type(e).__name__,
+                "message": message
+            })
             SafeLogger.warn(
                 f"gemini_error mode={mode} model={model_id} "
                 f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
             )
-            if _is_transient_model_error(e):
-                if idx < len(GEMINI_MODEL_PRIORITY) - 1:
-                    next_model = GEMINI_MODEL_PRIORITY[idx + 1]
-                    SafeLogger.warn(
-                        f"Model {model_id} failed with transient error code={code or 'unknown'} "
-                        f"message={message[:180]} - trying {next_model}"
-                    )
-                    continue
-                break
-
-            raise RuntimeError(
-                f"Non-transient Gemini failure on model {model_id} "
-                f"(code={code or 'unknown'}): {message}"
-            ) from e
+            if idx < len(GEMINI_MODEL_PRIORITY) - 1:
+                next_model = GEMINI_MODEL_PRIORITY[idx + 1]
+                SafeLogger.warn(
+                    f"Model {model_id} failed with error code={code or 'unknown'} "
+                    f"message={message[:180]} - trying {next_model}"
+                )
+            continue
 
     SafeLogger.error(
         f"gemini_failover_result mode={mode} success=false failover_succeeded=false "
         f"final_model=none attempted_models={attempted_models}"
     )
+    attempt_statuses = [f"{a['model']}:{a['status']}" for a in attempt_errors]
     raise RuntimeError(
         "All Gemini models failed in generate_mentor_insight. "
         f"Attempted models (in order): {attempted_models}. "
+        f"Attempt statuses: {attempt_statuses}. "
         f"Final error: {type(last_error).__name__} - {last_error}"
     ) from last_error
 
