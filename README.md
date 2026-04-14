@@ -12,7 +12,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 
 - **Sage Intelligence v3 (Self-Healing AI)**: 
     - **Multi-Model Failover**: Automatically rotates through prioritized models (`Gemini 3.1 Flash Lite`, `Gemma 3 27B`, `Gemini 2.5 Flash Lite`) if the primary provider is saturated or fails validation.
-    - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) to ensure 100% post reliability.
+    - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean post reliable.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context to fetch 25+ RSS feeds concurrently. Processing time reduced by **90%**.
 - **Atomic Broadcasting Engine**: 
