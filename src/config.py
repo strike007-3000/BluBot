@@ -19,7 +19,9 @@ THREADS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 
 # Platform Constraints
-GEMINI_MODEL_ID = "gemini-3.1-flash-lite-preview"
+GEMINI_MODEL_PRIORITY = ["gemini-3.1-flash-lite", "gemma-3-27b", "gemini-2.5-flash-lite"]
+# Deprecated: kept temporarily for rollout compatibility. Prefer GEMINI_MODEL_PRIORITY.
+GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
 BLUESKY_LIMIT = 300
 MASTODON_LIMIT = 500
 THREADS_LIMIT = 500

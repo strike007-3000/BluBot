@@ -9,7 +9,7 @@ from google import genai
 from .config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
-    SECONDARY_TOPICS, GEMINI_API_KEY, GEMINI_MODEL_ID
+    SECONDARY_TOPICS, GEMINI_API_KEY, GEMINI_MODEL_PRIORITY
 )
 from .utils import retry_with_backoff, SafeLogger
 
@@ -139,6 +139,21 @@ def validate_summary(text):
     if "#" not in text: return False, "No Hashtags"
     return True, "Valid"
 
+async def generate_content_with_failover(client, user_prompt, config, mode):
+    """Attempts content generation across prioritized Gemini models."""
+    last_error = None
+    for model_id in GEMINI_MODEL_PRIORITY:
+        try:
+            SafeLogger.info(f"Synthesizing in {mode} Mode via {model_id}...")
+            response = await client.aio.models.generate_content(model=model_id, contents=user_prompt, config=config)
+            return response
+        except Exception as e:
+            last_error = e
+            SafeLogger.warn(f"Model {model_id} failed in {mode} Mode: {type(e).__name__} - {e}")
+    raise RuntimeError(
+        f"All Gemini failover models failed for {mode} Mode. Last error: {type(last_error).__name__} - {last_error}"
+    ) from last_error
+
 @retry_with_backoff
 async def summarize_news(news_items, context, mode="Curator"):
     """Synthesizes news using Gemini API with standardized Model constant."""
@@ -152,8 +167,7 @@ async def summarize_news(news_items, context, mode="Curator"):
     
     config = types.GenerateContentConfig(system_instruction=instruction, temperature=0.7)
 
-    SafeLogger.info(f"Synthesizing in {mode} Mode via {GEMINI_MODEL_ID}...")
-    response = await client.aio.models.generate_content(model=GEMINI_MODEL_ID, contents=user_prompt, config=config)
+    response = await generate_content_with_failover(client, user_prompt, config, mode)
     raw_text = response.text.strip()
 
     topic = "General"
@@ -182,7 +196,7 @@ async def generate_mentor_insight(context):
     user_prompt = f"Current Time: {context['day']} {context['session']}\nStrategic Topic: {topic}"
     config = types.GenerateContentConfig(system_instruction=MENTOR_SYSTEM_INSTRUCTION, temperature=0.8)
     
-    response = await client.aio.models.generate_content(model=GEMINI_MODEL_ID, contents=user_prompt, config=config)
+    response = await generate_content_with_failover(client, user_prompt, config, "Mentor Fallback")
     summary = response.text.strip()
     
     if "BODY:" in summary:
