@@ -6,7 +6,7 @@ requests==2.33.0
 Mastodon.py>=2.2.1
 beautifulsoup4>=4.14.0
 httpx>=0.28.0
-Pillow==10.3.0
+Pillow==12.2.0
 
 # Security Hardening for Transitive Dependencies
 cryptography==46.0.7
