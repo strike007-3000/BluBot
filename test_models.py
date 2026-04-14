@@ -50,11 +50,20 @@ async def test_model(model_name):
 
 async def main():
     load_dotenv()
-    if not os.getenv("GEMINI_KEY"):
-        print("ERROR: GEMINI_KEY not found in .env file.")
-        return
+    api_key = os.getenv("GEMINI_KEY")
+    
+    if not api_key:
+        print("\n--- GEMINI_KEY not found in environment ---")
+        api_key = input("Please enter your Gemini API Key: ").strip()
+        if not api_key:
+            print("ERROR: API Key is required to run tests.")
+            return
+        # Inject into environment for the session
+        os.environ["GEMINI_KEY"] = api_key
+        # Refresh the key in the curator module
+        from src import curator
+        curator.GEMINI_API_KEY = api_key
 
-    # test current priority list
     from src.config import GEMINI_MODEL_PRIORITY
     print(f"Current Priority List: {GEMINI_MODEL_PRIORITY}")
     
