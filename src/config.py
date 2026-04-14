@@ -1,4 +1,5 @@
 import os
+from .utils import SafeLogger
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -138,18 +139,18 @@ def validate_config():
     core_vars = ["BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY"]
     for v in core_vars:
         if not os.getenv(v):
-            print(f"CRITICAL ERROR: Missing CORE variable: {v}")
+            SafeLogger.error(f"Missing CORE variable: {v}")
             return False
             
     # Platform-specific "Fail Fast" validation
     # Mastodon
     if (MASTODON_TOKEN or MASTODON_BASE_URL) and not (MASTODON_TOKEN and MASTODON_BASE_URL):
-        print("CRITICAL ERROR: Partial Mastodon configuration detected.")
+        SafeLogger.error("Partial Mastodon configuration detected.")
         return False
         
     # Threads
     if (THREADS_TOKEN or THREADS_USER_ID) and not (THREADS_TOKEN and THREADS_USER_ID):
-        print("CRITICAL ERROR: Partial Threads configuration detected.")
+        SafeLogger.error("Partial Threads configuration detected.")
         return False
 
     if not validate_gemini_model_priority():
@@ -176,14 +177,14 @@ def validate_gemini_model_priority():
     try:
         from google import genai
     except Exception as e:
-        print(f"CRITICAL ERROR: Failed to import google.genai for model validation: {e}")
+        SafeLogger.error(f"Failed to import google.genai for model validation: {e}")
         return False
 
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
         listed_models = list(client.models.list())
     except Exception as e:
-        print(f"CRITICAL ERROR: Unable to call Gemini ListModels for startup validation: {e}")
+        SafeLogger.error(f"Unable to call Gemini ListModels for startup validation: {e}")
         return False
 
     supported_by_name = {}
@@ -206,23 +207,23 @@ def validate_gemini_model_priority():
         if canonical:
             valid_models.append(canonical)
         else:
-            print(
-                "WARNING: Gemini model is invalid or lacks generateContent support; skipping: "
+            SafeLogger.warn(
+                "Gemini model is invalid or lacks generateContent support; skipping: "
                 f"{configured_model}"
             )
             # Diagnostic: Print all available models to help fix future mismatches
             all_names = sorted(list(supported_by_name.keys()))
-            print(f"DEBUG: Available models for this key: {all_names}")
+            SafeLogger.info(f"Available models for this key: {all_names}")
 
     # Preserve order while removing duplicates
     valid_models = list(dict.fromkeys(valid_models))
     GEMINI_MODEL_PRIORITY[:] = valid_models
 
     if not GEMINI_MODEL_PRIORITY:
-        print("CRITICAL ERROR: No valid Gemini models available after startup validation.")
+        SafeLogger.error("No valid Gemini models available after startup validation.")
         GEMINI_MODEL_ID = None
         return False
 
     GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
-    print(f"INFO: Validated Gemini model priority: {GEMINI_MODEL_PRIORITY}")
+    SafeLogger.info(f"Validated Gemini model priority: {GEMINI_MODEL_PRIORITY}")
     return True
