@@ -19,7 +19,7 @@ We welcome the use of AI coding assistants (like Gemini, Claude, or GPT), but wi
 ## 🚀 The PR Workflow
 1.  **Fork & Branch**: Create a descriptive branch (e.g., `feature/atproto-facets` or `fix/bibtex-parsing`).
 2.  **Test Before You Post**: Run `python test_models.py` and verify all diagnostic scores pass.
-3.  **The "Merge" Requirement**: Your PR must pass the **GitHub Actions CI (`post-news`)** and **CodeQL Analysis** before it will be considered for a merge.
+3.  **The "Merge" Requirement**: Your PR must pass the **CI Verification (`test`)** and **CodeQL Analysis** before it will be considered for a merge.
 4.  **Documentation**: If you change the persona or scoring engine, update [WIKI_MANUAL.md](docs/WIKI_MANUAL.md) to reflect the shift.
 
 *By contributing, you agree that your work will be licensed under the MIT License of this repository.*
