@@ -216,7 +216,13 @@ def validate_gemini_model_priority():
         return False
 
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
+        # Dynamic fetch to handle runtime-provided keys (e.g. in test_models.py)
+        api_key = os.getenv("GEMINI_KEY") or GEMINI_API_KEY
+        if not api_key:
+            SafeLogger.error("Unable to call Gemini ListModels: No API key provided.")
+            return False
+            
+        client = genai.Client(api_key=api_key)
         listed_models = list(client.models.list())
     except Exception as e:
         SafeLogger.error(f"Unable to call Gemini ListModels for startup validation: {e}")
