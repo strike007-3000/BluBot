@@ -87,16 +87,25 @@ def load_seen_articles():
     return {"links": [], "recent_topics": []}
 
 def save_seen_articles(data):
-    """Saves updated memory to the absolute SEEN_FILE_PATH."""
+    """Saves updated memory to the absolute SEEN_FILE_PATH using atomic writing."""
     try:
         # Retention management
         data["links"] = data["links"][-500:]
         data["recent_topics"] = data["recent_topics"][-20:]
-        with open(SEEN_FILE_PATH, "w") as f:
+        
+        # Atomic Write: Write to temp file then rename
+        temp_path = f"{SEEN_FILE_PATH}.tmp"
+        with open(temp_path, "w") as f:
             json.dump(data, f, indent=4)
-        SafeLogger.info(f"Saved {len(data['links'])} seen articles.")
+        
+        # Expert Review Fix: Atomic swap to prevent truncation corruption
+        os.replace(temp_path, SEEN_FILE_PATH)
+        
+        SafeLogger.info(f"Saved {len(data['links'])} seen articles (Atomic).")
     except Exception as e:
         SafeLogger.error(f"Error saving seen articles: {e}")
+        if os.path.exists(f"{SEEN_FILE_PATH}.tmp"):
+            os.remove(f"{SEEN_FILE_PATH}.tmp")
 
 async def get_link_metadata(client, url):
     """Scrapes OpenGraph metadata using a shared httpx client with modern browser headers."""

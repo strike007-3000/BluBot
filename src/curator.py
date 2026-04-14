@@ -12,7 +12,8 @@ from .config import (
     SECONDARY_TOPICS, GEMINI_API_KEY, GEMINI_MODEL_PRIORITY,
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
-    MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE
+    MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
+    FEED_SUMMARY_MAX_CHARS
 )
 from .utils import retry_with_backoff, SafeLogger
 
@@ -112,7 +113,7 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
             if not pub_date or pub_date < start_time or entry.link in seen_links:
                 continue
 
-            summary = re.sub('<[^<]+?>', '', getattr(entry, 'summary', getattr(entry, 'description', "")))[:500]
+            summary = re.sub('<[^<]+?>', '', getattr(entry, 'summary', getattr(entry, 'description', "")))[:FEED_SUMMARY_MAX_CHARS]
             item = {
                 "title": entry.title,
                 "summary": summary,
@@ -206,7 +207,7 @@ async def fetch_news(client, seen_links=None, recent_topics=None):
 
     # Ensure at least one hidden gem (Legacy injection logic)
     has_gem = any(any(g in a['link'] for g in HIDDEN_GEM_SOURCES) for a in selected)
-    if not has_gem:
+    if not has_gem and selected:
         for r in remaining:
             if any(g in r['link'] for g in HIDDEN_GEM_SOURCES):
                 selected.pop() # Remove least diverse/scored
