@@ -57,6 +57,9 @@ def retry_with_backoff(func):
             try:
                 return await func(*args, **kwargs)
             except Exception as e:
+                if getattr(e, "skip_backoff_retry", False):
+                    SafeLogger.warn(f"Skipping retry loop for {func.__name__}: {e}")
+                    raise
                 retries += 1
                 if retries == MAX_API_RETRIES:
                     SafeLogger.error(f"Ultimate failure in {func.__name__} after {MAX_API_RETRIES} attempts: {e}")

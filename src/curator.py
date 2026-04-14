@@ -13,6 +13,8 @@ from .config import (
 )
 from .utils import retry_with_backoff, SafeLogger
 
+MODEL_ATTEMPT_RETRIES = 2
+
 def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None):
     """Calculates a relevance score using a consistent reference time."""
     score = 0
@@ -182,7 +184,6 @@ async def generate_content_with_failover(client, user_prompt, config, mode):
         f"All Gemini failover models failed for {mode} Mode. Last error: {type(last_error).__name__} - {last_error}"
     ) from last_error
 
-@retry_with_backoff
 async def summarize_news(news_items, context, mode="Curator"):
     """Synthesizes news using Gemini API with standardized Model constant."""
     if not news_items: return None, None, None
@@ -205,33 +206,43 @@ async def summarize_news(news_items, context, mode="Curator"):
             f"gemini_attempt mode={mode} model={model_id} order={idx + 1}/{len(GEMINI_MODEL_PRIORITY)}"
         )
 
-        try:
-            response = await client.aio.models.generate_content(
-                model=model_id,
-                contents=user_prompt,
-                config=config
-            )
-            raw_text = response.text.strip()
-
-            topic = "General"
-            summary = raw_text
-            if "TOPIC:" in raw_text and "BODY:" in raw_text:
-                parts = raw_text.split("BODY:", 1)
-                topic = parts[0].replace("TOPIC:", "").strip()
-                summary = parts[1].strip()
-
-            is_valid, reason = validate_summary(summary)
-            if is_valid:
-                SafeLogger.info(
-                    f"gemini_failover_result mode={mode} success=true "
-                    f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+        for attempt in range(1, MODEL_ATTEMPT_RETRIES + 1):
+            try:
+                response = await client.aio.models.generate_content(
+                    model=model_id,
+                    contents=user_prompt,
+                    config=config
                 )
-                return summary, news_items[0]['link'], topic
+                raw_text = response.text.strip()
 
-            if reason == "No Hashtags" and len(summary) >= 30:
-                SafeLogger.info(
-                    f"gemini_failover_result mode={mode} success=true "
-                    f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+                topic = "General"
+                summary = raw_text
+                if "TOPIC:" in raw_text and "BODY:" in raw_text:
+                    parts = raw_text.split("BODY:", 1)
+                    topic = parts[0].replace("TOPIC:", "").strip()
+                    summary = parts[1].strip()
+
+                is_valid, reason = validate_summary(summary)
+                if is_valid:
+                    SafeLogger.info(f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> success")
+                    SafeLogger.info(
+                        f"gemini_failover_result mode={mode} success=true "
+                        f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+                    )
+                    return summary, news_items[0]['link'], topic
+
+                if reason == "No Hashtags" and len(summary) >= 30:
+                    SafeLogger.info(f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> success")
+                    SafeLogger.info(
+                        f"gemini_failover_result mode={mode} success=true "
+                        f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+                    )
+                    return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
+
+                last_error = ValueError(f"AI Validation Failed: {reason}")
+                SafeLogger.warn(
+                    f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
+                    f"error=validation_failed reason={reason}"
                 )
                 return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
 
@@ -249,7 +260,8 @@ async def summarize_news(news_items, context, mode="Curator"):
             if idx < len(GEMINI_MODEL_PRIORITY) - 1:
                 next_model = GEMINI_MODEL_PRIORITY[idx + 1]
                 SafeLogger.warn(
-                    f"Model {model_id} produced invalid output ({reason}), trying {next_model}"
+                    f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
+                    f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
                 )
             continue
         except Exception as e:
@@ -285,7 +297,6 @@ async def summarize_news(news_items, context, mode="Curator"):
         f"Final error: {type(last_error).__name__} - {last_error}"
     ) from last_error
 
-@retry_with_backoff
 async def generate_mentor_insight(context):
     """Fallback insight generation using standardized Model constant."""
     import random
@@ -307,29 +318,39 @@ async def generate_mentor_insight(context):
             f"gemini_attempt mode={mode} model={model_id} order={idx + 1}/{len(GEMINI_MODEL_PRIORITY)}"
         )
 
-        try:
-            response = await client.aio.models.generate_content(
-                model=model_id,
-                contents=user_prompt,
-                config=config
-            )
-            summary = response.text.strip()
-
-            if "BODY:" in summary:
-                summary = summary.split("BODY:", 1)[1].strip()
-
-            is_valid, reason = validate_summary(summary)
-            if is_valid:
-                SafeLogger.info(
-                    f"gemini_failover_result mode={mode} success=true "
-                    f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+        for attempt in range(1, MODEL_ATTEMPT_RETRIES + 1):
+            try:
+                response = await client.aio.models.generate_content(
+                    model=model_id,
+                    contents=user_prompt,
+                    config=config
                 )
-                return summary, None, "Strategy"
+                summary = response.text.strip()
 
-            if reason == "No Hashtags" and len(summary) >= 30:
-                SafeLogger.info(
-                    f"gemini_failover_result mode={mode} success=true "
-                    f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+                if "BODY:" in summary:
+                    summary = summary.split("BODY:", 1)[1].strip()
+
+                is_valid, reason = validate_summary(summary)
+                if is_valid:
+                    SafeLogger.info(f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> success")
+                    SafeLogger.info(
+                        f"gemini_failover_result mode={mode} success=true "
+                        f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+                    )
+                    return summary, None, "Strategy"
+
+                if reason == "No Hashtags" and len(summary) >= 30:
+                    SafeLogger.info(f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> success")
+                    SafeLogger.info(
+                        f"gemini_failover_result mode={mode} success=true "
+                        f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
+                    )
+                    return summary.strip() + " #AI #Tech", None, "Strategy"
+
+                last_error = ValueError(f"AI Validation Failed: {reason}")
+                SafeLogger.warn(
+                    f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
+                    f"error=validation_failed reason={reason}"
                 )
                 return summary.strip() + " #AI #Tech", None, "Strategy"
 
@@ -347,7 +368,8 @@ async def generate_mentor_insight(context):
             if idx < len(GEMINI_MODEL_PRIORITY) - 1:
                 next_model = GEMINI_MODEL_PRIORITY[idx + 1]
                 SafeLogger.warn(
-                    f"Model {model_id} produced invalid output ({reason}), trying {next_model}"
+                    f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> fail "
+                    f"error_class={type(e).__name__} status={code or 'unknown'} message={message[:180]}"
                 )
             continue
         except Exception as e:
