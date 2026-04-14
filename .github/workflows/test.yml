@@ -7,6 +7,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      BSKY_HANDLE: "mock.bsky.social"
+      BSKY_APP_PASSWORD: "mock-password"
+      GEMINI_KEY: "mock-key"
+      CI: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
