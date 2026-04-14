@@ -92,9 +92,10 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 - `bot.py`: Main Orchestrator.
 - **`src/`**: Modular logic layers:
-  - `config.py`: RSS feeds, source tiers, and Model Priority.
-  - `curator.py`: News discovery, scoring, and Sage Failover.
-  - `utils.py`: Resilience (@retry_with_backoff), Metadata, and SafeLogger.
+  - `config.py`: RSS feeds, source tiers, and Sage Failover logic.
+  - `logger.py`: Centralized **Secure Logging Engine** with dynamic secret masking.
+  - `curator.py`: News discovery, relevance scoring, and AI synthesis.
+  - `utils.py`: Resilience (@retry_with_backoff), Metadata scraping, and Image optimization.
   - `broadcaster.py`: Async platform-specific posting logic.
 - `seen_articles.json`: Persistent memory of posted content.
 - `debug_bot.py`: Local testing entry point.
