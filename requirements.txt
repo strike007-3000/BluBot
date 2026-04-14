@@ -1,9 +1,16 @@
-atproto
-google-genai
-feedparser
-python-dotenv
-requests
-Mastodon.py
-beautifulsoup4
-httpx
-Pillow
+atproto>=0.0.65
+google-genai>=1.72.0
+feedparser>=6.0.12
+python-dotenv>=1.2.1
+requests>=2.33.0
+Mastodon.py>=2.2.1
+beautifulsoup4>=4.14.0
+httpx>=0.28.0
+Pillow>=10.3.0
+
+# Security Hardening for Transitive Dependencies
+cryptography>=46.0.6
+urllib3>=2.6.3
+anyio>=4.4.0
+zipp>=3.19.1
+dnspython>=2.6.1

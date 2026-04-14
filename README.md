@@ -113,6 +113,10 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - Added semantic deduplication (diversity engine) and consensus synergy bonuses.
     - Expanded academic research footprint (BAIR, SAIL, NVIDIA, Meta AI).
     - Hardened the "Fortress" by migrating all system layers to `SafeLogger`.
+- **2026-04-14 (v3.2)**: **DeepCode AI Security Hardening**.
+    - **Critical Dependency Lockdown**: Pinned all core and transitive dependencies (`Pillow`, `urllib3`, `cryptography`, `h11`) to safe versions to resolve 22+ security vulnerabilities.
+    - **Advanced HTML Sanitization**: Refactored logic to use `BeautifulSoup` for high-fidelity, secure HTML stripping across 30+ feeds.
+    - **Observability Overhaul**: Implemented granular exception handling to differentiate between network saturation, auth failures, and filesystem IO errors.
 - **2026-04-13**: **Parallel Async & Security Overhaul**.
     - Re-engineered core as a high-performance `asyncio` engine with `httpx`.
     - Implemented **Atomic Broadcasting** to ensure platform-independent persistence.

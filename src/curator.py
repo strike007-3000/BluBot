@@ -3,6 +3,7 @@ import httpx
 import feedparser
 import re
 import calendar
+from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 from google.genai import types
 from google import genai
@@ -113,7 +114,11 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
             if not pub_date or pub_date < start_time or entry.link in seen_links:
                 continue
 
-            summary = re.sub('<[^<]+?>', '', getattr(entry, 'summary', getattr(entry, 'description', "")))[:FEED_SUMMARY_MAX_CHARS]
+            # Expert Review Fix: Use BeautifulSoup for robust HTML stripping (Fixes Naive Regex Parsing)
+            raw_summary = getattr(entry, 'summary', getattr(entry, 'description', ""))
+            clean_summary = BeautifulSoup(raw_summary, "html.parser").get_text()
+            summary = clean_summary[:FEED_SUMMARY_MAX_CHARS]
+            
             item = {
                 "title": entry.title,
                 "summary": summary,
@@ -123,8 +128,11 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
             item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics)
             items.append(item)
         return items
+    except (httpx.HTTPError, asyncio.TimeoutError) as e:
+        SafeLogger.warn(f"Network error fetching {url}: {type(e).__name__}")
+        return []
     except Exception as e:
-        SafeLogger.error(f"Feed error {url}: {type(e).__name__} - {e}")
+        SafeLogger.error(f"Unexpected feed error {url}: {type(e).__name__} - {e}")
         return []
 
 

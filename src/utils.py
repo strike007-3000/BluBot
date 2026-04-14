@@ -82,8 +82,8 @@ def load_seen_articles():
                     data["recent_topics"] = []
                 # Performance fix: ensure we store seen as a set for O(1) in-memory lookups later
                 return data
-        except Exception as e:
-            SafeLogger.error(f"Error loading seen articles: {e}")
+        except (json.JSONDecodeError, IOError) as e:
+            SafeLogger.error(f"Corruption or read error in seen articles: {e}")
     return {"links": [], "recent_topics": []}
 
 def save_seen_articles(data):
@@ -154,7 +154,10 @@ async def get_link_metadata(client, url):
             "image": image_data,
             "url": url
         }
+    except (httpx.HTTPError, asyncio.TimeoutError) as e:
+        SafeLogger.warn(f"Network error extracting metadata for {url}: {type(e).__name__}")
+        return {"title": "News Update", "description": "", "image": None, "url": url}
     except Exception as e:
-        SafeLogger.warn(f"Partial metadata extraction for {url}: {type(e).__name__} - {e}")
+        SafeLogger.warn(f"Unexpected metadata error for {url}: {type(e).__name__} - {e}")
         # Expert Review Fix: Return at least the URL instead of None
         return {"title": "News Update", "description": "", "image": None, "url": url}

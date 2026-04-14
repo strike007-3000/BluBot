@@ -38,8 +38,10 @@ async def update_live_status(session_name):
         with open(README_FILE_PATH, "w", encoding="utf-8") as f:
             f.writelines(new_lines)
         SafeLogger.info("Updated README Live Status Dashboard.")
+    except IOError as e:
+        SafeLogger.error(f"Filesystem error updating README: {e}")
     except Exception as e:
-        SafeLogger.error(f"Failed to update README status: {e}")
+        SafeLogger.error(f"Unexpected error in README update: {e}")
 
 async def main():
     if not validate_config():
@@ -106,7 +108,8 @@ async def main():
             try:
                 await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
             except Exception as e:
-                SafeLogger.error(f"Failed to authenticate with Bluesky: {e}")
+                # Login failure is often a credential issue (401) or network (httpx)
+                SafeLogger.error(f"Bluesky auth failed: {type(e).__name__} - {e}")
                 bsky_client = None
 
             # Expert Review Fix: Atomic Persistence & Exception Handling
