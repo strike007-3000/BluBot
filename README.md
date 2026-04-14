@@ -21,9 +21,11 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - Failure on one platform (e.g., API glitch) does NOT prevent success on others or compromise state persistence.
 - **Shared Session Engine**: Reuses authenticated sessions and connections across all platform operations to minimize redundant login handshakes and latency.
 - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
-- **Curated Signal-to-Noise Engine**: 
-    - Pulls from 25+ high-signal sources (OpenAI, DeepMind, Anthropic, Hugging Face, SemiAnalysis, arXiv, etc.).
-    - Uses heuristic-based scoring (Source Tiers + Product Keywords) to prioritize groundbreaking technical shifts over generic news.
+- **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
+    - **Impact-Aware Intelligence**: Uses a sophisticated weighted matrix to prioritize high-signal news (Agents, SOTA, Breakthroughs) and boosts articles mentioning flagship 2026 models (GPT-5, Llama-4, Claude-4).
+    - **Academic Gem Expansion**: Direct integration of elite research labs (BAIR, SAIL, NVIDIA Research) with a dedicated "Hidden Gem" bonus.
+    - **Consensus Synergy Pass**: Automatically identifies "Consensus Events" reported by multiple independent feeds and boosts them to the top of the queue.
+    - **Semantic Diversity Engine**: Implements greedy entity-overlap deduplication to ensure the final selection (Top 8) covers a broad industry spectrum rather than a single-topic echo chamber.
 - **4-State Intelligence Matrix**: Dynamically adjusts strategy based on the time of day and news volume. Switches between **The Curator** (Morning), **The Senior Analyst** (Afternoon), and **The Strategist** (Low-volume fallback).
 - **The Fortress: Advanced Security**:
     - **Dynamic Log Masking**: `SafeLogger` automatically redacts sensitive tokens, keys, and passwords using dynamic environment scanning.
@@ -107,6 +109,9 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - Introduced multi-model failover and self-discovery diagnostics.
     - Implemented self-healing post-formatting (markdown stripping).
     - Fixed relative URL resolution for metadata scraping (academic/arXiv fix).
+    - **Breakthrough Scoring Engine v3**: Rolled out the Elite Signal Processing pipeline.
+    - Added semantic deduplication (diversity engine) and consensus synergy bonuses.
+    - Expanded academic research footprint (BAIR, SAIL, NVIDIA, Meta AI).
     - Hardened the "Fortress" by migrating all system layers to `SafeLogger`.
 - **2026-04-13**: **Parallel Async & Security Overhaul**.
     - Re-engineered core as a high-performance `asyncio` engine with `httpx`.

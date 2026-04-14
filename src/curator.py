@@ -9,34 +9,57 @@ from google import genai
 from .config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
-    SECONDARY_TOPICS, GEMINI_API_KEY, GEMINI_MODEL_PRIORITY
+    SECONDARY_TOPICS, GEMINI_API_KEY, GEMINI_MODEL_PRIORITY,
+    HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
+    BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
+    MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE
 )
 from .utils import retry_with_backoff, SafeLogger
 
 MODEL_ATTEMPT_RETRIES = 2
 
 def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None):
-    """Calculates a relevance score using a consistent reference time."""
+    """Calculates a multi-factor breakthrough score for an article."""
     score = 0
+    title_text = item['title'].lower()
     content_text = f"{item['title']} {item['summary']}".lower()
-
-    # 1. Source Tier
-    for domain in TIER_1_SOURCES:
-        if domain in item['link']:
-            score += 10
-            break
-    for domain in TIER_2_SOURCES:
-        if domain in item['link']:
-            score += 8
-            break
     
-    # 2. Keywords
-    if any(kw in content_text for kw in ["launch", "release", "api", "feature"]):
-        score += 5
-    if any(kw in content_text for kw in ["breakthrough", "sota", "architecture"]):
-        score += 7
+    # 1. Source Tiering
+    source_score = 0
+    is_gem = any(g in item['link'] for g in HIDDEN_GEM_SOURCES)
+    if is_gem:
+        source_score = BASE_HIDDEN_GEM
+    else:
+        for domain in TIER_1_SOURCES:
+            if domain in item['link']:
+                source_score = BASE_TIER_1
+                break
+        if source_score == 0:
+            for domain in TIER_2_SOURCES:
+                if domain in item['link']:
+                    source_score = BASE_TIER_2
+                    break
+    score += source_score
 
-    # 3. Topic Diversity Penalty
+    # 2. High-Signal Keyword Boosting
+    signal_score = 0
+    for kw in HIGH_SIGNAL_KEYWORDS:
+        if kw in content_text:
+            signal_score += SIGNAL_BOOST
+            # Apply only once for any high signal match to avoid inflation
+            break
+    score += signal_score
+
+    # 3. Momentum Product Boosting
+    momentum_score = 0
+    for product in MOMENTUM_PRODUCTS:
+        if product in title_text:
+            momentum_score += MOMENTUM_BOOST
+            break # Apply once 
+    score += momentum_score
+
+    # 4. Topic Diversity Penalty (Legacy)
+    topic_penalty = 0
     if recent_topics:
         item_topic = "General"
         for topic, keywords in TOPIC_MAP.items():
@@ -44,11 +67,22 @@ def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None):
                 item_topic = topic
                 break
         if item_topic in recent_topics:
-            score -= 12
+            topic_penalty = 12
+            score -= topic_penalty
 
-    # 4. Time Decay (Fixed: Uses passed now_utc)
+    # 5. Time Decay
     age_hours = (now_utc - pub_date).total_seconds() / 3600
-    score -= (age_hours * 0.5)
+    decay = age_hours * 0.5
+    score -= decay
+
+    # Store components for diagnostics
+    item['_score_debug'] = {
+        "source": source_score,
+        "signal": signal_score,
+        "momentum": momentum_score,
+        "penalty": topic_penalty,
+        "decay": round(decay, 1)
+    }
 
     return score
 
@@ -92,10 +126,21 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         SafeLogger.error(f"Feed error {url}: {type(e).__name__} - {e}")
         return []
 
+
+def _extract_entities(text):
+    """Simple extraction of potential topic entities (Proper Nouns, Products)."""
+    # Look for capitalized sequences and common product IDs
+    entities = re.findall(r'[A-Z][a-z]+(?: [A-Z][a-z]+)*', text)
+    # Add product matches from config if present
+    from .config import MOMENTUM_PRODUCTS
+    for p in MOMENTUM_PRODUCTS:
+        if p.lower() in text.lower():
+            entities.append(p.title())
+    return set(entities)
+
 async def fetch_news(client, seen_links=None, recent_topics=None):
-    """Orchestrates parallel fetching of all RSS sources using a shared client."""
+    """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity."""
     if seen_links is None: seen_links = []
-    # Expert Review Fix: Performance optimization O(1) lookups
     seen_set = set(seen_links)
     
     now_utc = datetime.now(timezone.utc)
@@ -104,36 +149,72 @@ async def fetch_news(client, seen_links=None, recent_topics=None):
     tasks = [fetch_single_feed(client, url, start_time, now_utc, seen_set, recent_topics) for url in RSS_FEEDS]
     results = await asyncio.gather(*tasks)
 
-    all_entries = [e for sublist in results for e in sublist]
+    all_raw_entries = [e for sublist in results for e in sublist]
     
-    # Bug Fix: Ensure no internal duplicates if one feed has multiple entries for same link
-    unique_entries = {}
-    for e in all_entries:
-        if e['link'] not in unique_entries or e['score'] > unique_entries[e['link']]['score']:
-            unique_entries[e['link']] = e
+    # 1. Deduplicate by link across feeds
+    unique_by_link = {}
+    for e in all_raw_entries:
+        if e['link'] not in unique_by_link:
+            unique_by_link[e['link']] = e
+        else:
+            # If same link found elsewhere, it's a "Synergy" signal
+            unique_by_link[e['link']]['_synergy_count'] = unique_by_link[e['link']].get('_synergy_count', 1) + 1
     
-    all_entries = list(unique_entries.values())
-    all_entries.sort(key=lambda x: x["score"], reverse=True)
-    
-    if not all_entries: return []
+    entries = list(unique_by_link.values())
+    if not entries: return []
 
-    # Hidden Gem Injection
-    top_articles = all_entries[:7]
-    remaining = all_entries[7:]
-    has_gem = any(any(g in a['link'] for g in HIDDEN_GEM_SOURCES) for a in top_articles)
-
-    if not has_gem:
-        for art in remaining:
-            if any(g in art['link'] for g in HIDDEN_GEM_SOURCES):
-                top_articles.append(art)
-                break
-    
-    while len(top_articles) < 8 and remaining:
-        art = remaining.pop(0)
-        if not any(a['link'] == art['link'] for a in top_articles):
-            top_articles.append(art)
+    # 2. Add Consensus Synergy Bonus
+    for e in entries:
+        count = e.get('_synergy_count', 1)
+        if count > 1:
+            e['score'] += SYNERGY_BONUS
+            e['_score_debug']['synergy'] = SYNERGY_BONUS
+        else:
+            e['_score_debug']['synergy'] = 0
             
-    return top_articles[:8]
+    # 3. Enrich with entities for Diversity Engine
+    for e in entries:
+        e['_entities'] = _extract_entities(f"{e['title']} {e['summary']}")
+
+    # 4. Sort by preliminary score
+    entries.sort(key=lambda x: x["score"], reverse=True)
+
+    # 5. Greedy Diversity Selection (Top 8)
+    selected = []
+    topic_counts = {}
+    remaining = entries.copy()
+
+    while len(selected) < 8 and remaining:
+        # Re-sort remaining based on diversity penalty
+        for r in remaining:
+            penalty = 0
+            for ent in r['_entities']:
+                count = topic_counts.get(ent, 0)
+                if count >= MAX_TOPIC_RECURRENCE:
+                    penalty = max(penalty, DIVERSITY_PENALTY)
+            r['_current_score'] = r['score'] - penalty
+            r['_score_debug']['diversity_penalty'] = penalty
+        
+        remaining.sort(key=lambda x: x["_current_score"], reverse=True)
+        top_candidate = remaining.pop(0)
+        
+        # Select it
+        selected.append(top_candidate)
+        # Update entity counts
+        for ent in top_candidate['_entities']:
+            topic_counts[ent] = topic_counts.get(ent, 0) + 1
+
+    # Ensure at least one hidden gem (Legacy injection logic)
+    has_gem = any(any(g in a['link'] for g in HIDDEN_GEM_SOURCES) for a in selected)
+    if not has_gem:
+        for r in remaining:
+            if any(g in r['link'] for g in HIDDEN_GEM_SOURCES):
+                selected.pop() # Remove least diverse/scored
+                selected.append(r)
+                break
+
+    return selected[:8]
+
 
 def validate_summary(text):
     if not text or len(text) < 60: return False, "Short/Empty"

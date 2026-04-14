@@ -60,6 +60,26 @@ async def test_model(model_name):
     finally:
         curator.GEMINI_MODEL_PRIORITY = original_priority
 
+async def test_scoring():
+    print(f"\n{'='*20}")
+    print(f"DIAGNOSTIC: SCORING ENGINE")
+    print(f"{'='*20}")
+    from src.curator import fetch_news
+    import httpx
+    
+    async with httpx.AsyncClient() as client:
+        top_news = await fetch_news(client)
+        
+    print(f"Top {len(top_news)} News Selection (Ranked by Score):")
+    for i, item in enumerate(top_news):
+        debug = item.get('_score_debug', {})
+        print(f"\n{i+1}. {item['title']} ({item['source']})")
+        print(f"   Score: {item.get('score', 0):.1f}")
+        print(f"   Components: Source+{debug.get('source')}, Signal+{debug.get('signal')}, "
+              f"Momentum+{debug.get('momentum')}, Synergy+{debug.get('synergy')}, "
+              f"DiversityPenalty-{debug.get('diversity_penalty', 0)}, Decay-{debug.get('decay')}")
+        print(f"   Entities: {', '.join(item.get('_entities', []))}")
+
 async def main():
     load_dotenv()
     api_key = os.getenv("GEMINI_KEY")
@@ -81,7 +101,10 @@ async def main():
     # 1. Test RSS Feeds
     await test_rss()
 
-    # 2. Test AI Models
+    # 2. Test Scoring Engine
+    await test_scoring()
+
+    # 3. Test AI Models
     print(f"\n{'='*20}")
     print(f"TESTING AI MODELS")
     print(f"{'='*20}")

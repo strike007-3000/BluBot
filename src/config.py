@@ -63,6 +63,12 @@ RSS_FEEDS = [
     "https://siliconangle.com/category/ai/feed/",
     "https://www.assemblyai.com/blog/rss/",
     "https://mistral.ai/news/rss.xml",
+    "https://bair.berkeley.edu/blog/feed.xml",
+    "https://ai.stanford.edu/blog/feed.xml",
+    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
+    "https://ai.meta.com/blog/rss/",
+    "https://www.microsoft.com/en-us/research/blog/feed/",
+    "https://cohere.com/blog/rss.xml",
 ]
 
 # Source Tiers for Scoring
@@ -70,7 +76,34 @@ TIER_1_SOURCES = ["openai.com", "deepmind.google", "anthropic.com", "huggingface
 TIER_2_SOURCES = ["semianalysis.com", "interconnects.ai", "aheadofai.substack.com", "simonwillison.net"]
 
 # Hidden Gem Sources (Research Focused)
-HIDDEN_GEM_SOURCES = ["arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", "magazine.sebastianraschka.com"]
+HIDDEN_GEM_SOURCES = [
+    "arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", 
+    "magazine.sebastianraschka.com", "bair.berkeley.edu", 
+    "ai.stanford.edu", "blogs.nvidia.com"
+]
+
+# --- Breakthrough Scoring Engine Constants ---
+HIGH_SIGNAL_KEYWORDS = [
+    "sota", "benchmark", "breakthrough", "agentic", "autonomous", 
+    "world model", "test-time compute", "moe", "reasoning", 
+    "open weights", "open source", "scaling law"
+]
+
+MOMENTUM_PRODUCTS = [
+    "gpt-5", "claude 4", "llama 4", "gemini 3", "gemma 4", 
+    "sora", "devin", "grok 4", "mistral 4", "strawberry"
+]
+
+# Weighting Matrix
+BASE_TIER_1 = 30
+BASE_HIDDEN_GEM = 25
+BASE_TIER_2 = 15
+SIGNAL_BOOST = 12
+MOMENTUM_BOOST = 18
+SYNERGY_BONUS = 15
+DIVERSITY_PENALTY = 25
+MAX_TOPIC_RECURRENCE = 3 # Allow up to 3 posts on same major topic
+# ---------------------------------------------
 
 # Topic Penalty Mapping
 TOPIC_MAP = {
