@@ -59,17 +59,17 @@ async def main():
         news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"])
 
         # 4-State Persona Matrix Decision
-        summary, lead_link, topic = None, None, "General"
+        summary, lead_link, topic, internal_failover = None, None, "General", False
         session = context['session']
         news_count = len(news)
         
         if news_count > 3:
             mode = "Mentor" if "Afternoon" in session else "Curator"
             try:
-                summary, lead_link, topic = await summarize_news(news, context, mode=mode)
+                summary, lead_link, topic, internal_failover = await summarize_news(news, context, mode=mode)
                 SafeLogger.info(
                     f"pipeline_failover_result stage=summarize_news success=true "
-                    f"failover_succeeded=false final_path=summarize_news"
+                    f"failover_succeeded={'true' if internal_failover else 'false'} final_path=summarize_news"
                 )
             except Exception as e:
                 SafeLogger.warn(
@@ -77,10 +77,11 @@ async def main():
                     "Degrading gracefully to mentor insight mode."
                 )
                 try:
-                    summary, lead_link, topic = await generate_mentor_insight(context)
+                    summary, lead_link, topic, internal_failover = await generate_mentor_insight(context)
                     SafeLogger.info(
-                        "pipeline_failover_result stage=summarize_news success=true "
-                        "failover_succeeded=true final_path=generate_mentor_insight"
+                        f"pipeline_failover_result stage=summarize_news success=true "
+                        f"failover_succeeded=true internal_model_failover={'true' if internal_failover else 'false'} "
+                        "final_path=generate_mentor_insight"
                     )
                 except Exception:
                     SafeLogger.error(
@@ -91,7 +92,11 @@ async def main():
         else:
             mode_label = "Strategist" if "Morning" in session else "Mentor"
             SafeLogger.info(f"Low news volume ({news_count}). Switching to {mode_label} Mode.")
-            summary, lead_link, topic = await generate_mentor_insight(context)
+            summary, lead_link, topic, internal_failover = await generate_mentor_insight(context)
+            SafeLogger.info(
+                f"pipeline_failover_result stage=summarize_news success=true info=direct_mentor_path "
+                f"internal_model_failover={'true' if internal_failover else 'false'}"
+            )
 
         if summary:
             SafeLogger.info(f"Broadcasting in {topic} mode...")

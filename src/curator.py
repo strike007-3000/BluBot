@@ -238,7 +238,7 @@ async def summarize_news(news_items, context, mode="Curator"):
                         f"gemini_failover_result mode={mode} success=true "
                         f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
                     )
-                    return strip_markdown(summary), news_items[0]['link'], topic
+                    return strip_markdown(summary), news_items[0]['link'], topic, (idx > 0)
 
                 if reason == "No Hashtags" and len(summary) >= 30:
                     SafeLogger.info(f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> success")
@@ -246,7 +246,7 @@ async def summarize_news(news_items, context, mode="Curator"):
                         f"gemini_failover_result mode={mode} success=true "
                         f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
                     )
-                    return summary.strip() + " #AI #Tech", news_items[0]['link'], "General"
+                    return strip_markdown(summary.strip()) + " #AI #Tech", news_items[0]['link'], "General", (idx > 0)
 
                 last_error = ValueError(f"AI Validation Failed: {reason}")
                 raise last_error
@@ -345,7 +345,7 @@ async def generate_mentor_insight(context):
                         f"gemini_failover_result mode={mode} success=true "
                         f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
                     )
-                    return strip_markdown(summary), None, "Strategy"
+                    return strip_markdown(summary), None, "Strategy", (idx > 0)
 
                 if reason == "No Hashtags" and len(summary) >= 30:
                     SafeLogger.info(f"model={model_id} attempt={attempt}/{MODEL_ATTEMPT_RETRIES} -> success")
@@ -353,7 +353,7 @@ async def generate_mentor_insight(context):
                         f"gemini_failover_result mode={mode} success=true "
                         f"failover_succeeded={'true' if idx > 0 else 'false'} final_model={model_id}"
                     )
-                    return summary.strip() + " #AI #Tech", None, "Strategy"
+                    return strip_markdown(summary.strip()) + " #AI #Tech", None, "Strategy", (idx > 0)
 
                 last_error = ValueError(f"AI Validation Failed: {reason}")
                 raise last_error

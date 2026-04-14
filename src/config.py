@@ -21,7 +21,7 @@ THREADS_USER_ID = os.getenv("THREADS_USER_ID")
 # Platform Constraints
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.1-flash-lite-preview",
-    "models/gemma-3-27b",
+    "models/gemma-3-27b-it",
     "models/gemini-2.5-flash-lite",
 ]
 # Deprecated: kept temporarily for rollout compatibility. Prefer GEMINI_MODEL_PRIORITY.
@@ -210,6 +210,9 @@ def validate_gemini_model_priority():
                 "WARNING: Gemini model is invalid or lacks generateContent support; skipping: "
                 f"{configured_model}"
             )
+            # Diagnostic: Print all available models to help fix future mismatches
+            all_names = sorted(list(supported_by_name.keys()))
+            print(f"DEBUG: Available models for this key: {all_names}")
 
     # Preserve order while removing duplicates
     valid_models = list(dict.fromkeys(valid_models))
