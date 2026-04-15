@@ -105,6 +105,10 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
+- **2026-04-15 (v3.3)**: **Fortress Synchronization & Dependency Resolve**.
+    - **Dependency Conflict Fix**: Resolved critical installation failure by bumping `anyio` to `4.13.0`, satisfying the strict constraints of `google-genai` (≥ 1.73.1).
+    - **Security Parity Audit**: Aligned all core dependencies with the latest security advisories (April 2026). Bumped `requests` to `2.33.1` to eliminate high-severity vulnerabilities.
+    - **Baseline Hardening**: Verified `urllib3==2.6.3` against the latest CVE-409/CWE-770 patches.
 - **2026-04-14**: **Sage Intelligence v3** rollout. 
     - Introduced multi-model failover and self-discovery diagnostics.
     - Implemented self-healing post-formatting (markdown stripping).
