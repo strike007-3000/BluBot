@@ -105,11 +105,11 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
-- **2026-04-15 (v3.3)**: **Fortress Synchronization & Dependency Resolve**.
+- **v3.3 (2026-04-15)**: **Fortress Synchronization & Dependency Resolve**.
     - **Dependency Conflict Fix**: Resolved critical installation failure by bumping `anyio` to `4.13.0`, satisfying the strict constraints of `google-genai` (≥ 1.73.1).
     - **Security Parity Audit**: Aligned all core dependencies with the latest security advisories (April 2026). Bumped `requests` to `2.33.1` to eliminate high-severity vulnerabilities.
     - **Baseline Hardening**: Verified `urllib3==2.6.3` against the latest CVE-409/CWE-770 patches.
-- **2026-04-14**: **Sage Intelligence v3** rollout. 
+- **v3.2.5 (2026-04-14)**: **Sage Intelligence v3** rollout. 
     - Introduced multi-model failover and self-discovery diagnostics.
     - Implemented self-healing post-formatting (markdown stripping).
     - Fixed relative URL resolution for metadata scraping (academic/arXiv fix).
@@ -117,7 +117,7 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - Added semantic deduplication (diversity engine) and consensus synergy bonuses.
     - Expanded academic research footprint (BAIR, SAIL, NVIDIA, Meta AI).
     - Hardened the "Fortress" by migrating all system layers to `SafeLogger`.
-- **2026-04-14 (v3.2)**: **DeepCode AI Security Hardening**.
+- **v3.2 (2026-04-14)**: **DeepCode AI Security Hardening**.
     - **Critical Dependency Lockdown**: Pinned all core and transitive dependencies (`Pillow`, `urllib3`, `cryptography`, `h11`) to safe versions to resolve 22+ security vulnerabilities.
     - **Advanced HTML Sanitization**: Refactored logic to use `BeautifulSoup` for high-fidelity, secure HTML stripping across 30+ feeds.
     - **Observability Overhaul**: Implemented granular exception handling to differentiate between network saturation, auth failures, and filesystem IO errors.
@@ -141,6 +141,9 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 - **Security**: Please read our [Security Policy](SECURITY.md) before reporting vulnerabilities.
 - **Contributing**: Check our [Contribution Guidelines](CONTRIBUTING.md) to help evolve the Sage persona.
+- **Releasing**: To create a new release:
+  1. Update the version in `VERSION` and `README.md`.
+  2. Push a tag: `git tag v<version>` and `git push origin v<version>`.
 - **Wiki**: Find the full technical blueprint in the [Elite Sage Manual](docs/WIKI_MANUAL.md).
 
 *Built with ❤️ for the AI Community*

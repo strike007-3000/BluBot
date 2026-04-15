@@ -9,6 +9,7 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SEEN_FILE_PATH = os.path.join(BASE_DIR, "seen_articles.json")
 README_FILE_PATH = os.path.join(BASE_DIR, "README.md")
+VERSION_FILE_PATH = os.path.join(BASE_DIR, "VERSION")
 
 # API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
@@ -18,6 +19,16 @@ MASTODON_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
 MASTODON_BASE_URL = os.getenv("MASTODON_BASE_URL")
 THREADS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID")
+
+# Versioning
+def get_version():
+    try:
+        with open(VERSION_FILE_PATH, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return "Unknown"
+
+VERSION = get_version()
 
 # Platform Constraints
 GEMINI_MODEL_PRIORITY = [

@@ -1,0 +1,45 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Extract Changelog
+        id: changelog
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          # Extract section from README.md
+          # It looks for a line containing the version (e.g. v3.3) 
+          # and takes everything until the next line starting with '- **' (another entry)
+          # or until it hits the footer separator '---'
+          
+          # Use awk to extract the block
+          awk -v ver="v$TAG_VERSION" '
+            BEGIN { found=0 }
+            $0 ~ ver { found=1; print $0; next }
+            found && /^---/ { exit }
+            found && /^- \*\*/ { if ($0 !~ ver) exit }
+            found { print $0 }
+          ' README.md > release_notes.md
+          
+          echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true # Fallback if extraction fails or to append contributors
