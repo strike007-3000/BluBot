@@ -122,16 +122,16 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - **Advanced HTML Sanitization**: Refactored logic to use `BeautifulSoup` for high-fidelity, secure HTML stripping across 30+ feeds.
     - **Observability Overhaul**: Implemented granular exception handling to differentiate between network saturation, auth failures, and filesystem IO errors.
     - **Community Hardening**: Established [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md) with "Signal Verification" guidelines.
-- **2026-04-13**: **Parallel Async & Security Overhaul**.
+- **v3.1 (2026-04-13)**: **Parallel Async & Security Overhaul**.
     - Re-engineered core as a high-performance `asyncio` engine with `httpx`.
     - Implemented **Atomic Broadcasting** to ensure platform-independent persistence.
     - Introduced `SafeLogger` for dynamic, environment-aware secret masking.
     - Added Pillow-powered image compression and byte-safe truncation.
     - Optimized memory with O(1) deduplication lookups.
-- **2026-04-12**: **4-State Persona Matrix**.
+- **v3.0 (2026-04-12)**: **4-State Persona Matrix**.
     - Added dynamic switching between Curator, Senior Analyst, and Strategist modes.
     - Integrated multi-topic fallback pool for low-volume news days.
-- **2026-04-11**: **Threads Integration & High-Signal Scoring**.
+- **v2.9 (2026-04-11)**: **Threads Integration & High-Signal Scoring**.
     - Added Threads as the third broadcasting platform.
     - Implemented Tier-based source scoring and "Hidden Gem" injection logic.
 
