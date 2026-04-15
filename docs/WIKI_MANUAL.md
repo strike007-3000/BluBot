@@ -70,7 +70,7 @@ graph LR
 ### v3.1 Hardening Features
 - **Atomic Persistence**: The Sage uses a `.tmp` swap method to save state. It writes the "Seen Articles" to a temporary file and then performs a system-level move. This prevents data corruption even if the server crashes mid-write.
 - **DeepCode Security Hardening (v3.2)**: 
-    - **Dependency Fortress**: All core and transitive dependencies are pinned to safe, audited versions (`Pillow>=10.3.0`, `urllib3>=2.6.3`, `cryptography>=46.0.6`) to eliminate vulnerabilities like Heap Overflows and Request Smuggling.
+    - **Dependency Fortress**: All core and transitive dependencies are pinned to safe, audited versions (`Pillow>=10.3.0`, `urllib3>=2.6.3`, `requests>=2.33.1`, `anyio>=4.13.0`, `cryptography>=46.0.6`) to eliminate vulnerabilities like Heap Overflows and Request Smuggling.
     - **Robust Sanitization**: Replaced naive regex-based HTML stripping with a robust `BeautifulSoup` text extraction engine to handle malformed feed data securely.
     - **Granular Error Handling**: Moved away from broad `except Exception` blocks to categorical catching (Networking, Auth, IO), ensuring security failures are never silenced.
 - **Gemma Compatibility Layer**: A specialized logic branch that translates standard system instructions into a prompt-prepended format for Gemma models, ensuring perfect persona consistency regardless of which AI is running.
