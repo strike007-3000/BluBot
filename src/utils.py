@@ -10,7 +10,10 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from urllib.parse import urljoin
 from PIL import Image
-from .config import MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, SEEN_FILE_PATH, SESSION_FILE_PATH
+from .config import (
+    MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
+    SEEN_FILE_PATH, SESSION_FILE_PATH, GENERIC_IMAGE_PATTERNS
+)
 
 from .logger import SafeLogger
 
@@ -163,9 +166,28 @@ async def get_link_metadata(client, url):
         description = og_description['content'] if og_description else ""
         image_url = og_image['content'] if og_image else None
         
+        # Expert Review Fix: Generic Image Filtering
+        is_generic = False
         if image_url:
-            # Resolve relative URLs (common on arXiv and others)
-            image_url = urljoin(url, image_url)
+            image_url = urljoin(url, image_url).lower()
+            if any(p.lower() in image_url for p in GENERIC_IMAGE_PATTERNS):
+                SafeLogger.info(f"Generic logo detected: {image_url}. Searching for fallback...")
+                is_generic = True
+
+        if not image_url or is_generic:
+            # Fallback: Find the first substantial image on the page
+            found_fallback = False
+            for img in soup.find_all("img"):
+                fallback_url = img.get("src")
+                if fallback_url:
+                    abs_fallback = urljoin(url, fallback_url)
+                    # Skip if this also looks generic
+                    if not any(p.lower() in abs_fallback.lower() for p in GENERIC_IMAGE_PATTERNS):
+                        image_url = abs_fallback
+                        found_fallback = True
+                        break
+            if is_generic and not found_fallback:
+                image_url = None # Force AI generation later
 
         image_data = None
         if image_url:

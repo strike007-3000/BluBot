@@ -14,7 +14,7 @@ from .utils import (
 import re
 
 @retry_with_backoff
-async def post_to_bluesky(bsky_client, client_shared, text, link=None):
+async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None):
     """Posts to Bluesky using an authenticated client, with Facets and byte-safe truncation."""
     if not BLUESKY_HANDLE:
         return
@@ -49,11 +49,14 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None):
     if link:
         meta = await get_link_metadata(client_shared, link)
         if meta:
+            # Expert Review Fix: Sage Designer Override
+            image_data = override_image if override_image else meta.get('image')
+            
             thumb_blob = None
-            if meta['image']:
+            if image_data:
                 try:
                     # Expert Review Fix: Wrap CPU-bound compression in to_thread
-                    compressed = await asyncio.to_thread(compress_image, meta['image'])
+                    compressed = await asyncio.to_thread(compress_image, image_data)
                     upload = await bsky_client.upload_blob(compressed)
                     thumb_blob = upload.blob
                 except Exception as e: 

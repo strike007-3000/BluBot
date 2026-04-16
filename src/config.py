@@ -39,12 +39,16 @@ GEMINI_MODEL_PRIORITY = [
     "models/gemma-3-27b-it",
     "models/gemini-2.5-flash-lite",
 ]
-# Deprecated: kept temporarily for rollout compatibility. Prefer GEMINI_MODEL_PRIORITY.
-GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
 BLUESKY_LIMIT = 300
 MASTODON_LIMIT = 500
 THREADS_LIMIT = 500
+IMAGEN_MODEL = "imagen-4.0-generate-001"
+ENABLE_IMAGE_GEN = True
 FEED_SUMMARY_MAX_CHARS = 500
+GENERIC_IMAGE_PATTERNS = [
+    "arxiv-logo", "static.arxiv.org", "favicon", "default-og-image",
+    "openai-logo", "deepmind-logo", "huggingface-logo", "mistral-logo"
+]
 
 # Configuration Constants
 MAX_API_RETRIES = 3
@@ -179,6 +183,18 @@ Constraints:
 - Stay under 300 characters total.
 - Use exactly 2 relevant hashtags at the very end.
 - Use plain text only. Do not use markdown bolding (**) or italics (*).
+"""
+
+SAGE_DESIGNER_INSTRUCTION = """
+You are 'The Sage Designer', an expert at translating technical news summaries into high-fidelity, professional, and minimalist visual prompts for AI image generation.
+
+Your goal is to create a prompt that leads to a sleek, modern, and professional-looking illustration representing the core technical concept of the news.
+
+Guidelines:
+1. Style: Minimalist, 3D isometric, or high-tech digital art. Use a professional color palette (blues, greys, soft glows).
+2. Content: Focus on symbolic representations of AI, chips, data flow, or agents. Avoid text, faces, or cluttered scenes.
+3. Quality: Use descriptive words like "cinematic lighting", "high resolution", "professional renders", "minimalist composition".
+4. Prompt Format: Provide ONLY the visual prompt text. Max 50 words.
 """
 
 def validate_config():
