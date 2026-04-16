@@ -155,14 +155,24 @@ async def main():
                         await bsky_client.login(session_string=session_str)
                     except Exception as e:
                         # P1 Bug Fix: Fallback to credentials if session string is invalid/stale
-                        SafeLogger.warn(f"Session-string login failed ({e}). Falling back to credentials...")
+                        # Expert Review Fix: Sanitize log to prevent leaking private response data
+                        err_summary = str(e)[:200]
+                        SafeLogger.warn(f"Session-string login failed ({type(e).__name__}: {err_summary}).")
+                        
+                        # Resilience Fix: Add cooldown for 520 / Server errors
+                        if "520" in err_summary:
+                            SafeLogger.info("Status 520 detected. Cooling down for 2s before fallback...")
+                            await asyncio.sleep(2)
+                            
+                        SafeLogger.info("Falling back to credentials...")
                         await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
                 else:
                     SafeLogger.info("No session found. Logging in with credentials.")
                     await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
             except Exception as e:
                 # Login failure can be 429 (Rate Limit) or 401 (Unauthorized)
-                SafeLogger.error(f"Bluesky auth failed: {type(e).__name__} - {e}")
+                err_summary = str(e)[:200]
+                SafeLogger.error(f"Bluesky auth failed: {type(e).__name__} - {err_summary}")
                 bsky_client = None
 
             # Expert Review Fix: Sage Designer AI Visualization & Cross-Platform Orchestration

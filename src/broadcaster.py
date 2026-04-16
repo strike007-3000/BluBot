@@ -9,7 +9,7 @@ from .config import (
 )
 from .utils import (
     retry_with_backoff, get_link_metadata, compress_image, 
-    SafeLogger, truncate_bytes
+    SafeLogger, truncate_bytes, get_image_mime
 )
 import re
 
@@ -85,11 +85,16 @@ async def post_to_mastodon(text, image_data=None):
         media_ids = []
         if image_data:
             try:
-                # Expert Review Fix: Direct binary upload
-                media = m.media_post(image_data, mime_type="image/jpeg")
+                # Expert Review Fix: Use dynamic MIME detection for P2 fidelity
+                mime = get_image_mime(image_data)
+                media = m.media_post(image_data, mime_type=mime)
                 media_ids.append(media['id'])
             except Exception as e:
-                SafeLogger.warn(f"Mastodon media upload failed: {e}")
+                err_msg = str(e)
+                if "403" in err_msg or "Forbidden" in err_msg:
+                    SafeLogger.warn(f"Mastodon media upload failed (403). CHECK TOKEN SCOPES (write:media)! Error: {err_msg}")
+                else:
+                    SafeLogger.warn(f"Mastodon media upload failed: {err_msg}")
                 
         m.status_post(text[:MASTODON_LIMIT], media_ids=media_ids)
     
@@ -103,18 +108,32 @@ async def post_to_threads(client, text, image_url=None):
         return
 
     # 1. Create Media Container
-    base_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
-    payload = {
-        "media_type": "IMAGE" if image_url else "TEXT",
-        "text": text[:THREADS_LIMIT],
-        "access_token": THREADS_TOKEN
-    }
+    # P1 Bug Fix: Robust Fallback to TEXT if IMAGE container creation fails
+    container_id = None
     if image_url:
-        payload["image_url"] = image_url
-    
-    res = await client.post(base_url, data=payload, timeout=20)
-    res.raise_for_status()
-    container_id = res.json().get("id")
+        try:
+            payload = {
+                "media_type": "IMAGE",
+                "image_url": image_url,
+                "text": text[:THREADS_LIMIT],
+                "access_token": THREADS_TOKEN
+            }
+            res = await client.post(base_url, data=payload, timeout=20)
+            res.raise_for_status()
+            container_id = res.json().get("id")
+        except Exception as e:
+            SafeLogger.warn(f"Threads IMAGE container failed ({type(e).__name__}). Falling back to TEXT post...")
+            image_url = None # Set to None to trigger TEXT fallback below
+
+    if not container_id:
+        payload = {
+            "media_type": "TEXT",
+            "text": text[:THREADS_LIMIT],
+            "access_token": THREADS_TOKEN
+        }
+        res = await client.post(base_url, data=payload, timeout=20)
+        res.raise_for_status()
+        container_id = res.json().get("id")
 
     # 2. Wait for READY state (Polling loop)
     # Even for text, a small check ensures robustness
