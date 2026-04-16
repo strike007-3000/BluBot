@@ -15,8 +15,15 @@ class SafeLogger:
     @staticmethod
     def sanitize(message):
         text = str(message)
-        # 1. Static pattern masking
-        for pattern in SafeLogger.FORBIDDEN_PATTERNS:
+        
+        # 1. Static pattern masking (Improved for JWTs and Auth headers)
+        patterns = SafeLogger.FORBIDDEN_PATTERNS + [
+            r"(access_jwt\":\s*\")[^\"]+",
+            r"(refresh_jwt\":\s*\")[^\"]+",
+            r"(x-rpc-auth:\s*)[^\s']+",
+            r"(Authorization:\s*Bearer\s*)[^\s']+"
+        ]
+        for pattern in patterns:
             text = re.sub(pattern, r"\1[MASKED]", text, flags=re.IGNORECASE)
         
         # 2. Dynamic environment variable masking
@@ -24,6 +31,20 @@ class SafeLogger:
         for k, v in os.environ.items():
             if any(s in k.upper() for s in sensitive_keys) and v and len(v) > 5:
                 text = text.replace(v, "[MASKED]")
+
+        # 3. Active File Redaction (BlueSky Session String)
+        try:
+            # We assume SESSION_FILE_PATH logic here, but to avoid circular imports 
+            # we check the common path directly or pass it in.
+            session_path = "bluesky_session.txt"
+            if os.path.exists(session_path):
+                with open(session_path, "r", encoding="utf-8") as f:
+                    session_content = f.read().strip()
+                    if session_content and len(session_content) > 10:
+                        text = text.replace(session_content, "[MASKED_SESSION]")
+        except Exception:
+            pass # Never let the logger fail
+
         return text
 
     @staticmethod

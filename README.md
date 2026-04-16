@@ -16,8 +16,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key, making it effortless to identify the correct identifiers for new releases (like Gemma 3).
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context to fetch 25+ RSS feeds concurrently. Processing time reduced by **90%**.
-- **Cross-Platform Visuals**: Sage Designer and scraped thumbnails now broadcast to **Bluesky** and **Mastodon** (binary) and **Threads** (public URL).
-- **Session Persistence**: GitHub Actions cached sessions with robust **Credential Fallback** logic.
+- **Fortress Hardening (v3.5.2)**: Active redaction of session strings and sanitized error logging.
+- **Cross-Platform Visuals**: Enhanced media support for **Bluesky** and **Mastodon** (binary) and **Threads** (fallback logic).
 - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
     - **Impact-Aware Intelligence**: Uses a sophisticated weighted matrix to prioritize high-signal news (Agents, SOTA, Breakthroughs) and boosts articles mentioning flagship 2026 models (GPT-5, Llama-4, Claude-4).
@@ -103,7 +103,12 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
-- **v3.5.1 (Current)**: **Visual Synergy & Stability Patch**.
+- **v3.5.2 (Current)**: **Security & Resilience Suite**.
+    - **Active Redaction**: Implemented dynamic masking for `bluesky_session.txt` and JWT tokens in `SafeLogger`.
+    - **Threads Resilience**: Added automatic fallback to plain TEXT if IMAGE container creation fails.
+    - **MIME Fidelity**: Integrated dynamic image format detection for Mastodon binary uploads.
+    - **Sanitized Logging**: Hardened exception handling to prevent leaking raw response headers and bodies.
+- **v3.5.1 (2026-04-16)**: **Visual Synergy & Stability Patch**.
     - **P1 Bug Fixes**: Resolved `NameError` for `genai_client` and implemented robust **Credential Fallback** for BlueSky session logins.
     - **Cross-Platform Visuals**: Integrated binary media uploads for **Mastodon** and public URL support for **Threads**.
     - **URL Integrity**: Fixed 404/Case-sensitivity bug in metadata scraper.

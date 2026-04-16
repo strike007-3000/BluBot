@@ -95,6 +95,16 @@ def compress_image(image_bytes: bytes, max_size=900000) -> bytes:
         SafeLogger.error(f"Failed to compress image: {e}")
         return image_bytes
 
+def get_image_mime(image_bytes: bytes) -> str:
+    """Detects the MIME type of image data using Pillow."""
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        fmt = img.format.lower() if img.format else 'jpeg'
+        if fmt == 'jpg': fmt = 'jpeg'
+        return f"image/{fmt}"
+    except Exception:
+        return "image/jpeg" # Safe default
+
 def truncate_bytes(text: str, limit: int) -> str:
     """UTF-8 byte-safe truncation to avoid splitting multi-byte characters."""
     encoded = text.encode('utf-8')
