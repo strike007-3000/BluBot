@@ -5,7 +5,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 ## 📊 System Status
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-04-14 | 🚀 Async Parallel Engine |
+| **Broadcaster** | Operational | 2026-04-16 | 🚀 Async Parallel Engine |
 | **Signal Strength** | Elite (Parallel) | -- | -- |
 
 ## 🚀 Key Features
@@ -19,7 +19,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **Atomic Broadcasting Engine**: 
     - Posts to Bluesky, Mastodon, and Threads simultaneously using `asyncio.gather(return_exceptions=True)`.
     - Failure on one platform (e.g., API glitch) does NOT prevent success on others or compromise state persistence.
-- **Shared Session Engine**: Reuses authenticated sessions and connections across all platform operations to minimize redundant login handshakes and latency.
+- **Shared Session Engine (v3.4)**: Reuses authenticated sessions via **Encrypted Caching** to minimize redundant login handshakes and eliminate `Rate Limit Reached` errors.
 - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
     - **Impact-Aware Intelligence**: Uses a sophisticated weighted matrix to prioritize high-signal news (Agents, SOTA, Breakthroughs) and boosts articles mentioning flagship 2026 models (GPT-5, Llama-4, Claude-4).
@@ -30,7 +30,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **The Fortress: Advanced Security**:
     - **Dynamic Log Masking**: `SafeLogger` automatically redacts sensitive tokens, keys, and passwords using dynamic environment scanning.
     - **Secure Logging Engine**: All system layers (including configuration and startup) are routed through the `SafeLogger` engine to ensure the "Fortress" protection is active from the very first line of output.
-    - **Byte-Safe Truncation**: Specialized logic to truncate long summaries on byte boundaries, preventing multi-byte character (emoji) corruption.
+    - **Byte-Safe Truncation & Facet Sync**: Specialized logic to truncate long summaries on byte boundaries and **re-index facets dynamically**, fixing the dreaded `Forbidden (403)` errors on BlueSky.
 
 ## 🧠 Sage Intelligence: Failover Architecture
 
@@ -105,6 +105,11 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
+- **v3.4 (2026-04-16)**: **Elite Stability & API Resilience**.
+    - **Session Persistence**: Implemented `atproto` session export/import with **GitHub Actions Caching** to eliminate `Rate Limit Reached` errors on login.
+    - **Forbidden (403) Resolved**: Re-engineered the BlueSky broadcasting pipeline to calculate facets *after* byte-safe truncation, ensuring 100% valid metadata offsets.
+    - **Smarter Retry Engine**: Refined `@retry_with_backoff` to intelligently handle 429 (Rate Limit) and 403 (Forbidden) statuses with zero-hammering logic.
+    - **Security-First Persistence**: Added `bluesky_session.txt` to `.gitignore` to prevent secret leakage in public repositories.
 - **v3.3 (2026-04-15)**: **Fortress Synchronization & Dependency Resolve**.
     - **Dependency Conflict Fix**: Resolved critical installation failure by bumping `anyio` to `4.13.0`, satisfying the strict constraints of `google-genai` (≥ 1.73.1).
     - **Security Parity Audit**: Aligned all core dependencies with the latest security advisories (April 2026). Bumped `requests` to `2.33.1` to eliminate high-severity vulnerabilities.
@@ -122,16 +127,16 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - **Advanced HTML Sanitization**: Refactored logic to use `BeautifulSoup` for high-fidelity, secure HTML stripping across 30+ feeds.
     - **Observability Overhaul**: Implemented granular exception handling to differentiate between network saturation, auth failures, and filesystem IO errors.
     - **Community Hardening**: Established [SECURITY.md](SECURITY.md) and [CONTRIBUTING.md](CONTRIBUTING.md) with "Signal Verification" guidelines.
-- **2026-04-13**: **Parallel Async & Security Overhaul**.
+- **v3.1 (2026-04-13)**: **Parallel Async & Security Overhaul**.
     - Re-engineered core as a high-performance `asyncio` engine with `httpx`.
     - Implemented **Atomic Broadcasting** to ensure platform-independent persistence.
     - Introduced `SafeLogger` for dynamic, environment-aware secret masking.
     - Added Pillow-powered image compression and byte-safe truncation.
     - Optimized memory with O(1) deduplication lookups.
-- **2026-04-12**: **4-State Persona Matrix**.
+- **v3.0 (2026-04-12)**: **4-State Persona Matrix**.
     - Added dynamic switching between Curator, Senior Analyst, and Strategist modes.
     - Integrated multi-topic fallback pool for low-volume news days.
-- **2026-04-11**: **Threads Integration & High-Signal Scoring**.
+- **v2.9 (2026-04-11)**: **Threads Integration & High-Signal Scoring**.
     - Added Threads as the third broadcasting platform.
     - Implemented Tier-based source scoring and "Hidden Gem" injection logic.
 

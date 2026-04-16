@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 # Modular Imports
 from src.config import validate_config, README_FILE_PATH
-from src.utils import load_seen_articles, save_seen_articles, SafeLogger
+from src.utils import load_seen_articles, save_seen_articles, SafeLogger, load_session_string, save_session_string
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, get_temporal_context
 )
@@ -103,12 +103,24 @@ async def main():
         if summary:
             SafeLogger.info(f"Broadcasting in {topic} mode...")
             
-            # Expert Review Fix: Redundant Auth - Login once
+            # Expert Review Fix: Redundant Auth - Session Persistence
             bsky_client = AsyncClient()
+
+            @bsky_client.on_session_change
+            async def on_session_change(event, session):
+                # Save the updated session string whenever it is created or refreshed
+                save_session_string(bsky_client.export_session_string())
+
             try:
-                await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
+                session_str = load_session_string()
+                if session_str:
+                    SafeLogger.info("Attempting login via persisted session...")
+                    await bsky_client.login(session_string=session_str)
+                else:
+                    SafeLogger.info("No session found. Logging in with credentials.")
+                    await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
             except Exception as e:
-                # Login failure is often a credential issue (401) or network (httpx)
+                # Login failure can be 429 (Rate Limit) or 401 (Unauthorized)
                 SafeLogger.error(f"Bluesky auth failed: {type(e).__name__} - {e}")
                 bsky_client = None
 
