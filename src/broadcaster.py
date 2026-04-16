@@ -75,20 +75,29 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
     SafeLogger.info("Successfully posted to Bluesky!")
 
 @retry_with_backoff
-async def post_to_mastodon(text):
-    """Posts to Mastodon using the standardized character limit."""
+async def post_to_mastodon(text, image_data=None):
+    """Posts to Mastodon using the standardized character limit, with media support."""
     if not MASTODON_TOKEN or not MASTODON_BASE_URL:
         return
 
     def _post():
         m = Mastodon(access_token=MASTODON_TOKEN, api_base_url=MASTODON_BASE_URL)
-        m.status_post(text[:MASTODON_LIMIT])
+        media_ids = []
+        if image_data:
+            try:
+                # Expert Review Fix: Direct binary upload
+                media = m.media_post(image_data, mime_type="image/jpeg")
+                media_ids.append(media['id'])
+            except Exception as e:
+                SafeLogger.warn(f"Mastodon media upload failed: {e}")
+                
+        m.status_post(text[:MASTODON_LIMIT], media_ids=media_ids)
     
     await asyncio.to_thread(_post)
     SafeLogger.info("Successfully posted to Mastodon!")
 
 @retry_with_backoff
-async def post_to_threads(client, text):
+async def post_to_threads(client, text, image_url=None):
     """Posts to Threads using fully asynchronous logic and status validation."""
     if not THREADS_TOKEN or not THREADS_USER_ID:
         return
@@ -96,10 +105,12 @@ async def post_to_threads(client, text):
     # 1. Create Media Container
     base_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
     payload = {
-        "media_type": "TEXT",
+        "media_type": "IMAGE" if image_url else "TEXT",
         "text": text[:THREADS_LIMIT],
         "access_token": THREADS_TOKEN
     }
+    if image_url:
+        payload["image_url"] = image_url
     
     res = await client.post(base_url, data=payload, timeout=20)
     res.raise_for_status()

@@ -168,13 +168,15 @@ async def get_link_metadata(client, url):
         
         # Expert Review Fix: Generic Image Filtering
         is_generic = False
+        original_image_url = None
         if image_url:
-            image_url = urljoin(url, image_url).lower()
-            if any(p.lower() in image_url for p in GENERIC_IMAGE_PATTERNS):
-                SafeLogger.info(f"Generic logo detected: {image_url}. Searching for fallback...")
+            original_image_url = urljoin(url, image_url)
+            image_url_lower = original_image_url.lower()
+            if any(p.lower() in image_url_lower for p in GENERIC_IMAGE_PATTERNS):
+                SafeLogger.info(f"Generic logo detected: {image_url_lower}. Searching for fallback...")
                 is_generic = True
 
-        if not image_url or is_generic:
+        if not original_image_url or is_generic:
             # Fallback: Find the first substantial image on the page
             found_fallback = False
             for img in soup.find_all("img"):
@@ -183,17 +185,17 @@ async def get_link_metadata(client, url):
                     abs_fallback = urljoin(url, fallback_url)
                     # Skip if this also looks generic
                     if not any(p.lower() in abs_fallback.lower() for p in GENERIC_IMAGE_PATTERNS):
-                        image_url = abs_fallback
+                        original_image_url = abs_fallback
                         found_fallback = True
                         break
             if is_generic and not found_fallback:
-                image_url = None # Force AI generation later
+                original_image_url = None # Force AI generation later
 
         image_data = None
-        if image_url:
+        if original_image_url:
             try:
                 # Use browser-like headers for the image request as well
-                img_res = await client.get(image_url, headers=headers, timeout=5, follow_redirects=True)
+                img_res = await client.get(original_image_url, headers=headers, timeout=5, follow_redirects=True)
                 if img_res.status_code == 200:
                     image_data = img_res.content
             except Exception as e:
@@ -203,6 +205,7 @@ async def get_link_metadata(client, url):
             "title": title[:100],
             "description": description[:200],
             "image": image_data,
+            "image_url": original_image_url, # Pass back the public URL for Threads
             "url": url
         }
     except (httpx.HTTPError, asyncio.TimeoutError) as e:
