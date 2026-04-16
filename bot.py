@@ -7,10 +7,15 @@ from datetime import datetime, timezone
 from src.config import validate_config, README_FILE_PATH
 from src.utils import load_seen_articles, save_seen_articles, SafeLogger, load_session_string, save_session_string
 from src.curator import (
-    fetch_news, summarize_news, generate_mentor_insight, get_temporal_context
+    fetch_news, summarize_news, generate_mentor_insight, 
+    get_temporal_context, generate_visual_prompt
 )
 from src.broadcaster import post_to_bluesky, post_to_mastodon, post_to_threads
-from src.config import BLUESKY_HANDLE, BLUESKY_PASSWORD
+from src.config import (
+    BLUESKY_HANDLE, BLUESKY_PASSWORD, 
+    IMAGEN_MODEL, ENABLE_IMAGE_GEN
+)
+from google.genai import types
 from atproto import AsyncClient, AsyncRequest
 
 async def update_live_status(session_name):
@@ -42,6 +47,33 @@ async def update_live_status(session_name):
         SafeLogger.error(f"Filesystem error updating README: {e}")
     except Exception as e:
         SafeLogger.error(f"Unexpected error in README update: {e}")
+
+async def generate_ai_thumbnail(genai_client, summary, topic):
+    """Orchestrates the Sage Designer pipeline to generate a custom visualization."""
+    if not ENABLE_IMAGE_GEN:
+        return None
+        
+    try:
+        SafeLogger.info(f"Sage Designer: Generating visual prompt for '{topic}'...")
+        visual_prompt = await generate_visual_prompt(genai_client, summary, topic)
+        
+        SafeLogger.info(f"Sage Designer: Generating Imagen 4 thumbnail...")
+        response = await genai_client.aio.models.generate_images(
+            model=IMAGEN_MODEL,
+            prompt=visual_prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio='1:1'
+            )
+        )
+        
+        if response.generated_images:
+            # We need the raw bytes for broadcaster.py
+            return response.generated_images[0].image._image_bytes
+            
+    except Exception as e:
+        SafeLogger.warn(f"Sage Designer failed: {e}. Falling back to No-Image mode.")
+    return None
 
 async def main():
     if not validate_config():
@@ -124,10 +156,20 @@ async def main():
                 SafeLogger.error(f"Bluesky auth failed: {type(e).__name__} - {e}")
                 bsky_client = None
 
+            # Expert Review Fix: Sage Designer AI Visualization
+            # First, check metadata to see if we have a unique image
+            override_image = None
+            if lead_link:
+                from src.utils import get_link_metadata
+                meta = await get_link_metadata(client, lead_link)
+                # If no unique image found (generic filtered out in utils), try AI Generation
+                if not meta.get('image') and ENABLE_IMAGE_GEN:
+                    override_image = await generate_ai_thumbnail(genai_client, summary, topic)
+
             # Expert Review Fix: Atomic Persistence & Exception Handling
             # Using gather with return_exceptions=True to ensure one failure doesn't block state saving
             broadcast_tasks = [
-                ("Bluesky", post_to_bluesky(bsky_client, client, summary, lead_link)) if bsky_client else None,
+                ("Bluesky", post_to_bluesky(bsky_client, client, summary, lead_link, override_image)) if bsky_client else None,
                 ("Mastodon", post_to_mastodon(summary)),
                 ("Threads", post_to_threads(client, summary))
             ]

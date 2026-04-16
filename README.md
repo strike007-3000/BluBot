@@ -5,8 +5,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 ## 📊 System Status
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-04-16 | 🚀 Async Parallel Engine |
-| **Signal Strength** | Elite (Parallel) | -- | -- |
+| **Broadcaster** | Operational | 2026-04-16 | 🚀 Sage Designer Engine |
+| **Signal Strength** | Elite (Imagen 4) | -- | -- |
 
 ## 🚀 Key Features
 
@@ -16,9 +16,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key, making it effortless to identify the correct identifiers for new releases (like Gemma 3).
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context to fetch 25+ RSS feeds concurrently. Processing time reduced by **90%**.
-- **Atomic Broadcasting Engine**: 
-    - Posts to Bluesky, Mastodon, and Threads simultaneously using `asyncio.gather(return_exceptions=True)`.
-    - Failure on one platform (e.g., API glitch) does NOT prevent success on others or compromise state persistence.
+- **Sage Designer (v3.5)**: Custom **Imagen 4** visualization engine for missing thumbnails.
+- **Smart Scraper**: Automated generic logo filtering (arXiv, OpenAI, etc.) and semantic fallback.
 - **Shared Session Engine (v3.4)**: Reuses authenticated sessions via **Encrypted Caching** to minimize redundant login handshakes and eliminate `Rate Limit Reached` errors.
 - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
@@ -105,6 +104,10 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
+- **v3.5 (Current)**: **Sage Designer & Visual Discovery**.
+    - **Sage Designer Pipeline**: Integrated **Imagen 4** to generate custom technical visualizations when unique thumbnails are missing.
+    - **Smart Thumbnail Engine**: Implemented site-wide logo filtering (arXiv, etc.) and semantic image discovery fallbacks.
+    - **Version Sync**: Full documentation update for the v3.5 stability suite.
 - **v3.4 (2026-04-16)**: **Elite Stability & API Resilience**.
     - **Session Persistence**: Implemented `atproto` session export/import with **GitHub Actions Caching** to eliminate `Rate Limit Reached` errors on login.
     - **Forbidden (403) Resolved**: Re-engineered the BlueSky broadcasting pipeline to calculate facets *after* byte-safe truncation, ensuring 100% valid metadata offsets.

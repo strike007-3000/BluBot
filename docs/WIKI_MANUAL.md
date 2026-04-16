@@ -139,4 +139,33 @@ The Sage isn't just a news-poster; it's a **Mentor**. Our LLM prompts are design
 - **Emoji Limit**: Max 1-2 subtle, conversational emojis (e.g., 🛠️, 🚀).
 
 ---
+
+## 🎨 Page 7: Sage Designer v3.5
+
+The Sage now possesses a **Visual Intelligence** capable of generating high-fidelity technical illustrations using **Imagen 4** (via your Google AI Studio free credits).
+
+### The Designer Pipeline
+
+```mermaid
+graph TD
+    A[Lead Article Selected] --> B[Scrape Metadata]
+    B --> C{Unique Image Found?}
+    C -->|Yes| D[Use Scraped Thumbnail]
+    C -->|No/Generic Logo| E[Trigger Sage Designer]
+    
+    E --> F[Gemini: Generate Visual Prompt]
+    F --> G[Imagen 4: Generate Illustration]
+    G --> H[Upload as Thumbnail]
+    
+    D --> I[Wait for Broadcast]
+    H --> I
+```
+
+### Key Technical Features
+- **Generic Image Filtering**: The Sage automatically identifies and skips repetitive site-wide logos (like the arXiv logo) in favor of unique thumbnails. 
+- **Semantic Discovery Fallsback**: If a generic logo is filtered out, the scraper attempts to find the first *real* figure or diagram within the article content.
+- **Fail-Soft AI Generation**: If no unique thumbnail can be discovered, the bot calls the **Sage Designer**. Using a specialized persona, it translates the news summary into a high-fidelity, minimalist 3D isometric illustration that perfectly matches your brand's aesthetic.
+- **Fail-Safe Logic**: If your API key hits its daily generation limit (e.g., 25/day), the bot gracefully skips the image rather than failing the post.
+
+---
 *Built with ❤️ for the AI Community*

@@ -10,6 +10,7 @@ from google import genai
 from .config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
+    SAGE_DESIGNER_INSTRUCTION, # Sage Designer
     SECONDARY_TOPICS, GEMINI_API_KEY, GEMINI_MODEL_PRIORITY,
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
@@ -527,4 +528,25 @@ def get_temporal_context():
     now = datetime.now(timezone.utc)
     day = now.strftime("%A")
     session = "Morning Intelligence" if now.hour < 12 else "Afternoon Deep Dive"
-    return {"day": day, "session": session, "theme": "Technical Analysis"}
+    theme = "Technical Analysis"
+    return {"day": day, "session": session, "theme": theme}
+
+async def generate_visual_prompt(client, summary, topic):
+    """Uses Gemini to generate a high-fidelity visual prompt for Imagen 4."""
+    user_prompt = f"Topic: {topic}\nNews Summary: {summary}\nTask: Create a minimalist technical visual prompt."
+    config = types.GenerateContentConfig(
+        system_instruction=SAGE_DESIGNER_INSTRUCTION,
+        temperature=0.8
+    )
+    
+    try:
+        # We use the primary Gemini model for prompt generation
+        response = await client.aio.models.generate_content(
+            model=GEMINI_MODEL_PRIORITY[0],
+            contents=user_prompt,
+            config=config
+        )
+        return response.text.strip()
+    except Exception as e:
+        SafeLogger.warn(f"Sage Designer prompt generation failed: {e}")
+        return f"A minimalist high-tech representation of {topic} and AI."
