@@ -108,6 +108,8 @@ async def post_to_threads(client, text, image_url=None):
         return
 
     # 1. Create Media Container
+    base_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+    
     # P1 Bug Fix: Robust Fallback to TEXT if IMAGE container creation fails
     container_id = None
     if image_url:

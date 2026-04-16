@@ -103,7 +103,9 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
-- **v3.5.2 (Current)**: **Security & Resilience Suite**.
+- **v3.5.3 (Current)**: **Threads Resilience Patch**.
+    - **Stability**: Fixed `NameError` for `base_url` in the Threads broadcasting logic.
+- **v3.5.2 (2026-04-16)**: **Security & Resilience Suite**.
     - **Active Redaction**: Implemented dynamic masking for `bluesky_session.txt` and JWT tokens in `SafeLogger`.
     - **Threads Resilience**: Added automatic fallback to plain TEXT if IMAGE container creation fails.
     - **MIME Fidelity**: Integrated dynamic image format detection for Mastodon binary uploads.
