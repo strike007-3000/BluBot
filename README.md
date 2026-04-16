@@ -109,6 +109,7 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
     - **Session Persistence**: Implemented `atproto` session export/import with **GitHub Actions Caching** to eliminate `Rate Limit Reached` errors on login.
     - **Forbidden (403) Resolved**: Re-engineered the BlueSky broadcasting pipeline to calculate facets *after* byte-safe truncation, ensuring 100% valid metadata offsets.
     - **Smarter Retry Engine**: Refined `@retry_with_backoff` to intelligently handle 429 (Rate Limit) and 403 (Forbidden) statuses with zero-hammering logic.
+    - **Network Resilience**: Increased BlueSky client timeout to **30.0s** to resolve `InvokeTimeoutError` in high-latency GitHub Action environments.
     - **Security-First Persistence**: Added `bluesky_session.txt` to `.gitignore` to prevent secret leakage in public repositories.
 - **v3.3 (2026-04-15)**: **Fortress Synchronization & Dependency Resolve**.
     - **Dependency Conflict Fix**: Resolved critical installation failure by bumping `anyio` to `4.13.0`, satisfying the strict constraints of `google-genai` (≥ 1.73.1).

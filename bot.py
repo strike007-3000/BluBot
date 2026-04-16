@@ -11,7 +11,7 @@ from src.curator import (
 )
 from src.broadcaster import post_to_bluesky, post_to_mastodon, post_to_threads
 from src.config import BLUESKY_HANDLE, BLUESKY_PASSWORD
-from atproto import AsyncClient
+from atproto import AsyncClient, AsyncRequest
 
 async def update_live_status(session_name):
     """Automatically update the README dashboard using absolute pathing."""
@@ -103,8 +103,8 @@ async def main():
         if summary:
             SafeLogger.info(f"Broadcasting in {topic} mode...")
             
-            # Expert Review Fix: Redundant Auth - Session Persistence
-            bsky_client = AsyncClient()
+            # Expert Review Fix: Increase timeout to 30s to prevent InvokeTimeoutError
+            bsky_client = AsyncClient(request=AsyncRequest(timeout=30.0))
 
             @bsky_client.on_session_change
             async def on_session_change(event, session):
