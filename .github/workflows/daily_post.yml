@@ -24,6 +24,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Restore BlueSky session
+        uses: actions/cache/restore@v4
+        with:
+          path: bluesky_session.txt
+          key: bsky-session-${{ github.run_id }}
+          restore-keys: |
+            bsky-session-
+
       - name: Run bot
         env:
           BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
@@ -34,6 +42,13 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
         run: python bot.py
+
+      - name: Save BlueSky session
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: bluesky_session.txt
+          key: bsky-session-${{ github.run_id }}
 
       - name: Commit and push changes
         run: |

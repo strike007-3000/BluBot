@@ -19,7 +19,10 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None):
     if not BLUESKY_HANDLE:
         return
 
-    # Expert Review Fix: Implement Rich Text Facets for clickable links/hashtags
+    # Expert Review Fix: Use byte-safe truncation BEFORE calculating facets
+    # This prevents 'Forbidden' or 'Bad Request' errors due to out-of-bounds byte offsets.
+    text = truncate_bytes(text, BLUESKY_LIMIT)
+
     facets = []
     
     # 1. URL Facets
@@ -65,10 +68,7 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None):
                 )
             )
 
-    # Expert Review Fix: Use byte-safe truncation
-    safe_text = truncate_bytes(text, BLUESKY_LIMIT)
-    
-    await bsky_client.send_post(text=safe_text, embed=embed, facets=facets)
+    await bsky_client.send_post(text=text, embed=embed, facets=facets)
     SafeLogger.info("Successfully posted to Bluesky!")
 
 @retry_with_backoff

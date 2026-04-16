@@ -75,6 +75,9 @@ graph LR
     - **Granular Error Handling**: Moved away from broad `except Exception` blocks to categorical catching (Networking, Auth, IO), ensuring security failures are never silenced.
 - **Gemma Compatibility Layer**: A specialized logic branch that translates standard system instructions into a prompt-prepended format for Gemma models, ensuring perfect persona consistency regardless of which AI is running.
 - **The Fortress**: A unified logging system that dynamically masks all environment secrets and tokens, keeping the diagnostic logs safe for public review.
+- **Session Persistence & API Resilience (v3.4)**:
+    - **Encrypted Session Caching**: Implemented a secure export/import layer for BlueSky sessions. By using GitHub's internal cache, the bot reuses its login state across runs, staying well below API rate limit thresholds.
+    - **Synchronized Facet Indexing**: Resolved the "Forbidden (403)" metadata mismatch by enforcing a strict *Truncate-then-Index* pipeline, ensuring all URL and Hashtag offsets are perfectly aligned with the final UTF-8 byte stream.
 
 ---
 

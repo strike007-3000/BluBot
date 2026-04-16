@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from urllib.parse import urljoin
 from PIL import Image
-from .config import MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, SEEN_FILE_PATH
+from .config import MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, SEEN_FILE_PATH, SESSION_FILE_PATH
 
 from .logger import SafeLogger
 
@@ -33,9 +33,38 @@ def retry_with_backoff(func):
                 
                 # Calculate sleep with jitter
                 wait_time = (BACKOFF_FACTOR ** retries) + random.uniform(0, JITTER_RANGE)
-                SafeLogger.warn(f"Retry {retries}/{MAX_API_RETRIES} for {func.__name__} in {wait_time:.2f}s... (Error: {str(e)[:100]})")
+                
+                # Expert Review Fix: Better logging for rate limits
+                err_msg = str(e).lower()
+                if "rate limit" in err_msg or "429" in err_msg:
+                    SafeLogger.warn(f"Rate limited by BlueSky. Waiting {wait_time:.2f}s before retry {retries}/{MAX_API_RETRIES}...")
+                elif "forbidden" in err_msg or "403" in err_msg:
+                    SafeLogger.error(f"Forbidden (403) error in {func.__name__}. This likely indicates invalid facets/metadata. Skipping retries.")
+                    raise e
+                else:
+                    SafeLogger.warn(f"Retry {retries}/{MAX_API_RETRIES} for {func.__name__} in {wait_time:.2f}s... (Error: {str(e)[:100]})")
+                
                 await asyncio.sleep(wait_time)
     return wrapper
+
+def save_session_string(session_string: str):
+    """Saves the BlueSky session string to a private file."""
+    try:
+        with open(SESSION_FILE_PATH, "w", encoding="utf-8") as f:
+            f.write(session_string)
+        SafeLogger.info("BlueSky session string persisted.")
+    except Exception as e:
+        SafeLogger.error(f"Failed to save session string: {e}")
+
+def load_session_string() -> str:
+    """Loads the BlueSky session string from the private file."""
+    try:
+        if os.path.exists(SESSION_FILE_PATH):
+            with open(SESSION_FILE_PATH, "r", encoding="utf-8") as f:
+                return f.read().strip()
+    except Exception as e:
+        SafeLogger.error(f"Failed to load session string: {e}")
+    return None
 
 def compress_image(image_bytes: bytes, max_size=900000) -> bytes:
     """Compresses an image to stay under the specified max_size (default <1MB for Bluesky)."""
