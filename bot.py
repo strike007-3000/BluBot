@@ -13,9 +13,10 @@ from src.curator import (
 from src.broadcaster import post_to_bluesky, post_to_mastodon, post_to_threads
 from src.config import (
     BLUESKY_HANDLE, BLUESKY_PASSWORD, 
-    IMAGEN_MODEL, ENABLE_IMAGE_GEN
+    IMAGEN_MODEL, ENABLE_IMAGE_GEN, GEMINI_API_KEY
 )
 from google.genai import types
+from google import genai
 from atproto import AsyncClient, AsyncRequest
 
 async def update_live_status(session_name):
@@ -78,6 +79,9 @@ async def generate_ai_thumbnail(genai_client, summary, topic):
 async def main():
     if not validate_config():
         return
+
+    # Expert Review Fix: Initialize genai_client once at startup
+    genai_client = genai.Client(api_key=GEMINI_API_KEY)
 
     context = get_temporal_context()
     now = datetime.now(timezone.utc)
@@ -146,8 +150,13 @@ async def main():
             try:
                 session_str = load_session_string()
                 if session_str:
-                    SafeLogger.info("Attempting login via persisted session...")
-                    await bsky_client.login(session_string=session_str)
+                    try:
+                        SafeLogger.info("Attempting login via persisted session...")
+                        await bsky_client.login(session_string=session_str)
+                    except Exception as e:
+                        # P1 Bug Fix: Fallback to credentials if session string is invalid/stale
+                        SafeLogger.warn(f"Session-string login failed ({e}). Falling back to credentials...")
+                        await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
                 else:
                     SafeLogger.info("No session found. Logging in with credentials.")
                     await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
@@ -156,22 +165,27 @@ async def main():
                 SafeLogger.error(f"Bluesky auth failed: {type(e).__name__} - {e}")
                 bsky_client = None
 
-            # Expert Review Fix: Sage Designer AI Visualization
-            # First, check metadata to see if we have a unique image
+            # Expert Review Fix: Sage Designer AI Visualization & Cross-Platform Orchestration
             override_image = None
+            image_url_for_threads = None
+            
             if lead_link:
                 from src.utils import get_link_metadata
                 meta = await get_link_metadata(client, lead_link)
-                # If no unique image found (generic filtered out in utils), try AI Generation
-                if not meta.get('image') and ENABLE_IMAGE_GEN:
-                    override_image = await generate_ai_thumbnail(genai_client, summary, topic)
+                if meta:
+                    image_url_for_threads = meta.get('image_url')
+                    # If no unique image found (generic filtered out in utils), try AI Generation
+                    if not meta.get('image') and ENABLE_IMAGE_GEN:
+                        override_image = await generate_ai_thumbnail(genai_client, summary, topic)
+                    else:
+                        override_image = meta.get('image')
 
             # Expert Review Fix: Atomic Persistence & Exception Handling
             # Using gather with return_exceptions=True to ensure one failure doesn't block state saving
             broadcast_tasks = [
                 ("Bluesky", post_to_bluesky(bsky_client, client, summary, lead_link, override_image)) if bsky_client else None,
-                ("Mastodon", post_to_mastodon(summary)),
-                ("Threads", post_to_threads(client, summary))
+                ("Mastodon", post_to_mastodon(summary, override_image)),
+                ("Threads", post_to_threads(client, summary, image_url_for_threads))
             ]
             
             # Filter out None tasks (e.g., if Bsky login failed)
