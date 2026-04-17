@@ -11,6 +11,16 @@ SEEN_FILE_PATH = os.path.join(BASE_DIR, "seen_articles.json")
 README_FILE_PATH = os.path.join(BASE_DIR, "README.md")
 VERSION_FILE_PATH = os.path.join(BASE_DIR, "VERSION")
 SESSION_FILE_PATH = os.path.join(BASE_DIR, "bluesky_session.txt")
+STATUS_FILE_PATH = os.path.join(BASE_DIR, "STATUS.md")
+VANGUARD_STATE_PATH = os.path.join(BASE_DIR, "broken_feeds.json")
+INTERACTIONS_STATE_PATH = os.path.join(BASE_DIR, "seen_interactions.json")
+
+# Interaction Engine Constants
+INTERACTION_LIMIT = 5
+MENTION_REPLY_PROB = 0.8
+COMMENT_REPLY_PROB = 0.5
+AUTO_LIKE_INTERACTIONS = True
+
 
 # API Keys (Standard initialization)
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
@@ -61,37 +71,39 @@ BACKOFF_FACTOR = 3.0
 JITTER_RANGE = 2.0
 
 RSS_FEEDS = [
+    # === Tier 1: AI Lab Official Blogs ===
     "https://openai.com/news/rss.xml",
     "https://huggingface.co/blog/feed.xml",
     "https://deepmind.google/blog/rss.xml",
-    "https://anthropic.com/news.rss",
-    "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
-    "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
-    "https://aheadofai.substack.com/feed",
-    "https://www.semianalysis.com/feed",
+    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
+    "https://www.microsoft.com/en-us/research/blog/feed/",
+    
+    # === Tier 2: Elite Newsletters & Analysts ===
     "https://www.interconnects.ai/feed",
-    "https://simonwillison.net/search/?q=AI&format=atom",
-    "https://arxiv.org/rss/cs.AI",
+    "https://magazine.sebastianraschka.com/feed",
+    "https://www.latent.space/feed",
+    "https://jack-clark.net/feed/",
+    "https://www.oneusefulthing.org/feed",
+    "https://newsletter.maartengrootendorst.com/feed",
+    
+    # === Tier 3: Research & Academic ===
     "https://arxiv.org/rss/cs.LG",
-    "https://www.the-decoder.com/feed/",
-    "https://404media.co/rss/",
-    "https://www.artificialanalysis.ai/feed",
-    "https://www.wired.com/feed/tag/ai/latest/rss",
     "https://thegradient.pub/rss/",
     "https://vkrakovna.wordpress.com/feed/",
-    "https://aiacceleratorinstitute.com/rss/",
-    "https://synthedia.substack.com/feed",
-    "https://magazine.sebastianraschka.com/feed",
-    "https://stability.ai/blog?format=rss",
-    "https://siliconangle.com/category/ai/feed/",
-    "https://www.assemblyai.com/blog/rss/",
-    "https://mistral.ai/news/rss.xml",
     "https://bair.berkeley.edu/blog/feed.xml",
-    "https://ai.stanford.edu/blog/feed.xml",
-    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
-    "https://ai.meta.com/blog/rss/",
-    "https://www.microsoft.com/en-us/research/blog/feed/",
-    "https://cohere.com/blog/rss.xml",
+    "https://machinelearningmastery.com/feed/",
+    
+    # === Tier 4: Industry & Journalism ===
+    "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
+    "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
+    "https://www.the-decoder.com/feed/",
+    "https://404media.co/rss/",
+    "https://www.wired.com/feed/tag/ai/latest/rss",
+    "https://siliconangle.com/category/ai/feed/",
+    "https://aiacceleratorinstitute.com/rss/",
+    "https://www.marktechpost.com/feed/",
+    "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "https://venturebeat.com/category/ai/feed/",
 ]
 
 # --- Breakthrough Scoring Engine Constants ---
@@ -108,7 +120,7 @@ MOMENTUM_PRODUCTS = [
 
 # Weighting Matrix
 BASE_TIER_1 = 30
-BASE_HIDDEN_GEM = 25
+BASE_HIDDEN_GEM = 15
 BASE_TIER_2 = 15
 SIGNAL_BOOST = 12
 MOMENTUM_BOOST = 18
@@ -116,9 +128,9 @@ SYNERGY_BONUS = 15
 DIVERSITY_PENALTY = 25
 MAX_TOPIC_RECURRENCE = 3
 
-TIER_1_SOURCES = ["openai.com", "deepmind.google", "anthropic.com", "huggingface.co", "mistral.ai"]
-TIER_2_SOURCES = ["semianalysis.com", "interconnects.ai", "aheadofai.substack.com", "simonwillison.net"]
-HIDDEN_GEM_SOURCES = ["arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", "magazine.sebastianraschka.com", "bair.berkeley.edu", "ai.stanford.edu", "blogs.nvidia.com"]
+TIER_1_SOURCES = ["openai.com", "deepmind.google", "huggingface.co", "blogs.nvidia.com", "microsoft.com"]
+TIER_2_SOURCES = ["interconnects.ai", "latent.space", "jack-clark.net", "oneusefulthing.org", "magazine.sebastianraschka.com"]
+HIDDEN_GEM_SOURCES = ["arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", "bair.berkeley.edu", "newsletter.maartengrootendorst.com", "machinelearningmastery.com"]
 
 TOPIC_MAP = {
     "LLMs": ["GPT", "Llama", "Claude", "Gemini", "Model", "Train", "Dataset"],
@@ -141,89 +153,97 @@ SECONDARY_TOPICS = [
     "The Evolving Role of Junior Engineers"
 ]
 
-CURATOR_SYSTEM_INSTRUCTION = "Synthesize technical news concisely as a Technical Expert curator."
-MENTOR_SYSTEM_INSTRUCTION = "Share technical insights as a Veteran Mentor."
+CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a compact, human, business-relevant short-form post.
+
+Do not write an academic summary. Extract the real-world implication and express one clear point of view.
+
+ANTI-PATTERNS (DO NOT USE):
+* Generic openings like "AI is transforming...", "The future of...", or "In today's rapidly evolving...".
+* Hype words like "game-changing", "revolutionary", "frontier", or "systemic intelligence".
+* Dense academic jargon or dry article abstracts.
+* Repeating the exact same "not X, but Y" structure in every post.
+* Stuffing too many ideas into one post.
+
+REUSABLE STRUCTURES (choose one based on the story):
+1. Strategic Contrast: contrast the old assumption with the new reality.
+2. Practical Enterprise Implication: explain what changes for business, product, vendors, ROI, or operations.
+3. Risk/Accountability Lens: explain what must be trusted, verified, secured, or governed.
+
+STYLE:
+* Write like a thoughtful human, not a press release.
+* Use short sentences.
+* Prefer concrete business language over technical jargon.
+* Make one strong point.
+* If using line breaks, keep them minimal because the post is short-form.
+* Hashtags are optional. Use 0-2 relevant hashtags only when they add discovery value. Never sacrifice clarity or the main thesis for hashtags.
+
+LENGTH:
+* Target 260-290 characters for normal posts.
+* Stay within the platform-safe short-form limit without relying on truncation.
+* If space is tight, keep the thesis and remove supporting detail."""
+
+MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
+STRICTLY limit your output to a single post under 280 characters, presenting the core lesson with zero fluff."""
 SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
 
+INTERACTIVE_REPLY_INSTRUCTION = """
+You are the **Elite AI Sage**, a technical visionary and mentor in the AI/ML space.
+You are replying to a comment or mention in a social media conversation. Provide a quick, valuable, and authentic response.
+
+**Rules for Interaction**:
+1. **Human-like Authenticity**: Sound natural, conversational, and real. Avoid robotic pre-ambles, clichés, and greeting formulas (e.g., do NOT start with "As the Elite AI Sage...", "Indeed,", "Greetings,"). Speak as a peer sharing a quick insight.
+2. **Persona Alignment**: Use your active persona (analytical, strategically visionary, or mentor-like) in an organic way.
+3. **Conciseness**: Keep replies under 280 characters. Zero fluff.
+4. **High Signal**: Provide a genuine piece of strategic or technical insight. Avoid generic "Thanks for the comment!" templates.
+5. **Format**: No hashtags. No emojis unless representing a specific technical concept (e.g. 🚀, 🧠).
+
+Current Temporal Context: {context}
+"""
+
+# --- Persona Dialects (v3.7.0) ---
+PERSONA_DIALECTS = {
+    "ANALYTICAL": "ANALYST: Explain why the news matters. Avoid hype, strip buzzwords, and connect technology to business impact.",
+    "PRACTICAL": "PRACTICAL: Focus on developer utility, operational use, and what changes in real workflows.",
+    "SAGE": "SAGE: Strategic, executive-facing, reflective, and written in simple language.",
+    "CONCISE": "CONCISE: Short, sharp, high-signal, using minimal words.",
+    "PHILOSOPHICAL": "PHILOSOPHICAL: Explore the deeper impact or ethical tension without becoming abstract or academic."
+}
+
+# --- Backward Compatibility Wrappers ---
 def validate_config():
-    """Ensures all required environment variables are present and valid."""
-    is_dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
-    
-    # Core essentials
-    core_vars = ["BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY"]
-    if os.getenv("IMAGE_PROVIDER", "nvidia") == "nvidia":
-        core_vars.append("NVIDIA_KEY")
-        
-    for v in core_vars:
-        current_val = os.getenv(v)
-        if not current_val:
-            if is_dry_run and v not in ["GEMINI_KEY", "NVIDIA_KEY"]:
-                # Injects "mock_value" into os.environ[v]
-                if not os.environ.get(v):
-                    os.environ[v] = "mock_value"
-                SafeLogger.info(f"DRY_RUN: Missing {v}, using mock credentials.")
-            elif is_dry_run and v in ["GEMINI_KEY", "NVIDIA_KEY"]:
-                # These are required for dry-run AI testing
-                pass
-            else:
-                SafeLogger.error(f"Missing CORE variable: {v}")
-                return False
-            
-    # Platform-specific checks
-    if (not os.getenv("MASTODON_ACCESS_TOKEN") or not os.getenv("MASTODON_BASE_URL")) and (os.getenv("MASTODON_ACCESS_TOKEN") or os.getenv("MASTODON_BASE_URL")):
-        if not is_dry_run:
-            SafeLogger.error("Partial Mastodon configuration detected.")
-            return False
-
-    if (not os.getenv("THREADS_ACCESS_TOKEN") or not os.getenv("THREADS_USER_ID")) and (os.getenv("THREADS_ACCESS_TOKEN") or os.getenv("THREADS_USER_ID")):
-        if not is_dry_run:
-            SafeLogger.error("Partial Threads configuration detected.")
-            return False
-            
-    if not validate_gemini_model_priority():
-        return False
-
-    return True
-
-def _model_variants(model_id):
-    normalized = model_id.strip()
-    without_prefix = normalized.replace("models/", "", 1)
-    with_prefix = f"models/{without_prefix}"
-    return {normalized, without_prefix, with_prefix}
+    """Legacy wrapper for the new Settings validation logic."""
+    from .settings import Settings
+    return Settings.from_env().validate()
 
 def validate_gemini_model_priority():
-    global GEMINI_MODEL_PRIORITY, GEMINI_MODEL_ID
+    """Legacy wrapper for Gemini model self-discovery."""
+    if os.getenv("CI", "false").lower() == "true":
+        return True
+    key = os.getenv("GEMINI_KEY") or os.getenv("GEMINI_API_KEY")
+    if not key:
+        SafeLogger.warn("Gemini Validation: No key found in environment for model discovery.")
+        return True  # Fall back to defaults
     try:
         from google import genai
-        api_key = os.getenv("GEMINI_KEY") or GEMINI_API_KEY
-        if os.getenv("CI") == "true":
-            return True
-        if not api_key:
-            return False
-        client = genai.Client(api_key=api_key)
-        listed_models = list(client.models.list())
+        client = genai.Client(api_key=key)
+        # List models synchronously
+        SafeLogger.info("Gemini Validation: Querying available models from API...")
+        available = [m.name for m in client.models.list()]
         
-        supported_by_name = {}
-        for model in listed_models:
-            actions = getattr(model, "supported_actions", None) or getattr(model, "supported_generation_methods", None) or []
-            if "generateContent" in actions:
-                supported_by_name[model.name] = model.name
-                supported_by_name[model.name.replace("models/", "", 1)] = model.name
-
-        valid_models = []
-        for configured_model in GEMINI_MODEL_PRIORITY:
-            for variant in _model_variants(configured_model):
-                if variant in supported_by_name:
-                    valid_models.append(supported_by_name[variant])
-                    break
-        
-        valid_models = list(dict.fromkeys(valid_models))
-        if valid_models:
-            GEMINI_MODEL_PRIORITY[:] = valid_models
-            GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
-            SafeLogger.info(f"Validated Gemini model priority: {GEMINI_MODEL_PRIORITY}")
-            return True
-        return False
+        # Prune prioritised list in-place
+        pruned = []
+        for model_id in GEMINI_MODEL_PRIORITY:
+            norm_id = model_id.lower()
+            if any(norm_id in m.lower() or m.lower() in norm_id for m in available):
+                pruned.append(model_id)
+                
+        if pruned:
+            SafeLogger.info(f"Gemini Validation: Discovered active models: {pruned}")
+            GEMINI_MODEL_PRIORITY.clear()
+            GEMINI_MODEL_PRIORITY.extend(pruned)
+        else:
+            SafeLogger.warn("Gemini Validation: None of the prioritized models were returned by the API. Keeping defaults.")
+        return True
     except Exception as e:
-        SafeLogger.error(f"Gemini validation error: {e}")
-        return False
+        SafeLogger.warn(f"Gemini Validation: Discovery failed ({e}). Falling back to configured defaults.")
+        return True  # Return True to avoid blocking execution due to API network glitches
