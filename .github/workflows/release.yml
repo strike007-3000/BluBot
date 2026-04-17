@@ -4,10 +4,14 @@ on:
   push:
     tags:
       - 'v*'
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     permissions:
       contents: write
     steps:
@@ -16,10 +20,29 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Determine Version
+        id: get_version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          else
+            VER=$(cat VERSION)
+            echo "VERSION=$VER" >> $GITHUB_ENV
+            
+            # Create and push tag if it doesn't exist
+            if ! git rev-parse "v$VER" >/dev/null 2>&1; then
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              git tag "v$VER"
+              git push origin "v$VER"
+              echo "CREATED_TAG=true" >> $GITHUB_ENV
+            fi
+          fi
+
       - name: Extract Changelog
         id: changelog
         run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          TAG_VERSION=${{ env.VERSION }}
           # Extract section from README.md
           # It looks for a line containing the version (e.g. v3.3) 
           # and takes everything until the next line starting with '- **' (another entry)
