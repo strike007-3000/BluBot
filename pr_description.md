@@ -1,38 +1,43 @@
-# PR Description: The Fortress & The Narrator (v3.8.2) 🏰🥁
+# PR Description: Natural Vibe Engine (v3.7.0) 🎭🚀
 
-This PR completes the v3.8.x development cycle, transforming BluBot into an industry-grade autonomous entity with "cloud memory," natural pacing, and elite supply-chain security.
+This PR evolves BluBot from a scheduled automation script into a **Dynamic Editorial Entity**. It introduces high-resolution temporal intelligence, stylistic memory, and automated manual-run detection to make the bot feel significantly more natural and varied in its social media feed.
 
-## 🌟 Key Features (v3.8.0 - v3.8.2)
+## 🌟 Key Features (v3.7.0)
 
-### 1. 3-Tier State Resilience (The Fortress)
-BluBot now has "cloud memory" that survives even if the local CI environment is wiped.
-- **Tier 1 (Local)**: Atomic writes with `FileLock` protection.
-- **Tier 2 (Backup)**: Automatic rotation to `.bak` files with self-repair logic.
-- **Tier 3 (Remote)**: Synchronizes state with a private GitHub Gist for cross-runner persistence.
+### 1. The Natural Vibe Engine (Stylistic Memory)
+BluBot now has "memory" of its own persona. It records its last used style and ensures the next run uses a different one from a pool of 5 distinct dialects:
+- **ANALYTICAL**: Data-driven specs and arch impact.
+- **PRACTICAL**: Engineering utility and "How-to".
+- **SAGE**: Visionary strategy and industry shifts.
+- **CONCISE**: High-velocity scanner updates.
+- **PHILOSOPHICAL**: Ethical exploration and the "Big Picture".
 
-### 2. Humanization Patterning (The Narrator)
-Closed the "Turing Gap" by implementing natural activity markers:
-- **🥁 Thread Rhythm**: Randomized 10-30s pauses between posts in a multi-part thread. This prevents "burst-spam" detection and simulates human narration.
-- **🤖 Dynamic Bio Management**: Automatically updates social bios on Bluesky and Mastodon with live telemetry (e.g., *"1,245 stories curated | Voice: Analytical"*).
+### 2. High-Resolution Temporal Intelligence
+Resolved the "Session" logic from 2 slots to **5 granular sessions**, ensuring content is perfectly aligned with the time of day:
+- **Night Reflection** (00:00 - 06:00)
+- **Morning Intelligence** (06:00 - 11:00)
+- **Midday Briefing** (11:00 - 15:00)
+- **Afternoon Deep Dive** (15:00 - 19:00)
+- **Evening Synthesis** (19:00 - 24:00)
 
-### 3. Supply Chain Hardening
-Finalized security posture to match production enterprise standards:
-- **pip-tools Integration**: Migrated to a strict lockfile (`requirements.txt`) with **cryptographic hashes**.
-- **The Benefit**: Protection against malicious modifications in transitive dependencies.
+### 3. Manual Intercept Mode
+The bot now detects if it was triggered manually via `workflow_dispatch`.
+- **Logic**: Automatically appends **"(Intercept)"** to the session name.
+- **Effect**: Shifts the AI logic into an "Ad-hoc briefing" mode, preventing it from producing scheduled-sounding content during an off-hour manual trigger.
 
-### 4. Critical Bug Remediation
-- **Typing Fix**: Resolved P0 `NameError` in `bot.py` by properly importing `Any` for type annotations.
-- **Async Fix**: Resolved P1 `NameError` in `broadcaster.py` by correctly capturing the event loop for threaded Mastodon delivery.
+### 4. Architectural Hardening
+- **Absolute Imports**: Converted all relative imports to absolute `src.` paths to resolve `pytest` isolation issues and standardizing the source tree.
+- **State Persistence**: Extended the atomic persistence logic to track `last_dialect`.
 
-## 🧪 Verification & Stability
-- ✅ **Dry-Run Validation**: Bot successfully initializes and validates settings without NameErrors.
-- ✅ **Humanization Diagnostic**: Verified `human_delay` timing accuracy and state counter persistence via `test_humanization.py`.
-- ✅ **Compilations**: Successfully generated hashed `requirements.txt` from `requirements.in`.
+## 🧪 Verification Results
+
+- **Automated Tests**: Passed 100% of the 15-test regression suite (`pytest src/tests/`).
+- **Regression Check**: Verified internal constant consistency (restored `CURATOR_SYSTEM_INSTRUCTION`).
+- **Dry-Run Validation**: Successful execution via `test_models.py` with mock-ad-hoc interception.
 
 ## 📊 Documentation Updates
-- **README.md**: Updated with v3.8.2 features and expanded resilience documentation.
-- **WIKI_MANUAL.md**: Added sections for **Security & Supply Chain** and handled v3.8 navigation.
-- **VERSION**: Bumped to **3.8.2**.
+- **README.md**: Updated with v3.7.0 key features and Status Dashboard.
+- **WIKI_MANUAL.md**: Added Page 10 (The Natural Vibe Engine).
 
 ---
-*Hardened and Humanized - Ready for the v3.8.2 Production Merge*
+*Built for the Elite Sage released under v3.7.0*

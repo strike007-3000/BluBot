@@ -189,15 +189,8 @@ def load_seen_articles():
                     SafeLogger.info("Restored seen articles from local backup.")
                     return data
             except (json.JSONDecodeError, IOError):
-                SafeLogger.warn("Local backup corrupted as well.")
-
-        # Tier 3: Remote Gist
-        gist_data = _load_gist_state("seen_articles.json")
-        if gist_data:
-            SafeLogger.info("Restored seen articles from GitHub Gist.")
-            return gist_data
-            
-        return default_state
+                return {"links": [], "recent_topics": [], "last_dialect": None}
+        return {"links": [], "recent_topics": [], "last_dialect": None}
 
 def save_seen_articles(data):
     """3-Tier Persistence: Atomic Write -> Backup Commit -> Remote Sync."""

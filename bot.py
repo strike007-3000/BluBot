@@ -95,7 +95,8 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
             summary, lead_link, topic, is_failover, current_dialect = await summarize_news(
                 news_dicts, context, mode=mode, last_dialect=curation.last_dialect
             )
-            # v3.7.1 Fix: Propagate updated dialect back to main state
+            # Update curation result with the dialect used for persistence (requires non-frozen edit or re-init)
+            # Since CurationResult is frozen, we re-instantiate
             curation = CurationResult(
                 top_articles=curation.top_articles,
                 seen_links=curation.seen_links,
@@ -183,26 +184,12 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
         state.setdefault("recent_topics", []).append(synthesis.topic)
 
-    # Update stats
-    count_this_run = len(curation.top_articles)
-    state["total_posts_curated"] = state.get("total_posts_curated", 0) + count_this_run
-    state["last_dialect"] = curation.last_dialect
-    
-    # Cap history to prevent state bloat (Tier 1 constraint)
-    state["links"] = state["links"][-500:]
-    state["recent_topics"] = state["recent_topics"][-20:]
-
-    save_seen_articles(state)
-    await update_status_dashboard(curation.session_name, synthesis.topic)
-
-    # Dynamic Bio Update
-    await update_social_profiles(
-        client_bsky, 
-        settings.mastodon_token, 
-        state["total_posts_curated"],
-        curation.last_dialect,
-        synthesis.topic
-    )
+    save_seen_articles({
+        "links": curation.seen_links,
+        "recent_topics": curation.recent_topics,
+        "last_dialect": curation.last_dialect
+    })
+    await update_readme_dashboard(curation.session_name, synthesis.topic)
 
 async def main():
     if not settings.validate():
