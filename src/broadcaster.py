@@ -9,7 +9,6 @@ from src.utils import (
     human_delay
 )
 from src.settings import settings
-from src.config import VERSION
 
 @retry_with_backoff
 async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None):
