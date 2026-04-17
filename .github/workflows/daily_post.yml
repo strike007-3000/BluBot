@@ -24,6 +24,9 @@ jobs:
         with:
           fetch-depth: 0 # Full history needed for rebase
 
+      - name: Mask Session Metadata
+        run: echo "::add-mask::${{ github.run_id }}"
+
       - name: Restore persistence state
         run: |
           git fetch origin automated/state || echo "automated/state branch not found"
@@ -84,7 +87,7 @@ jobs:
             exit 0
           fi
 
-          # Safe rebase strategy: use --autostash to handle dirty worktree (README.md changes)
+          # Safe rebase strategy: use --autostash and fallback to 'ours' for README conflicts
           git fetch origin automated/state
-          git pull origin automated/state --rebase --autostash
+          git pull origin automated/state --rebase --autostash || (git checkout --ours README.md && git add README.md && git rebase --continue)
           git push origin HEAD:automated/state

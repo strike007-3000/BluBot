@@ -373,3 +373,19 @@ def truncate_bytes(text, max_bytes):
     if len(encoded) <= max_bytes:
         return text
     return encoded[:max_bytes].decode('utf-8', 'ignore')
+
+def smart_truncate(text, max_chars, suffix='...'):
+    """Truncates text at word boundaries within the limit, appending a suffix."""
+    if not text or len(text) <= max_chars:
+        return text
+    
+    # Reserve space for the suffix
+    limit = max_chars - len(suffix)
+    truncated = text[:limit]
+    
+    # Backtrack to the last whitespace to avoid mid-word cutoff
+    last_space = truncated.rfind(' ')
+    if last_space != -1:
+        truncated = truncated[:last_space]
+        
+    return f"{truncated.rstrip()}{suffix}"

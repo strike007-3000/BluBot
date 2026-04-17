@@ -72,7 +72,10 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.7.3 (Current)**: **Stabilization & Visibility Patch**.
+- **v3.7.5 (Current)**: **Content & Infrastructure Optimization**.
+    - **Smart Truncate**: Implemented word-boundary-aware truncation for Mastodon and Threads to prevent mid-word cutoffs.
+    - **Persistence Hardening**: Resolved automated `README.md` rebase conflicts and implemented session ID masking in CI logs.
+- **v3.7.3**: **Stabilization & Visibility Patch**.
     - **Stability Fix**: Restored the missing `published` timestamp in the curation engine to satisfy `Article` model requirements.
     - **Session Visibility**: Enhanced the broadcast stage with explicit logging for Bluesky session cache restoration.
 - **v3.7.2**: **Production Hardening Patch**.
