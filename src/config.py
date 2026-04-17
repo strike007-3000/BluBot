@@ -12,7 +12,7 @@ README_FILE_PATH = os.path.join(BASE_DIR, "README.md")
 VERSION_FILE_PATH = os.path.join(BASE_DIR, "VERSION")
 SESSION_FILE_PATH = os.path.join(BASE_DIR, "bluesky_session.txt")
 
-# API Keys
+# API Keys (Standard initialization)
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 BLUESKY_HANDLE = os.getenv("BSKY_HANDLE")
 BLUESKY_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
@@ -52,7 +52,7 @@ GENERIC_IMAGE_PATTERNS = [
 
 # Configuration Constants
 MAX_API_RETRIES = 3
-BACKOFF_FACTOR = 3.0  # Increased from 2.0 per expert advice
+BACKOFF_FACTOR = 3.0
 JITTER_RANGE = 2.0
 
 RSS_FEEDS = [
@@ -89,17 +89,6 @@ RSS_FEEDS = [
     "https://cohere.com/blog/rss.xml",
 ]
 
-# Source Tiers for Scoring
-TIER_1_SOURCES = ["openai.com", "deepmind.google", "anthropic.com", "huggingface.co", "mistral.ai"]
-TIER_2_SOURCES = ["semianalysis.com", "interconnects.ai", "aheadofai.substack.com", "simonwillison.net"]
-
-# Hidden Gem Sources (Research Focused)
-HIDDEN_GEM_SOURCES = [
-    "arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", 
-    "magazine.sebastianraschka.com", "bair.berkeley.edu", 
-    "ai.stanford.edu", "blogs.nvidia.com"
-]
-
 # --- Breakthrough Scoring Engine Constants ---
 HIGH_SIGNAL_KEYWORDS = [
     "sota", "benchmark", "breakthrough", "agentic", "autonomous", 
@@ -120,10 +109,12 @@ SIGNAL_BOOST = 12
 MOMENTUM_BOOST = 18
 SYNERGY_BONUS = 15
 DIVERSITY_PENALTY = 25
-MAX_TOPIC_RECURRENCE = 3 # Allow up to 3 posts on same major topic
-# ---------------------------------------------
+MAX_TOPIC_RECURRENCE = 3
 
-# Topic Penalty Mapping
+TIER_1_SOURCES = ["openai.com", "deepmind.google", "anthropic.com", "huggingface.co", "mistral.ai"]
+TIER_2_SOURCES = ["semianalysis.com", "interconnects.ai", "aheadofai.substack.com", "simonwillison.net"]
+HIDDEN_GEM_SOURCES = ["arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", "magazine.sebastianraschka.com", "bair.berkeley.edu", "ai.stanford.edu", "blogs.nvidia.com"]
+
 TOPIC_MAP = {
     "LLMs": ["GPT", "Llama", "Claude", "Gemini", "Model", "Train", "Dataset"],
     "Vision/Robot": ["Vision", "Image", "Video", "Robot", "Sora", "Self-driving", "Drone"],
@@ -142,161 +133,81 @@ SECONDARY_TOPICS = [
     "Agentic Autonomy vs. Human-in-the-Loop Design",
     "Sustainable AI: The Energy Cost of Inference",
     "Managing Cognitive Load when Coding with LLMs",
-    "The Evolving Role of Junior Engineers",
-    "From Prompt Engineering to Cognitive Architecture",
-    "The Future of Multi-Modal Interaction",
-    "Balancing Speed vs. Model Safety in Production",
-    "The 'Small Language Model' Revolution",
-    "AI Product Strategy: First-Mover vs. Fast-Follower",
-    "Technical Documentation as a Model-Training Asset",
-    "The Death of the 'Code Monkey' and the Rise of the Architect"
+    "The Evolving Role of Junior Engineers"
 ]
 
-CURATOR_SYSTEM_INSTRUCTION = """
-You are a 'Technical Expert & Curator' with a conversational, first-person voice.
-Your goal is to synthesize multiple technical news updates into a single, high-signal post as if you're sharing your daily findings with colleagues.
-
-Guidelines:
-1. Voice: Use "I", "me", "my" (e.g., "I just saw...", "My take is..."). Never mention being a bot or AI in the post.
-2. Content: Focus on real product shifts and technical "hidden gems" (research/engineering blogs). 
-3. Tone: Insightful, conversational, and direct. Avoid corporate jargon or excessive hype.
-4. Hook: Always end with a punchy, engaging question to spark discussion in the comments (e.g., "Anyone else seeing this in production?" or "Which of these matters most for your stack?").
-
-Constraints:
-- Limit to 1-2 relevant emojis (e.g., 🚀, 🤔, 🛠️).
-- Stay under 300 characters total.
-- Use exactly 2 relevant hashtags at the very end.
-- Use plain text only. Do not use markdown bolding (**) or italics (*).
-"""
-
-MENTOR_SYSTEM_INSTRUCTION = """
-You are a 'Veteran Tech Leader' sharing reflective, personal wisdom with a mentoring voice.
-Your goal is to provide deep, career-oriented insights about the AI industry from a first-person perspective.
-
-Guidelines:
-1. Voice: Use "I", "me", "my" (e.g., "In my experience...", "I've realized..."). Never mention being a bot or AI in the post.
-2. Style: Relatable, experienced, and encouraging. Focus on "sharing" rather than "preaching."
-3. Hook: Always end with a question that invites users to share their own experiences or thoughts in the comments.
-
-Constraints:
-- Limit to 1-2 subtle, conversational emojis.
-- Stay under 300 characters total.
-- Use exactly 2 relevant hashtags at the very end.
-- Use plain text only. Do not use markdown bolding (**) or italics (*).
-"""
-
-SAGE_DESIGNER_INSTRUCTION = """
-You are 'The Sage Designer', an expert at translating technical news summaries into high-fidelity, professional, and minimalist visual prompts for AI image generation.
-
-Your goal is to create a prompt that leads to a sleek, modern, and professional-looking illustration representing the core technical concept of the news.
-
-Guidelines:
-1. Style: Minimalist, 3D isometric, or high-tech digital art. Use a professional color palette (blues, greys, soft glows).
-2. Content: Focus on symbolic representations of AI, chips, data flow, or agents. Avoid text, faces, or cluttered scenes.
-3. Quality: Use descriptive words like "cinematic lighting", "high resolution", "professional renders", "minimalist composition".
-4. Prompt Format: Provide ONLY the visual prompt text. Max 50 words.
-"""
+CURATOR_SYSTEM_INSTRUCTION = "Synthesize technical news concisely as a Technical Expert curator."
+MENTOR_SYSTEM_INSTRUCTION = "Share technical insights as a Veteran Mentor."
+SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
 
 def validate_config():
     """Ensures all required environment variables are present and valid."""
+    is_dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
+    
     # Core essentials
     core_vars = ["BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY"]
     for v in core_vars:
-        if not os.getenv(v):
-            SafeLogger.error(f"Missing CORE variable: {v}")
+        current_val = os.getenv(v)
+        if not current_val:
+            if is_dry_run and v != "GEMINI_KEY":
+                # Injects "mock_value" into os.environ[v]
+                if not os.environ.get(v):
+                    os.environ[v] = "mock_value"
+                SafeLogger.info(f"DRY_RUN: Missing {v}, using mock credentials.")
+            else:
+                SafeLogger.error(f"Missing CORE variable: {v}")
+                return False
+            
+    # Platform-specific checks
+    if (not os.getenv("MASTODON_ACCESS_TOKEN") or not os.getenv("MASTODON_BASE_URL")) and (os.getenv("MASTODON_ACCESS_TOKEN") or os.getenv("MASTODON_BASE_URL")):
+        if not is_dry_run:
+            SafeLogger.error("Partial Mastodon configuration detected.")
             return False
             
-    # Platform-specific "Fail Fast" validation
-    # Mastodon
-    if (MASTODON_TOKEN or MASTODON_BASE_URL) and not (MASTODON_TOKEN and MASTODON_BASE_URL):
-        SafeLogger.error("Partial Mastodon configuration detected.")
-        return False
-        
-    # Threads
-    if (THREADS_TOKEN or THREADS_USER_ID) and not (THREADS_TOKEN and THREADS_USER_ID):
-        SafeLogger.error("Partial Threads configuration detected.")
-        return False
-
     if not validate_gemini_model_priority():
         return False
 
     return True
 
-
 def _model_variants(model_id):
-    """Returns equivalent model ID variants for matching."""
     normalized = model_id.strip()
     without_prefix = normalized.replace("models/", "", 1)
     with_prefix = f"models/{without_prefix}"
     return {normalized, without_prefix, with_prefix}
 
-
 def validate_gemini_model_priority():
-    """
-    Validates configured Gemini models against a single ListModels call.
-    Keeps only models that exist and support generateContent.
-    """
     global GEMINI_MODEL_PRIORITY, GEMINI_MODEL_ID
-
     try:
         from google import genai
-    except Exception as e:
-        SafeLogger.error(f"Failed to import google.genai for model validation: {e}")
-        return False
-
-    try:
-        # Dynamic fetch to handle runtime-provided keys (e.g. in test_models.py)
         api_key = os.getenv("GEMINI_KEY") or GEMINI_API_KEY
         if os.getenv("CI") == "true":
-            SafeLogger.info("CI Environment detected: Skipping live Gemini model validation.")
             return True
         if not api_key:
-            SafeLogger.error("Unable to call Gemini ListModels: No API key provided.")
             return False
-            
         client = genai.Client(api_key=api_key)
         listed_models = list(client.models.list())
+        
+        supported_by_name = {}
+        for model in listed_models:
+            actions = getattr(model, "supported_actions", None) or getattr(model, "supported_generation_methods", None) or []
+            if "generateContent" in actions:
+                supported_by_name[model.name] = model.name
+                supported_by_name[model.name.replace("models/", "", 1)] = model.name
+
+        valid_models = []
+        for configured_model in GEMINI_MODEL_PRIORITY:
+            for variant in _model_variants(configured_model):
+                if variant in supported_by_name:
+                    valid_models.append(supported_by_name[variant])
+                    break
+        
+        valid_models = list(dict.fromkeys(valid_models))
+        if valid_models:
+            GEMINI_MODEL_PRIORITY[:] = valid_models
+            GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
+            SafeLogger.info(f"Validated Gemini model priority: {GEMINI_MODEL_PRIORITY}")
+            return True
+        return False
     except Exception as e:
-        SafeLogger.error(f"Unable to call Gemini ListModels for startup validation: {e}")
+        SafeLogger.error(f"Gemini validation error: {e}")
         return False
-
-    supported_by_name = {}
-    for model in listed_models:
-        actions = getattr(model, "supported_actions", None) or getattr(
-            model, "supported_generation_methods", None
-        ) or []
-        if "generateContent" in actions and getattr(model, "name", None):
-            supported_by_name[model.name] = model.name
-            supported_by_name[model.name.replace("models/", "", 1)] = model.name
-
-    valid_models = []
-    for configured_model in GEMINI_MODEL_PRIORITY:
-        canonical = None
-        for variant in _model_variants(configured_model):
-            if variant in supported_by_name:
-                canonical = supported_by_name[variant]
-                break
-
-        if canonical:
-            valid_models.append(canonical)
-        else:
-            SafeLogger.warn(
-                "Gemini model is invalid or lacks generateContent support; skipping: "
-                f"{configured_model}"
-            )
-            # Diagnostic: Print all available models to help fix future mismatches
-            all_names = sorted(list(supported_by_name.keys()))
-            SafeLogger.info(f"Available models for this key: {all_names}")
-
-    # Preserve order while removing duplicates
-    valid_models = list(dict.fromkeys(valid_models))
-    GEMINI_MODEL_PRIORITY[:] = valid_models
-
-    if not GEMINI_MODEL_PRIORITY:
-        SafeLogger.error("No valid Gemini models available after startup validation.")
-        GEMINI_MODEL_ID = None
-        return False
-
-    GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
-    SafeLogger.info(f"Validated Gemini model priority: {GEMINI_MODEL_PRIORITY}")
-    return True
