@@ -3,7 +3,7 @@ import os
 import httpx
 import logging
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Tuple
 
 # Elite Architecture Imports
 from src.settings import settings
@@ -37,7 +37,7 @@ async def update_readme_dashboard(session_name: str, topic: str):
             if "| **Broadcaster** |" in line:
                 new_lines.append(f"| **Broadcaster** | Operational | {today} | {icon} {session_name} ({topic}) |\n")
             elif "| **Signal Strength** |" in line:
-                new_lines.append(f"| **Signal Strength** | Elite (Parallel) | -- | -- |\n")
+                new_lines.append(f"| **Signal Strength** | Elite (Natural) | -- | -- |\n")
             else:
                 new_lines.append(line)
         with open(README_FILE_PATH, "w", encoding="utf-8") as f:
@@ -57,10 +57,11 @@ async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
         top_articles=articles,
         seen_links=seen_data["links"],
         recent_topics=seen_data["recent_topics"],
+        last_dialect=seen_data.get("last_dialect"),
         session_name=context['session']
     )
 
-async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult) -> SynthesisResult:
+async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult) -> Tuple[SynthesisResult, CurationResult]:
     """Stage 2: AI Summarization and Persona Application."""
     context = get_temporal_context()
     news_count = len(curation.top_articles)
@@ -68,11 +69,24 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     summary, lead_link, topic, is_failover = None, None, "General", False
     
     if news_count > 3:
-        mode = "Mentor" if "Afternoon" in curation.session_name else "Curator"
+        # v3.7.0 logic: Morning/Midday -> Curator, Afternoon/Evening/Night -> Mentor
+        is_mentor_time = any(x in curation.session_name for x in ["Afternoon", "Evening", "Night"])
+        mode = "Mentor" if is_mentor_time else "Curator"
         try:
             # Convert back to dict for legacy curator logic (minimizing regression)
             news_dicts = [vars(a) for a in curation.top_articles]
-            summary, lead_link, topic, is_failover = await summarize_news(news_dicts, context, mode=mode)
+            summary, lead_link, topic, is_failover, current_dialect = await summarize_news(
+                news_dicts, context, mode=mode, last_dialect=curation.last_dialect
+            )
+            # v3.7.1 Fix: Propagate updated dialect back to main state
+            curation = CurationResult(
+                top_articles=curation.top_articles,
+                seen_links=curation.seen_links,
+                recent_topics=curation.recent_topics,
+                last_dialect=current_dialect,
+                session_name=curation.session_name,
+                timestamp=curation.timestamp
+            )
         except Exception as e:
             SafeLogger.warn(f"Synthesis failed, falling back to insight: {e}")
             summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
@@ -81,7 +95,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
 
     if not summary:
-        return SynthesisResult(content="", lead_link=None, topic="General")
+        return SynthesisResult(content="", lead_link=None, topic="General"), curation
 
     # Visual Asset Creation
     image_data, image_url = None, None
@@ -103,7 +117,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         is_failover=is_failover,
         image_data=image_data,
         image_url=image_url
-    )
+    ), curation
 
 async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> List[BroadcastResult]:
     """Stage 3: Multi-platform delivery."""
@@ -149,7 +163,8 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
 
     save_seen_articles({
         "links": curation.seen_links,
-        "recent_topics": curation.recent_topics
+        "recent_topics": curation.recent_topics,
+        "last_dialect": curation.last_dialect
     })
     await update_readme_dashboard(curation.session_name, synthesis.topic)
 
@@ -173,7 +188,7 @@ async def main():
         curation = await curation_stage(client)
         
         # 2. Synthesis
-        synthesis = await synthesis_stage(client, genai_client, curation)
+        synthesis, curation = await synthesis_stage(client, genai_client, curation)
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return

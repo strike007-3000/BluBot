@@ -9,8 +9,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 from google.genai import types
 from google import genai
-from .settings import settings
-from .config import (
+from src.settings import settings
+from src.config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
     SAGE_DESIGNER_INSTRUCTION, SECONDARY_TOPICS, GEMINI_MODEL_PRIORITY,
@@ -19,7 +19,7 @@ from .config import (
     MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
     FEED_SUMMARY_MAX_CHARS, NVIDIA_MODEL_ID, NVIDIA_INVOKE_URL
 )
-from .utils import retry_with_backoff, SafeLogger
+from src.utils import retry_with_backoff, SafeLogger
 
 MODEL_ATTEMPT_RETRIES = 2
 
@@ -138,15 +138,30 @@ def strip_markdown(text):
     if not text: return text
     return re.sub(r'(\*\*|__|\*)', '', text).strip()
 
-async def summarize_news(news_items, context, mode="Curator"):
-    """Synthesizes news with full Failover Loop and adaptation logic."""
-    if not news_items: return None, None, "General", False
+async def summarize_news(news_items, context, mode="Curator", last_dialect=None):
+    """Synthesizes news with full Failover Loop and randomized Dialect adaptation."""
+    if not news_items: return None, None, "General", False, None
     
     # Professional Architecture: Use settings singleton
     client = genai.Client(api_key=settings.gemini_key)
     
+    from .config import CURATOR_SYSTEM_INSTRUCTION, PERSONA_DIALECTS
+    import random
+    
+    # Select Dialect (ensure variety)
+    available_dialects = list(PERSONA_DIALECTS.keys())
+    if last_dialect in available_dialects and len(available_dialects) > 1:
+        available_dialects.remove(last_dialect)
+    
+    current_dialect = random.choice(available_dialects)
+    dialect_instruction = PERSONA_DIALECTS[current_dialect]
+    
     news_text = "\n".join([f"- {i+1}. {item['title']} ({item['source']})" for i, item in enumerate(news_items)])
-    instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
+    
+    # Combine instructions
+    base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
+    combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
+    
     user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
     
     for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
@@ -157,7 +172,7 @@ async def summarize_news(news_items, context, mode="Curator"):
                 # Expert Review Fix: Gemma vs Gemini Adaptation
                 # Professional Architecture: Model-specific adaptation
                 if "gemma" in model_id.lower():
-                    contents = f"{instruction}\n\nUSER INPUT:\n{user_prompt}"
+                    contents = f"{combined_instruction}\n\nUSER INPUT:\n{user_prompt}"
                     response = await client.aio.models.generate_content(
                         model=model_id, contents=contents,
                         config=types.GenerateContentConfig(temperature=0.7)
@@ -165,7 +180,7 @@ async def summarize_news(news_items, context, mode="Curator"):
                 else:
                     response = await client.aio.models.generate_content(
                         model=model_id, contents=user_prompt,
-                        config=types.GenerateContentConfig(system_instruction=instruction, temperature=0.7)
+                        config=types.GenerateContentConfig(system_instruction=combined_instruction, temperature=0.7)
                     )
                 
                 raw_text = response.text.strip()
@@ -178,13 +193,13 @@ async def summarize_news(news_items, context, mode="Curator"):
                     summary = parts[1].strip()
                 
                 if len(summary) > 60:
-                    return strip_markdown(summary), news_items[0]['link'], topic, (idx > 0)
+                    return strip_markdown(summary), news_items[0]['link'], topic, (idx > 0), current_dialect
                     
             except Exception as e:
                 SafeLogger.warn(f"Model {model_id} attempt {attempt} failed: {e}")
                 if attempt == MODEL_ATTEMPT_RETRIES and idx == len(GEMINI_MODEL_PRIORITY) - 1:
                     raise e
-    return None, None, "General", False
+    return None, None, "General", False, None
 
 async def generate_mentor_insight(context):
     key = os.getenv("GEMINI_KEY")
@@ -208,9 +223,34 @@ async def generate_mentor_insight(context):
     return None, None, "Strategy", False
 
 def get_temporal_context():
-    """Expert Review Fix: Restoring 'Afternoon' prefix for mode selection (v3.6.2)."""
+    """Enhanced Temporal Awareness for v3.7.0 (High Resolution + Manual Intercept)."""
+    from src.settings import settings
+    from datetime import datetime, timezone
+    
     now = datetime.now(timezone.utc)
-    return {"day": now.strftime("%A"), "session": "Morning Intelligence" if now.hour < 12 else "Afternoon Deep Dive"}
+    hour = now.hour
+    
+    # Resolve Session name
+    if 0 <= hour < 6:
+        session = "Night Reflection"
+    elif 6 <= hour < 11:
+        session = "Morning Intelligence"
+    elif 11 <= hour < 15:
+        session = "Midday Briefing"
+    elif 15 <= hour < 19:
+        session = "Afternoon Deep Dive"
+    else:
+        session = "Evening Synthesis"
+        
+    # Manual Intercept Decoration
+    if settings.is_manual_run:
+        session += " (Intercept)"
+        
+    return {
+        "day": now.strftime("%A"), 
+        "session": session,
+        "is_intercept": settings.is_manual_run
+    }
 
 async def generate_visual_prompt(client, summary, topic):
     try:

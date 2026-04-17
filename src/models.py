@@ -19,7 +19,8 @@ class CurationResult:
     top_articles: List[Article]
     seen_links: List[str]
     recent_topics: List[str]
-    session_name: str
+    last_dialect: Optional[str] = None
+    session_name: str = "General Intelligence"
     timestamp: datetime = field(default_factory=datetime.now)
 
 @dataclass(frozen=True)

@@ -2,11 +2,11 @@ import asyncio
 import re
 from mastodon import Mastodon
 from atproto import AsyncClient, models
-from .utils import (
+from src.utils import (
     retry_with_backoff, get_link_metadata, compress_image, 
     SafeLogger, truncate_bytes, get_image_mime
 )
-from .settings import settings
+from src.settings import settings
 
 @retry_with_backoff
 async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None):
