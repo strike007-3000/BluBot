@@ -207,8 +207,9 @@ async def generate_mentor_insight(context):
     return None, None, "Strategy", False
 
 def get_temporal_context():
+    """Expert Review Fix: Restoring 'Afternoon' prefix for mode selection (v3.6.2)."""
     now = datetime.now(timezone.utc)
-    return {"day": now.strftime("%A"), "session": "Morning Intelligence" if now.hour < 12 else "Deep Dive"}
+    return {"day": now.strftime("%A"), "session": "Morning Intelligence" if now.hour < 12 else "Afternoon Deep Dive"}
 
 async def generate_visual_prompt(client, summary, topic):
     try:
