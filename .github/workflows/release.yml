@@ -24,10 +24,9 @@ jobs:
         id: get_version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+            VER=${GITHUB_REF#refs/tags/v}
           else
             VER=$(cat VERSION)
-            echo "VERSION=$VER" >> $GITHUB_ENV
             
             # Create and push tag if it doesn't exist
             if ! git rev-parse "v$VER" >/dev/null 2>&1; then
@@ -38,11 +37,12 @@ jobs:
               echo "CREATED_TAG=true" >> $GITHUB_ENV
             fi
           fi
+          echo "version=$VER" >> $GITHUB_OUTPUT
 
       - name: Extract Changelog
         id: changelog
         run: |
-          TAG_VERSION=${{ env.VERSION }}
+          TAG_VERSION=${{ steps.get_version.outputs.version }}
           # Extract section from README.md
           # It looks for a line containing the version (e.g. v3.3) 
           # and takes everything until the next line starting with '- **' (another entry)
@@ -62,7 +62,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ env.VERSION }}"
+          tag_name: "v${{ steps.get_version.outputs.version }}"
           body_path: release_notes.md
           draft: false
           prerelease: false
