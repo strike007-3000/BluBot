@@ -340,8 +340,8 @@ def compress_image(image_bytes, max_size_kb=900):
     try:
         img = Image.open(io.BytesIO(image_bytes))
         
-        # Convert RGBA to RGB if necessary
-        if img.mode in ("RGBA", "P"):
+        # Defensive Architecture: Force RGB for all platform-compatible JPEGs
+        if img.mode != "RGB":
             img = img.convert("RGB")
             
         output = io.BytesIO()
