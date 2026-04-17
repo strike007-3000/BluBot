@@ -1,36 +1,43 @@
-# 🚀 PR v3.12.0: Interactive Telegram Control, Alt Text, and Hashtag Management
+# PR Description: Natural Vibe Engine (v3.7.0) 🎭🚀
 
-This PR introduces interactive Telegram bot control (remote curating and approval queue), screen-reader multimodal alt-text generation, per-platform hashtag alignment, and a side-effect-free dry-run execution mode.
+This PR evolves BluBot from a scheduled automation script into a **Dynamic Editorial Entity**. It introduces high-resolution temporal intelligence, stylistic memory, and automated manual-run detection to make the bot feel significantly more natural and varied in its social media feed.
 
-## Proposed Upgrades
+## 🌟 Key Features (v3.7.0)
 
-### 🎮 1. Telegram Control & Approval Queue
-- **Wait-and-Poll Approval**: Intercepts the post pipeline to request manual review (`[✅ Approve]`, `[❌ Reject]`) via a Telegram message. Automatically posts on timeout (default 5 minutes) to avoid runner hang-ups.
-- **On-Demand Topic Curation**: Intercepts curation to fetch, score, and summarize a custom topic if a `/topic <keyword>` command is received from the authorized `TELEGRAM_USER_ID` within the last 15 minutes.
+### 1. The Natural Vibe Engine (Stylistic Memory)
+BluBot now has "memory" of its own persona. It records its last used style and ensures the next run uses a different one from a pool of 5 distinct dialects:
+- **ANALYTICAL**: Data-driven specs and arch impact.
+- **PRACTICAL**: Engineering utility and "How-to".
+- **SAGE**: Visionary strategy and industry shifts.
+- **CONCISE**: High-velocity scanner updates.
+- **PHILOSOPHICAL**: Ethical exploration and the "Big Picture".
 
-### ♿ 2. Screen Reader Multimodal Alt-Text
-- Implemented `generate_image_alt_text` using Gemini Vision (`models/gemini-2.5-flash-lite`) to generate 100-character descriptions for all visual assets. Alt-text is attached to Mastodon and Threads uploads.
+### 2. High-Resolution Temporal Intelligence
+Resolved the "Session" logic from 2 slots to **5 granular sessions**, ensuring content is perfectly aligned with the time of day:
+- **Night Reflection** (00:00 - 06:00)
+- **Morning Intelligence** (06:00 - 11:00)
+- **Midday Briefing** (11:00 - 15:00)
+- **Afternoon Deep Dive** (15:00 - 19:00)
+- **Evening Synthesis** (19:00 - 24:00)
 
-### 🏷️ 3. Per-Platform Hashtags
-- Toggles hashtags per platform via settings (`ENABLE_HASHTAGS_BSKY=false` by default). Safely strips standalone hashtags and preserves inline keywords by stripping formatting characters.
+### 3. Manual Intercept Mode
+The bot now detects if it was triggered manually via `workflow_dispatch`.
+- **Logic**: Automatically appends **"(Intercept)"** to the session name.
+- **Effect**: Shifts the AI logic into an "Ad-hoc briefing" mode, preventing it from producing scheduled-sounding content during an off-hour manual trigger.
 
-### 🛡️ 4. Side-Effect-Free Dry Run
-- The `--dry-run` flag bypasses all external broadcasts, state file persistence, and live AI API calls (substituting mock summaries and alt-text) to enable offline local diagnostics.
+### 4. Architectural Hardening
+- **Absolute Imports**: Converted all relative imports to absolute `src.` paths to resolve `pytest` isolation issues and standardizing the source tree.
+- **State Persistence**: Extended the atomic persistence logic to track `last_dialect`.
+
+## 🧪 Verification Results
+
+- **Automated Tests**: Passed 100% of the 15-test regression suite (`pytest src/tests/`).
+- **Regression Check**: Verified internal constant consistency (restored `CURATOR_SYSTEM_INSTRUCTION`).
+- **Dry-Run Validation**: Successful execution via `test_models.py` with mock-ad-hoc interception.
+
+## 📊 Documentation Updates
+- **README.md**: Updated with v3.7.0 key features and Status Dashboard.
+- **WIKI_MANUAL.md**: Added Page 10 (The Natural Vibe Engine).
 
 ---
-
-## 🛠️ Compliance with `AGENTS.md` Rules
-
-### 1. What was Deleted or Simplified
-- **Simplified Scopes in `src/curator.py`**: Removed local import statements for configuration parameters (`from .config import GEMINI_MODEL_PRIORITY`) that caused `UnboundLocalError` when accessed inside fallback functions.
-- **Bypassed Action Complexity**: Implemented inline Telegram updates polling instead of persistent webhook listeners, keeping the architecture extremely simple and fit for ephemeral CI runners.
-
-### 2. Why the Simpler Version is Safe
-- Inline polling using the official `python-telegram-bot` wrapper avoids running persistent threads or opening network ports in GitHub Actions.
-- Local dry-run checks in `summarize_news`, `broadcast_stage`, and `persistence_stage` guarantee that runs executed with `--dry-run` are 100% side-effect-free, even with invalid API keys.
-
-### 3. Verification & Tests Run
-- Added `test_dry_run_broadcaster_bypasses_real_posts` and `test_dry_run_persistence_does_not_save` to verify the new diagnostic flag.
-- Added `test_telegram_settings_defaults` to verify environment mapping.
-- Ran **37 tests successfully** using `pytest src/tests/`.
-- Ran `python bot.py --dry-run` to verify end-to-end telemetry and dry-run safety.
+*Built for the Elite Sage released under v3.7.0*
