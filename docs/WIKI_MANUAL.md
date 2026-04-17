@@ -31,18 +31,16 @@ The "Brain" of the bot ranked by a weighted matrix.
 
 ---
 
-## 🛡️ Page 3: Reliability & The Fortress (v3.6.3)
+## 🛡️ Page 3: Reliability & The Fortress (v3.6.5)
 
 The Sage is designed to be **unbreakable**.
 
-### The Failover Loop
-- **Primary**: Gemini 3.1 Flash Lite.
-- **Failovers**: Gemma 4 (31B/26B), Gemma 3 (27B-IT).
-
 ### Hardening Features
+- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) even if they aren't in the environment variables.
+- **SSRF Prevention Logic**: The metadata scraper (`get_link_metadata`) uses **DNS Pinning** to prevent rebinding attacks and **IP Validation** to ensure the bot only connects to public, routable internet addresses.
 - **Zero-Clobber Persistence**: Uses a linear rebase-and-push strategy on the `automated/state` branch with `--autostash` to prevent dirty worktree aborts.
 - **Zero-Duplicate Threads Strategy**: Wraps final Threads delivery in a "Catch & Log" block. If the response fails, it logs a warning instead of retrying the whole post, preventing accidental duplicate threads.
-- **The Fortress**: Unified logging system (`SafeLogger`) that dynamically masks all environment secrets and tokens.
+- **The Fortress**: Unified logging system that dynamically masks all environment secrets and tokens.
 
 ---
 
