@@ -128,10 +128,10 @@ async def post_to_threads(client, text, image_url=None):
     publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
     try:
         publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": THREADS_TOKEN}, timeout=20)
-        
-        # Expert Review Fix: Catch delivery errors but log them instead of raising (v3.6.3)
-        # This prevents the global @retry_with_backoff from re-threading the whole post (Zero-Duplicate strategy)
         publish_res.raise_for_status()
         SafeLogger.info("Successfully posted to Threads!")
     except Exception as e:
+        # P1 Badge: Propagate delivery failure to orchestrator but skip global retry (Zero-Duplicate)
         SafeLogger.error(f"Threads delivery failed: {e}. Check dashboard for status.")
+        setattr(e, "skip_backoff_retry", True)
+        raise

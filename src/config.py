@@ -174,6 +174,11 @@ def validate_config():
         if not is_dry_run:
             SafeLogger.error("Partial Mastodon configuration detected.")
             return False
+
+    if (not os.getenv("THREADS_ACCESS_TOKEN") or not os.getenv("THREADS_USER_ID")) and (os.getenv("THREADS_ACCESS_TOKEN") or os.getenv("THREADS_USER_ID")):
+        if not is_dry_run:
+            SafeLogger.error("Partial Threads configuration detected.")
+            return False
             
     if not validate_gemini_model_priority():
         return False

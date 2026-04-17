@@ -51,7 +51,9 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `NVIDIA_KEY` | **Yes** | Your NVIDIA API Key (for SD3) |
 | `IMAGE_PROVIDER` | No | Default: `nvidia`. Set to `imagen` to switch back. |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token |
+| `MASTODON_BASE_URL` | No | Your Mastodon Instance URL |
 | `THREADS_ACCESS_TOKEN` | No | Your Threads Long-Lived Access Token |
+| `THREADS_USER_ID` | No | Your Threads User ID |
 
 ## 📂 Project Structure
 
@@ -61,9 +63,11 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.6.3 (Current)**: **Threads Stability & Documentation Sync**.
-    - **Zero-Duplicate Strategy**: Hardened Threads publishing to avoid duplicates on transient failures.
-    - **NVIDIA Integration**: Permanent SD3-Medium integration as the default image provider.
+- **v3.6.4 (Current)**: **Threads & Documentation Sync**.
+    - **Failure Propagation**: Hardened Threads publishing to correctly signal delivery failures to the orchestrator.
+    - **Config Validation**: Added fail-fast validation for partial Mastodon and Threads configurations.
+- **v3.6.3**: **Threads Stability Patch**.
+    - **Zero-Duplicate Strategy**: Implemented initial Threads delivery validation.
 - **v3.6.0**: **NVIDIA NIM Image Integration**.
     - Bypassed Imagen 4 restrictions by moving to NVIDIA SD3.
     - Added interactive console input for keys in `test_models.py`.
