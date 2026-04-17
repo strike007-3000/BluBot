@@ -29,8 +29,11 @@ The bot now detects if it was triggered manually via `workflow_dispatch`.
 - **Absolute Imports**: Converted all relative imports to absolute `src.` paths to resolve `pytest` isolation issues and standardizing the source tree.
 - **State Persistence**: Extended the atomic persistence logic to track `last_dialect`.
 
-## 🧪 Verification Results
+## 🧪 Verification & Stability (v3.7.1 Fixes)
 
+- **Code Review Remediation**:
+    - **Gemma Path Fix**: Resolved a `NameError` in `summarize_news` where the instruction variable was misnamed during the fallback.
+    - **State Propagation Fix**: Updated `synthesis_stage` to properly return the updated `CurationResult` to `main()`, ensuring the `last_dialect` memory is persisted across runs.
 - **Automated Tests**: Passed 100% of the 15-test regression suite (`pytest src/tests/`).
 - **Regression Check**: Verified internal constant consistency (restored `CURATOR_SYSTEM_INSTRUCTION`).
 - **Dry-Run Validation**: Successful execution via `test_models.py` with mock-ad-hoc interception.

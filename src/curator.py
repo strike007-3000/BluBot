@@ -172,7 +172,7 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
                 # Expert Review Fix: Gemma vs Gemini Adaptation
                 # Professional Architecture: Model-specific adaptation
                 if "gemma" in model_id.lower():
-                    contents = f"{instruction}\n\nUSER INPUT:\n{user_prompt}"
+                    contents = f"{combined_instruction}\n\nUSER INPUT:\n{user_prompt}"
                     response = await client.aio.models.generate_content(
                         model=model_id, contents=contents,
                         config=types.GenerateContentConfig(temperature=0.7)

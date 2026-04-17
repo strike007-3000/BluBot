@@ -3,7 +3,7 @@ import os
 import httpx
 import logging
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Tuple
 
 # Elite Architecture Imports
 from src.settings import settings
@@ -61,7 +61,7 @@ async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
         session_name=context['session']
     )
 
-async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult) -> SynthesisResult:
+async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult) -> Tuple[SynthesisResult, CurationResult]:
     """Stage 2: AI Summarization and Persona Application."""
     context = get_temporal_context()
     news_count = len(curation.top_articles)
@@ -78,8 +78,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
             summary, lead_link, topic, is_failover, current_dialect = await summarize_news(
                 news_dicts, context, mode=mode, last_dialect=curation.last_dialect
             )
-            # Update curation result with the dialect used for persistence (requires non-frozen edit or re-init)
-            # Since CurationResult is frozen, we re-instantiate
+            # v3.7.1 Fix: Propagate updated dialect back to main state
             curation = CurationResult(
                 top_articles=curation.top_articles,
                 seen_links=curation.seen_links,
@@ -96,7 +95,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
 
     if not summary:
-        return SynthesisResult(content="", lead_link=None, topic="General")
+        return SynthesisResult(content="", lead_link=None, topic="General"), curation
 
     # Visual Asset Creation
     image_data, image_url = None, None
@@ -118,7 +117,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         is_failover=is_failover,
         image_data=image_data,
         image_url=image_url
-    )
+    ), curation
 
 async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> List[BroadcastResult]:
     """Stage 3: Multi-platform delivery."""
@@ -189,7 +188,7 @@ async def main():
         curation = await curation_stage(client)
         
         # 2. Synthesis
-        synthesis = await synthesis_stage(client, genai_client, curation)
+        synthesis, curation = await synthesis_stage(client, genai_client, curation)
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
