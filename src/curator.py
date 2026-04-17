@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 from google.genai import types
 from google import genai
+from .settings import settings
 from .config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
@@ -141,9 +142,8 @@ async def summarize_news(news_items, context, mode="Curator"):
     """Synthesizes news with full Failover Loop and adaptation logic."""
     if not news_items: return None, None, "General", False
     
-    # Dynamic identity fetch (v3.5.12)
-    key = os.getenv("GEMINI_KEY")
-    client = genai.Client(api_key=key)
+    # Professional Architecture: Use settings singleton
+    client = genai.Client(api_key=settings.gemini_key)
     
     news_text = "\n".join([f"- {i+1}. {item['title']} ({item['source']})" for i, item in enumerate(news_items)])
     instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
@@ -155,6 +155,7 @@ async def summarize_news(news_items, context, mode="Curator"):
                 SafeLogger.info(f"Synthesizing via {model_id} (Attempt {attempt})...")
                 
                 # Expert Review Fix: Gemma vs Gemini Adaptation
+                # Professional Architecture: Model-specific adaptation
                 if "gemma" in model_id.lower():
                     contents = f"{instruction}\n\nUSER INPUT:\n{user_prompt}"
                     response = await client.aio.models.generate_content(
@@ -201,7 +202,7 @@ async def generate_mentor_insight(context):
             summary = response.text.strip()
             if "BODY:" in summary:
                 summary = summary.split("BODY:", 1)[1].strip()
-            return strip_markdown(summary), None, "Strategy", (model_id != GEMINI_MODEL_PRIORITY[0])
+            return strip_markdown(summary), None, "Strategy", (model_id != settings.gemini_model_priority[0])
         except Exception as e:
             SafeLogger.warn(f"Mentor Fallback failed on {model_id}: {e}")
     return None, None, "Strategy", False
@@ -224,7 +225,7 @@ async def generate_visual_prompt(client, summary, topic):
 @retry_with_backoff
 async def generate_nvidia_image(client, prompt):
     """Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing."""
-    nv_key = os.getenv("NVIDIA_KEY")
+    nv_key = settings.nvidia_key
     if not nv_key:
         return None
     

@@ -18,6 +18,10 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **🖼️ Self-Healing Image Generation (v3.6)**: 
     - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
+- **Elite Architecture (v3.6.7)**:
+    - **Typed Pipeline Stages**: Re-engineered core logic into distinct, immutable stages (**Curation → Synthesis → Broadcast → Persistence**) using frozen `dataclasses` for 100% data integrity.
+    - **Settings Singleton**: Centralized configuration and environment validation into a typed `Settings` object, removing loose `os.getenv` calls.
+    - **Advisory File Locking**: Implemented a cross-platform `FileLock` (via `fcntl`/`msvcrt`) for state persistence, preventing race conditions during concurrent CI/local runs.
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context for 90% faster processing.
 - **Fortress Hardening (v3.6.5)**: 
     - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity).
@@ -57,17 +61,19 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 📂 Project Structure
 
-- `bot.py`: Main Orchestrator.
-- `src/`: Modular logic layers (Config, Logger, Curator, Utils, Broadcaster).
+- `bot.py`: Main Orchestrator (Staged Pipeline).
+- `src/`: Modular logic layers (Config, Settings, Models, Logger, Curator, Utils, Broadcaster).
 - `src/tests/`: **Automated Test Suite** (Security, Scoring, Redaction).
 - `test_models.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
 
 ## 🗒️ Updates & History
 
-- **v3.6.5 (Current)**: **Hardening & Automated Quality Control**.
-    - **Automated Test Suite**: Integrated `pytest` suite with high-fidelity coverage for SSRF, scoring weights, and secret redaction.
-    - **Structured JSON Logs**: Implemented standardized `logging` with automated masking for high-entropy secrets.
-    - **SSRF Hardening**: Integrated DNS pinning and IP scoping for `get_link_metadata` to prevent internal service discovery.
+- **v3.6.7 (Current)**: **Elite Architecture Overhaul**.
+    - **Staged Pipeline**: Refactored `bot.py` into distinct functional stages powered by `src/models.py`.
+    - **Typed Settings**: Centralized configuration into `src/settings.py` for professional-grade environment management.
+    - **Thread-Safe State**: Integrated cross-platform `FileLock` for robust state persistence and atomic `seen_articles.json` writes.
+    - **Refined Normalization**: Resolved protocol-relative links (//) and stripped aggressive tracking queries while preserving redirect integrity (P1 Codex fix).
+- **v3.6.5**: **Hardening & Automated Quality Control**.
 - **v3.6.4**: **Threads & Documentation Sync**.
     - **Failure Propagation**: Hardened Threads publishing to correctly signal delivery failures to the orchestrator.
 - **v3.6.3**: **Threads Stability Patch**.

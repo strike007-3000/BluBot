@@ -37,7 +37,9 @@ The Sage is designed to be **unbreakable**.
 
 ### Hardening Features
 - **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) even if they aren't in the environment variables.
+- **Elite Architecture (v3.6.7)**: Transitions the bot from a monolithic script to a professional **Staged Pipeline** (`Curation` → `Synthesis` → `Broadcast` → `Persistence`) using frozen dataclasses and a typed `Settings` singleton.
 - **SSRF Prevention Logic**: The metadata scraper (`get_link_metadata`) uses **DNS Pinning** to prevent rebinding attacks and **IP Validation** to ensure the bot only connects to public, routable internet addresses.
+- **Advisory File Locking**: Integrated cross-platform `FileLock` (supporting both `fcntl` on Unix and `msvcrt` on Windows) for all state persistence operations, ensuring 100% integrity for `seen_articles.json`.
 - **Zero-Clobber Persistence**: Uses a linear rebase-and-push strategy on the `automated/state` branch with `--autostash` to prevent dirty worktree aborts.
 - **Zero-Duplicate Threads Strategy**: Wraps final Threads delivery in a "Catch & Log" block. If the response fails, it logs a warning instead of retrying the whole post, preventing accidental duplicate threads.
 - **The Fortress**: Unified logging system that dynamically masks all environment secrets and tokens.
@@ -64,7 +66,7 @@ Scanning over **30 premium feeds**.
 
 ---
 
-## ⚙️ Page 6: Technical Configuration (v3.6.3)
+## ⚙️ Page 6: Technical Configuration (v3.6.7)
 
 ### Environment Secrets
 | Variable | Description |
@@ -84,7 +86,7 @@ The Sage provides a robust **Full Pipeline Dry Run** via `test_models.py`.
 ### Interactive Key Management
 You can test the entire bot locally **without social media credentials**. 
 1. **Interactive Entry**: If `GEMINI_KEY` or `NVIDIA_KEY` are missing from your `.env`, the script will prompt you to paste them in the console.
-2. **Offline Logic**: Config engine injects "Mock" values for `BSKY_HANDLE`, ensuring you only need your AI keys to verify the synthesis.
+2. **Elite Rigidity**: The `Settings.from_env()` engine automatically injects "Mock" values for `BSKY_HANDLE` during dry runs, allowing you to verify synthesis logic with only AI keys.
 
 ### Running the Diagnostic
 ```bash

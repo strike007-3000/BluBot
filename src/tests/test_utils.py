@@ -1,7 +1,7 @@
 import pytest
 import ipaddress
 from unittest.mock import AsyncMock, MagicMock
-from src.utils import _is_public_ip, truncate_bytes, get_image_mime, compress_image
+from src.utils import _is_public_ip, truncate_bytes, get_image_mime, compress_image, normalize_url
 
 def test_is_public_ip_validation():
     """Verify that private and reserved IP addresses are correctly identified as non-public."""
@@ -98,3 +98,27 @@ async def test_ssrf_blocking_in_redirects(mock_httpx_client, mocker):
     # Starting with https
     resp = await get_with_safe_redirects(mock_httpx_client, "https://safe.com")
     assert resp is None # Should block downgrade to http
+
+def test_normalize_url_scenarios():
+    """Verify that normalize_url handles various edge cases correctly."""
+    # 1. Protocol-relative
+    assert normalize_url("//example.com/test") == "https://example.com/test"
+    
+    # 2. Relative resolving
+    assert normalize_url("/img.jpg", base_url="https://site.com/blog") == "https://site.com/img.jpg"
+    
+    # 3. Tracking parameters
+    url_with_tracking = "https://example.com/page?utm_source=twitter&ref=nudge&s=09&feature=share&id=123"
+    normalized = normalize_url(url_with_tracking)
+    assert "utm_source" not in normalized
+    assert "ref" not in normalized
+    assert "s=" not in normalized
+    assert "feature=" not in normalized
+    assert "id=123" in normalized
+    
+    # 4. Fragments and Casing
+    assert normalize_url("HTTPS://Example.COM/Path/#frag") == "https://example.com/Path/"
+    
+    # 5. Null/Malformed
+    assert normalize_url(None) == ""
+    assert normalize_url("not-a-url") == "not-a-url"
