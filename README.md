@@ -59,12 +59,14 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 - `bot.py`: Main Orchestrator.
 - `src/`: Modular logic layers (Config, Logger, Curator, Utils, Broadcaster).
+- `src/tests/`: **Automated Test Suite** (Security, Scoring, Redaction).
 - `test_models.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
 
 ## 🗒️ Updates & History
 
-- **v3.6.5 (Current)**: **Security Hardening & Structural Logging**.
-    - **Structured JSON Logs**: Implemented standardized `logging` with automated masking for high-entropy secrets and auth tokens.
+- **v3.6.5 (Current)**: **Hardening & Automated Quality Control**.
+    - **Automated Test Suite**: Integrated `pytest` suite with high-fidelity coverage for SSRF, scoring weights, and secret redaction.
+    - **Structured JSON Logs**: Implemented standardized `logging` with automated masking for high-entropy secrets.
     - **SSRF Hardening**: Integrated DNS pinning and IP scoping for `get_link_metadata` to prevent internal service discovery.
 - **v3.6.4**: **Threads & Documentation Sync**.
     - **Failure Propagation**: Hardened Threads publishing to correctly signal delivery failures to the orchestrator.
@@ -76,6 +78,22 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 - **v3.5.12**: **Persistence & Retry Hardening**.
     - Implemented `--autostash` for state updates and branch bootstrapping logic.
     - Narrowed retry behavior to skip terminal 403/400 errors.
+## 🧪 Testing
+
+BluBot v3.6.5 features a dual-layer testing strategy:
+
+### 1. Automated Regression (CI-Ready)
+Run the professional test suite via `pytest`:
+```bash
+pytest src/tests/
+```
+Targeting **SSRF protection**, **Scoring fidelity**, and **Secret redaction**.
+
+### 2. Interactive Diagnostic (Developer Tool)
+Run the playground to see manual scoring breakdowns and AI drafts:
+```bash
+python test_models.py
+```
 
 ---
 

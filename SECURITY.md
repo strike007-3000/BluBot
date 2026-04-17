@@ -21,10 +21,11 @@ Instead, please use the **GitHub "Private Vulnerability Reporting"** feature:
 
 Our team will respond within 48 hours to acknowledge your report and provide a timeline for resolution.
 
-## Current Security Baseline (v3.2)
+## Current Security Baseline (v3.6.5)
 The project is currently hardened against:
-- **Dependency Exploits**: All core packages are locked to safe versions (resolving CWE-122, CWE-444, etc.).
-- **Secret Leaks**: `SafeLogger` dynamically redacts API tokens and handles from logs.
+- **SSRF Attacks**: metadata fetching is protected by DNS pinning and IP scoping (RFC 1918 blocking), with **automated regression tests** in the CI suite.
+- **Secret Leaks**: `SafeLogger` dynamically redacts API tokens and high-entropy strings from logs.
+- **Dependency Exploits**: Core packages are locked to safe versions (resolving CWE-1100, etc.).
 - **Data Corruption**: Atomic state persistence via `.tmp` swap logic.
 
 *Thank you for helping keep the Sage secure!*

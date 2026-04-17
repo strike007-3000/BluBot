@@ -103,4 +103,19 @@ To protect your "Seen Articles" history on a restricted repository, the bot uses
 2. **Autostash Rebase**: Performs `git pull --rebase --autostash` to merge `seen_articles.json` and `README.md` safely without workspace conflicts.
 
 ---
+## 🧪 Page 9: Automated Quality Control (v3.6.5)
+
+BluBot v3.6.5 introduces a professional **Automated Test Suite** powered by `pytest`.
+
+### The Test Layers
+1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
+2. **Intelligence (Scoring)**: The Breakthrough Scoring Engine weights are verified to ensure "Signal over Noise" remains mathematically consistent.
+3. **Hardening (Redaction)**: The `SafeLogger` is tested against high-entropy string detection to ensure no API keys leak into production logs.
+
+### Running Automated Tests
+```bash
+pytest src/tests/
+```
+
+---
 *Built with ❤️ for the AI Community*
