@@ -126,8 +126,10 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
     try:
         cached_session = load_session_string()
         if cached_session:
+            SafeLogger.info("Restoring cached Bluesky session...")
             await bsky_client.login(session_string=cached_session)
         else:
+            SafeLogger.info("Initiating new Bluesky login...")
             await bsky_client.login(settings.bsky_handle, settings.bsky_password)
         save_session_string(bsky_client.export_session_string())
     except Exception as e:

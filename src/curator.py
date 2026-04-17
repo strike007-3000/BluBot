@@ -109,6 +109,7 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
                 "title": entry.title,
                 "summary": clean_summary[:FEED_SUMMARY_MAX_CHARS],
                 "link": entry.link,
+                "published": pub_date.isoformat(),
                 "source": getattr(feed.feed, 'title', url)
             }
             item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics)
