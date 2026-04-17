@@ -222,7 +222,7 @@ async def generate_visual_prompt(client, summary, topic):
 
 @retry_with_backoff
 async def generate_nvidia_image(client, prompt):
-    """Calls NVIDIA NIM for SD3-Medium image generation."""
+    """Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing."""
     nv_key = os.getenv("NVIDIA_KEY")
     if not nv_key:
         return None
@@ -243,9 +243,20 @@ async def generate_nvidia_image(client, prompt):
         response.raise_for_status()
         result = response.json()
         
-        # NVIDIA NIM usually returns images as base64 in the 'image' field
+        # Expert Review Fix: Robust multi-format base64 parsing (artifacts vs direct image field)
+        image_b64 = None
         if "image" in result:
-            return base64.b64decode(result["image"])
+            image_b64 = result["image"]
+        elif "artifacts" in result and len(result["artifacts"]) > 0:
+            image_b64 = result["artifacts"][0].get("base64")
+        elif "data" in result and len(result["data"]) > 0:
+            image_b64 = result["data"][0].get("b64_json") or result["data"][0].get("base64")
+        
+        if image_b64:
+            SafeLogger.info("NVIDIA NIM: Image successfully generated.")
+            return base64.b64decode(image_b64)
+            
+        SafeLogger.warn(f"NVIDIA NIM: Response succeeded but no image found. Response keys: {list(result.keys())}")
     except Exception as e:
         SafeLogger.warn(f"NVIDIA NIM failed: {e}")
     return None
