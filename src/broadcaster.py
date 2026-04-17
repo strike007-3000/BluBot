@@ -90,7 +90,7 @@ async def post_to_mastodon(text, image_data=None):
 
 @retry_with_backoff
 async def post_to_threads(client, text, image_url=None):
-    """Posts to Threads with IMAGE-to-TEXT fallback logic and delivery validation."""
+    """Posts to Threads with IMAGE-to-TEXT fallback logic and delivery telemetry."""
     from .config import THREADS_TOKEN, THREADS_USER_ID
     if not THREADS_TOKEN or not THREADS_USER_ID:
         return
@@ -126,8 +126,12 @@ async def post_to_threads(client, text, image_url=None):
 
     # Final publish step
     publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
-    publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": THREADS_TOKEN}, timeout=20)
-    
-    # Expert Review Fix: Validate publish response to ensure delivery success (v3.6.2)
-    publish_res.raise_for_status()
-    SafeLogger.info("Successfully posted to Threads!")
+    try:
+        publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": THREADS_TOKEN}, timeout=20)
+        
+        # Expert Review Fix: Catch delivery errors but log them instead of raising (v3.6.3)
+        # This prevents the global @retry_with_backoff from re-threading the whole post (Zero-Duplicate strategy)
+        publish_res.raise_for_status()
+        SafeLogger.info("Successfully posted to Threads!")
+    except Exception as e:
+        SafeLogger.error(f"Threads delivery failed: {e}. Check dashboard for status.")
