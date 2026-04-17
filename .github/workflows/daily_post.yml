@@ -18,11 +18,15 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       NODE_NO_WARNINGS: "1"
+      GIT_EDITOR: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Full history needed for rebase
+
+      - name: Mask Session Metadata
+        run: echo "::add-mask::${{ github.run_id }}"
 
       - name: Restore persistence state
         run: |
@@ -58,6 +62,8 @@ jobs:
           MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
         run: python bot.py
 
       - name: Save BlueSky session
@@ -73,8 +79,8 @@ jobs:
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "actions@github.com"
           
-          # Stage changes (including README.md which might have been updated by update_live_status)
-          git add seen_articles.json README.md || echo "No changes to seen_articles.json or README"
+          # Stage changes (including STATUS.md dashboard)
+          git add seen_articles.json STATUS.md || echo "No changes to state or status"
           git commit -m "Update seen articles and dashboard [skip ci]" || exit 0
           
           # P2 Bug Fix: Bootstrap automated/state branch if it doesn't exist
@@ -84,7 +90,7 @@ jobs:
             exit 0
           fi
 
-          # Safe rebase strategy: use --autostash to handle dirty worktree (README.md changes)
+          # Safe rebase strategy: use --autostash and favor latest state (-Xtheirs)
           git fetch origin automated/state
-          git pull origin automated/state --rebase --autostash
+          git pull origin automated/state --rebase=merges --autostash -Xtheirs
           git push origin HEAD:automated/state
