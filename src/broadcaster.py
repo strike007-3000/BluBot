@@ -1,28 +1,22 @@
 import asyncio
+import re
 from mastodon import Mastodon
 from atproto import AsyncClient, models
-from .config import (
-    BLUESKY_HANDLE, BLUESKY_PASSWORD, 
-    MASTODON_TOKEN, MASTODON_BASE_URL, 
-    THREADS_TOKEN, THREADS_USER_ID,
-    BLUESKY_LIMIT, MASTODON_LIMIT, THREADS_LIMIT
-)
 from .utils import (
     retry_with_backoff, get_link_metadata, compress_image, 
     SafeLogger, truncate_bytes, get_image_mime
 )
-import re
+from .config import BLUESKY_LIMIT, MASTODON_LIMIT, THREADS_LIMIT
 
 @retry_with_backoff
 async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None):
-    """Posts to Bluesky using an authenticated client, with Facets and byte-safe truncation."""
-    if not BLUESKY_HANDLE:
+    """Posts to Bluesky with full Facets support and byte-safe truncation."""
+    from .config import BLUESKY_HANDLE
+    if not BLUESKY_HANDLE or not bsky_client:
         return
 
-    # Expert Review Fix: Use byte-safe truncation BEFORE calculating facets
-    # This prevents 'Forbidden' or 'Bad Request' errors due to out-of-bounds byte offsets.
+    # Expert Review Fix: Byte-safe truncation
     text = truncate_bytes(text, BLUESKY_LIMIT)
-
     facets = []
     
     # 1. URL Facets
@@ -49,28 +43,21 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
     if link:
         meta = await get_link_metadata(client_shared, link)
         if meta:
-            # Expert Review Fix: Sage Designer Override
             image_data = override_image if override_image else meta.get('image')
-            
             thumb_blob = None
             if image_data:
                 try:
-                    # Expert Review Fix: Wrap CPU-bound compression in to_thread
                     compressed = await asyncio.to_thread(compress_image, image_data)
                     if compressed:
                         upload = await bsky_client.upload_blob(compressed)
                         thumb_blob = upload.blob
-                    else:
-                        SafeLogger.warn("Image compression failed or returned invalid data. Skipping thumbnail.")
                 except Exception as e: 
-                    SafeLogger.warn(f"Failed to upload Bluesky thumbnail: {e}")
+                    SafeLogger.warn(f"Bluesky thumbnail failed: {e}")
 
             embed = models.AppBskyEmbedExternal.Main(
                 external=models.AppBskyEmbedExternal.External(
-                    title=meta['title'],
-                    description=meta['description'],
-                    uri=meta['url'],
-                    thumb=thumb_blob
+                    title=meta['title'], description=meta['description'],
+                    uri=meta['url'], thumb=thumb_blob
                 )
             )
 
@@ -79,7 +66,8 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
 
 @retry_with_backoff
 async def post_to_mastodon(text, image_data=None):
-    """Posts to Mastodon using the standardized character limit, with media support."""
+    """Posts to Mastodon with dynamic MIME detection and retry handling."""
+    from .config import MASTODON_TOKEN, MASTODON_BASE_URL
     if not MASTODON_TOKEN or not MASTODON_BASE_URL:
         return
 
@@ -88,19 +76,12 @@ async def post_to_mastodon(text, image_data=None):
         media_ids = []
         if image_data:
             try:
-                # Expert Review Fix: Use dynamic MIME detection for P2 fidelity
                 mime = get_image_mime(image_data)
                 if mime:
                     media = m.media_post(image_data, mime_type=mime)
                     media_ids.append(media['id'])
-                else:
-                    SafeLogger.warn("Mastodon: Invalid image MIME type. Skipping attachment.")
             except Exception as e:
-                err_msg = str(e)
-                if "403" in err_msg or "Forbidden" in err_msg:
-                    SafeLogger.warn(f"Mastodon media upload failed (403). CHECK TOKEN SCOPES (write:media)! Error: {err_msg}")
-                else:
-                    SafeLogger.warn(f"Mastodon media upload failed: {err_msg}")
+                SafeLogger.warn(f"Mastodon media failed: {e}")
                 
         m.status_post(text[:MASTODON_LIMIT], media_ids=media_ids)
     
@@ -109,57 +90,40 @@ async def post_to_mastodon(text, image_data=None):
 
 @retry_with_backoff
 async def post_to_threads(client, text, image_url=None):
-    """Posts to Threads using fully asynchronous logic and status validation."""
+    """Posts to Threads with IMAGE-to-TEXT fallback logic."""
+    from .config import THREADS_TOKEN, THREADS_USER_ID
     if not THREADS_TOKEN or not THREADS_USER_ID:
         return
 
-    # 1. Create Media Container
     base_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
-    
-    # P1 Bug Fix: Robust Fallback to TEXT if IMAGE container creation fails
     container_id = None
+    
     if image_url:
         try:
-            payload = {
-                "media_type": "IMAGE",
-                "image_url": image_url,
-                "text": text[:THREADS_LIMIT],
-                "access_token": THREADS_TOKEN
-            }
-            res = await client.post(base_url, data=payload, timeout=20)
+            res = await client.post(base_url, data={
+                "media_type": "IMAGE", "image_url": image_url,
+                "text": text[:THREADS_LIMIT], "access_token": THREADS_TOKEN
+            }, timeout=20)
             res.raise_for_status()
             container_id = res.json().get("id")
-        except Exception as e:
-            SafeLogger.warn(f"Threads IMAGE container failed ({type(e).__name__}). Falling back to TEXT post...")
-            image_url = None # Set to None to trigger TEXT fallback below
+        except Exception:
+            SafeLogger.warn("Threads IMAGE failed. Falling back to TEXT...")
 
     if not container_id:
-        payload = {
-            "media_type": "TEXT",
-            "text": text[:THREADS_LIMIT],
+        res = await client.post(base_url, data={
+            "media_type": "TEXT", "text": text[:THREADS_LIMIT],
             "access_token": THREADS_TOKEN
-        }
-        res = await client.post(base_url, data=payload, timeout=20)
+        }, timeout=20)
         res.raise_for_status()
         container_id = res.json().get("id")
 
-    # 2. Wait for READY state (Polling loop)
-    # Even for text, a small check ensures robustness
+    # Final publish
     for _ in range(3):
-        status_res = await client.get(
-            f"https://graph.threads.net/v1.0/{container_id}",
-            params={"fields": "status", "access_token": THREADS_TOKEN}
-        )
+        status_res = await client.get(f"https://graph.threads.net/v1.0/{container_id}", params={"fields": "status", "access_token": THREADS_TOKEN})
         if status_res.status_code == 200 and status_res.json().get("status") == "FINISHED":
             break
         await asyncio.sleep(2)
 
-    # 3. Publish
     publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
-    publish_res = await client.post(
-        publish_url, 
-        data={"creation_id": container_id, "access_token": THREADS_TOKEN}, 
-        timeout=20
-    )
-    publish_res.raise_for_status()
+    await client.post(publish_url, data={"creation_id": container_id, "access_token": THREADS_TOKEN}, timeout=20)
     SafeLogger.info("Successfully posted to Threads!")

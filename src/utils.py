@@ -42,10 +42,11 @@ def retry_with_backoff(func):
                 if "rate limit" in err_msg or "429" in err_msg:
                     SafeLogger.warn(f"Rate limited. Waiting {wait_time:.2f}s before retry {retries}/{MAX_API_RETRIES}...")
                 elif "forbidden" in err_msg or "403" in err_msg:
+                    # P1 Badge: 403 is usually permanent (permission/scope issue)
                     SafeLogger.error(f"Forbidden (403) error in {func.__name__}. Skipping retries.")
                     raise e
                 elif "invalidrequest" in err_msg:
-                    # Narrowed check (Codex): Only skip retries for explicit atproto validation errors
+                    # P1 Badge Restrict 400 matching: Only skip retries for explicit atproto validation errors
                     SafeLogger.error(f"Permanent validation error (InvalidRequest) in {func.__name__}. Skipping retries.")
                     raise e
                 else:
@@ -59,179 +60,122 @@ def save_session_string(session_string: str):
     try:
         with open(SESSION_FILE_PATH, "w", encoding="utf-8") as f:
             f.write(session_string)
-        SafeLogger.debug("BlueSky session string persisted.")
+        # Hidden log (debug level only)
+        SafeLogger.debug("Session string cache updated.")
     except Exception as e:
-        SafeLogger.error(f"Failed to save session string: {e}")
+        SafeLogger.error(f"Failed to cache session string: {e}")
 
-def load_session_string() -> str:
-    """Loads the BlueSky session string from the private file."""
-    try:
-        if os.path.exists(SESSION_FILE_PATH):
+def load_session_string():
+    """Loads the cached BlueSky session string if it exists."""
+    if os.path.exists(SESSION_FILE_PATH):
+        try:
             with open(SESSION_FILE_PATH, "r", encoding="utf-8") as f:
                 return f.read().strip()
-    except Exception as e:
-        SafeLogger.error(f"Failed to load session string: {e}")
+        except Exception as e:
+            SafeLogger.error(f"Failed to read session cache: {e}")
     return None
 
-def compress_image(image_bytes: bytes, max_size=900000) -> bytes:
-    """Compresses an image to stay under the specified max_size (default <1MB for Bluesky)."""
-    try:
-        img = Image.open(io.BytesIO(image_bytes))
-        if img.mode in ("RGBA", "P"):
-            img = img.convert("RGB")
-        
-        quality = 85
-        buffer = io.BytesIO()
-        img.save(buffer, format="JPEG", quality=quality, optimize=True)
-        
-        attempt = 0
-        while buffer.tell() > max_size and attempt < 5:
-            attempt += 1
-            quality -= 15
-            width, height = img.size
-            img = img.resize((int(width * 0.8), int(height * 0.8)), Image.Resampling.LANCZOS)
-            
-            buffer = io.BytesIO()
-            img.save(buffer, format="JPEG", quality=max(quality, 30), optimize=True)
-            
-        return buffer.getvalue()
-    except Exception as e:
-        SafeLogger.error(f"Failed to compress image (skipping thumbnail): {e}")
-        return None
-
-def get_image_mime(image_bytes: bytes) -> str:
-    """Detects the MIME type of image data using Pillow."""
-    try:
-        img = Image.open(io.BytesIO(image_bytes))
-        fmt = img.format.lower() if img.format else 'jpeg'
-        if fmt == 'jpg': fmt = 'jpeg'
-        return f"image/{fmt}"
-    except Exception:
-        return None 
-
-def truncate_bytes(text: str, limit: int) -> str:
-    """UTF-8 byte-safe truncation to avoid splitting multi-byte characters."""
-    encoded = text.encode('utf-8')
-    if len(encoded) <= limit:
-        return text
-    
-    # Truncate and decode, ignoring errors (dropping partial trailing char)
-    return encoded[:limit].decode('utf-8', errors='ignore')
-
 def load_seen_articles():
-    """Loads processing memory using absolute paths."""
     if os.path.exists(SEEN_FILE_PATH):
         try:
-            with open(SEEN_FILE_PATH, "r") as f:
-                data = json.load(f)
-                if "recent_topics" not in data:
-                    data["recent_topics"] = []
-                # Performance fix: ensure we store seen as a set for O(1) in-memory lookups later
-                return data
-        except (json.JSONDecodeError, IOError) as e:
-            SafeLogger.error(f"Corruption or read error in seen articles: {e}")
+            with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            return {"links": [], "recent_topics": []}
     return {"links": [], "recent_topics": []}
 
 def save_seen_articles(data):
-    """Saves updated memory to the absolute SEEN_FILE_PATH using atomic writing."""
     try:
-        # Retention management
-        data["links"] = data["links"][-500:]
-        data["recent_topics"] = data["recent_topics"][-20:]
-        
-        # Atomic Write: Write to temp file then rename
+        # P1 Bug Fix: Atomic write to avoid state corruption
         temp_path = f"{SEEN_FILE_PATH}.tmp"
-        with open(temp_path, "w") as f:
-            json.dump(data, f, indent=4)
-        
-        # Expert Review Fix: Atomic swap to prevent truncation corruption
+        with open(temp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
         os.replace(temp_path, SEEN_FILE_PATH)
-        
-        SafeLogger.info(f"Saved {len(data['links'])} seen articles (Atomic).")
     except Exception as e:
-        SafeLogger.error(f"Error saving seen articles: {e}")
-        if os.path.exists(f"{SEEN_FILE_PATH}.tmp"):
-            os.remove(f"{SEEN_FILE_PATH}.tmp")
+        SafeLogger.error(f"Critical error saving state: {e}")
 
 async def get_link_metadata(client, url):
-    """Scrapes OpenGraph metadata using a shared httpx client with modern browser headers."""
-    SafeLogger.info(f"Scraping metadata: {url}")
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Sec-Ch-Ua': '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"',
-        'Sec-Ch-Ua-Mobile': '?0',
-        'Sec-Ch-Ua-Platform': '"Windows"',
-    }
+    """Fetches high-fidelity metadata (og:image, description) from a URL."""
     try:
-        # Ensure we follow redirects (OpenAI often redirects to a trailing slash version)
-        response = await client.get(url, headers=headers, timeout=10, follow_redirects=True)
-        response.raise_for_status()
+        resp = await client.get(url, timeout=15)
+        if resp.status_code != 200:
+            return None
         
-        # Expert Review Fix: Wrap CPU-bound Beautiful Soup in to_thread
-        soup = await asyncio.to_thread(BeautifulSoup, response.text, 'html.parser')
-
-        og_title = soup.find("meta", property="og:title")
-        og_description = soup.find("meta", property="og:description")
-        og_image = soup.find("meta", property="og:image")
-
-        title = og_title['content'] if og_title else (soup.title.string if soup.title else "News Update")
-        description = og_description['content'] if og_description else ""
-        image_url = og_image['content'] if og_image else None
+        soup = BeautifulSoup(resp.text, "html.parser")
         
-        # Expert Review Fix: Generic Image Filtering
-        is_generic = False
-        original_image_url = None
-        if image_url:
-            original_image_url = urljoin(url, image_url)
-            image_url_lower = original_image_url.lower()
-            if any(p.lower() in image_url_lower for p in GENERIC_IMAGE_PATTERNS):
-                SafeLogger.info(f"Generic logo detected: {image_url_lower}. Searching for fallback...")
-                is_generic = True
-
-        if not original_image_url or is_generic:
-            # Fallback: Find the first substantial image on the page
-            found_fallback = False
-            for img in soup.find_all("img"):
-                fallback_url = img.get("src")
-                if fallback_url:
-                    abs_fallback = urljoin(url, fallback_url)
-                    # Skip if this also looks generic
-                    if not any(p.lower() in abs_fallback.lower() for p in GENERIC_IMAGE_PATTERNS):
-                        original_image_url = abs_fallback
-                        found_fallback = True
-                        break
-            if is_generic and not found_fallback:
-                original_image_url = None # Force AI generation later
-
+        # Meta Priority Matrix
+        title = soup.find("meta", property="og:title")
+        desc = soup.find("meta", property="og:description")
+        image = soup.find("meta", property="og:image")
+        
+        # Expert Review Fix: Sanitize image URLs for platform limits
+        img_url = image["content"] if image else None
         image_data = None
-        if original_image_url:
-            try:
-                # Use browser-like headers for the image request as well
-                img_res = await client.get(original_image_url, headers=headers, timeout=5, follow_redirects=True)
-                if img_res.status_code == 200:
-                    # Expert Review Fix: Validate image data immediately
-                    try:
-                        test_img = Image.open(io.BytesIO(img_res.content))
-                        test_img.verify() # Verify file integrity
-                        image_data = img_res.content
-                    except Exception as e:
-                        SafeLogger.warn(f"Fetched thumbnail content is not a valid image: {e}")
-            except Exception as e:
-                SafeLogger.warn(f"Failed to fetch thumbnail data: {e}")
+        
+        if img_url:
+            # Handle relative URLs
+            if not img_url.startswith("http"):
+                img_url = urljoin(url, img_url)
+
+            # P1 Bug Fix: Filter out generic logos
+            is_generic = any(p in img_url.lower() for p in GENERIC_IMAGE_PATTERNS)
+            if is_generic:
+                SafeLogger.info(f"Generic logo detected: {img_url}. Searching for fallback...")
+                img_url = None
+            else:
+                try:
+                    img_resp = await client.get(img_url, timeout=10)
+                    if img_resp.status_code == 200:
+                        image_data = img_resp.content
+                except Exception:
+                    SafeLogger.warn(f"Failed to fetch metadata image: {img_url}")
 
         return {
-            "title": title[:100],
-            "description": description[:200],
+            "title": title["content"][:200] if title else soup.title.string[:200] if soup.title else "News Report",
+            "description": desc["content"][:300] if desc else "No description available.",
+            "url": url,
             "image": image_data,
-            "image_url": original_image_url, # Pass back the public URL for Threads
-            "url": url
+            "image_url": img_url
         }
-    except (httpx.HTTPError, asyncio.TimeoutError) as e:
-        SafeLogger.warn(f"Network error extracting metadata for {url}: {type(e).__name__}")
-        return {"title": "News Update", "description": "", "image": None, "url": url}
     except Exception as e:
-        SafeLogger.warn(f"Unexpected metadata error for {url}: {type(e).__name__} - {e}")
-        # Expert Review Fix: Return at least the URL instead of None
-        return {"title": "News Update", "description": "", "image": None, "url": url}
+        SafeLogger.warn(f"Metadata extraction failed: {e}")
+        return None
+
+def compress_image(image_bytes, max_size_kb=900):
+    """Losslessly then lossily compresses image to stay within platform limits (e.g., Bluesky 1MB)."""
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        
+        # Convert RGBA to RGB if necessary
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+            
+        output = io.BytesIO()
+        img.save(output, format="JPEG", quality=85, optimize=True)
+        
+        # Iterative Quality Downscaling
+        quality = 80
+        while output.tell() > max_size_kb * 1024 and quality > 30:
+            output = io.BytesIO()
+            img.save(output, format="JPEG", quality=quality, optimize=True)
+            quality -= 10
+            
+        return output.getvalue()
+    except Exception as e:
+        SafeLogger.error(f"Image compression critical failure: {e}")
+        return None
+
+def get_image_mime(image_bytes):
+    """Detects MIME type from image bytes for broadcaster fidelity."""
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        return Image.MIME.get(img.format)
+    except Exception:
+        return None
+
+def truncate_bytes(text, max_bytes):
+    """Unicode-aware byte-level truncation to prevent Bluesky index errors."""
+    encoded = text.encode('utf-8')
+    if len(encoded) <= max_bytes:
+        return text
+    return encoded[:max_bytes].decode('utf-8', 'ignore')

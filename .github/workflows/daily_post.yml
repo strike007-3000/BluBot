@@ -52,6 +52,8 @@ jobs:
           BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
           BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          NVIDIA_KEY: ${{ secrets.NVIDIA_KEY }}
+          IMAGE_PROVIDER: nvidia
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
@@ -70,10 +72,19 @@ jobs:
         run: |
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "actions@github.com"
-          git add seen_articles.json
-          git commit -m "Update seen articles [skip ci]" || exit 0
           
-          # Safe rebase strategy: pull latest from state branch then push
+          # Stage changes (including README.md which might have been updated by update_live_status)
+          git add seen_articles.json README.md || echo "No changes to seen_articles.json or README"
+          git commit -m "Update seen articles and dashboard [skip ci]" || exit 0
+          
+          # P2 Bug Fix: Bootstrap automated/state branch if it doesn't exist
+          if ! git ls-remote --exit-code --heads origin automated/state; then
+            echo "automated/state branch not found. Bootstrapping new state branch..."
+            git push origin HEAD:automated/state
+            exit 0
+          fi
+
+          # Safe rebase strategy: use --autostash to handle dirty worktree (README.md changes)
           git fetch origin automated/state
-          git pull origin automated/state --rebase
+          git pull origin automated/state --rebase --autostash
           git push origin HEAD:automated/state
