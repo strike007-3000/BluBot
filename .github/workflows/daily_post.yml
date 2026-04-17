@@ -5,6 +5,11 @@ on:
     - cron: '0 7,13 * * *' # 9:00 AM and 3:00 PM (UTC+2)
   workflow_dispatch: # Allows manual triggering
 
+# Ensure only one run updates the state branch at a time
+concurrency:
+  group: bsky-persistence-state
+  cancel-in-progress: false
+
 jobs:
   post-news:
     runs-on: ubuntu-latest
@@ -15,9 +20,9 @@ jobs:
       NODE_NO_WARNINGS: "1"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for branch switching
+          fetch-depth: 0 # Full history needed for rebase
 
       - name: Restore persistence state
         run: |
@@ -25,7 +30,7 @@ jobs:
           git checkout origin/automated/state -- seen_articles.json || echo "seen_articles.json not found in state branch"
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -61,10 +66,14 @@ jobs:
           key: bsky-session-${{ github.run_id }}
 
       - name: Commit and push changes
+        if: success()
         run: |
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "actions@github.com"
           git add seen_articles.json
-          git commit -m "Update seen articles [skip ci]" || echo "No changes to commit"
-          # Push to a dedicated state branch using --force to ensure persistence even if histories diverge
-          git push origin HEAD:automated/state --force
+          git commit -m "Update seen articles [skip ci]" || exit 0
+          
+          # Safe rebase strategy: pull latest from state branch then push
+          git fetch origin automated/state
+          git pull origin automated/state --rebase
+          git push origin HEAD:automated/state

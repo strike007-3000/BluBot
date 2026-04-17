@@ -199,23 +199,32 @@ Guidelines:
 
 def validate_config():
     """Ensures all required environment variables are present and valid."""
+    is_dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
+    
     # Core essentials
     core_vars = ["BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY"]
     for v in core_vars:
         if not os.getenv(v):
-            SafeLogger.error(f"Missing CORE variable: {v}")
-            return False
+            if is_dry_run and v != "GEMINI_KEY":
+                if not os.environ.get(v):
+                   os.environ[v] = "mock_value"
+                SafeLogger.info(f"DRY_RUN: Missing {v}, using mock credentials.")
+            else:
+                SafeLogger.error(f"Missing CORE variable: {v}")
+                return False
             
     # Platform-specific "Fail Fast" validation
     # Mastodon
     if (MASTODON_TOKEN or MASTODON_BASE_URL) and not (MASTODON_TOKEN and MASTODON_BASE_URL):
-        SafeLogger.error("Partial Mastodon configuration detected.")
-        return False
+        if not is_dry_run:
+            SafeLogger.error("Partial Mastodon configuration detected.")
+            return False
         
     # Threads
     if (THREADS_TOKEN or THREADS_USER_ID) and not (THREADS_TOKEN and THREADS_USER_ID):
-        SafeLogger.error("Partial Threads configuration detected.")
-        return False
+        if not is_dry_run:
+            SafeLogger.error("Partial Threads configuration detected.")
+            return False
 
     if not validate_gemini_model_priority():
         return False
