@@ -21,6 +21,16 @@ from .config import (
 
 from .logger import SafeLogger
 
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
+
 def retry_with_backoff(func):
     """Decorator to retry an async function with exponential backoff and jitter."""
     @functools.wraps(func)
@@ -79,22 +89,49 @@ def load_session_string():
             SafeLogger.error(f"Failed to read session cache: {e}")
     return None
 
-def load_seen_articles():
-    if os.path.exists(SEEN_FILE_PATH):
+class FileLock:
+    """Cross-platform advisory file lock context manager."""
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.lock_file = f"{file_path}.lock"
+        self.handle = None
+
+    def __enter__(self):
+        self.handle = open(self.lock_file, "w")
+        if fcntl:
+            fcntl.flock(self.handle, fcntl.LOCK_EX)
+        elif msvcrt:
+            msvcrt.locking(self.handle.fileno(), msvcrt.LK_LOCK, 1)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         try:
-            with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return {"links": [], "recent_topics": []}
-    return {"links": [], "recent_topics": []}
+            if fcntl:
+                fcntl.flock(self.handle, fcntl.LOCK_UN)
+            elif msvcrt:
+                msvcrt.locking(self.handle.fileno(), msvcrt.LK_UNLCK, 1)
+            self.handle.close()
+        except Exception:
+            pass
+
+def load_seen_articles():
+    with FileLock(SEEN_FILE_PATH):
+        if os.path.exists(SEEN_FILE_PATH):
+            try:
+                with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                return {"links": [], "recent_topics": []}
+        return {"links": [], "recent_topics": []}
 
 def save_seen_articles(data):
     try:
-        # P1 Bug Fix: Atomic write to avoid state corruption
-        temp_path = f"{SEEN_FILE_PATH}.tmp"
-        with open(temp_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        os.replace(temp_path, SEEN_FILE_PATH)
+        with FileLock(SEEN_FILE_PATH):
+            # P1 Bug Fix: Atomic write to avoid state corruption
+            temp_path = f"{SEEN_FILE_PATH}.tmp"
+            with open(temp_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            os.replace(temp_path, SEEN_FILE_PATH)
     except Exception as e:
         SafeLogger.error(f"Critical error saving state: {e}")
 
@@ -237,7 +274,7 @@ async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, he
             location = response.headers.get("location")
             if not location:
                 return response
-            next_url = normalize_url(location, base_url=current_url)
+            next_url = urljoin(current_url, location)
             
             # Prevent scheme downgrade (https -> http)
             if initial_scheme == 'https' and urlparse(next_url).scheme == 'http':
