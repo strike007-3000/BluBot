@@ -36,13 +36,10 @@ The "Brain" of the bot ranked by a weighted matrix.
 The Sage is designed to be **unbreakable**.
 
 ### Hardening Features
-- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) even if they aren't in the environment variables.
-- **Elite Architecture (v3.6.7)**: Transitions the bot from a monolithic script to a professional **Staged Pipeline** (`Curation` → `Synthesis` → `Broadcast` → `Persistence`) using frozen dataclasses and a typed `Settings` singleton.
-- **SSRF Prevention Logic**: The metadata scraper (`get_link_metadata`) uses **DNS Pinning** to prevent rebinding attacks and **IP Validation** to ensure the bot only connects to public, routable internet addresses.
-- **Advisory File Locking**: Integrated cross-platform `FileLock` (supporting both `fcntl` on Unix and `msvcrt` on Windows) for all state persistence operations, ensuring 100% integrity for `seen_articles.json`.
-- **Zero-Clobber Persistence**: Uses a linear rebase-and-push strategy on the `automated/state` branch with `--autostash` to prevent dirty worktree aborts.
-- **Zero-Duplicate Threads Strategy**: Wraps final Threads delivery in a "Catch & Log" block. If the response fails, it logs a warning instead of retrying the whole post, preventing accidental duplicate threads.
-- **The Fortress**: Unified logging system that dynamically masks all environment secrets and tokens.
+- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) and **masks session metadata** in CI logs to prevent ID leakage.
+- **Visual Integrity Defense (v3.7.6)**: Implements **Universal RGB Conversion** in the image engine to handle grayscale (ArXiv) and specialized modes, preventing solid-black/white artifact regressions.
+- **Resilient Rebase Strategy (v3.7.5)**: Integrated an automated `git checkout --ours` strategy for `README.md` dashboards. Even under high concurrency or manual edits, the bot will resolve its own rebase conflicts to protect article history.
+- **SSRF Prevention Logic**: The metadata scraper (`get_link_metadata`) uses **DNS Pinning** to prevent rebinding attacks and **IP Validation** to ensure secure extraction.
 
 ---
 
@@ -148,6 +145,26 @@ Resolved from a 2-session split into **5 granular sessions**:
 The Sage now detects if it was triggered via a manual GitHub **workflow_dispatch**. 
 - **Urgency Shift**: Appends **"(Intercept)"** to the session name.
 - **Tone Modification**: Signifies to the AI that this is an ad-hoc briefing rather than a standard daily run, shifting the synthesis towards urgent insights.
+
+---
+
+## 🧵 Page 11: The Weaver (Multi-Post Threading)
+
+Version 3.8.0 introduces the **Conditional Threading** engine, allowing for high-resolution narration.
+
+### 1. Smart Split Logic
+Instead of hard truncation, the bot now uses `smart_split` to chunk text at natural boundaries:
+- **Priority 1**: Paragraph breaks (`\n\n`)
+- **Priority 2**: Sentence endings (`. `)
+- **Pagination**: Automatically appends `(1/N)` markers to keep the user oriented.
+
+### 2. Platform-Native Chaining
+- **Bluesky**: Uses depth-aware `root` and `parent` pointers to maintain reply integrity.
+- **Mastodon**: Chains via `in_reply_to_id`.
+- **Threads**: Sequentially publishes media containers with a `reply_to` link to the parent post.
+
+### 3. Narrative Expansion
+The Weaver allows the AI to use a **1000-character budget**, transforming the daily brief into a deep technical deep-dive without the fear of character limits.
 
 ---
 *Built with ❤️ for the AI Community*
