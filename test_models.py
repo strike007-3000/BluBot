@@ -5,6 +5,9 @@ import sys
 from unittest.mock import AsyncMock, patch
 from dotenv import load_dotenv
 
+# Set DRY_RUN before any other imports that might trigger validation
+os.environ["DRY_RUN"] = "true"
+
 # Ensure we can import from src
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -89,7 +92,7 @@ async def test_scoring():
 
 async def test_full_dry_run():
     print(f"\n{'='*20}")
-    print(f"FULL PIPELINE DRY RUN (v3.5.5)")
+    print(f"FULL PIPELINE DRY RUN (v3.5.9)")
     print(f"{'='*20}")
     
     # Force DEBUG mode to see session/cache logs
@@ -97,18 +100,20 @@ async def test_full_dry_run():
     
     import bot
     
-    # Mock broadcasters and session saving to prevent external side effects
+    # Mock broadcasters and session logic to prevent external side effects
     with patch("bot.post_to_bluesky", new_callable=AsyncMock) as mock_bsky, \
          patch("bot.post_to_mastodon", new_callable=AsyncMock) as mock_masto, \
          patch("bot.post_to_threads", new_callable=AsyncMock) as mock_threads, \
          patch("bot.update_live_status", new_callable=AsyncMock), \
-         patch("bot.save_seen_articles"): # Prevent local state file changes
+         patch("bot.save_seen_articles"), \
+         patch("bot.load_session_string", return_value=None), \
+         patch("bot.AsyncClient"): # Mock atproto client completely
         
         mock_bsky.return_value = "Mocked Success"
         mock_masto.return_value = "Mocked Success"
         mock_threads.return_value = "Mocked Success"
         
-        print("Executing full bot orchestration...")
+        print("Executing full bot orchestration (Offline Mode)...")
         await bot.main()
         
         print(f"\n{'='*20}")
@@ -150,7 +155,7 @@ async def main():
     print("\nSelect Test Mode:")
     print("1. Quick Diagnostic (RSS + Scoring)")
     print("2. AI Model Validation")
-    print("3. FULL PIPELINE DRY RUN (No-Post)")
+    print("3. FULL PIPELINE DRY RUN (v3.5.9)")
     
     choice = input("\nEnter choice (1-3): ").strip()
     

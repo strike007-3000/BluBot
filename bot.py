@@ -87,12 +87,17 @@ async def main():
     if not validate_config():
         return
 
+    # Re-fetch keys from environment to pick up dry-run mocks or manual user input
+    gemini_key = os.getenv("GEMINI_KEY")
+    bsky_handle = os.getenv("BSKY_HANDLE")
+    bsky_password = os.getenv("BSKY_APP_PASSWORD")
+
     # Expert Review Fix: Suppress verbose logging from external libraries to prevent token leaks
     logging.getLogger("atproto").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    # Expert Review Fix: Initialize genai_client once at startup
-    genai_client = genai.Client(api_key=GEMINI_API_KEY)
+    # Expert Review Fix: Initialize genai_client with the latest key
+    genai_client = genai.Client(api_key=gemini_key)
 
     context = get_temporal_context()
     now = datetime.now(timezone.utc)
@@ -176,10 +181,10 @@ async def main():
                             await asyncio.sleep(2)
                             
                         SafeLogger.info("Falling back to credentials...")
-                        await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
+                        await bsky_client.login(bsky_handle, bsky_password)
                 else:
                     SafeLogger.info("No session found. Logging in with credentials.")
-                    await bsky_client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
+                    await bsky_client.login(bsky_handle, bsky_password)
             except Exception as e:
                 # Login failure can be 429 (Rate Limit) or 401 (Unauthorized)
                 err_summary = str(e)[:200]

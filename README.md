@@ -16,7 +16,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key, making it effortless to identify the correct identifiers for new releases (like Gemma 3).
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context to fetch 25+ RSS feeds concurrently. Processing time reduced by **90%**.
-- **Fortress Hardening (v3.5.5)**: Active redaction of session strings, sanitized error logging, and **precision retry logic** (Codex P1 fix).
+- **Fortress Hardening (v3.5.10)**: Dynamic credential discovery and **zero-clobber state persistence**.
 - **Cross-Platform Visuals**: Enhanced media support for **Bluesky** and **Mastodon** (binary) and **Threads** (fallback logic).
 - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
@@ -103,7 +103,16 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
-- **v3.5.5 (Current)**: **Stability & Offline Verification Suite**.
+- **v3.5.10 (Current)**: **Runtime Stability & Persistence Hardening**.
+    - **Dynamic Identity**: Bot now re-discovers credentials at runtime, enabling local testing with manual keys or mock-handles without restarts.
+    - **Zero-Clobber Persistence**: Implemented linear rebase-and-push strategy for `seen_articles.json` with GHA concurrency guards.
+    - **Self-Healing Dry Run**: Resolved stale import errors in `test_models.py` for absolute offline reliability.
+- **v3.5.9 (2026-04-17)**: **Stabilization & Concurrency Guard**.
+    - **Keys-Free Dry Run**: Configuration engine now allows local verification of AI synthesis without your social media credentials.
+    - **Concurrency Protection**: Implemented a GitHub Actions concurrency guard to prevent data races during state updates.
+    - **Linear Persistence**: Transitioned to a rebase-based state push to ensure `seen_articles.json` is always merged safely into the `automated/state` branch.
+    - **Diagnostic Suite v2**: Hardened `test_models.py` with enhanced mocking for absolute offline stability.
+- **v3.5.5 (2026-04-17)**: **Stability & Offline Verification Suite**.
     - **Offline Dry Run**: Enhanced `test_models.py` with a full pipeline orchestrator. Test discovery, scoring, and AI thumbnail generation locally without posting.
     - **Persistence Resilience**: Migrated state persistence to a dedicated `automated/state` branch to bypass `main` branch protection.
     - **Codex P1 Fix**: Refined `retry_with_backoff` to strictly target non-recoverable errors, ensuring Threads media retries remain active.

@@ -164,3 +164,35 @@ graph TD
 - **Generic Image Filtering**: The Sage automatically identifies and skips repetitive site-wide logos (like the arXiv logo) in favor of unique thumbnails. 
 - **Semantic Discovery Fallsback**: If a generic logo is filtered out, the scraper attempts to find the first *real* figure or diagram within the article content.
 - **Fail-Soft AI Generation**: If no unique thumbnail can be discovered, the bot calls the **Sage Designer**. Using a specialized persona, it translates the news summary into a high-fidelity, minimalist 3D isometric illustration that perfectly matches your brand's aesthetic.
+- **Fail-Safe Logic**: If your API key hits its daily generation limit (e.g., 25/day), the bot gracefully skips the image rather than failing the post.
+
+---
+
+## 🧪 Page 8: Local Testing & Offline Diagnostics (v3.5.9)
+
+With v3.5.9, the Sage provides a robust **Full Pipeline Dry Run** via `test_models.py`. 
+
+### Keys-Free Verification
+You can now test the entire bot logic locally **without social media credentials**. 
+1. **The 'Dry Run' Flag**: The bot now intelligently detects the dry-run state.
+2. **Mocking Engine**: It automatically fills in "Mock" values for `BSKY_HANDLE` and other credentials, so you only need your `GEMINI_KEY` to verify the AI synthesis.
+
+### Running the Diagnostic
+Run the following and select **Option 3**:
+```bash
+python test_models.py
+```
+This mode intercepts the final payload and prints a **Draft Review** to your terminal. No network traffic is sent to social platforms.
+
+---
+
+## 💾 Page 9: Linear State Persistence (Safety First)
+
+To protect your "Seen Articles" history on a restricted repository, the bot uses a dedicated `automated/state` branch.
+
+### The 'Zero-Clobber' Architecture
+1. **Concurrency Guard**: A GitHub Actions concurrency group (`bsky-persistence-state`) ensures that only one bot run updates the state at a time. No more racing.
+2. **Rebase Merge**: Instead of force-pushing, the bot now fetches the latest state and performs a `git pull --rebase` before pushing. This ensures that every bot run's history is preserved linearly.
+
+---
+*Built with ❤️ for the AI Community*
