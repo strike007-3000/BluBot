@@ -107,6 +107,7 @@ async def post_to_threads(client, text, image_url=None):
             SafeLogger.warn("Threads IMAGE failed. Falling back to TEXT...")
 
     if not container_id:
+        SafeLogger.debug("Initiating TEXT-only posting for Threads...")
         res = await client.post(base_url, data={
             "media_type": "TEXT", "text": smart_truncate(text, settings.threads_limit),
             "access_token": settings.threads_token

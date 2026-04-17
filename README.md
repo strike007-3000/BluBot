@@ -72,7 +72,10 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.7.5 (Current)**: **Content & Infrastructure Optimization**.
+- **v3.7.6 (Current)**: **Visual Integrity Hardening**.
+    - **Black/White Box Fix**: Implemented universal `RGB` mode conversion in the compression engine to prevent corrupted renders on ArXiv-style links.
+    - **Fidelity Guards**: Hardened broadcasting logic to ensure atomic image delivery and graceful text fallbacks to prevent placeholder distortions.
+- **v3.7.5**: **Content & Infrastructure Optimization**.
     - **Smart Truncate**: Implemented word-boundary-aware truncation for Mastodon and Threads to prevent mid-word cutoffs.
     - **Persistence Hardening**: Resolved automated `README.md` rebase conflicts and implemented session ID masking in CI logs.
 - **v3.7.3**: **Stabilization & Visibility Patch**.
