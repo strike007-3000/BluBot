@@ -7,8 +7,9 @@ BluBot is not just a bot; it's an **Impact-Aware Intelligence**. Our goal is to 
 
 ## 🧱 Architectural Guardrails
 1.  **Asynchronous First**: All network operations must use `asyncio` and `httpx`. No blocking calls in the main pipeline.
-2.  **The Fortress (Security)**: All logging must pass through `src/logger.py:SafeLogger` to ensure secret masking. Always use atomic writes for persistence.
-3.  **Modular Logic**: Platform logic belongs in `src/broadcaster.py`, and curation logic belongs in `src/curator.py`. Keep `bot.py` lean as an orchestrator.
+2.  **Staged Pipeline (v3.6.7)**: Core logic follows a linear, staged flow (**Curation → Synthesis → Broadcast → Persistence**). Always pass state via frozen dataclasses from `src/models.py`.
+3.  **Typed Settings**: Centralized configuration belongs in `src/settings.py` via the `Settings` singleton. Never use loose `os.getenv` in business logic.
+4.  **The Fortress (Security)**: All logging must pass through `src/logger.py:SafeLogger`. Use `FileLock` for state persistence and ensuring atomic writes. 
 
 ## ⚖️ "Signal Verification" for AI-Assisted Code
 We welcome the use of AI coding assistants (like Gemini, Claude, or GPT), but with a **hard requirement for manual verification**:

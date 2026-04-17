@@ -6,17 +6,16 @@ from .utils import (
     retry_with_backoff, get_link_metadata, compress_image, 
     SafeLogger, truncate_bytes, get_image_mime
 )
-from .config import BLUESKY_LIMIT, MASTODON_LIMIT, THREADS_LIMIT
+from .settings import settings
 
 @retry_with_backoff
 async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None):
     """Posts to Bluesky with full Facets support and byte-safe truncation."""
-    from .config import BLUESKY_HANDLE
-    if not BLUESKY_HANDLE or not bsky_client:
+    if not settings.bsky_handle or not bsky_client:
         return
 
     # Expert Review Fix: Byte-safe truncation
-    text = truncate_bytes(text, BLUESKY_LIMIT)
+    text = truncate_bytes(text, settings.bluesky_limit)
     facets = []
     
     # 1. URL Facets
@@ -67,12 +66,11 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
 @retry_with_backoff
 async def post_to_mastodon(text, image_data=None):
     """Posts to Mastodon with dynamic MIME detection and retry handling."""
-    from .config import MASTODON_TOKEN, MASTODON_BASE_URL
-    if not MASTODON_TOKEN or not MASTODON_BASE_URL:
+    if not settings.mastodon_token or not settings.mastodon_base_url:
         return
 
     def _post():
-        m = Mastodon(access_token=MASTODON_TOKEN, api_base_url=MASTODON_BASE_URL)
+        m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
         media_ids = []
         if image_bytes := image_data:
             try:
@@ -83,7 +81,7 @@ async def post_to_mastodon(text, image_data=None):
             except Exception as e:
                 SafeLogger.warn(f"Mastodon media failed: {e}")
                 
-        m.status_post(text[:MASTODON_LIMIT], media_ids=media_ids)
+        m.status_post(text[:settings.mastodon_limit], media_ids=media_ids)
     
     await asyncio.to_thread(_post)
     SafeLogger.info("Successfully posted to Mastodon!")
@@ -91,18 +89,17 @@ async def post_to_mastodon(text, image_data=None):
 @retry_with_backoff
 async def post_to_threads(client, text, image_url=None):
     """Posts to Threads with IMAGE-to-TEXT fallback logic and delivery telemetry."""
-    from .config import THREADS_TOKEN, THREADS_USER_ID
-    if not THREADS_TOKEN or not THREADS_USER_ID:
+    if not settings.threads_token or not settings.threads_user_id:
         return
 
-    base_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads"
+    base_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
     container_id = None
     
     if image_url:
         try:
             res = await client.post(base_url, data={
                 "media_type": "IMAGE", "image_url": image_url,
-                "text": text[:THREADS_LIMIT], "access_token": THREADS_TOKEN
+                "text": text[:settings.threads_limit], "access_token": settings.threads_token
             }, timeout=20)
             res.raise_for_status()
             container_id = res.json().get("id")
@@ -111,23 +108,23 @@ async def post_to_threads(client, text, image_url=None):
 
     if not container_id:
         res = await client.post(base_url, data={
-            "media_type": "TEXT", "text": text[:THREADS_LIMIT],
-            "access_token": THREADS_TOKEN
+            "media_type": "TEXT", "text": text[:settings.threads_limit],
+            "access_token": settings.threads_token
         }, timeout=20)
         res.raise_for_status()
         container_id = res.json().get("id")
 
     # Wait for media processing to finish
     for _ in range(3):
-        status_res = await client.get(f"https://graph.threads.net/v1.0/{container_id}", params={"fields": "status", "access_token": THREADS_TOKEN})
+        status_res = await client.get(f"https://graph.threads.net/v1.0/{container_id}", params={"fields": "status", "access_token": settings.threads_token})
         if status_res.status_code == 200 and status_res.json().get("status") == "FINISHED":
             break
         await asyncio.sleep(2)
 
     # Final publish step
-    publish_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish"
+    publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
     try:
-        publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": THREADS_TOKEN}, timeout=20)
+        publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": settings.threads_token}, timeout=20)
         publish_res.raise_for_status()
         SafeLogger.info("Successfully posted to Threads!")
     except Exception as e:

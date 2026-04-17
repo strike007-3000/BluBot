@@ -12,7 +12,7 @@ import ipaddress
 from contextlib import contextmanager
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
 from PIL import Image
 from .config import (
     MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
@@ -20,6 +20,16 @@ from .config import (
 )
 
 from .logger import SafeLogger
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
 
 def retry_with_backoff(func):
     """Decorator to retry an async function with exponential backoff and jitter."""
@@ -79,24 +89,103 @@ def load_session_string():
             SafeLogger.error(f"Failed to read session cache: {e}")
     return None
 
-def load_seen_articles():
-    if os.path.exists(SEEN_FILE_PATH):
+class FileLock:
+    """Cross-platform advisory file lock context manager."""
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.lock_file = f"{file_path}.lock"
+        self.handle = None
+
+    def __enter__(self):
+        self.handle = open(self.lock_file, "w")
+        if fcntl:
+            fcntl.flock(self.handle, fcntl.LOCK_EX)
+        elif msvcrt:
+            msvcrt.locking(self.handle.fileno(), msvcrt.LK_LOCK, 1)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         try:
-            with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return {"links": [], "recent_topics": []}
-    return {"links": [], "recent_topics": []}
+            if fcntl:
+                fcntl.flock(self.handle, fcntl.LOCK_UN)
+            elif msvcrt:
+                msvcrt.locking(self.handle.fileno(), msvcrt.LK_UNLCK, 1)
+            self.handle.close()
+        except Exception:
+            pass
+
+def load_seen_articles():
+    with FileLock(SEEN_FILE_PATH):
+        if os.path.exists(SEEN_FILE_PATH):
+            try:
+                with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                return {"links": [], "recent_topics": []}
+        return {"links": [], "recent_topics": []}
 
 def save_seen_articles(data):
     try:
-        # P1 Bug Fix: Atomic write to avoid state corruption
-        temp_path = f"{SEEN_FILE_PATH}.tmp"
-        with open(temp_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        os.replace(temp_path, SEEN_FILE_PATH)
+        with FileLock(SEEN_FILE_PATH):
+            # P1 Bug Fix: Atomic write to avoid state corruption
+            temp_path = f"{SEEN_FILE_PATH}.tmp"
+            with open(temp_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            os.replace(temp_path, SEEN_FILE_PATH)
     except Exception as e:
         SafeLogger.error(f"Critical error saving state: {e}")
+
+def normalize_url(url: str, base_url: Optional[str] = None) -> str:
+    """
+    Normalizes a URL by resolving protocol-relative links, stripping fragments,
+    standardizing hostnames, and removing tracking parameters (UTM, etc.).
+    """
+    if not url:
+        return ""
+    
+    # 1. Handle protocol-relative URLs (e.g., //example.com)
+    if url.strip().startswith("//"):
+        # Assume https as the modern standard for protocol-relative links
+        url = "https:" + url.strip()
+    
+    # 2. Resolve relative URLs against a base if provided
+    if base_url and not urlparse(url).scheme:
+        url = urljoin(base_url, url)
+        
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            return url
+            
+        # 3. Standardize components
+        scheme = parsed.scheme.lower()
+        netloc = parsed.netloc.lower()
+        path = parsed.path if parsed.path else "/"
+        
+        # 4. Strip tracking query parameters
+        query_params = parse_qs(parsed.query)
+        tracking_prefixes = ('utm_', 'ref', 'fbclid', 'gclid', '_ga', 'mc_cid', 'mc_eid')
+        tracking_exact = ('s', 'igsh', 'feature')
+        
+        clean_params = {
+            k: v for k, v in query_params.items() 
+            if not k.lower().startswith(tracking_prefixes) 
+            and k.lower() not in tracking_exact
+        }
+        
+        # 5. Reconstruct without fragments (#)
+        normalized = urlunparse((
+            scheme,
+            netloc,
+            path,
+            parsed.params,
+            urlencode(clean_params, doseq=True),
+            "" # Fragment is stripped
+        ))
+        
+        return normalized
+    except Exception:
+        return url
 
 def _is_public_ip(ip_str: str) -> bool:
     """Checks if an IP address is a routable public address."""
@@ -219,9 +308,8 @@ async def get_link_metadata(client, url):
         image_data = None
         
         if img_url:
-            # Handle relative URLs
-            if not img_url.startswith("http"):
-                img_url = urljoin(url, img_url)
+            # P1 Badge: Use robust normalization for images (handles // and relative)
+            img_url = normalize_url(img_url, base_url=url)
 
             # P1 Bug Fix: Filter out generic logos
             is_generic = any(p in img_url.lower() for p in GENERIC_IMAGE_PATTERNS)

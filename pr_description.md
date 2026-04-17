@@ -1,23 +1,21 @@
 ## Description
-This Pull Request implements a comprehensive, automated test suite for **BluBot v3.6.5** and synchronizes all project documentation to reflect these new quality standards.
+This Pull Request elevates **BluBot** to an enterprise-grade technical standard (v3.6.7) by implementing a major **Elite Architecture Overhaul** and industrial-grade **URL Normalization**.
 
-### Key Changes
-- **Automated Test Suite**: Added 14 tests in `src/tests/` using `pytest`.
-    - `test_utils.py`: SSRF protection and image processing.
-    - `test_curator.py`: Scoring engine weights and synergy bonus logic.
-    - `test_logger.py`: Secret redaction and JSON formatting.
-    - `test_config.py`: Configuration validation.
-- **Documentation Sync**: 
-    - Updated `README.md` with testing instructions.
-    - Added **Page 9** to `docs/WIKI_MANUAL.md` for Quality Control.
-    - Updated `CONTRIBUTING.md` and `SECURITY.md`.
-- **CI Hardening**: Updated `.github/workflows/test.yml` to enforce the 14-test suite on all PRs.
-- **Automated Releases**: Refactored `release.yml` to automatically create tags and GitHub Releases upon PR merge, extracting changelogs from `README.md`.
-- **Version Sync**: Bumped [VERSION](file:///d:/Code/BlueSky/VERSION) to `3.6.5`.
-- **Legacy Diagnostics**: Refactored `test_models.py` to use shared internal logic while preserving its interactive developer playground features.
+### 🛠️ Key Architectural Changes (v3.6.7)
+- **Typed Pipeline Stages**: Refactored the monolithic `main()` into distinct, immutable handler stages (**Curation → Synthesis → Broadcast → Persistence**) using frozen `src/models.py` dataclasses.
+- **Centralized Settings Singleton**: Migrated all environment-aware configuration to `src/settings.py` for professional-grade rigidity and validation.
+- **Advisory File-Locking**: Integrated a cross-platform `FileLock` (supporting `fcntl` and `msvcrt`) into `src/utils.py` to protect `seen_articles.json` from race conditions.
+- **Industrial URL Normalization**: 
+    - Implemented `normalize_url` to resolve protocol-relative links (`//`) and strip aggressive tracking parameters (UTM, ref, fbclid, etc.).
+    - **P1 Bug Fix**: Restored exact redirect URL resolution in `get_with_safe_redirects` while keeping normalization for the final landing page (preserving session/token integrity).
+
+### 🧪 Quality & Documentation
+- **Verified Regression Suite**: All 15 automated tests (Security, Scoring, Redaction, Settings) are passing.
+- **Documentation Overhaul**: Synchronized `README.md`, `WIKI_MANUAL.md`, `CONTRIBUTING.md`, and `SECURITY.md` to reflect the new technical blueprint.
+- **CI Enforcement**: Integrated the new `Settings` validation into the standard GitHub Actions test suite.
 
 ### Verification Results
-- 100% pass rate on all 14 automated tests.
-- Manual verification of scoring breakdown in `test_models.py`.
+- **100% Test Pass Rate** (15/15 tests).
+- Successful **Full Dry Run** of the staged pipeline using `test_models.py`.
 
 *Built with ❤️ for the AI Community*
