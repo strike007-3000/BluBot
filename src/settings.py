@@ -87,10 +87,7 @@ class Settings:
     @property
     def is_manual_run(self) -> bool:
         """Determines if the current execution was manually triggered."""
-        is_manual = self.github_event != "schedule" or not self.is_ci
-        if is_manual:
-            SafeLogger.info(f"Settings: Manual run detected (Event: {self.github_event}). Bypassing scheduling blocks.")
-        return is_manual
+        return self.github_event == "workflow_dispatch"
 
     def validate(self) -> bool:
         """Validates critical settings and returns True if valid."""
