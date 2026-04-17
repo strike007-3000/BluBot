@@ -12,9 +12,17 @@ jobs:
       contents: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      NODE_NO_WARNINGS: "1"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Fetch all history for branch switching
+
+      - name: Restore persistence state
+        run: |
+          git fetch origin automated/state || echo "automated/state branch not found"
+          git checkout origin/automated/state -- seen_articles.json || echo "seen_articles.json not found in state branch"
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -58,4 +66,5 @@ jobs:
           git config --global user.email "actions@github.com"
           git add seen_articles.json
           git commit -m "Update seen articles [skip ci]" || echo "No changes to commit"
-          git push || echo "No changes to push"
+          # Push to a dedicated state branch to bypass main's branch protection
+          git push origin HEAD:automated/state

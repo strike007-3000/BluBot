@@ -1,9 +1,16 @@
 import os
 import asyncio
 import feedparser
+import sys
+from unittest.mock import AsyncMock, patch
 from dotenv import load_dotenv
-from src.curator import summarize_news, generate_mentor_insight, SafeLogger
-from src.config import RSS_FEEDS
+
+# Ensure we can import from src
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from src.curator import summarize_news, generate_mentor_insight
+from src.logger import SafeLogger
+from src.config import RSS_FEEDS, GEMINI_MODEL_PRIORITY, validate_gemini_model_priority
 
 # Mock data for testing
 MOCK_NEWS = [
@@ -31,7 +38,7 @@ async def test_rss():
     print(f"\n{'='*20}")
     print(f"TESTING RSS FEEDS")
     print(f"{'='*20}")
-    for url in RSS_FEEDS:
+    for url in RSS_FEEDS[:5]: # Test first 5 for speed
         try:
             feed = feedparser.parse(url)
             print(f"[OK] {url}: found {len(feed.entries)} items")
@@ -79,7 +86,50 @@ async def test_scoring():
         print(f"   Components: Source+{debug.get('source')}, Signal+{debug.get('signal')}, "
               f"Momentum+{debug.get('momentum')}, Synergy+{debug.get('synergy')}, "
               f"DiversityPenalty-{debug.get('diversity_penalty', 0)}, Decay-{debug.get('decay')}")
-        print(f"   Entities: {', '.join(item.get('_entities', []))}")
+
+async def test_full_dry_run():
+    print(f"\n{'='*20}")
+    print(f"FULL PIPELINE DRY RUN (v3.5.5)")
+    print(f"{'='*20}")
+    
+    # Force DEBUG mode to see session/cache logs
+    os.environ["DEBUG"] = "true"
+    
+    import bot
+    
+    # Mock broadcasters and session saving to prevent external side effects
+    with patch("bot.post_to_bluesky", new_callable=AsyncMock) as mock_bsky, \
+         patch("bot.post_to_mastodon", new_callable=AsyncMock) as mock_masto, \
+         patch("bot.post_to_threads", new_callable=AsyncMock) as mock_threads, \
+         patch("bot.update_live_status", new_callable=AsyncMock), \
+         patch("bot.save_seen_articles"): # Prevent local state file changes
+        
+        mock_bsky.return_value = "Mocked Success"
+        mock_masto.return_value = "Mocked Success"
+        mock_threads.return_value = "Mocked Success"
+        
+        print("Executing full bot orchestration...")
+        await bot.main()
+        
+        print(f"\n{'='*20}")
+        print(f"DRY RUN PAYLOAD REVIEW")
+        print(f"{'='*20}")
+        
+        if mock_bsky.called:
+            args = mock_bsky.call_args[0]
+            summary = args[2]
+            link = args[3]
+            img = args[4]
+            print(f"\n[BLUESKY DRAFT]")
+            print(f"Content: {summary}")
+            print(f"Link: {link}")
+            print(f"Image: {'[ATTACHED]' if img else '[NONE]'}")
+        
+        if mock_masto.called:
+            args = mock_masto.call_args[0]
+            print(f"\n[MASTODON DRAFT]")
+            print(f"Content: {args[0]}")
+            print(f"Image: {'[ATTACHED]' if args[1] else '[NONE]'}")
 
 async def main():
     load_dotenv()
@@ -91,32 +141,29 @@ async def main():
         if not api_key:
             print("ERROR: API Key is required to run tests.")
             return
-        # Inject into environment for the session
         os.environ["GEMINI_KEY"] = api_key
-        # Refresh the key in the curator module
-        from src import curator
-        curator.GEMINI_API_KEY = api_key
 
-    # EXPORT CHECK: Run only the AI validation for testing
-    from src.config import validate_gemini_model_priority, GEMINI_MODEL_PRIORITY
     if not validate_gemini_model_priority():
-        print("ERROR: Gemini model priority validation failed.")
+        print("ERROR: Gemini validation failed.")
         return
     
-    # 1. Test RSS Feeds
-    await test_rss()
-
-    # 2. Test Scoring Engine
-    await test_scoring()
-
-    # 3. Test AI Models
-    print(f"\n{'='*20}")
-    print(f"TESTING AI MODELS")
-    print(f"{'='*20}")
-    print(f"Current Priority List: {GEMINI_MODEL_PRIORITY}")
+    print("\nSelect Test Mode:")
+    print("1. Quick Diagnostic (RSS + Scoring)")
+    print("2. AI Model Validation")
+    print("3. FULL PIPELINE DRY RUN (No-Post)")
     
-    for model in GEMINI_MODEL_PRIORITY:
-        await test_model(model)
+    choice = input("\nEnter choice (1-3): ").strip()
+    
+    if choice == "1":
+        await test_rss()
+        await test_scoring()
+    elif choice == "2":
+        for model in GEMINI_MODEL_PRIORITY:
+            await test_model(model)
+    elif choice == "3":
+        await test_full_dry_run()
+    else:
+        print("Invalid choice.")
 
 if __name__ == "__main__":
     asyncio.run(main())

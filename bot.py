@@ -74,7 +74,13 @@ async def generate_ai_thumbnail(genai_client, summary, topic):
             return response.generated_images[0].image._image_bytes
             
     except Exception as e:
-        SafeLogger.warn(f"Sage Designer failed: {e}. Falling back to No-Image mode.")
+        err_msg = str(e).lower()
+        if "paid plan" in err_msg or "billing" in err_msg:
+            SafeLogger.info("Sage Designer: Imagen is restricted to paid plans on this account. Skipping generation.")
+        elif "quota" in err_msg or "limit" in err_msg:
+            SafeLogger.info("Sage Designer: Imagen quota reached for today. Skipping generation.")
+        else:
+            SafeLogger.warn(f"Sage Designer failed: {e}. Falling back to No-Image mode.")
     return None
 
 async def main():
