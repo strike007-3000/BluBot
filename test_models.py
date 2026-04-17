@@ -90,10 +90,6 @@ async def test_scoring():
               f"Momentum+{debug.get('momentum')}, Synergy+{debug.get('synergy')}, "
               f"DiversityPenalty-{debug.get('diversity_penalty', 0)}, Decay-{debug.get('decay')}")
 
-async def test_full_dry_run():
-    print(f"\n{'='*20}")
-    print(f"FULL PIPELINE DRY RUN (v3.5.9)")
-    print(f"{'='*20}")
     
     # Force DEBUG mode to see session/cache logs
     os.environ["DEBUG"] = "true"
