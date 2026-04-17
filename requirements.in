@@ -1,0 +1,24 @@
+# BluBot Source Dependencies (v3.8.2)
+# Use 'pip-compile requirements.in' to generate requirements.txt
+
+atproto>=0.0.65
+google-genai>=1.72.0
+feedparser>=6.0.12
+python-dotenv>=1.2.1
+requests==2.33.1
+Mastodon.py>=2.2.1
+beautifulsoup4>=4.14.0
+httpx>=0.28.0
+Pillow==12.2.0
+
+# Security Hardening (Specific Transitive Pins)
+cryptography==46.0.7
+urllib3==2.6.3
+anyio==4.13.0
+zipp==3.23.1
+dnspython==2.6.1
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-mock>=3.12.0
