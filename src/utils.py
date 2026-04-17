@@ -12,14 +12,32 @@ import ipaddress
 from contextlib import contextmanager
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
 from PIL import Image
 from .config import (
     MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
-    SEEN_FILE_PATH, SESSION_FILE_PATH, GENERIC_IMAGE_PATTERNS
+    SEEN_FILE_PATH, SESSION_FILE_PATH, GENERIC_IMAGE_PATTERNS,
+    INTERACTIONS_STATE_PATH
 )
 
 from .logger import SafeLogger
+from .settings import settings
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
+async def human_delay(min_sec: int, max_sec: int):
+    """Wait for a random duration to simulate human activity."""
+    delay = random.uniform(min_sec, max_sec)
+    SafeLogger.info(f"Applying natural pause: {delay:.1f}s...")
+    await asyncio.sleep(delay)
+
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
 
 def retry_with_backoff(func):
     """Decorator to retry an async function with exponential backoff and jitter."""
@@ -79,24 +97,195 @@ def load_session_string():
             SafeLogger.error(f"Failed to read session cache: {e}")
     return None
 
-def load_seen_articles():
-    if os.path.exists(SEEN_FILE_PATH):
+class FileLock:
+    """Cross-platform advisory file lock context manager."""
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.lock_file = f"{file_path}.lock"
+        self.handle = None
+
+    def __enter__(self):
+        self.handle = open(self.lock_file, "w")
+        if fcntl:
+            fcntl.flock(self.handle, fcntl.LOCK_EX)
+        elif msvcrt:
+            msvcrt.locking(self.handle.fileno(), msvcrt.LK_LOCK, 1)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         try:
-            with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
+            if fcntl:
+                fcntl.flock(self.handle, fcntl.LOCK_UN)
+            elif msvcrt:
+                msvcrt.locking(self.handle.fileno(), msvcrt.LK_UNLCK, 1)
+            self.handle.close()
+        except Exception:
+            pass
+
+def _load_gist_state(filename: str) -> Optional[dict]:
+    """Helper to pull state from a private GitHub Gist."""
+    if not settings.gist_id or not settings.gist_token:
+        return None
+    
+    try:
+        url = f"https://api.github.com/gists/{settings.gist_id}"
+        headers = {
+            "Authorization": f"token {settings.gist_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(url, headers=headers)
+            resp.raise_for_status()
+            files = resp.json().get("files", {})
+            if filename in files:
+                content = files[filename].get("content")
+                return json.loads(content) if content else None
+    except Exception as e:
+        SafeLogger.warn(f"Failed to load state from Gist: {e}")
+    return None
+
+def _save_gist_state(filename: str, data: dict) -> bool:
+    """Helper to push state to a private GitHub Gist."""
+    if not settings.gist_id or not settings.gist_token:
+        return False
+        
+    try:
+        url = f"https://api.github.com/gists/{settings.gist_id}"
+        headers = {
+            "Authorization": f"token {settings.gist_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        payload = {
+            "files": {
+                filename: {"content": json.dumps(data, indent=2)}
+            }
+        }
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.patch(url, headers=headers, json=payload)
+            resp.raise_for_status()
+            return True
+    except Exception as e:
+        SafeLogger.error(f"Failed to save state to Gist: {e}")
+        return False
+
+def load_seen_interactions() -> List[str]:
+    """Loads the list of social interaction IDs we've already responded to."""
+    if os.path.exists(INTERACTIONS_STATE_PATH):
+        try:
+            with open(INTERACTIONS_STATE_PATH, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return {"links": [], "recent_topics": []}
-    return {"links": [], "recent_topics": []}
+        except Exception:
+            return []
+    return []
+
+def save_seen_interactions(interacted_ids: List[str]):
+    """Saves the list of social interaction IDs to persistent store."""
+    try:
+        with open(INTERACTIONS_STATE_PATH, "w", encoding="utf-8") as f:
+            json.dump(interacted_ids[-500:], f, indent=4) # Keep last 500
+    except Exception as e:
+        SafeLogger.error(f"Failed to save interactions: {e}")
+
+def load_seen_articles():
+    """3-Tier Resilience: Local -> Backup -> Gist -> Default."""
+    default_state = {"links": [], "recent_topics": [], "last_dialect": None, "total_posts_curated": 0}
+    
+    with FileLock(SEEN_FILE_PATH):
+        # Tier 1: Local primary
+        if os.path.exists(SEEN_FILE_PATH):
+            try:
+                with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                SafeLogger.warn(f"Local seen articles file corrupted: {e}. Trying backup...")
+
+        # Tier 2: Local backup (.bak)
+        bak_path = f"{SEEN_FILE_PATH}.bak"
+        if os.path.exists(bak_path):
+            try:
+                with open(bak_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    SafeLogger.info("Restored seen articles from local backup.")
+                    return data
+            except (json.JSONDecodeError, IOError):
+                return {"links": [], "recent_topics": [], "last_dialect": None}
+        return {"links": [], "recent_topics": [], "last_dialect": None}
 
 def save_seen_articles(data):
+    """3-Tier Persistence: Atomic Write -> Backup Commit -> Remote Sync."""
+    if "total_posts_curated" not in data:
+        data["total_posts_curated"] = 0
     try:
-        # P1 Bug Fix: Atomic write to avoid state corruption
-        temp_path = f"{SEEN_FILE_PATH}.tmp"
-        with open(temp_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        os.replace(temp_path, SEEN_FILE_PATH)
+        with FileLock(SEEN_FILE_PATH):
+            # 1. Local Backup Rotation
+            if os.path.exists(SEEN_FILE_PATH):
+                bak_path = f"{SEEN_FILE_PATH}.bak"
+                os.replace(SEEN_FILE_PATH, bak_path)
+            
+            # 2. Atomic Primary Write
+            temp_path = f"{SEEN_FILE_PATH}.tmp"
+            with open(temp_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            os.replace(temp_path, SEEN_FILE_PATH)
+            
+            # 3. Remote Synchronization (Gist)
+            if settings.gist_id and settings.gist_token:
+                _save_gist_state("seen_articles.json", data)
+                
     except Exception as e:
-        SafeLogger.error(f"Critical error saving state: {e}")
+        SafeLogger.error(f"Critical error in state persistence: {e}")
+
+def normalize_url(url: str, base_url: Optional[str] = None) -> str:
+    """
+    Normalizes a URL by resolving protocol-relative links, stripping fragments,
+    standardizing hostnames, and removing tracking parameters (UTM, etc.).
+    """
+    if not url:
+        return ""
+    
+    # 1. Handle protocol-relative URLs (e.g., //example.com)
+    if url.strip().startswith("//"):
+        # Assume https as the modern standard for protocol-relative links
+        url = "https:" + url.strip()
+    
+    # 2. Resolve relative URLs against a base if provided
+    if base_url and not urlparse(url).scheme:
+        url = urljoin(base_url, url)
+        
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            return url
+            
+        # 3. Standardize components
+        scheme = parsed.scheme.lower()
+        netloc = parsed.netloc.lower()
+        path = parsed.path if parsed.path else "/"
+        
+        # 4. Strip tracking query parameters
+        query_params = parse_qs(parsed.query)
+        tracking_prefixes = ('utm_', 'ref', 'fbclid', 'gclid', '_ga', 'mc_cid', 'mc_eid')
+        tracking_exact = ('s', 'igsh', 'feature')
+        
+        clean_params = {
+            k: v for k, v in query_params.items() 
+            if not k.lower().startswith(tracking_prefixes) 
+            and k.lower() not in tracking_exact
+        }
+        
+        # 5. Reconstruct without fragments (#)
+        normalized = urlunparse((
+            scheme,
+            netloc,
+            path,
+            parsed.params,
+            urlencode(clean_params, doseq=True),
+            "" # Fragment is stripped
+        ))
+        
+        return normalized
+    except Exception:
+        return url
 
 def _is_public_ip(ip_str: str) -> bool:
     """Checks if an IP address is a routable public address."""
@@ -219,9 +408,8 @@ async def get_link_metadata(client, url):
         image_data = None
         
         if img_url:
-            # Handle relative URLs
-            if not img_url.startswith("http"):
-                img_url = urljoin(url, img_url)
+            # P1 Badge: Use robust normalization for images (handles // and relative)
+            img_url = normalize_url(img_url, base_url=url)
 
             # P1 Bug Fix: Filter out generic logos
             is_generic = any(p in img_url.lower() for p in GENERIC_IMAGE_PATTERNS)
@@ -252,8 +440,8 @@ def compress_image(image_bytes, max_size_kb=900):
     try:
         img = Image.open(io.BytesIO(image_bytes))
         
-        # Convert RGBA to RGB if necessary
-        if img.mode in ("RGBA", "P"):
+        # Defensive Architecture: Force RGB for all platform-compatible JPEGs
+        if img.mode != "RGB":
             img = img.convert("RGB")
             
         output = io.BytesIO()
@@ -285,3 +473,67 @@ def truncate_bytes(text, max_bytes):
     if len(encoded) <= max_bytes:
         return text
     return encoded[:max_bytes].decode('utf-8', 'ignore')
+
+def smart_truncate(text, max_chars, suffix='...'):
+    """Truncates text at word boundaries within the limit, appending a suffix."""
+    if not text or len(text) <= max_chars:
+        return text
+    
+    # Reserve space for the suffix
+    limit = max_chars - len(suffix)
+    truncated = text[:limit]
+    
+    # Backtrack to the last whitespace to avoid mid-word cutoff
+    last_space = truncated.rfind(' ')
+    if last_space != -1:
+        truncated = truncated[:last_space]
+        
+    return f"{truncated.rstrip()}{suffix}"
+
+def smart_split(text, limit, max_chunks=None):
+    """Splits text into chunks within the limit, prioritizing paragraph and sentence boundaries."""
+    if not text:
+        return []
+        
+    # Expert Review: If text fits in one part, return immediately
+    if len(text) <= limit:
+        return [text]
+    
+    chunks = []
+    remaining = text
+    
+    while remaining:
+        # Check if we've hit the thread cap
+        if max_chunks and len(chunks) >= max_chunks:
+            # Ensure the last chunk indicates truncation if there was more content
+            if chunks:
+                last = chunks[-1]
+                if not last.endswith("..."):
+                    chunks[-1] = last.rstrip() + "..."
+            break
+
+        if len(remaining) <= limit:
+            chunks.append(remaining)
+            break
+            
+        # 1. Try splitting at paragraphs
+        idx = remaining.rfind('\n\n', 0, limit)
+        # 2. Try splitting at sentences
+        if idx == -1:
+            idx = remaining.rfind('. ', 0, limit)
+            if idx != -1:
+                idx += 1 # Include period
+        # 3. Try splitting at words
+        if idx == -1:
+            idx = remaining.rfind(' ', 0, limit)
+            
+        # 4. Hard cut if no boundaries found (unlikely)
+        if idx == -1:
+            idx = limit
+            
+        chunk = remaining[:idx].strip()
+        if chunk:
+            chunks.append(chunk)
+        remaining = remaining[idx:].strip()
+        
+    return chunks
