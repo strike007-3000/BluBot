@@ -12,7 +12,7 @@ import ipaddress
 from contextlib import contextmanager
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
 from PIL import Image
 from .config import (
     MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
@@ -97,6 +97,58 @@ def save_seen_articles(data):
         os.replace(temp_path, SEEN_FILE_PATH)
     except Exception as e:
         SafeLogger.error(f"Critical error saving state: {e}")
+
+def normalize_url(url: str, base_url: Optional[str] = None) -> str:
+    """
+    Normalizes a URL by resolving protocol-relative links, stripping fragments,
+    standardizing hostnames, and removing tracking parameters (UTM, etc.).
+    """
+    if not url:
+        return ""
+    
+    # 1. Handle protocol-relative URLs (e.g., //example.com)
+    if url.strip().startswith("//"):
+        # Assume https as the modern standard for protocol-relative links
+        url = "https:" + url.strip()
+    
+    # 2. Resolve relative URLs against a base if provided
+    if base_url and not urlparse(url).scheme:
+        url = urljoin(base_url, url)
+        
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            return url
+            
+        # 3. Standardize components
+        scheme = parsed.scheme.lower()
+        netloc = parsed.netloc.lower()
+        path = parsed.path if parsed.path else "/"
+        
+        # 4. Strip tracking query parameters
+        query_params = parse_qs(parsed.query)
+        tracking_prefixes = ('utm_', 'ref', 'fbclid', 'gclid', '_ga', 'mc_cid', 'mc_eid')
+        tracking_exact = ('s', 'igsh', 'feature')
+        
+        clean_params = {
+            k: v for k, v in query_params.items() 
+            if not k.lower().startswith(tracking_prefixes) 
+            and k.lower() not in tracking_exact
+        }
+        
+        # 5. Reconstruct without fragments (#)
+        normalized = urlunparse((
+            scheme,
+            netloc,
+            path,
+            parsed.params,
+            urlencode(clean_params, doseq=True),
+            "" # Fragment is stripped
+        ))
+        
+        return normalized
+    except Exception:
+        return url
 
 def _is_public_ip(ip_str: str) -> bool:
     """Checks if an IP address is a routable public address."""
@@ -185,7 +237,7 @@ async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, he
             location = response.headers.get("location")
             if not location:
                 return response
-            next_url = urljoin(current_url, location)
+            next_url = normalize_url(location, base_url=current_url)
             
             # Prevent scheme downgrade (https -> http)
             if initial_scheme == 'https' and urlparse(next_url).scheme == 'http':
@@ -219,9 +271,8 @@ async def get_link_metadata(client, url):
         image_data = None
         
         if img_url:
-            # Handle relative URLs
-            if not img_url.startswith("http"):
-                img_url = urljoin(url, img_url)
+            # P1 Badge: Use robust normalization for images (handles // and relative)
+            img_url = normalize_url(img_url, base_url=url)
 
             # P1 Bug Fix: Filter out generic logos
             is_generic = any(p in img_url.lower() for p in GENERIC_IMAGE_PATTERNS)
