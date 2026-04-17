@@ -389,3 +389,40 @@ def smart_truncate(text, max_chars, suffix='...'):
         truncated = truncated[:last_space]
         
     return f"{truncated.rstrip()}{suffix}"
+
+def smart_split(text, limit):
+    """Splits text into chunks within the limit, prioritizing paragraph and sentence boundaries."""
+    if not text:
+        return []
+    if len(text) <= limit:
+        return [text]
+    
+    chunks = []
+    remaining = text
+    
+    while remaining:
+        if len(remaining) <= limit:
+            chunks.append(remaining)
+            break
+            
+        # 1. Try splitting at paragraphs
+        idx = remaining.rfind('\n\n', 0, limit)
+        # 2. Try splitting at sentences
+        if idx == -1:
+            idx = remaining.rfind('. ', 0, limit)
+            if idx != -1:
+                idx += 1 # Include period
+        # 3. Try splitting at words
+        if idx == -1:
+            idx = remaining.rfind(' ', 0, limit)
+            
+        # 4. Hard cut if no boundaries found (unlikely)
+        if idx == -1:
+            idx = limit
+            
+        chunk = remaining[:idx].strip()
+        if chunk:
+            chunks.append(chunk)
+        remaining = remaining[idx:].strip()
+        
+    return chunks
