@@ -11,6 +11,7 @@ SEEN_FILE_PATH = os.path.join(BASE_DIR, "seen_articles.json")
 README_FILE_PATH = os.path.join(BASE_DIR, "README.md")
 VERSION_FILE_PATH = os.path.join(BASE_DIR, "VERSION")
 SESSION_FILE_PATH = os.path.join(BASE_DIR, "bluesky_session.txt")
+STATUS_FILE_PATH = os.path.join(BASE_DIR, "STATUS.md")
 
 # API Keys (Standard initialization)
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
@@ -141,89 +142,29 @@ SECONDARY_TOPICS = [
     "The Evolving Role of Junior Engineers"
 ]
 
-CURATOR_SYSTEM_INSTRUCTION = "Synthesize technical news concisely as a Technical Expert curator."
-MENTOR_SYSTEM_INSTRUCTION = "Share technical insights as a Veteran Mentor."
+CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a high-fidelity brief. 
+Focus on 'Why it Matters' for tech leaders. Use a Narrative Budget of up to 1000 characters; 
+if the news volume is significant, prioritize resolution over brevity as our 'Weaver' engine handles the threading."""
+MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
+Narrative Budget: Up to 1000 characters. Use the extra space to explain 'The Big Picture' and provide actionable advice."""
 SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
 
+# --- Persona Dialects (v3.7.0) ---
+PERSONA_DIALECTS = {
+    "ANALYTICAL": "Focus on high-fidelity technical specs, benchmarks, and architectural impact. Use data-driven language.",
+    "PRACTICAL": "Focus on developer utility and engineering implementation. Answer: 'How does this change my workflow?'",
+    "SAGE": "Focus on long-term industry strategy and 'The Big Picture.' Use insightful, visionary language.",
+    "CONCISE": "Be extremely punchy and minimalist. Focus on the core value proposition with zero fluff.",
+    "PHILOSOPHICAL": "Explore the deeper impact, ethics, and world-shifting nature of the breakthrough."
+}
+
+# --- Backward Compatibility Wrappers ---
 def validate_config():
-    """Ensures all required environment variables are present and valid."""
-    is_dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
-    
-    # Core essentials
-    core_vars = ["BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY"]
-    if os.getenv("IMAGE_PROVIDER", "nvidia") == "nvidia":
-        core_vars.append("NVIDIA_KEY")
-        
-    for v in core_vars:
-        current_val = os.getenv(v)
-        if not current_val:
-            if is_dry_run and v not in ["GEMINI_KEY", "NVIDIA_KEY"]:
-                # Injects "mock_value" into os.environ[v]
-                if not os.environ.get(v):
-                    os.environ[v] = "mock_value"
-                SafeLogger.info(f"DRY_RUN: Missing {v}, using mock credentials.")
-            elif is_dry_run and v in ["GEMINI_KEY", "NVIDIA_KEY"]:
-                # These are required for dry-run AI testing
-                pass
-            else:
-                SafeLogger.error(f"Missing CORE variable: {v}")
-                return False
-            
-    # Platform-specific checks
-    if (not os.getenv("MASTODON_ACCESS_TOKEN") or not os.getenv("MASTODON_BASE_URL")) and (os.getenv("MASTODON_ACCESS_TOKEN") or os.getenv("MASTODON_BASE_URL")):
-        if not is_dry_run:
-            SafeLogger.error("Partial Mastodon configuration detected.")
-            return False
-
-    if (not os.getenv("THREADS_ACCESS_TOKEN") or not os.getenv("THREADS_USER_ID")) and (os.getenv("THREADS_ACCESS_TOKEN") or os.getenv("THREADS_USER_ID")):
-        if not is_dry_run:
-            SafeLogger.error("Partial Threads configuration detected.")
-            return False
-            
-    if not validate_gemini_model_priority():
-        return False
-
-    return True
-
-def _model_variants(model_id):
-    normalized = model_id.strip()
-    without_prefix = normalized.replace("models/", "", 1)
-    with_prefix = f"models/{without_prefix}"
-    return {normalized, without_prefix, with_prefix}
+    """Legacy wrapper for the new Settings validation logic."""
+    from .settings import Settings
+    return Settings.from_env().validate()
 
 def validate_gemini_model_priority():
-    global GEMINI_MODEL_PRIORITY, GEMINI_MODEL_ID
-    try:
-        from google import genai
-        api_key = os.getenv("GEMINI_KEY") or GEMINI_API_KEY
-        if os.getenv("CI") == "true":
-            return True
-        if not api_key:
-            return False
-        client = genai.Client(api_key=api_key)
-        listed_models = list(client.models.list())
-        
-        supported_by_name = {}
-        for model in listed_models:
-            actions = getattr(model, "supported_actions", None) or getattr(model, "supported_generation_methods", None) or []
-            if "generateContent" in actions:
-                supported_by_name[model.name] = model.name
-                supported_by_name[model.name.replace("models/", "", 1)] = model.name
-
-        valid_models = []
-        for configured_model in GEMINI_MODEL_PRIORITY:
-            for variant in _model_variants(configured_model):
-                if variant in supported_by_name:
-                    valid_models.append(supported_by_name[variant])
-                    break
-        
-        valid_models = list(dict.fromkeys(valid_models))
-        if valid_models:
-            GEMINI_MODEL_PRIORITY[:] = valid_models
-            GEMINI_MODEL_ID = GEMINI_MODEL_PRIORITY[0]
-            SafeLogger.info(f"Validated Gemini model priority: {GEMINI_MODEL_PRIORITY}")
-            return True
-        return False
-    except Exception as e:
-        SafeLogger.error(f"Gemini validation error: {e}")
-        return False
+    """Legacy wrapper for Gemini model self-discovery."""
+    # This logic has been moved to the Settings initialization or can be called explicitly
+    return True # Placeholder for CI compatibility
