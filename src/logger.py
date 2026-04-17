@@ -48,6 +48,11 @@ class SafeLogger:
         return text
 
     @staticmethod
+    def debug(message):
+        if os.environ.get("DEBUG", "false").lower() == "true":
+            print(f"DEBUG: {SafeLogger.sanitize(message)}", flush=True)
+
+    @staticmethod
     def info(message):
         print(f"INFO: {SafeLogger.sanitize(message)}", flush=True)
 

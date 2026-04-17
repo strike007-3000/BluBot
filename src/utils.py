@@ -40,12 +40,13 @@ def retry_with_backoff(func):
                 # Expert Review Fix: Better logging for rate limits
                 err_msg = str(e).lower()
                 if "rate limit" in err_msg or "429" in err_msg:
-                    SafeLogger.warn(f"Rate limited by BlueSky. Waiting {wait_time:.2f}s before retry {retries}/{MAX_API_RETRIES}...")
+                    SafeLogger.warn(f"Rate limited. Waiting {wait_time:.2f}s before retry {retries}/{MAX_API_RETRIES}...")
                 elif "forbidden" in err_msg or "403" in err_msg:
-                    SafeLogger.error(f"Forbidden (403) error in {func.__name__}. This likely indicates invalid facets/metadata. Skipping retries.")
+                    SafeLogger.error(f"Forbidden (403) error in {func.__name__}. Skipping retries.")
                     raise e
-                elif "invalidrequest" in err_msg or "400" in err_msg:
-                    SafeLogger.error(f"Invalid Request (400) error in {func.__name__}. Likely malformed record or invalid media. Skipping retries.")
+                elif "invalidrequest" in err_msg:
+                    # Narrowed check (Codex): Only skip retries for explicit atproto validation errors
+                    SafeLogger.error(f"Permanent validation error (InvalidRequest) in {func.__name__}. Skipping retries.")
                     raise e
                 else:
                     SafeLogger.warn(f"Retry {retries}/{MAX_API_RETRIES} for {func.__name__} in {wait_time:.2f}s... (Error: {str(e)[:100]})")
@@ -58,7 +59,7 @@ def save_session_string(session_string: str):
     try:
         with open(SESSION_FILE_PATH, "w", encoding="utf-8") as f:
             f.write(session_string)
-        SafeLogger.info("BlueSky session string persisted.")
+        SafeLogger.debug("BlueSky session string persisted.")
     except Exception as e:
         SafeLogger.error(f"Failed to save session string: {e}")
 

@@ -16,7 +16,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key, making it effortless to identify the correct identifiers for new releases (like Gemma 3).
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context to fetch 25+ RSS feeds concurrently. Processing time reduced by **90%**.
-- **Fortress Hardening (v3.5.4)**: Active redaction of session strings, sanitized error logging, and **suppression of verbose external library logs** (atproto/httpx).
+- **Fortress Hardening (v3.5.5)**: Active redaction of session strings, sanitized error logging, and **precision retry logic** (Codex P1 fix).
 - **Cross-Platform Visuals**: Enhanced media support for **Bluesky** and **Mastodon** (binary) and **Threads** (fallback logic).
 - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
@@ -103,7 +103,13 @@ Go to `Settings > Actions > General` and ensure **"Read and write permissions"**
 
 ## 🗒️ Updates & History
 
-- **v3.5.4 (Current)**: **Fortress Hardening (Visual & Logging)**.
+- **v3.5.5 (Current)**: **Stability & Offline Verification Suite**.
+    - **Offline Dry Run**: Enhanced `test_models.py` with a full pipeline orchestrator. Test discovery, scoring, and AI thumbnail generation locally without posting.
+    - **Persistence Resilience**: Migrated state persistence to a dedicated `automated/state` branch to bypass `main` branch protection.
+    - **Codex P1 Fix**: Refined `retry_with_backoff` to strictly target non-recoverable errors, ensuring Threads media retries remain active.
+    - **Imagen 4 Sync**: Standardized model identifiers to correctly utilize Imagen 4 quotas.
+    - **Log Sanitization**: Implemented `SafeLogger.debug` and silenced Node.js deprecation warnings in CI.
+- **v3.5.4 (2026-04-17)**: **Fortress Hardening (Visual & Logging)**.
     - **Image Stability**: Implemented byte-level validation for fetched thumbnails. Bot now intelligently skips invalid image data (like SVGs/XML) instead of failing the post.
     - **Log Sanitization**: Suppressed verbose debug output from `atproto` and `httpx` to eliminate potential token leakage in public CI logs.
     - **Retry Intelligence**: Updated `@retry_with_backoff` to skip retries for `400 Bad Request` validation errors.

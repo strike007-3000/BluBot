@@ -164,7 +164,3 @@ graph TD
 - **Generic Image Filtering**: The Sage automatically identifies and skips repetitive site-wide logos (like the arXiv logo) in favor of unique thumbnails. 
 - **Semantic Discovery Fallsback**: If a generic logo is filtered out, the scraper attempts to find the first *real* figure or diagram within the article content.
 - **Fail-Soft AI Generation**: If no unique thumbnail can be discovered, the bot calls the **Sage Designer**. Using a specialized persona, it translates the news summary into a high-fidelity, minimalist 3D isometric illustration that perfectly matches your brand's aesthetic.
-- **Fail-Safe Logic**: If your API key hits its daily generation limit (e.g., 25/day), the bot gracefully skips the image rather than failing the post.
-
----
-*Built with ❤️ for the AI Community*
