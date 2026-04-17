@@ -1,26 +1,43 @@
-# PR Description: Supply Chain Resilience & Dependabot Mitigation (v3.11.2) 🛡️🤖
+# PR Description: Natural Vibe Engine (v3.7.0) 🎭🚀
 
-This PR resolves a critical Dependabot updater failure by aligning package version bounds and configuring version pinning rules.
+This PR evolves BluBot from a scheduled automation script into a **Dynamic Editorial Entity**. It introduces high-resolution temporal intelligence, stylistic memory, and automated manual-run detection to make the bot feel significantly more natural and varied in its social media feed.
 
-## 🌟 Key Updates
+## 🌟 Key Features (v3.7.0)
 
-### 1. Supply Chain Constraints
-- Updated `cryptography` in `requirements.in` from a rigid pin (`cryptography==46.0.7`) to a range constraint (`cryptography>=46.0.7,<47`).
-- This satisfies the transitive constraint of the `atproto` SDK client library, which strictly restricts `cryptography<47,>=41.0.7`.
+### 1. The Natural Vibe Engine (Stylistic Memory)
+BluBot now has "memory" of its own persona. It records its last used style and ensures the next run uses a different one from a pool of 5 distinct dialects:
+- **ANALYTICAL**: Data-driven specs and arch impact.
+- **PRACTICAL**: Engineering utility and "How-to".
+- **SAGE**: Visionary strategy and industry shifts.
+- **CONCISE**: High-velocity scanner updates.
+- **PHILOSOPHICAL**: Ethical exploration and the "Big Picture".
 
-### 2. Dependabot Configuration
-- Configured `.github/dependabot.yml` to ignore upgrades for `cryptography` to versions `>= 47.0.0`.
-- This prevents the Dependabot updater from getting stuck in an unresolvable dependency cycle, while still allowing it to parse and submit PRs for security updates within the `46.x` branch.
+### 2. High-Resolution Temporal Intelligence
+Resolved the "Session" logic from 2 slots to **5 granular sessions**, ensuring content is perfectly aligned with the time of day:
+- **Night Reflection** (00:00 - 06:00)
+- **Morning Intelligence** (06:00 - 11:00)
+- **Midday Briefing** (11:00 - 15:00)
+- **Afternoon Deep Dive** (15:00 - 19:00)
+- **Evening Synthesis** (19:00 - 24:00)
 
-### 3. Dependency Compilation
-- Recompiled `requirements.txt` using `pip-compile`. It successfully locked `cryptography` to `46.0.7` without conflict and generated all corresponding cryptographic hashes.
+### 3. Manual Intercept Mode
+The bot now detects if it was triggered manually via `workflow_dispatch`.
+- **Logic**: Automatically appends **"(Intercept)"** to the session name.
+- **Effect**: Shifts the AI logic into an "Ad-hoc briefing" mode, preventing it from producing scheduled-sounding content during an off-hour manual trigger.
 
-### 4. Telemetry Alignment
-- Checked and verified live-telemetry status in `STATUS.md`.
+### 4. Architectural Hardening
+- **Absolute Imports**: Converted all relative imports to absolute `src.` paths to resolve `pytest` isolation issues and standardizing the source tree.
+- **State Persistence**: Extended the atomic persistence logic to track `last_dialect`.
 
-## 🧪 Verification & Testing
-- ✅ **Test Coverage**: All 36 tests in `src/tests/` passed successfully (including verification of settings and curation).
-- ✅ **Upgraded Local Validation**: Verified local package resolution and confirmed compatibility.
+## 🧪 Verification Results
+
+- **Automated Tests**: Passed 100% of the 15-test regression suite (`pytest src/tests/`).
+- **Regression Check**: Verified internal constant consistency (restored `CURATOR_SYSTEM_INSTRUCTION`).
+- **Dry-Run Validation**: Successful execution via `test_models.py` with mock-ad-hoc interception.
+
+## 📊 Documentation Updates
+- **README.md**: Updated with v3.7.0 key features and Status Dashboard.
+- **WIKI_MANUAL.md**: Added Page 10 (The Natural Vibe Engine).
 
 ---
-*Ensuring Continuous Delivery Pipeline Uptime via Dependabot Hardening - Ready for Merge*
+*Built for the Elite Sage released under v3.7.0*

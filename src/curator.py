@@ -147,42 +147,6 @@ def strip_markdown(text):
     if not text: return text
     return _MARKDOWN_STRIP_RE.sub('', text).strip()
 
-def supports_thinking(model_id: str) -> bool:
-    """Helper to detect if a model supports thinking configs (like Gemini 2.0/2.5 models)."""
-    model_lower = model_id.lower()
-    if "gemma" in model_lower:
-        return False
-    if "lite" in model_lower:
-        return False
-    if "gemini-2.0" in model_lower or "gemini-2.5" in model_lower:
-        return True
-    return False
-
-async def prune_gemini_model_priority_async(genai_client):
-    """Asynchronously lists available models and prunes the GEMINI_MODEL_PRIORITY in-place."""
-    if os.getenv("CI", "false").lower() == "true":
-        return
-    try:
-        SafeLogger.info("Gemini Model Discovery: Querying available models from API...")
-        available_models = []
-        async for m in genai_client.aio.models.list():
-            available_models.append(m.name)
-            
-        pruned = []
-        for model_id in GEMINI_MODEL_PRIORITY:
-            norm_id = model_id.lower()
-            if any(norm_id in m.lower() or m.lower() in norm_id for m in available_models):
-                pruned.append(model_id)
-                
-        if pruned:
-            SafeLogger.info(f"Gemini Model Discovery: Discovered active models: {pruned}")
-            GEMINI_MODEL_PRIORITY.clear()
-            GEMINI_MODEL_PRIORITY.extend(pruned)
-        else:
-            SafeLogger.warn("Gemini Model Discovery: None of the prioritized models were returned by the API. Keeping defaults.")
-    except Exception as e:
-        SafeLogger.warn(f"Gemini Model Discovery: API call failed ({e}). Falling back to configured defaults.")
-
 async def summarize_news(news_items, context, mode="Curator", last_dialect=None):
     """Synthesizes news with full Failover Loop and randomized Dialect adaptation."""
     if not news_items: return None, None, "General", False, None
@@ -207,16 +171,6 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
     combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
     
-    # Check for Consensus Curation (allows threads opt-in)
-    has_consensus = any(item.get('consensus_synergy', False) for item in news_items)
-    if has_consensus:
-        combined_instruction += "\n\nCONSENSUS EVENT INSTRUCTION: Multiple independent feeds have reported the same major breakthrough. You may expand the post up to 500 characters only when the existing platform-specific limits and splitter can safely handle it. Do not pad. Do not write a long summary. State one clear thesis, explain why the consensus matters, and keep the tone human, concise, and business-relevant."
-    
-    # Friday Morning Curation focus overlay
-    is_friday_morning = context.get('day') == 'Friday' and 'Morning' in context.get('session', '')
-    if is_friday_morning:
-        combined_instruction += "\n\nRELEASE ROUNDUP INSTRUCTION: Focus exclusively on summarizing the latest market launches, product updates, and developer releases from the past week (Weekly Release Roundup format). Highlight the most impactful commercial developer announcements."
-
     user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
     
     for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
@@ -224,26 +178,19 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
             try:
                 SafeLogger.info(f"Synthesizing via {model_id} (Attempt {attempt})...")
                 
-                # Dynamic GenerateContentConfig args
-                config_args = {
-                    "temperature": 0.7
-                }
-                
-                # Check for system_instruction support
-                if "gemma" not in model_id.lower():
-                    config_args["system_instruction"] = combined_instruction
-                
-                # Apply thinking config if supported
-                if supports_thinking(model_id):
-                    budget = settings.thinking_budget if settings.thinking_budget is not None else 1024
-                    config_args["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
-                
-                contents = f"{combined_instruction}\n\nUSER INPUT:\n{user_prompt}" if "gemma" in model_id.lower() else user_prompt
-                
-                response = await client.aio.models.generate_content(
-                    model=model_id, contents=contents,
-                    config=types.GenerateContentConfig(**config_args)
-                )
+                # Expert Review Fix: Gemma vs Gemini Adaptation
+                # Professional Architecture: Model-specific adaptation
+                if "gemma" in model_id.lower():
+                    contents = f"{instruction}\n\nUSER INPUT:\n{user_prompt}"
+                    response = await client.aio.models.generate_content(
+                        model=model_id, contents=contents,
+                        config=types.GenerateContentConfig(temperature=0.7)
+                    )
+                else:
+                    response = await client.aio.models.generate_content(
+                        model=model_id, contents=user_prompt,
+                        config=types.GenerateContentConfig(system_instruction=combined_instruction, temperature=0.7)
+                    )
                 
                 raw_text = response.text.strip()
                 topic = "General"
