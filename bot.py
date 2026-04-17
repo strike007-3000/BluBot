@@ -164,35 +164,8 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     
     summary, lead_link, topic, is_failover = None, None, "General", False
     
-    if settings.is_dry_run:
-        SafeLogger.info("DRY RUN: Generating mock synthesis summary.")
-        summary = "DRY RUN: This is a mock synthesis summary of AI breakthrough news. #AI #Tech"
-        lead_link = "https://example.com/mock-lead-link"
-        topic = telegram_topic if telegram_topic else "DryRun"
-        is_failover = False
-    elif telegram_topic and not (news_count > 0 and not any(a.source == "Telegram Intercept" for a in curation.top_articles)):
-        SafeLogger.info(f"Synthesis Stage: Generating on-demand post from scratch for topic: '{telegram_topic}'")
-        try:
-            from src.config import CURATOR_SYSTEM_INSTRUCTION
-            prompt = (
-                f"Write an elite tech insight post on the topic: '{telegram_topic}'.\n"
-                "CRITICAL: If this topic is hypothetical, speculative, or references a potential future scenario (e.g. 'could be', 'what if', 'speculation'), "
-                "do NOT write as if it has already occurred or is an established fact. Frame it hypothetically (e.g., 'If Cursor were to be acquired...'). "
-                "Do not state unverified assumptions as facts."
-            )
-            response = await genai_client.aio.models.generate_content(
-                model=settings.gemini_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.7)
-            )
-            summary = strip_markdown(response.text.strip())
-            lead_link = "https://telegram.org"
-            topic = telegram_topic
-        except Exception as e:
-            SafeLogger.warn(f"Telegram topic synthesis failed: {e}")
-            summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
-    elif news_count > 3 or (telegram_topic and news_count > 0):
-        # Curation flow: either normal flow with >3 articles or matched Telegram topic
+    if news_count > 3:
+        # v3.7.0 logic: Morning/Midday -> Curator, Afternoon/Evening/Night -> Mentor
         is_mentor_time = any(x in curation.session_name for x in ["Afternoon", "Evening", "Night"])
         mode = "Mentor" if is_mentor_time else "Curator"
         try:
@@ -201,9 +174,8 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
             summary, lead_link, topic, is_failover, current_dialect = await summarize_news(
                 news_dicts, context, mode=mode, last_dialect=curation.last_dialect
             )
-            if telegram_topic:
-                topic = telegram_topic
-            # v3.7.1 Fix: Propagate updated dialect back to main state
+            # Update curation result with the dialect used for persistence (requires non-frozen edit or re-init)
+            # Since CurationResult is frozen, we re-instantiate
             curation = CurationResult(
                 top_articles=curation.top_articles,
                 seen_links=curation.seen_links,
@@ -329,139 +301,12 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
         state.setdefault("recent_topics", []).append(synthesis.topic)
 
-    # Update stats
-    today_date = datetime.now(timezone.utc).date()
-    if "start_date" not in state:
-        state["start_date"] = "2026-03-31"
-    
-    try:
-        from datetime import date
-        start_dt = date.fromisoformat(state["start_date"])
-        active_day = (today_date - start_dt).days + 1
-    except Exception:
-        active_day = 68  # Fallback
-
-    # Increment total posts by 1 (actual synthesized post broadcast)
-    state["total_posts_curated"] = state.get("total_posts_curated", 0) + 1
-    state["last_dialect"] = curation.last_dialect
-    
-    # Cap history to prevent state bloat (Tier 1 constraint)
-    state["links"] = state["links"][-500:]
-    state["recent_topics"] = state["recent_topics"][-20:]
-
-    await asyncio.to_thread(save_seen_articles, state)
-    await update_status_dashboard(curation.session_name, synthesis.topic)
-
-    # Dynamic Bio Update
-    await update_social_profiles(
-        client_bsky, 
-        settings.mastodon_token, 
-        active_day,
-        synthesis.topic
-    )
-
-async def interaction_stage(bsky_client, http_client, session_context: dict) -> InteractionResult:
-    """Handles social interactions (mentions/replies) with humanized engagement."""
-    SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
-    seen_ids = await asyncio.to_thread(load_seen_interactions)
-    replied_ids = []
-    errors = []
-    
-    # 1. Fetch mentions
-    bsky_mentions = await fetch_bluesky_mentions(bsky_client)
-    mastodon_mentions = await fetch_mastodon_mentions()
-    
-    # 2. Fetch Threads replies
-    threads_replies = []
-    if settings.enable_threads_comment_replies:
-        threads_replies = await fetch_threads_replies(http_client)
-        
-    all_mentions = bsky_mentions + mastodon_mentions + threads_replies
-    
-    # Filter and prioritize
-    unseen = [m for m in all_mentions if m.id not in seen_ids]
-    SafeLogger.info(f"Found {len(unseen)} new mentions/comments to process.")
-    
-    import random
-    for mention in unseen[:INTERACTION_LIMIT]:
-        # Differentiate replies from direct mentions
-        is_reply = mention.root_uri is not None and mention.root_uri != mention.id
-        reply_prob = COMMENT_REPLY_PROB if is_reply else MENTION_REPLY_PROB
-        
-        # Probabilistic engagement (Humanization)
-        if random.random() > reply_prob:
-            SafeLogger.info(f"Decision: Skipping reply to @{mention.author} on {mention.platform} (Engagement Roll).")
-            seen_ids.append(mention.id)
-            continue
-            
-        try:
-            SafeLogger.info(f"Generating reply for @{mention.author} on {mention.platform}...")
-            reply_text = await generate_interactive_reply(mention.text, mention.author, session_context)
-            
-            if not reply_text:
-                continue
-                
-            # Human Delay before interaction
-            await human_delay(10, 30)
-            
-            if mention.platform == "bluesky" and bsky_client:
-                # Bluesky Reply with Threading
-                parent_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.uri, cid=mention.cid)
-                root_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.root_uri, cid=mention.root_cid) if mention.root_uri else parent_ref
-                
-                reply_ref = models.AppBskyFeedPost.ReplyRef(parent=parent_ref, root=root_ref)
-                await bsky_client.send_post(text=reply_text, reply_to=reply_ref)
-                
-                if AUTO_LIKE_INTERACTIONS:
-                    await bsky_client.like(mention.uri, mention.cid)
-                    
-            elif mention.platform == "mastodon":
-                # Mastodon Reply
-                from mastodon import Mastodon
-                m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
-                await asyncio.to_thread(m.status_post, reply_text, in_reply_to_id=mention.id)
-                if AUTO_LIKE_INTERACTIONS:
-                    await asyncio.to_thread(m.status_favourite, mention.id)
-                    
-            elif mention.platform == "threads":
-                # Threads Reply
-                base_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
-                publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
-                
-                res = await http_client.post(base_url, data={
-                    "media_type": "TEXT",
-                    "text": reply_text,
-                    "reply_to": mention.id,
-                    "access_token": settings.threads_token
-                }, timeout=20)
-                res.raise_for_status()
-                container_id = res.json().get("id")
-                
-                for _ in range(3):
-                    status_res = await http_client.get(
-                        f"https://graph.threads.net/v1.0/{container_id}", 
-                        params={"fields": "status", "access_token": settings.threads_token}
-                    )
-                    if status_res.status_code == 200 and status_res.json().get("status") == "FINISHED":
-                        break
-                    await asyncio.sleep(2)
-                
-                publish_res = await http_client.post(publish_url, data={
-                    "creation_id": container_id,
-                    "access_token": settings.threads_token
-                }, timeout=20)
-                publish_res.raise_for_status()
-            
-            replied_ids.append(mention.id)
-            seen_ids.append(mention.id)
-            SafeLogger.info(f"Successfully replied to @{mention.author} on {mention.platform}!")
-            
-        except Exception as e:
-            SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
-            errors.append(str(e))
-
-    await asyncio.to_thread(save_seen_interactions, seen_ids)
-    return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
+    save_seen_articles({
+        "links": curation.seen_links,
+        "recent_topics": curation.recent_topics,
+        "last_dialect": curation.last_dialect
+    })
+    await update_readme_dashboard(curation.session_name, synthesis.topic)
 
 async def main():
     if not settings.validate():
