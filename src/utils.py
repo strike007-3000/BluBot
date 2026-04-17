@@ -121,8 +121,8 @@ def load_seen_articles():
                 with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
-                return {"links": [], "recent_topics": []}
-        return {"links": [], "recent_topics": []}
+                return {"links": [], "recent_topics": [], "last_dialect": None}
+        return {"links": [], "recent_topics": [], "last_dialect": None}
 
 def save_seen_articles(data):
     try:

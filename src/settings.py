@@ -20,6 +20,7 @@ class Settings:
     # Modes & Flags
     is_dry_run: bool = False
     is_ci: bool = False
+    github_event: str = "schedule"
     image_provider: str = "nvidia"
     enable_image_gen: bool = True
     
@@ -50,6 +51,7 @@ class Settings:
             "threads_user_id": os.getenv("THREADS_USER_ID"),
             "is_dry_run": is_dry_run,
             "is_ci": is_ci,
+            "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
             "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true"
         }
@@ -65,6 +67,11 @@ class Settings:
             SafeLogger.info("Settings: DRY_RUN enabled. Using mock credentials where missing.")
 
         return cls(**{k: v for k, v in settings_dict.items() if v is not None})
+
+    @property
+    def is_manual_run(self) -> bool:
+        """Determines if the current execution was manually triggered."""
+        return self.github_event == "workflow_dispatch"
 
     def validate(self) -> bool:
         """Validates critical settings and returns True if valid."""

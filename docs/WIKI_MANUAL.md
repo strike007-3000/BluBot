@@ -1,6 +1,6 @@
 # 📖 BluBot Elite Sage: The Complete Manual
 
-Welcome to the official Wiki for the **Elite Sage** (BluBot v3.6.3). This guide balances the technical inner workings with the "Sage" persona's philosophy.
+Welcome to the official Wiki for the **Elite Sage** (BluBot v3.7.0). This guide balances the technical inner workings with the "Sage" persona's philosophy.
 
 ---
 
@@ -118,6 +118,35 @@ BluBot v3.6.5 introduces a professional **Automated Test Suite** powered by `pyt
 ```bash
 pytest src/tests/
 ```
+
+---
+
+## 🎭 Page 10: The Natural Vibe Engine (v3.7.0)
+
+Version 3.7.0 transforms the bot from a script into a **living editorial entity**.
+
+### 1. The Editorial Pulse (Stylistic Memory)
+The bot now tracks its previous tone to ensure consecutive updates feel varied:
+- **Style Memory**: Saves the `last_dialect` to `seen_articles.json`.
+- **The Diversity Pool**: 
+    - **Analytical**: High-fidelity technical specs and benchmarks.
+    - **Practical**: Developer utility and "How-to" engineering.
+    - **Sage**: Visionary strategic impact and industry shifts.
+    - **Concise**: Zero-fluff, minimalist scanner-friendly items.
+    - **Philosophical**: Ethical considerations and world-shifting nature.
+
+### 2. High-Resolution Temporal Intelligence
+Resolved from a 2-session split into **5 granular sessions**:
+- **Night Reflection** (00:00-06:00)
+- **Morning Intelligence** (06:00-11:00)
+- **Midday Briefing** (11:00-15:00)
+- **Afternoon Deep Dive** (15:00-19:00)
+- **Evening Synthesis** (19:00-24:00)
+
+### 3. Manual Intercept Mode
+The Sage now detects if it was triggered via a manual GitHub **workflow_dispatch**. 
+- **Urgency Shift**: Appends **"(Intercept)"** to the session name.
+- **Tone Modification**: Signifies to the AI that this is an ad-hoc briefing rather than a standard daily run, shifting the synthesis towards urgent insights.
 
 ---
 *Built with ❤️ for the AI Community*

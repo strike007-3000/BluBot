@@ -5,8 +5,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 ## 📊 System Status
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-04-17 | 🖼️ NVIDIA SD3 Generation |
-| **Signal Strength** | Elite (NIM) | -- | -- |
+| **Broadcaster** | Operational | 2026-04-18 | 🖼️ NVIDIA SD3 Generation |
+| **Signal Strength** | Elite (Natural) | -- | -- |
 
 ## 🚀 Key Features
 
@@ -27,6 +27,10 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity).
     - **SSRF Prevention Architecture**: Hardened the metadata scraper with **DNS Pinning** and **IP validation** to block all internal/private network requests.
     - **Zero-Duplicate Threads Logic**: Implemented "Catch & Log" delivery validation to prevent duplicate posts during transient API failures.
+- **🧠 Natural Vibe Engine (v3.7.0)**:
+    - **Stylistic Memory**: The bot now remembers its previous "vibe" and ensures it never repeats the same tone twice in a row, switching between **Analytical**, **Practical**, **Sage**, **Concise**, and **Philosophical** dialects.
+    - **Temporal Intelligence**: Upgraded from 2 to **5 granular sessions** (Dawn, Morning, Midday, Afternoon, Evening) for hyper-relevant time-of-day awareness.
+    - **Manual Run "Intercept"**: Automatically detects manual `workflow_dispatch` runs and labels them as **"(Intercept)"**, shifting the AI into an urgent, ad-hoc reporting mode.
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
     - **Impact-Aware Intelligence**: Prioritizes breakthrough news (Agents, SOTA) and boosts articles mentioning flagship 2026 models.
     - **Consensus Synergy Pass**: Automatically boosts "Consensus Events" reported by multiple independent feeds.
@@ -68,7 +72,11 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.6.7 (Current)**: **Elite Architecture Overhaul**.
+- **v3.7.0 (Current)**: **The Natural Vibe Engine Release**.
+    - **Style Memory**: Integrated stylistic persistence to ensure editorial variety between consecutive runs.
+    - **Session Granularity**: Increased temporal resolution to 5 sessions with manual intercept awareness.
+    - **Architectural Cleanup**: Formalized absolute `src.` imports across the entire project, resolving `pytest` isolation issues.
+- **v3.6.7**: **Elite Architecture Overhaul**.
     - **Staged Pipeline**: Refactored `bot.py` into distinct functional stages powered by `src/models.py`.
     - **Typed Settings**: Centralized configuration into `src/settings.py` for professional-grade environment management.
     - **Thread-Safe State**: Integrated cross-platform `FileLock` for robust state persistence and atomic `seen_articles.json` writes.

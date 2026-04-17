@@ -145,6 +145,15 @@ CURATOR_SYSTEM_INSTRUCTION = "Synthesize technical news concisely as a Technical
 MENTOR_SYSTEM_INSTRUCTION = "Share technical insights as a Veteran Mentor."
 SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
 
+# --- Persona Dialects (v3.7.0) ---
+PERSONA_DIALECTS = {
+    "ANALYTICAL": "Focus on high-fidelity technical specs, benchmarks, and architectural impact. Use data-driven language.",
+    "PRACTICAL": "Focus on developer utility and engineering implementation. Answer: 'How does this change my workflow?'",
+    "SAGE": "Focus on long-term industry strategy and 'The Big Picture.' Use insightful, visionary language.",
+    "CONCISE": "Be extremely punchy and minimalist. Focus on the core value proposition with zero fluff.",
+    "PHILOSOPHICAL": "Explore the deeper impact, ethics, and world-shifting nature of the breakthrough."
+}
+
 # --- Backward Compatibility Wrappers ---
 def validate_config():
     """Legacy wrapper for the new Settings validation logic."""
