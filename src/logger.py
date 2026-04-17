@@ -49,7 +49,7 @@ class _SecretRedactionFilter(logging.Filter):
         
         # 2. Add static patterns for known token formats
         static_patterns = [
-            r"access_token=[^&'\s\"]+",
+            r"(?P<key>access_token=)[^&'\s\"]+",
             r"(?P<key>(?:access_token|password|access_jwt|refresh_jwt|token|key)\":\s*\")[^\"]+",
             r"(?P<key>(?:auth|authorization|x-rpc-auth):\s*(?:Bearer\s+)?)[^\s'\",]+",
             r"(?P<key>Bearer\s+)[^\s'\",]+"
