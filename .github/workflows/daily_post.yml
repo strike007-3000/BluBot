@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Note: Node.js 20 is deprecated; runners now default to Node 24
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       NODE_NO_WARNINGS: "1"
     steps:
       - name: Checkout repository
