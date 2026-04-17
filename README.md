@@ -5,8 +5,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 ## 📊 System Status
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-04-17 | 🖼️ NVIDIA SD3 Generation |
-| **Signal Strength** | Elite (NIM) | -- | -- |
+| **Broadcaster** | Operational | 2026-04-17 | 🔍 Afternoon Deep Dive (General) |
+| **Signal Strength** | Elite (Parallel) | -- | -- |
 
 ## 🚀 Key Features
 
