@@ -49,7 +49,7 @@ class _SecretRedactionFilter(logging.Filter):
         
         # 2. Add static patterns for known token formats
         static_patterns = [
-            r"access_token=[^&'\s\"]+",
+            r"(?P<key>access_token=)[^&'\s\"]+",
             r"(?P<key>(?:access_token|password|access_jwt|refresh_jwt|token|key)\":\s*\")[^\"]+",
             r"(?P<key>(?:auth|authorization|x-rpc-auth):\s*(?:Bearer\s+)?)[^\s'\",]+",
             r"(?P<key>Bearer\s+)[^\s'\",]+"
@@ -62,7 +62,9 @@ class _SecretRedactionFilter(logging.Filter):
     def _sanitize(self, value: Any) -> Any:
         if value is None:
             return None
-        text = str(value)
+        if not isinstance(value, str):
+            return value
+        text = value
         if not self._secret_patterns:
             return text
         
@@ -96,7 +98,6 @@ class _JsonFormatter(logging.Formatter):
             "platform": getattr(record, "platform", "system"),
             "mode": getattr(record, "mode", None),
         }
-        # Add any extra fields passed
         for key, value in record.__dict__.items():
             if key.startswith("_") or key in payload or key in {
                 "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
@@ -107,6 +108,29 @@ class _JsonFormatter(logging.Formatter):
                 continue
             payload[key] = value
         return json.dumps({k: v for k, v in payload.items() if v is not None}, ensure_ascii=False)
+
+class _HumanFormatter(logging.Formatter):
+    """Formats log records as clean, colorized text for terminal readability."""
+    _COLORS = {
+        "DEBUG": "\033[36m",    # Cyan
+        "INFO": "\033[32m",     # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",    # Red
+        "CRITICAL": "\033[41m", # Red Background
+        "RESET": "\033[0m"
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        color = self._COLORS.get(record.levelname, self._COLORS["RESET"])
+        reset = self._COLORS["RESET"]
+        timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        platform = getattr(record, "platform", "sys")
+        message = record.getMessage()
+        
+        # Expert Review Fix: Sanitize platform string
+        platform_tag = f"[{platform.upper()}]" if platform != "system" else ""
+        
+        return f"{color}{timestamp} | {record.levelname:7} | {platform_tag:8} | {message}{reset}"
 
 class SafeLogger:
     """Structured, security-hardened logger with secret redaction and JSON output."""
@@ -122,8 +146,15 @@ class SafeLogger:
         cls._logger.setLevel(logging.DEBUG)
         cls._logger.propagate = False
         
+        # Infrastructure Discovery: Toggle format based on environment
+        is_ci = os.getenv("CI", "false").lower() == "true"
+        log_format = os.getenv("LOG_FORMAT", "json" if is_ci else "pretty").lower()
+        
         handler = logging.StreamHandler()
-        handler.setFormatter(_JsonFormatter())
+        if log_format == "pretty":
+            handler.setFormatter(_HumanFormatter())
+        else:
+            handler.setFormatter(_JsonFormatter())
         
         cls._redaction_filter = _SecretRedactionFilter()
         handler.addFilter(cls._redaction_filter)
@@ -135,6 +166,8 @@ class SafeLogger:
     @classmethod
     def configure(cls, platform: Optional[str] = None, mode: Optional[str] = None):
         cls._configure_if_needed()
+        if cls._redaction_filter:
+            cls._redaction_filter.refresh_secrets()
         if platform: cls._context["platform"] = platform
         if mode: cls._context["mode"] = mode
 
