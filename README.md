@@ -72,7 +72,10 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.7.2 (Current)**: **Production Hardening Patch**.
+- **v3.7.3 (Current)**: **Stabilization & Visibility Patch**.
+    - **Stability Fix**: Restored the missing `published` timestamp in the curation engine to satisfy `Article` model requirements.
+    - **Session Visibility**: Enhanced the broadcast stage with explicit logging for Bluesky session cache restoration.
+- **v3.7.2**: **Production Hardening Patch**.
     - **Model Stability**: Resolved a critical `TypeError` in the Article dataclass by supporting diagnostic `_score_debug` metadata.
     - **Infra Alignment**: Updated GitHub Actions environment to cleanly support Node.js 24 runners.
 - **v3.7.0**: **The Natural Vibe Engine Release**.
