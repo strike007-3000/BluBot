@@ -9,15 +9,6 @@ from src.utils import (
     human_delay
 )
 from src.settings import settings
-from src.config import VERSION
-def clean_hashtags_if_needed(text: str, enabled: bool) -> str:
-    """Helper to strip or format hashtags based on platform settings."""
-    if not enabled:
-        # Strip trailing hashtags (space followed by #word at the end of string or before other whitespace/end)
-        text = re.sub(r'\s+#\w+(?=\s|$)', '', text)
-        # Inline hashtags (e.g. #AI -> AI)
-        text = text.replace('#', '')
-    return text.strip()
 
 @retry_with_backoff
 async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None, image_alt_text=None):
