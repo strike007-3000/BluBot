@@ -36,7 +36,7 @@ The "Brain" of the bot ranked by a weighted matrix.
 The Sage is designed to be **unbreakable**.
 
 ### Hardening Features
-- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) and **masks session metadata** in CI logs to prevent ID leakage.
+- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) encountered in synthesis and broadcast logs to prevent accidental leakages.
 - **Visual Integrity Defense (v3.7.6)**: Implements **Universal RGB Conversion** in the image engine to handle grayscale (ArXiv) and specialized modes, preventing solid-black/white artifact regressions.
 - **Resilient Rebase Strategy (v3.7.5)**: Integrated an automated `git checkout --ours` strategy for `README.md` dashboards. Even under high concurrency or manual edits, the bot will resolve its own rebase conflicts to protect article history.
 - **SSRF Prevention Logic**: The metadata scraper (`get_link_metadata`) uses **DNS Pinning** to prevent rebinding attacks and **IP Validation** to ensure secure extraction.
