@@ -12,6 +12,7 @@ class Article:
     source: str
     score: Optional[int] = 0
     topic: Optional[str] = "General"
+    _score_debug: Optional[Any] = None
 
 @dataclass(frozen=True)
 class CurationResult:
