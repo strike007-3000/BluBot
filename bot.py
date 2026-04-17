@@ -1,6 +1,7 @@
 import asyncio
 import os
 import httpx
+import logging
 from datetime import datetime, timezone
 
 # Modular Imports
@@ -79,6 +80,10 @@ async def generate_ai_thumbnail(genai_client, summary, topic):
 async def main():
     if not validate_config():
         return
+
+    # Expert Review Fix: Suppress verbose logging from external libraries to prevent token leaks
+    logging.getLogger("atproto").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     # Expert Review Fix: Initialize genai_client once at startup
     genai_client = genai.Client(api_key=GEMINI_API_KEY)

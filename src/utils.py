@@ -44,6 +44,9 @@ def retry_with_backoff(func):
                 elif "forbidden" in err_msg or "403" in err_msg:
                     SafeLogger.error(f"Forbidden (403) error in {func.__name__}. This likely indicates invalid facets/metadata. Skipping retries.")
                     raise e
+                elif "invalidrequest" in err_msg or "400" in err_msg:
+                    SafeLogger.error(f"Invalid Request (400) error in {func.__name__}. Likely malformed record or invalid media. Skipping retries.")
+                    raise e
                 else:
                     SafeLogger.warn(f"Retry {retries}/{MAX_API_RETRIES} for {func.__name__} in {wait_time:.2f}s... (Error: {str(e)[:100]})")
                 
@@ -92,8 +95,8 @@ def compress_image(image_bytes: bytes, max_size=900000) -> bytes:
             
         return buffer.getvalue()
     except Exception as e:
-        SafeLogger.error(f"Failed to compress image: {e}")
-        return image_bytes
+        SafeLogger.error(f"Failed to compress image (skipping thumbnail): {e}")
+        return None
 
 def get_image_mime(image_bytes: bytes) -> str:
     """Detects the MIME type of image data using Pillow."""
@@ -103,7 +106,7 @@ def get_image_mime(image_bytes: bytes) -> str:
         if fmt == 'jpg': fmt = 'jpeg'
         return f"image/{fmt}"
     except Exception:
-        return "image/jpeg" # Safe default
+        return None 
 
 def truncate_bytes(text: str, limit: int) -> str:
     """UTF-8 byte-safe truncation to avoid splitting multi-byte characters."""
@@ -207,7 +210,13 @@ async def get_link_metadata(client, url):
                 # Use browser-like headers for the image request as well
                 img_res = await client.get(original_image_url, headers=headers, timeout=5, follow_redirects=True)
                 if img_res.status_code == 200:
-                    image_data = img_res.content
+                    # Expert Review Fix: Validate image data immediately
+                    try:
+                        test_img = Image.open(io.BytesIO(img_res.content))
+                        test_img.verify() # Verify file integrity
+                        image_data = img_res.content
+                    except Exception as e:
+                        SafeLogger.warn(f"Fetched thumbnail content is not a valid image: {e}")
             except Exception as e:
                 SafeLogger.warn(f"Failed to fetch thumbnail data: {e}")
 
