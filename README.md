@@ -72,7 +72,10 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.7.0 (Current)**: **The Natural Vibe Engine Release**.
+- **v3.7.2 (Current)**: **Production Hardening Patch**.
+    - **Model Stability**: Resolved a critical `TypeError` in the Article dataclass by supporting diagnostic `_score_debug` metadata.
+    - **Infra Alignment**: Updated GitHub Actions environment to cleanly support Node.js 24 runners.
+- **v3.7.0**: **The Natural Vibe Engine Release**.
     - **Style Memory**: Integrated stylistic persistence to ensure editorial variety between consecutive runs.
     - **Session Granularity**: Increased temporal resolution to 5 sessions with manual intercept awareness.
     - **Architectural Cleanup**: Formalized absolute `src.` imports across the entire project, resolving `pytest` isolation issues.

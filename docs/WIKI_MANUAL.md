@@ -113,6 +113,7 @@ BluBot v3.6.5 introduces a professional **Automated Test Suite** powered by `pyt
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
 2. **Intelligence (Scoring)**: The Breakthrough Scoring Engine weights are verified to ensure "Signal over Noise" remains mathematically consistent.
 3. **Hardening (Redaction)**: The `SafeLogger` is tested against high-entropy string detection to ensure no API keys leak into production logs.
+4. **Transparency (Diagnostic Scoring)**: The curation engine attaches `_score_debug` metadata to every article, providing a granular breakdown (Source, Signal, Momentum, Penalty, Decay) visible during dry-runs.
 
 ### Running Automated Tests
 ```bash
