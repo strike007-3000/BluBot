@@ -119,7 +119,7 @@ class SafeLogger:
     def _configure_if_needed(cls) -> None:
         if cls._is_configured:
             return
-        cls._logger.setLevel(logging.INFO)
+        cls._logger.setLevel(logging.DEBUG)
         cls._logger.propagate = False
         
         handler = logging.StreamHandler()
