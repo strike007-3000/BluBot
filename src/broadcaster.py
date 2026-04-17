@@ -57,8 +57,11 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
                 try:
                     # Expert Review Fix: Wrap CPU-bound compression in to_thread
                     compressed = await asyncio.to_thread(compress_image, image_data)
-                    upload = await bsky_client.upload_blob(compressed)
-                    thumb_blob = upload.blob
+                    if compressed:
+                        upload = await bsky_client.upload_blob(compressed)
+                        thumb_blob = upload.blob
+                    else:
+                        SafeLogger.warn("Image compression failed or returned invalid data. Skipping thumbnail.")
                 except Exception as e: 
                     SafeLogger.warn(f"Failed to upload Bluesky thumbnail: {e}")
 
@@ -87,8 +90,11 @@ async def post_to_mastodon(text, image_data=None):
             try:
                 # Expert Review Fix: Use dynamic MIME detection for P2 fidelity
                 mime = get_image_mime(image_data)
-                media = m.media_post(image_data, mime_type=mime)
-                media_ids.append(media['id'])
+                if mime:
+                    media = m.media_post(image_data, mime_type=mime)
+                    media_ids.append(media['id'])
+                else:
+                    SafeLogger.warn("Mastodon: Invalid image MIME type. Skipping attachment.")
             except Exception as e:
                 err_msg = str(e)
                 if "403" in err_msg or "Forbidden" in err_msg:
