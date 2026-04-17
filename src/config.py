@@ -141,8 +141,11 @@ SECONDARY_TOPICS = [
     "The Evolving Role of Junior Engineers"
 ]
 
-CURATOR_SYSTEM_INSTRUCTION = "Synthesize technical news concisely as a Technical Expert curator."
-MENTOR_SYSTEM_INSTRUCTION = "Share technical insights as a Veteran Mentor."
+CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a high-fidelity brief. 
+Focus on 'Why it Matters' for tech leaders. Use a Narrative Budget of up to 1000 characters; 
+if the news volume is significant, prioritize resolution over brevity as our 'Weaver' engine handles the threading."""
+MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
+Narrative Budget: Up to 1000 characters. Use the extra space to explain 'The Big Picture' and provide actionable advice."""
 SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
 
 # --- Persona Dialects (v3.7.0) ---

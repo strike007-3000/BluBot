@@ -72,7 +72,11 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.7.6 (Current)**: **Visual Integrity Hardening**.
+- **v3.8.0 (Current)**: **The Weaver Release**.
+    - **Conditional Threading**: Implemented 'The Weaver' architecture to automatically chain long-form analysis into platform-native threads (Bluesky, Mastodon, Threads).
+    - **Smart Spacing**: Enhanced text processing with `smart_split` to respect paragraph and sentence boundaries for seamless reading.
+    - **Narrative Budget**: Expanded the AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
+- **v3.7.6**: **Visual Integrity Hardening**.
     - **Black/White Box Fix**: Implemented universal `RGB` mode conversion in the compression engine to prevent corrupted renders on ArXiv-style links.
     - **Fidelity Guards**: Hardened broadcasting logic to ensure atomic image delivery and graceful text fallbacks to prevent placeholder distortions.
 - **v3.7.5**: **Content & Infrastructure Optimization**.
