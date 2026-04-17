@@ -4,7 +4,7 @@ from mastodon import Mastodon
 from atproto import AsyncClient, models
 from src.utils import (
     retry_with_backoff, get_link_metadata, compress_image, 
-    SafeLogger, truncate_bytes, get_image_mime
+    SafeLogger, truncate_bytes, get_image_mime, smart_truncate
 )
 from src.settings import settings
 
@@ -81,7 +81,7 @@ async def post_to_mastodon(text, image_data=None):
             except Exception as e:
                 SafeLogger.warn(f"Mastodon media failed: {e}")
                 
-        m.status_post(text[:settings.mastodon_limit], media_ids=media_ids)
+        m.status_post(smart_truncate(text, settings.mastodon_limit), media_ids=media_ids)
     
     await asyncio.to_thread(_post)
     SafeLogger.info("Successfully posted to Mastodon!")
@@ -99,7 +99,7 @@ async def post_to_threads(client, text, image_url=None):
         try:
             res = await client.post(base_url, data={
                 "media_type": "IMAGE", "image_url": image_url,
-                "text": text[:settings.threads_limit], "access_token": settings.threads_token
+                "text": smart_truncate(text, settings.threads_limit), "access_token": settings.threads_token
             }, timeout=20)
             res.raise_for_status()
             container_id = res.json().get("id")
@@ -108,7 +108,7 @@ async def post_to_threads(client, text, image_url=None):
 
     if not container_id:
         res = await client.post(base_url, data={
-            "media_type": "TEXT", "text": text[:settings.threads_limit],
+            "media_type": "TEXT", "text": smart_truncate(text, settings.threads_limit),
             "access_token": settings.threads_token
         }, timeout=20)
         res.raise_for_status()
