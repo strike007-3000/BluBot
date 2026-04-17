@@ -6,9 +6,12 @@ import random
 import io
 import re
 import httpx
+import socket
+import ipaddress
+from contextlib import contextmanager
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from PIL import Image
 from .config import (
     MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
@@ -94,11 +97,113 @@ def save_seen_articles(data):
     except Exception as e:
         SafeLogger.error(f"Critical error saving state: {e}")
 
-async def get_link_metadata(client, url):
-    """Fetches high-fidelity metadata (og:image, description) from a URL."""
+def _is_public_ip(ip_str: str) -> bool:
+    """Checks if an IP address is a routable public address."""
     try:
-        resp = await client.get(url, timeout=15)
-        if resp.status_code != 200:
+        ip_obj = ipaddress.ip_address(ip_str)
+        return not (
+            ip_obj.is_private
+            or ip_obj.is_loopback
+            or ip_obj.is_link_local
+            or ip_obj.is_multicast
+            or ip_obj.is_reserved
+            or ip_obj.is_unspecified
+        )
+    except ValueError:
+        return False
+
+def _resolve_public_ip_candidates(hostname: str) -> Optional[List[str]]:
+    """Resolves a hostname and returns only public IP candidates."""
+    try:
+        resolved = socket.getaddrinfo(hostname, None)
+        ips = list(set(res[4][0] for res in resolved))
+        # If any resolved IP is private, we block the whole host for safety
+        if any(not _is_public_ip(ip) for ip in ips):
+            return None
+        return ips
+    except Exception:
+        return None
+
+@contextmanager
+def _resolver_pinned_to_ips(hostname: str, allowed_ips: List[str]):
+    """
+    Temporarily constrains DNS resolution for one hostname to a prevalidated set.
+    Prevents DNS rebinding attacks.
+    """
+    original_getaddrinfo = socket.getaddrinfo
+    canonical_hostname = hostname.lower()
+    allowed_set = set(allowed_ips)
+
+    def guarded_getaddrinfo(host: str, *args, **kwargs):
+        if str(host).lower() != canonical_hostname:
+            return original_getaddrinfo(host, *args, **kwargs)
+        
+        current = original_getaddrinfo(host, *args, **kwargs)
+        current_ips = {entry[4][0] for entry in current}
+        
+        if current_ips - allowed_set:
+            raise socket.gaierror(f"SSRF Prevention: Resolver returned unexpected address for {host}")
+        
+        return [entry for entry in current if entry[4][0] in allowed_set]
+
+    socket.getaddrinfo = guarded_getaddrinfo
+    try:
+        yield
+    finally:
+        socket.getaddrinfo = original_getaddrinfo
+
+async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, headers=None):
+    """Fetches a URL while validating every hop in the redirect chain."""
+    current_url = url
+    initial_scheme = urlparse(url).scheme
+    
+    for _ in range(max_redirects + 1):
+        parsed = urlparse(current_url)
+        if parsed.scheme not in ('http', 'https'):
+            SafeLogger.warn(f"SSRF Prevention: Blocked non-HTTP scheme: {parsed.scheme}", "unsafe_url_blocked")
+            return None
+            
+        hostname = parsed.hostname
+        if not hostname or hostname.lower() == 'localhost':
+            SafeLogger.warn(f"SSRF Prevention: Blocked local hostname: {hostname}", "unsafe_url_blocked")
+            return None
+            
+        ips = _resolve_public_ip_candidates(hostname)
+        if not ips:
+            SafeLogger.warn(f"SSRF Prevention: Blocked non-public or unresolvable host: {hostname}", "unsafe_url_blocked")
+            return None
+            
+        try:
+            with _resolver_pinned_to_ips(hostname, ips):
+                response = await client.get(current_url, timeout=timeout, follow_redirects=False, headers=headers)
+        except Exception as e:
+            SafeLogger.warn(f"Request blocked by safety guards: {e}", "unsafe_url_blocked")
+            return None
+            
+        if response.is_redirect:
+            location = response.headers.get("location")
+            if not location:
+                return response
+            next_url = urljoin(current_url, location)
+            
+            # Prevent scheme downgrade (https -> http)
+            if initial_scheme == 'https' and urlparse(next_url).scheme == 'http':
+                SafeLogger.warn("SSRF Prevention: Blocked downgrade redirect", "unsafe_url_blocked")
+                return None
+                
+            current_url = next_url
+            continue
+            
+        return response
+    
+    return None
+
+async def get_link_metadata(client, url):
+    """Fetches high-fidelity metadata (og:image, description) from a URL with SSRF protection."""
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 BluBot/3.6 (Security Hardened)'}
+        resp = await get_with_safe_redirects(client, url, timeout=15, headers=headers)
+        if resp is None or resp.status_code != 200:
             return None
         
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -124,8 +229,8 @@ async def get_link_metadata(client, url):
                 img_url = None
             else:
                 try:
-                    img_resp = await client.get(img_url, timeout=10)
-                    if img_resp.status_code == 200:
+                    img_resp = await get_with_safe_redirects(client, img_url, timeout=10, headers=headers)
+                    if img_resp and img_resp.status_code == 200:
                         image_data = img_resp.content
                 except Exception:
                     SafeLogger.warn(f"Failed to fetch metadata image: {img_url}")

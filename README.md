@@ -19,10 +19,10 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context for 90% faster processing.
-- **Fortress Hardening (v3.6.3)**: 
+- **Fortress Hardening (v3.6.5)**: 
+    - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity).
+    - **SSRF Prevention Architecture**: Hardened the metadata scraper with **DNS Pinning** and **IP validation** to block all internal/private network requests.
     - **Zero-Duplicate Threads Logic**: Implemented "Catch & Log" delivery validation to prevent duplicate posts during transient API failures.
-    - **Zero-Clobber State Persistence**: Linear rebase-and-push strategy for `seen_articles.json` with concurrency guards.
-    - **Keys-Free Local Diagnostic Suite**: Interactive testing via `test_models.py` allows full pipeline dry runs with console-entered keys.
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
     - **Impact-Aware Intelligence**: Prioritizes breakthrough news (Agents, SOTA) and boosts articles mentioning flagship 2026 models.
     - **Consensus Synergy Pass**: Automatically boosts "Consensus Events" reported by multiple independent feeds.
@@ -63,9 +63,11 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.6.4 (Current)**: **Threads & Documentation Sync**.
+- **v3.6.5 (Current)**: **Security Hardening & Structural Logging**.
+    - **Structured JSON Logs**: Implemented standardized `logging` with automated masking for high-entropy secrets and auth tokens.
+    - **SSRF Hardening**: Integrated DNS pinning and IP scoping for `get_link_metadata` to prevent internal service discovery.
+- **v3.6.4**: **Threads & Documentation Sync**.
     - **Failure Propagation**: Hardened Threads publishing to correctly signal delivery failures to the orchestrator.
-    - **Config Validation**: Added fail-fast validation for partial Mastodon and Threads configurations.
 - **v3.6.3**: **Threads Stability Patch**.
     - **Zero-Duplicate Strategy**: Implemented initial Threads delivery validation.
 - **v3.6.0**: **NVIDIA NIM Image Integration**.
