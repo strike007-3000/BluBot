@@ -14,6 +14,7 @@ SESSION_FILE_PATH = os.path.join(BASE_DIR, "bluesky_session.txt")
 
 # API Keys (Standard initialization)
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
+NVIDIA_API_KEY = os.getenv("NVIDIA_KEY")
 BLUESKY_HANDLE = os.getenv("BSKY_HANDLE")
 BLUESKY_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
 MASTODON_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
@@ -32,6 +33,10 @@ def get_version():
 VERSION = get_version()
 
 # Platform Constraints
+IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "nvidia")
+NVIDIA_MODEL_ID = "stabilityai/stable-diffusion-3-medium"
+NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-3-medium"
+
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.1-flash-lite-preview",
     "models/gemma-4-31b-it",
@@ -146,14 +151,20 @@ def validate_config():
     
     # Core essentials
     core_vars = ["BSKY_HANDLE", "BSKY_APP_PASSWORD", "GEMINI_KEY"]
+    if os.getenv("IMAGE_PROVIDER", "nvidia") == "nvidia":
+        core_vars.append("NVIDIA_KEY")
+        
     for v in core_vars:
         current_val = os.getenv(v)
         if not current_val:
-            if is_dry_run and v != "GEMINI_KEY":
+            if is_dry_run and v not in ["GEMINI_KEY", "NVIDIA_KEY"]:
                 # Injects "mock_value" into os.environ[v]
                 if not os.environ.get(v):
                     os.environ[v] = "mock_value"
                 SafeLogger.info(f"DRY_RUN: Missing {v}, using mock credentials.")
+            elif is_dry_run and v in ["GEMINI_KEY", "NVIDIA_KEY"]:
+                # These are required for dry-run AI testing
+                pass
             else:
                 SafeLogger.error(f"Missing CORE variable: {v}")
                 return False
