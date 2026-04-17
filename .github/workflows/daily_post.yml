@@ -66,5 +66,5 @@ jobs:
           git config --global user.email "actions@github.com"
           git add seen_articles.json
           git commit -m "Update seen articles [skip ci]" || echo "No changes to commit"
-          # Push to a dedicated state branch to bypass main's branch protection
-          git push origin HEAD:automated/state
+          # Push to a dedicated state branch using --force to ensure persistence even if histories diverge
+          git push origin HEAD:automated/state --force
