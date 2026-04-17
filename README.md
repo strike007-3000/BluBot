@@ -90,44 +90,7 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.8.5 (Current)**: **Production Recovery & Precision Threading**.
-    - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum to maintain high signal-to-noise.
-    - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
-    - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).
-    - ⚡ **Failover Resilience**: Hardened AI synthesis with 503 retry delays and robust model rotation.
-- **v3.8.4**: **Final Infrastructure & Security Hardening**.
-    - 🛡️ **Harden Masking**: Relocated session metadata masking to the absolute first step of CI to prevent ID leaks in logs.
-    - 🛠️ **Universal Manual Bypass**: Extended scheduling logic to regard ALL non-scheduled events (Push/Dispatch/PR) as manual runs, ensuring zero weekend development blocks.
-- **v3.8.3**: **Infrastructure Modernization**.
-    - 🐍 **Python 3.13 Upgrade**: Realigned the entire CI/CD pipeline and delivery environment to Python 3.13.
-    - ⚡ **Node.js 24 Actions**: Migrated to `actions/checkout@v6`, `actions/setup-python@v6`, and `actions/cache@v5`.
-- **v3.8.2**: **Hardening, Humanization & The Interaction Engine**.
-    - 🛡️ **Feed Vanguard**: Automated RSS resilience engine with soft-disable backoff and pre-flight auditing.
-    - 💬 **Interactive Sage**: Conversational AI (Mention Replies) for Bluesky and Mastodon with persona-aligned logic.
-    - 🛰️ **Elite Expansion**: Added high-signal sources: **AlphaSignal**, **TLDR AI**, and **TheSequence**.
-    - 🔒 **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
-    - 🐛 **Bug Remediation**: Resolved critical P0/P1 issues in threading and broadcaster logic.
-    - **Thread Rhythm**: Implemented randomized pauses between thread posts.
-    - **Dynamic Bio**: Profiles now update automatically with live curation telemetry.
-- **v3.8.0**: **The Weaver & Resilience Engine**.
-    - **The Weaver**: Integrated a conditional multi-post threading engine with paragraph-aware `smart_split` logic.
-    - **Narrative Expansion**: Expanded AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
-    - **3-Tier Persistence**: Implemented a redundant state model (Primary → Local Backup → Remote Gist) with automatic corruption recovery.
-    - **Dashboard Migration**: Moved high-churn telemetry to a dedicated `STATUS.md` to eliminate Git rebase conflicts in CI.
-    - **CI Hardening**: Resolved "EDITOR unset" rebase failures in GitHub Actions.
-- **v3.7.6**: **Visual Integrity Hardening**.
-    - **Black/White Box Fix**: Implemented universal `RGB` mode conversion in the compression engine to prevent corrupted renders on ArXiv-style links.
-    - **Fidelity Guards**: Hardened broadcasting logic to ensure atomic image delivery and graceful text fallbacks to prevent placeholder distortions.
-- **v3.7.5**: **Content & Infrastructure Optimization**.
-    - **Smart Truncate**: Implemented word-boundary-aware truncation for Mastodon and Threads to prevent mid-word cutoffs.
-    - **Persistence Hardening**: Resolved automated `README.md` rebase conflicts and implemented session ID masking in CI logs.
-- **v3.7.3**: **Stabilization & Visibility Patch**.
-    - **Stability Fix**: Restored the missing `published` timestamp in the curation engine to satisfy `Article` model requirements.
-    - **Session Visibility**: Enhanced the broadcast stage with explicit logging for Bluesky session cache restoration.
-- **v3.7.2**: **Production Hardening Patch**.
-    - **Model Stability**: Resolved a critical `TypeError` in the Article dataclass by supporting diagnostic `_score_debug` metadata.
-    - **Infra Alignment**: Updated GitHub Actions environment to cleanly support Node.js 24 runners.
-- **v3.7.0**: **The Natural Vibe Engine Release**.
+- **v3.7.0 (Current)**: **The Natural Vibe Engine Release**.
     - **Style Memory**: Integrated stylistic persistence to ensure editorial variety between consecutive runs.
     - **Session Granularity**: Increased temporal resolution to 5 sessions with manual intercept awareness.
     - **Architectural Cleanup**: Formalized absolute `src.` imports across the entire project, resolving `pytest` isolation issues.
