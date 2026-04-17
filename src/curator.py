@@ -9,16 +9,18 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 from google.genai import types
 from google import genai
-from .config import (
+from src.settings import settings
+from src.config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
+    INTERACTIVE_REPLY_INSTRUCTION,
     SAGE_DESIGNER_INSTRUCTION, SECONDARY_TOPICS, GEMINI_MODEL_PRIORITY,
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
     MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
     FEED_SUMMARY_MAX_CHARS, NVIDIA_MODEL_ID, NVIDIA_INVOKE_URL
 )
-from .utils import retry_with_backoff, SafeLogger
+from src.utils import retry_with_backoff, SafeLogger
 
 MODEL_ATTEMPT_RETRIES = 2
 
@@ -108,6 +110,7 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
                 "title": entry.title,
                 "summary": clean_summary[:FEED_SUMMARY_MAX_CHARS],
                 "link": entry.link,
+                "published": pub_date.isoformat(),
                 "source": getattr(feed.feed, 'title', url)
             }
             item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics)
@@ -115,10 +118,11 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         return items
     except Exception: return []
 
-async def fetch_news(client, seen_links=None, recent_topics=None):
+async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None):
     """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity."""
     now_utc = datetime.now(timezone.utc)
-    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=2), now_utc, seen_links or [], recent_topics) for url in RSS_FEEDS]
+    source_list = feed_list if feed_list is not None else RSS_FEEDS
+    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=2), now_utc, seen_links or [], recent_topics) for url in source_list]
     results = await asyncio.gather(*tasks)
     
     all_raw_entries = [e for sublist in results for e in sublist]
@@ -137,16 +141,30 @@ def strip_markdown(text):
     if not text: return text
     return re.sub(r'(\*\*|__|\*)', '', text).strip()
 
-async def summarize_news(news_items, context, mode="Curator"):
-    """Synthesizes news with full Failover Loop and adaptation logic."""
-    if not news_items: return None, None, "General", False
+async def summarize_news(news_items, context, mode="Curator", last_dialect=None):
+    """Synthesizes news with full Failover Loop and randomized Dialect adaptation."""
+    if not news_items: return None, None, "General", False, None
     
-    # Dynamic identity fetch (v3.5.12)
-    key = os.getenv("GEMINI_KEY")
-    client = genai.Client(api_key=key)
+    # Professional Architecture: Use settings singleton
+    client = genai.Client(api_key=settings.gemini_key)
+    
+    from .config import CURATOR_SYSTEM_INSTRUCTION, PERSONA_DIALECTS
+    import random
+    
+    # Select Dialect (ensure variety)
+    available_dialects = list(PERSONA_DIALECTS.keys())
+    if last_dialect in available_dialects and len(available_dialects) > 1:
+        available_dialects.remove(last_dialect)
+    
+    current_dialect = random.choice(available_dialects)
+    dialect_instruction = PERSONA_DIALECTS[current_dialect]
     
     news_text = "\n".join([f"- {i+1}. {item['title']} ({item['source']})" for i, item in enumerate(news_items)])
-    instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
+    
+    # Combine instructions
+    base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
+    combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
+    
     user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
     
     for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
@@ -155,8 +173,9 @@ async def summarize_news(news_items, context, mode="Curator"):
                 SafeLogger.info(f"Synthesizing via {model_id} (Attempt {attempt})...")
                 
                 # Expert Review Fix: Gemma vs Gemini Adaptation
+                # Professional Architecture: Model-specific adaptation
                 if "gemma" in model_id.lower():
-                    contents = f"{instruction}\n\nUSER INPUT:\n{user_prompt}"
+                    contents = f"{combined_instruction}\n\nUSER INPUT:\n{user_prompt}"
                     response = await client.aio.models.generate_content(
                         model=model_id, contents=contents,
                         config=types.GenerateContentConfig(temperature=0.7)
@@ -164,7 +183,7 @@ async def summarize_news(news_items, context, mode="Curator"):
                 else:
                     response = await client.aio.models.generate_content(
                         model=model_id, contents=user_prompt,
-                        config=types.GenerateContentConfig(system_instruction=instruction, temperature=0.7)
+                        config=types.GenerateContentConfig(system_instruction=combined_instruction, temperature=0.7)
                     )
                 
                 raw_text = response.text.strip()
@@ -177,13 +196,19 @@ async def summarize_news(news_items, context, mode="Curator"):
                     summary = parts[1].strip()
                 
                 if len(summary) > 60:
-                    return strip_markdown(summary), news_items[0]['link'], topic, (idx > 0)
+                    return strip_markdown(summary), news_items[0]['link'], topic, (idx > 0), current_dialect
                     
             except Exception as e:
                 SafeLogger.warn(f"Model {model_id} attempt {attempt} failed: {e}")
+                
+                # Infrastructure Resilience: Add delay for 503 errors to allow service to recover
+                if "503" in str(e) or "UNAVAILABLE" in str(e).upper():
+                    SafeLogger.info(f"Service spike detected. Cooling down for 2s...")
+                    await asyncio.sleep(2)
+                    
                 if attempt == MODEL_ATTEMPT_RETRIES and idx == len(GEMINI_MODEL_PRIORITY) - 1:
                     raise e
-    return None, None, "General", False
+    return None, None, "General", False, None
 
 async def generate_mentor_insight(context):
     key = os.getenv("GEMINI_KEY")
@@ -201,15 +226,42 @@ async def generate_mentor_insight(context):
             summary = response.text.strip()
             if "BODY:" in summary:
                 summary = summary.split("BODY:", 1)[1].strip()
+
+            from .config import GEMINI_MODEL_PRIORITY
             return strip_markdown(summary), None, "Strategy", (model_id != GEMINI_MODEL_PRIORITY[0])
         except Exception as e:
             SafeLogger.warn(f"Mentor Fallback failed on {model_id}: {e}")
     return None, None, "Strategy", False
 
 def get_temporal_context():
-    """Expert Review Fix: Restoring 'Afternoon' prefix for mode selection (v3.6.2)."""
+    """Enhanced Temporal Awareness for v3.7.0 (High Resolution + Manual Intercept)."""
+    from src.settings import settings
+    from datetime import datetime, timezone
+    
     now = datetime.now(timezone.utc)
-    return {"day": now.strftime("%A"), "session": "Morning Intelligence" if now.hour < 12 else "Afternoon Deep Dive"}
+    hour = now.hour
+    
+    # Resolve Session name
+    if 0 <= hour < 6:
+        session = "Night Reflection"
+    elif 6 <= hour < 11:
+        session = "Morning Intelligence"
+    elif 11 <= hour < 15:
+        session = "Midday Briefing"
+    elif 15 <= hour < 19:
+        session = "Afternoon Deep Dive"
+    else:
+        session = "Evening Synthesis"
+        
+    # Manual Intercept Decoration
+    if settings.is_manual_run:
+        session += " (Intercept)"
+        
+    return {
+        "day": now.strftime("%A"), 
+        "session": session,
+        "is_intercept": settings.is_manual_run
+    }
 
 async def generate_visual_prompt(client, summary, topic):
     try:
@@ -224,7 +276,7 @@ async def generate_visual_prompt(client, summary, topic):
 @retry_with_backoff
 async def generate_nvidia_image(client, prompt):
     """Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing."""
-    nv_key = os.getenv("NVIDIA_KEY")
+    nv_key = settings.nvidia_key
     if not nv_key:
         return None
     
@@ -261,3 +313,30 @@ async def generate_nvidia_image(client, prompt):
     except Exception as e:
         SafeLogger.warn(f"NVIDIA NIM failed: {e}")
     return None
+
+async def generate_interactive_reply(original_text, author, context):
+    """Generates an AI reply for a social mention, maintaining the Sage persona."""
+    try:
+        genai_client = genai.Client(api_key=settings.gemini_api_key)
+        
+        # Format the system instruction with current temporal/session context
+        system_instruction = INTERACTIVE_REPLY_INSTRUCTION.format(
+            context=f"{context['session']} - {context['day']}"
+        )
+        
+        prompt = f"User @{author} mentioned you: '{original_text}'. Respond insightfully as the Elite Sage."
+        
+        response = await genai_client.aio.models.generate_content(
+            model=settings.gemini_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.7,
+                max_output_tokens=150
+            )
+        )
+        
+        return response.text.strip()
+    except Exception as e:
+        SafeLogger.error(f"Interaction generation failed: {e}")
+        return None
