@@ -77,8 +77,19 @@ class VanguardManager:
         now = datetime.now(timezone.utc)
         count = self.blacklist.get(url, {}).get("fail_count", 0) + 1
         
-        # Exponential Backoff for retries: 12h, 24h, 48h... up to a max of 72h
-        backoff_delay = min(72, 12 * (2**(min(count, 3) - 1)))
+        # Soft-Backoff Strategy:
+        # 1 fail: Warning only (retry_at = now)
+        # 2 fails: 1 hour silence
+        # 3 fails: 12 hours silence
+        # 4+ fails: Exponential (24h, 48h, 72h max)
+        
+        if count == 1:
+            backoff_delay = 0
+        elif count == 2:
+            backoff_delay = 1
+        else:
+            backoff_delay = min(72, 12 * (2**(min(count - 2, 3) - 1)))
+            
         retry_at = now + timedelta(hours=backoff_delay)
         
         self.blacklist[url] = {
@@ -86,11 +97,13 @@ class VanguardManager:
             "last_error": error_msg,
             "last_seen": now.isoformat(),
             "retry_at": retry_at.isoformat(),
-            "status": "TERMINAL" if count >= 6 else "PENALIZED"
+            "status": "TERMINAL" if count >= 6 else ("WARNING" if count == 1 else "PENALIZED")
         }
         
         if count >= 6:
             SafeLogger.warn(f"Vanguard: 🚨 Feed marked TERMINAL after 6 failures: {url}")
+        elif count == 1:
+            SafeLogger.info(f"Vanguard: ⚠️ Feed warning (hiccup detected): {url}")
         else:
             SafeLogger.info(f"Vanguard: 📉 Feed penalized ({count} fails, backoff {backoff_delay}h): {url}")
 
