@@ -88,10 +88,12 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.8.3 (Current)**: **Infrastructure Modernization**.
-    - 🐍 **Python 3.13 Upgrade**: Realigned the entire CI/CD pipeline and delivery environment to Python 3.13 for peak performance.
-    - ⚡ **Node.js 24 Actions**: Migrated to `actions/checkout@v6`, `actions/setup-python@v6`, and `actions/cache@v5` to eliminate Node.js 20 deprecation warnings.
-    - 🛠️ **Local Sync Fix**: Refined scheduling logic to allow manual local runs to bypass weekend rest blocks automatically.
+- **v3.8.4 (Current)**: **Final Infrastructure & Security Hardening**.
+    - 🛡️ **Harden Masking**: Relocated session metadata masking to the absolute first step of CI to prevent ID leaks in logs.
+    - 🛠️ **Universal Manual Bypass**: Extended scheduling logic to regard ALL non-scheduled events (Push/Dispatch/PR) as manual runs, ensuring zero weekend development blocks.
+- **v3.8.3**: **Infrastructure Modernization**.
+    - 🐍 **Python 3.13 Upgrade**: Realigned the entire CI/CD pipeline and delivery environment to Python 3.13.
+    - ⚡ **Node.js 24 Actions**: Migrated to `actions/checkout@v6`, `actions/setup-python@v6`, and `actions/cache@v5`.
 - **v3.8.2**: **Hardening, Humanization & The Interaction Engine**.
     - 🛡️ **Feed Vanguard**: Automated RSS resilience engine with soft-disable backoff and pre-flight auditing.
     - 💬 **Interactive Sage**: Conversational AI (Mention Replies) for Bluesky and Mastodon with persona-aligned logic.
