@@ -16,13 +16,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # Full history needed for rebase
-
       - name: Mask Session Metadata
-        run: echo "::add-mask::${{ github.run_id }}"
+        run: |
+          echo "::add-mask::${{ github.run_id }}"
+          echo "::add-mask::${{ github.run_attempt }}"
+
+      - name: Checkout repository
 
       - name: Restore persistence state
         run: |
