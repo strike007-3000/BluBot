@@ -88,7 +88,12 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.8.4 (Current)**: **Final Infrastructure & Security Hardening**.
+- **v3.8.5 (Current)**: **Production Recovery & Precision Threading**.
+    - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum to maintain high signal-to-noise.
+    - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
+    - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).
+    - ⚡ **Failover Resilience**: Hardened AI synthesis with 503 retry delays and robust model rotation.
+- **v3.8.4**: **Final Infrastructure & Security Hardening**.
     - 🛡️ **Harden Masking**: Relocated session metadata masking to the absolute first step of CI to prevent ID leaks in logs.
     - 🛠️ **Universal Manual Bypass**: Extended scheduling logic to regard ALL non-scheduled events (Push/Dispatch/PR) as manual runs, ensuring zero weekend development blocks.
 - **v3.8.3**: **Infrastructure Modernization**.
