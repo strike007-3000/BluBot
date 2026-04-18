@@ -215,9 +215,12 @@ To maintain 100% signal quality, BluBot uses the **Feed Vanguard** to automatica
 ### The "Soft-Disable" Strategy
 Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transient Blacklist**:
 1. **Audit**: Every run begins with a pre-flight health check using `VanguardManager`.
-2. **Penalty**: If a feed fails (404, 403, or Stale), it is moved to `broken_feeds.json` with an incrementing failure count.
-3. **Backoff**: The feed is silenced for an increasing window (12h → 24h → 48h → 72h).
-4. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
+2. **Penalty (Hiccup Resilience)**: 
+   - **1st failure**: Marked as a `WARNING` only; the feed remains active.
+   - **2nd failure**: Silenced for 1 hour.
+   - **3rd failure**: Silenced for 12 hours.
+   - **4th+ failure**: Exponential increase (24h → 48h → 72h max).
+3. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
 
 ### Managing Feeds
 - **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
