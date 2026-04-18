@@ -120,6 +120,7 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 - [3-Tier State Resilience](#3-tier-state-resilience)
 - [Security & Supply Chain](#security--supply-chain)
 - [The Weaver (Threading)](#the-weaver-threading)
+- [Feed Vanguard Automation](#feed-vanguard-automation)
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
 ### The Recovery Sequence
@@ -173,4 +174,51 @@ The Sage now detects if it was triggered via a manual GitHub **workflow_dispatch
 - **Tone Modification**: Signifies to the AI that this is an ad-hoc briefing rather than a standard daily run, shifting the synthesis towards urgent insights.
 
 ---
-*Built with ❤️ for the AI Community*
+
+## 🧵 Page 11: The Weaver (Multi-Post Threading)
+
+Version 3.8.0 introduces the **Conditional Threading** engine, allowing for high-resolution narration.
+
+### 1. Smart Split Logic
+Instead of hard truncation, the bot now uses `smart_split` to chunk text at natural boundaries:
+- **Priority 1**: Paragraph breaks (`\n\n`)
+- **Priority 2**: Sentence endings (`. `)
+- **Pagination**: Automatically appends `(1/N)` markers to keep the user oriented.
+
+### 2. Platform-Native Chaining
+- **Bluesky**: Uses depth-aware `root` and `parent` pointers to maintain reply integrity.
+- **Mastodon**: Chains via `in_reply_to_id`.
+- **Threads**: Sequentially publishes media containers with a `reply_to` link to the parent post.
+
+### 3. Narrative Expansion
+The Weaver allows the AI to use a **1000-character budget**, transforming the daily brief into a deep technical deep-dive without the fear of character limits.
+
+---
+
+## 📊 Page 12: System Telemetry Dashboards
+
+Version 3.8.0 introduces high-resolution telemetry separated from the main documentation.
+
+### The STATUS.md Advantage
+To eliminate "Rebase Conflicts" in CI, live status updates (Operational status, Last Run, Session Mode, and Current Topic) are now maintained in **STATUS.md**.
+- **Auto-Initialization**: If the file is missing, the bot bootstraps it with a professional header.
+- **CI-Friendly**: Because `README.md` is no longer churned by every run, your main repository remains clean and conflict-free.
+
+---
+
+---
+
+## 📡 Page 13: Feed Vanguard Automation (v3.8.2)
+
+To maintain 100% signal quality, BluBot uses the **Feed Vanguard** to automatically manage RSS health.
+
+### The "Soft-Disable" Strategy
+Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transient Blacklist**:
+1. **Audit**: Every run begins with a pre-flight health check using `VanguardManager`.
+2. **Penalty**: If a feed fails (404, 403, or Stale), it is moved to `broken_feeds.json` with an incrementing failure count.
+3. **Backoff**: The feed is silenced for an increasing window (12h → 24h → 48h → 72h).
+4. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
+
+### Managing Feeds
+- **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
+- **Manual Override**: Removing a URL from `broken_feeds.json` forces an immediate recovery attempt on the next run.
