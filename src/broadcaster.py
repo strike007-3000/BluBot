@@ -203,6 +203,63 @@ async def post_to_threads(client, text, image_url=None):
 
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Threads!")
 
+async def fetch_bluesky_mentions(bsky_client):
+    """Fetches recent mentions from Bluesky."""
+    if not bsky_client:
+        return []
+    
+    try:
+        from src.models import InteractionNote
+        resp = await bsky_client.app.bsky.notification.list_notifications()
+        mentions = []
+        for n in resp.notifications:
+            if n.reason == 'mention' and hasattr(n, 'record'):
+                # Extract threading metadata
+                root_uri = n.record.reply.root.uri if hasattr(n.record, 'reply') else n.uri
+                root_cid = n.record.reply.root.cid if hasattr(n.record, 'reply') else n.cid
+                
+                mentions.append(InteractionNote(
+                    platform="bluesky",
+                    id=n.uri,
+                    author=n.author.handle,
+                    text=n.record.text,
+                    timestamp=n.indexed_at,
+                    uri=n.uri,
+                    cid=n.cid,
+                    root_uri=root_uri,
+                    root_cid=root_cid
+                ))
+        return mentions
+    except Exception as e:
+        SafeLogger.debug(f"Failed to fetch Bluesky mentions: {e}")
+        return []
+
+async def fetch_mastodon_mentions():
+    """Fetches recent mentions from Mastodon."""
+    if not settings.mastodon_token or not settings.mastodon_base_url:
+        return []
+    
+    try:
+        from src.models import InteractionNote
+        m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
+        # Use asyncio.to_thread for synchronous mastodon calls
+        notifications = await asyncio.to_thread(m.notifications, types=['mention'])
+        mentions = []
+        for n in notifications:
+            status = n.get('status')
+            if status:
+                mentions.append(InteractionNote(
+                    platform="mastodon",
+                    id=str(status['id']),
+                    author=status['account']['acct'],
+                    text=re.sub(r'<[^>]+>', '', status['content']), # Strip HTML
+                    timestamp=status['created_at'].isoformat() if hasattr(status['created_at'], 'isoformat') else str(status['created_at'])
+                ))
+        return mentions
+    except Exception as e:
+        SafeLogger.debug(f"Failed to fetch Mastodon mentions: {e}")
+        return []
+
 async def update_social_profiles(bsky_client, mastodon_token, count, dialect, topic):
     """Dynamically update social media bios with exciting telemetry."""
     if not settings.enable_bio_management:
