@@ -3,7 +3,7 @@ import os
 import httpx
 import logging
 from datetime import datetime, timezone
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 # Elite Architecture Imports
 from src.settings import settings
@@ -16,7 +16,10 @@ from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
     get_temporal_context, generate_visual_prompt, generate_nvidia_image
 )
-from src.broadcaster import post_to_bluesky, post_to_mastodon, post_to_threads
+from src.broadcaster import (
+    post_to_bluesky, post_to_mastodon, post_to_threads,
+    update_social_profiles
+)
 from src.config import STATUS_FILE_PATH, IMAGEN_MODEL
 from google.genai import types
 from google import genai
@@ -133,7 +136,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         image_url=image_url
     ), curation
 
-async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> List[BroadcastResult]:
+async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> Tuple[List[BroadcastResult], Any]:
     """Stage 3: Multi-platform delivery."""
     # Bluesky Session Hardening
     bsky_client = AsyncClient(request=AsyncRequest(timeout=30.0))
@@ -165,24 +168,41 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
             report.append(BroadcastResult(platform=name, success=False, error=str(res)))
         else:
             report.append(BroadcastResult(platform=name, success=True))
-    return report
+    return report, bsky_client
 
-async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult):
+async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
     """Stage 4: State Synchronization."""
-    seen_links = set(curation.seen_links)
+    # Load fresh state to ensure we have the latest counter
+    state = load_seen_articles()
+    
+    seen_links = set(state.get("links", []))
     for article in curation.top_articles[:10]:
         if article.link not in seen_links:
-            curation.seen_links.append(article.link)
+            state.setdefault("links", []).append(article.link)
 
-    if synthesis.topic != "General" and synthesis.topic not in curation.recent_topics:
-        curation.recent_topics.append(synthesis.topic)
+    if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
+        state.setdefault("recent_topics", []).append(synthesis.topic)
 
-    save_seen_articles({
-        "links": curation.seen_links,
-        "recent_topics": curation.recent_topics,
-        "last_dialect": curation.last_dialect
-    })
+    # Update stats
+    count_this_run = len(curation.top_articles)
+    state["total_posts_curated"] = state.get("total_posts_curated", 0) + count_this_run
+    state["last_dialect"] = curation.last_dialect
+    
+    # Cap history to prevent state bloat (Tier 1 constraint)
+    state["links"] = state["links"][-500:]
+    state["recent_topics"] = state["recent_topics"][-20:]
+
+    save_seen_articles(state)
     await update_status_dashboard(curation.session_name, synthesis.topic)
+
+    # Dynamic Bio Update
+    await update_social_profiles(
+        client_bsky, 
+        settings.mastodon_token, 
+        state["total_posts_curated"],
+        curation.last_dialect,
+        synthesis.topic
+    )
 
 async def main():
     if not settings.validate():
@@ -211,7 +231,7 @@ async def main():
 
         # 3. Broadcast
         SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")
-        results = await broadcast_stage(client, synthesis)
+        results, bsky_client = await broadcast_stage(client, synthesis)
         for res in results:
             if res.success:
                 SafeLogger.info(f"{res.platform} broadcast successful.")
@@ -219,7 +239,7 @@ async def main():
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
 
         # 4. Persistence
-        await persistence_stage(curation, synthesis)
+        await persistence_stage(curation, synthesis, bsky_client)
 
 if __name__ == "__main__":
     try:

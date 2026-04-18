@@ -16,10 +16,12 @@ See [STATUS.md](file:///d:/Code/BlueSky/STATUS.md) for live telemetry and broadc
 - **🖼️ Self-Healing Image Generation (v3.6)**: 
     - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
-- **Elite Architecture (v3.8.0)**:
-    - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads (Bluesky, Mastodon, Threads) when summaries exceed character limits.
-    - **Fast Async Parallel Engine**: Re-engineered with `asyncio` and a shared `httpx.AsyncClient` context for 90% faster processing.
-    - **Typed Pipeline Stages**: Immutable stages (**Curation → Synthesis → Broadcast → Persistence**) using frozen `dataclasses` and a typed `Settings` singleton.
+- **Elite Architecture (v3.8.2)**:
+    - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads (Bluesky, Mastodon, Threads).
+    - **🥁 Thread Rhythm (v3.8.1)**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
+    - **🤖 Dynamic Bio Management (v3.8.1)**: Profiles now showcase live telemetry and curation statistics (e.g., "1,245 stories narrated | Voice: Analytical").
+    - **🛡️ Supply Chain Hardening (v3.8.2)**: Migrated to `pip-tools` with cryptographic hashes, eliminating vulnerabilities from unvetted transitive dependencies.
+    - **Typed Pipeline Stages**: Immutable stages powered by frozen `dataclasses` and a typed `Settings` singleton.
     - **Advisory File Locking**: Cross-platform `FileLock` for state persistence, preventing race conditions during concurrent CI/local runs.
 - **🛡️ Industrial Stabilization (v3.7.6)**: 
     - **Universal RGB Defense**: Image mode detection and conversion engine that prevents "Black/White Box" artifacts from non-standard (ArXiv) thumbnails.
@@ -84,8 +86,13 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.8.0 (Current)**: **The Weaver & Resilience Engine**.
-    - **The Weaver**: Integrated a conditional multi-post threading engine with paragraph-aware `smart_split` logic for high-fidelity narration across Bluesky, Mastodon, and Threads.
+- **v3.8.2 (Current)**: **Hardening & Humanization**.
+    - **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
+    - **Bug Remediation**: Resolved critical `NameErrors` in `bot.py` and `src/broadcaster.py`.
+    - **Thread Rhythm**: Implemented randomized pauses between thread posts.
+    - **Dynamic Bio**: Profiles now update automatically with live curation telemetry.
+- **v3.8.0**: **The Weaver & Resilience Engine**.
+    - **The Weaver**: Integrated a conditional multi-post threading engine with paragraph-aware `smart_split` logic.
     - **Narrative Expansion**: Expanded AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
     - **3-Tier Persistence**: Implemented a redundant state model (Primary → Local Backup → Remote Gist) with automatic corruption recovery.
     - **Dashboard Migration**: Moved high-churn telemetry to a dedicated `STATUS.md` to eliminate Git rebase conflicts in CI.
