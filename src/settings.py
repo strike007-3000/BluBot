@@ -79,7 +79,7 @@ class Settings:
     @property
     def is_manual_run(self) -> bool:
         """Determines if the current execution was manually triggered."""
-        return self.github_event == "workflow_dispatch"
+        return self.github_event == "workflow_dispatch" or not self.is_ci
 
     def validate(self) -> bool:
         """Validates critical settings and returns True if valid."""
