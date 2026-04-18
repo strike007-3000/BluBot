@@ -100,17 +100,16 @@ Scanning over **30 premium feeds**.
 
 ## 🧪 Page 7: Local Testing & Interactive Diagnostics
 
-The Sage provides a robust **Full Pipeline Dry Run** via `test_models.py`.
+The Sage provides a robust **Full Pipeline Dry Run** via `scripts/diagnostic.py`.
 
-### Interactive Key Management
+### Execution
+```bash
+python scripts/diagnostic.py
+```
 You can test the entire bot locally **without social media credentials**. 
 1. **Interactive Entry**: If `GEMINI_KEY` or `NVIDIA_KEY` are missing from your `.env`, the script will prompt you to paste them in the console.
 2. **Elite Rigidity**: The `Settings.from_env()` engine automatically injects "Mock" values for `BSKY_HANDLE` during dry runs, allowing you to verify synthesis logic with only AI keys.
 
-### Running the Diagnostic
-```bash
-python test_models.py
-```
 Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly what will be posted.
 
 ---
