@@ -15,7 +15,9 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
     if not settings.bsky_handle or not bsky_client:
         return
 
-    chunks = smart_split(text, settings.bluesky_limit)
+    # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)")
+    safe_limit = settings.bluesky_limit - 10
+    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
     root_post = None
     parent_post = None
 
@@ -99,8 +101,9 @@ async def post_to_mastodon(text, image_data=None):
     """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return
-
-    chunks = smart_split(text, settings.mastodon_limit)
+    # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)") with higher margin for Mastodon
+    safe_limit = settings.mastodon_limit - 15
+    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
     
     loop = asyncio.get_running_loop()
     
@@ -143,10 +146,10 @@ async def post_to_mastodon(text, image_data=None):
 @retry_with_backoff
 async def post_to_threads(client, text, image_url=None):
     """Posts to Threads with Conditional Multi-Post Threading (The Weaver)."""
-    if not settings.threads_token or not settings.threads_user_id:
-        return
-
-    chunks = smart_split(text, settings.threads_limit)
+    # Safety Buffer: Account for pagination suffixes
+    safe_limit = settings.threads_limit - 10
+    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
+    
     base_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
     publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
     
