@@ -119,7 +119,9 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 
 - [3-Tier State Resilience](#3-tier-state-resilience)
 - [Security & Supply Chain](#security--supply-chain)
-- [The Weaver (Threading)](#the-weaver-threading)
+- [Page 12: Media Pipeline & NVIDIA NIM](#page-12-media-pipeline--nvidia-nim)
+- [Page 13: Feed Vanguard Automation](#page-13-feed-vanguard-automation)
+- [Page 14: Interaction Engine (Mention Replies)](#page-14-interaction-engine-mention-replies)
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
 ### The Recovery Sequence
@@ -173,4 +175,80 @@ The Sage now detects if it was triggered via a manual GitHub **workflow_dispatch
 - **Tone Modification**: Signifies to the AI that this is an ad-hoc briefing rather than a standard daily run, shifting the synthesis towards urgent insights.
 
 ---
-*Built with ❤️ for the AI Community*
+
+## 🧵 Page 11: The Weaver (Multi-Post Threading)
+
+Version 3.8.0 introduces the **Conditional Threading** engine, allowing for high-resolution narration.
+
+### 1. Smart Split Logic
+Instead of hard truncation, the bot now uses `smart_split` to chunk text at natural boundaries:
+- **Priority 1**: Paragraph breaks (`\n\n`)
+- **Priority 2**: Sentence endings (`. `)
+- **Pagination**: Automatically appends `(1/N)` markers to keep the user oriented.
+
+### 2. Platform-Native Chaining
+- **Bluesky**: Uses depth-aware `root` and `parent` pointers to maintain reply integrity.
+- **Mastodon**: Chains via `in_reply_to_id`.
+- **Threads**: Sequentially publishes media containers with a `reply_to` link to the parent post.
+
+### 3. Narrative Expansion
+The Weaver allows the AI to use a **1000-character budget**, transforming the daily brief into a deep technical deep-dive without the fear of character limits.
+
+---
+
+## 📊 Page 12: System Telemetry Dashboards
+
+Version 3.8.0 introduces high-resolution telemetry separated from the main documentation.
+
+### The STATUS.md Advantage
+To eliminate "Rebase Conflicts" in CI, live status updates (Operational status, Last Run, Session Mode, and Current Topic) are now maintained in **STATUS.md**.
+- **Auto-Initialization**: If the file is missing, the bot bootstraps it with a professional header.
+- **CI-Friendly**: Because `README.md` is no longer churned by every run, your main repository remains clean and conflict-free.
+
+---
+
+---
+
+## 📡 Page 13: Feed Vanguard Automation (v3.8.2)
+
+To maintain 100% signal quality, BluBot uses the **Feed Vanguard** to automatically manage RSS health.
+
+### The "Soft-Disable" Strategy
+Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transient Blacklist**:
+1. **Audit**: Every run begins with a pre-flight health check using `VanguardManager`.
+2. **Penalty (Hiccup Resilience)**: 
+   - **1st failure**: Marked as a `WARNING` only; the feed remains active.
+   - **2nd failure**: Silenced for 1 hour.
+   - **3rd failure**: Silenced for 12 hours.
+   - **4th+ failure**: Exponential increase (24h → 48h → 72h max).
+3. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
+
+---
+
+## Page 14: Interaction Engine (Mention Replies)
+
+BluBot is no longer a broadcast-only curator. The **Interaction Engine** bridges the gap between static news and conversational engagement.
+
+### Core Architecture
+The engine runs post-broadcast in `bot.py` and performs the following:
+1. **Mention Polling**: Scans notifications on Bluesky and Mastodon for reasons like `mention` or `reply`.
+2. **Selective Engagement**: To prevent bot-spam signaling, the `MENTION_REPLY_PROB` (default 0.8) ensures the bot only engages with high-quality interactions.
+3. **The Sage Persona**: Generates technical, insightful replies using a dedicated system instruction that emphasizes technical mentorship over generic gratitude.
+4. **Resilient Threading**:
+   - **Bluesky**: Corrects for `root` vs `parent` refs to maintain perfect thread integrity.
+   - **Mastodon**: Uses status-id reply chaining.
+
+### Security & Anti-Spam
+- **Interaction Limit**: Hard-capped at 5 interactions per run to prevent "tag-bombing" from exhausting AI tokens.
+- **Seen Interactions**: Notification IDs are tracked in `seen_interactions.json` to prevent double-replies.
+- **Engagement Jitter**: Implements a 10-30s delay to simulate human narrative thought.
+
+### Configuration
+Set these in `config.py` (or as environment variables):
+- `MENTION_REPLY_PROB`: Adjust balance between silence and engagement.
+- `AUTO_LIKE_INTERACTIONS`: Enable/Disable bot "Likes" on interacted posts.
+
+### Managing Feeds
+- **Standalone Audit**: Run `python scripts/feed_audit.py` to get a full health report of all 29 elite feeds.
+- **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
+- **Manual Override**: Removing a URL from `broken_feeds.json` forces an immediate recovery attempt on the next run.

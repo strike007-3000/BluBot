@@ -7,23 +7,32 @@ from typing import List, Tuple, Any
 
 # Elite Architecture Imports
 from src.settings import settings
-from src.models import Article, CurationResult, SynthesisResult, BroadcastResult
+from src import models as src_models
+from src.models import (
+    Article, CurationResult, SynthesisResult, BroadcastResult,
+    InteractionNote, InteractionResult
+)
 from src.utils import (
     load_seen_articles, save_seen_articles, SafeLogger, 
-    load_session_string, save_session_string, get_link_metadata
+    load_session_string, save_session_string, get_link_metadata,
+    load_seen_interactions, save_seen_interactions, human_delay
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
-    get_temporal_context, generate_visual_prompt, generate_nvidia_image
+    get_temporal_context, generate_visual_prompt, generate_nvidia_image,
+    generate_interactive_reply
 )
 from src.broadcaster import (
     post_to_bluesky, post_to_mastodon, post_to_threads,
-    update_social_profiles
+    update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions
 )
-from src.config import STATUS_FILE_PATH, IMAGEN_MODEL
+from src.config import (
+    STATUS_FILE_PATH, IMAGEN_MODEL,
+    MENTION_REPLY_PROB, INTERACTION_LIMIT, AUTO_LIKE_INTERACTIONS
+)
 from google.genai import types
 from google import genai
-from atproto import AsyncClient, AsyncRequest
+from atproto import AsyncClient, AsyncRequest, models
 
 async def update_status_dashboard(session_name: str, topic: str):
     """Automatically update the STATUS.md dashboard."""
@@ -64,10 +73,18 @@ async def update_status_dashboard(session_name: str, topic: str):
 
 async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
+    from src.feed_vanguard import VanguardManager
+    vanguard = VanguardManager()
+    
+    # Pre-flight: Refresh blacklist based on current health
+    SafeLogger.info("Vanguard: Running pre-flight RSS health check...")
+    await vanguard.audit_and_update(client)
+    active_feeds = vanguard.get_active_feeds()
+    
     seen_data = load_seen_articles()
     context = get_temporal_context()
     
-    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"])
+    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
     articles = [Article(**item) for item in raw_news]
     
     return CurationResult(
@@ -191,6 +208,70 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     })
     await update_readme_dashboard(curation.session_name, synthesis.topic)
 
+async def interaction_stage(bsky_client, session_context: dict) -> InteractionResult:
+    """Handles social interactions (mentions/replies) with humanized engagement."""
+    SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
+    seen_ids = load_seen_interactions()
+    replied_ids = []
+    errors = []
+    
+    # 1. Fetch mentions
+    bsky_mentions = await fetch_bluesky_mentions(bsky_client)
+    mastodon_mentions = await fetch_mastodon_mentions()
+    all_mentions = bsky_mentions + mastodon_mentions
+    
+    # Filter and prioritize
+    unseen = [m for m in all_mentions if m.id not in seen_ids]
+    SafeLogger.info(f"Found {len(unseen)} new mentions to process.")
+    
+    import random
+    for mention in unseen[:INTERACTION_LIMIT]:
+        # Probabilistic engagement (Humanization)
+        if random.random() > MENTION_REPLY_PROB:
+            SafeLogger.info(f"Decision: Skipping reply to @{mention.author} (Engagement Roll).")
+            seen_ids.append(mention.id)
+            continue
+            
+        try:
+            SafeLogger.info(f"Generating reply for @{mention.author} on {mention.platform}...")
+            reply_text = await generate_interactive_reply(mention.text, mention.author, session_context)
+            
+            if not reply_text:
+                continue
+                
+            # Human Delay before interaction
+            await human_delay(10, 30)
+            
+            if mention.platform == "bluesky" and bsky_client:
+                # Bluesky Reply with Threading
+                parent_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.uri, cid=mention.cid)
+                root_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.root_uri, cid=mention.root_cid) if mention.root_uri else parent_ref
+                
+                reply_ref = models.AppBskyFeedPost.ReplyRef(parent=parent_ref, root=root_ref)
+                await bsky_client.send_post(text=reply_text, reply_to=reply_ref)
+                
+                if AUTO_LIKE_INTERACTIONS:
+                    await bsky_client.like(mention.uri, mention.cid)
+                    
+            elif mention.platform == "mastodon":
+                # Mastodon Reply
+                from mastodon import Mastodon
+                m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
+                await asyncio.to_thread(m.status_post, reply_text, in_reply_to_id=mention.id)
+                if AUTO_LIKE_INTERACTIONS:
+                    await asyncio.to_thread(m.status_favourite, mention.id)
+            
+            replied_ids.append(mention.id)
+            seen_ids.append(mention.id)
+            SafeLogger.info(f"Successfully replied to @{mention.author} on {mention.platform}!")
+            
+        except Exception as e:
+            SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
+            errors.append(str(e))
+
+    save_seen_interactions(seen_ids)
+    return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
+
 async def main():
     if not settings.validate():
         return
@@ -211,6 +292,7 @@ async def main():
         curation = await curation_stage(client)
         
         # 2. Synthesis
+        context = get_temporal_context()
         synthesis, curation = await synthesis_stage(client, genai_client, curation)
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
@@ -225,7 +307,12 @@ async def main():
             else:
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
 
-        # 4. Persistence
+        # 4. Interaction (Mention Replies)
+        if settings.enable_interactions:
+            interaction_res = await interaction_stage(bsky_client, context)
+            SafeLogger.info(f"Interaction Session Complete: {len(interaction_res.replied_ids)} replies sent.")
+
+        # 5. Persistence
         await persistence_stage(curation, synthesis, bsky_client)
 
 if __name__ == "__main__":

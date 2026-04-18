@@ -16,7 +16,8 @@ from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
 from PIL import Image
 from .config import (
     MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
-    SEEN_FILE_PATH, SESSION_FILE_PATH, GENERIC_IMAGE_PATTERNS
+    SEEN_FILE_PATH, SESSION_FILE_PATH, GENERIC_IMAGE_PATTERNS,
+    INTERACTIONS_STATE_PATH
 )
 
 from .logger import SafeLogger
@@ -166,6 +167,24 @@ def _save_gist_state(filename: str, data: dict) -> bool:
     except Exception as e:
         SafeLogger.error(f"Failed to save state to Gist: {e}")
         return False
+
+def load_seen_interactions() -> List[str]:
+    """Loads the list of social interaction IDs we've already responded to."""
+    if os.path.exists(INTERACTIONS_STATE_PATH):
+        try:
+            with open(INTERACTIONS_STATE_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+def save_seen_interactions(interacted_ids: List[str]):
+    """Saves the list of social interaction IDs to persistent store."""
+    try:
+        with open(INTERACTIONS_STATE_PATH, "w", encoding="utf-8") as f:
+            json.dump(interacted_ids[-500:], f, indent=4) # Keep last 500
+    except Exception as e:
+        SafeLogger.error(f"Failed to save interactions: {e}")
 
 def load_seen_articles():
     """3-Tier Resilience: Local -> Backup -> Gist -> Default."""
