@@ -27,6 +27,12 @@ try:
 except ImportError:
     fcntl = None
 
+async def human_delay(min_sec: int, max_sec: int):
+    """Wait for a random duration to simulate human activity."""
+    delay = random.uniform(min_sec, max_sec)
+    SafeLogger.info(f"Applying natural pause: {delay:.1f}s...")
+    await asyncio.sleep(delay)
+
 try:
     import msvcrt
 except ImportError:
@@ -163,7 +169,7 @@ def _save_gist_state(filename: str, data: dict) -> bool:
 
 def load_seen_articles():
     """3-Tier Resilience: Local -> Backup -> Gist -> Default."""
-    default_state = {"links": [], "recent_topics": [], "last_dialect": None}
+    default_state = {"links": [], "recent_topics": [], "last_dialect": None, "total_posts_curated": 0}
     
     with FileLock(SEEN_FILE_PATH):
         # Tier 1: Local primary
@@ -195,6 +201,8 @@ def load_seen_articles():
 
 def save_seen_articles(data):
     """3-Tier Persistence: Atomic Write -> Backup Commit -> Remote Sync."""
+    if "total_posts_curated" not in data:
+        data["total_posts_curated"] = 0
     try:
         with FileLock(SEEN_FILE_PATH):
             # 1. Local Backup Rotation
