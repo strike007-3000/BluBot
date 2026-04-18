@@ -45,20 +45,9 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Temporal Intelligence**: Upgraded from 2 to **5 granular sessions** (Dawn, Morning, Midday, Afternoon, Evening) for hyper-relevant time-of-day awareness.
     - **Manual Run "Intercept"**: Automatically detects manual `workflow_dispatch` runs and labels them as **"(Intercept)"**, shifting the AI into an urgent, ad-hoc reporting mode.
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
-    - **Weighted Curation Matrix**:
-        
-        | Factor / Signal | Weight / Modification | Notes |
-        | :--- | :--- | :--- |
-        | **Tier 1 Sources** | `+30` | Top-tier AI Labs (OpenAI, DeepMind, etc.) |
-        | **Hidden Gems / Tier 3** | `+15` | Research/Academic (ArXiv, BAIR, Stanford) |
-        | **Tier 2 Sources** | `+15` | Elite Analysts & Newsletters |
-        | **High-Signal Keywords** | `+12` | Boosts *SOTA, agentic, world model, open weights*, etc. |
-        | **Momentum Products** | `+18` | Boosts *GPT-5, Llama 4, Gemini 3, Gemma 4*, etc. |
-        | **Consensus Synergy** | `+15` | Story present across multiple independent feeds |
-        | **Topic Diversity Penalty**| `-12` * | Applied if topic is in recent_topics (config lists penalty as `25`) |
-        | **Time Decay** | `-0.5` / hour | Linearly decays relevance score over time |
-    - **Curated Feed Network**: **32 active feeds** across 4 tiers (AI Labs, Elite Analysts, Research, Journalism), dynamically audited for freshness.
-
+    - **Impact-Aware Intelligence**: Prioritizes breakthrough news (Agents, SOTA) and boosts articles mentioning flagship 2026 models.
+    - **Consensus Synergy Pass**: Automatically boosts "Consensus Events" reported by multiple independent feeds.
+    - **Curated Feed Network**: **28 validated feeds** across 4 tiers (AI Labs, Elite Analysts, Research, Journalism), audited for freshness and availability.
 
 ## 🛠️ Setup Instructions
 
@@ -139,7 +128,32 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.7.0 (Current)**: **The Natural Vibe Engine Release**.
+- **v3.8.2 (Current)**: **Hardening, Humanization & The Vanguard**.
+    - **Feed Vanguard**: Automated RSS resilience engine — audits all sources, silences broken ones, and auto-recovers.
+    - **Elite Expansion**: Added high-signal sources: **AlphaSignal**, **TLDR AI**, and **TheSequence**.
+    - **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
+    - **Bug Remediation**: Resolved critical `NameErrors` in `bot.py` and `src/broadcaster.py`.
+    - **Thread Rhythm**: Implemented randomized pauses between thread posts.
+    - **Dynamic Bio**: Profiles now update automatically with live curation telemetry.
+- **v3.8.0**: **The Weaver & Resilience Engine**.
+    - **The Weaver**: Integrated a conditional multi-post threading engine with paragraph-aware `smart_split` logic.
+    - **Narrative Expansion**: Expanded AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
+    - **3-Tier Persistence**: Implemented a redundant state model (Primary → Local Backup → Remote Gist) with automatic corruption recovery.
+    - **Dashboard Migration**: Moved high-churn telemetry to a dedicated `STATUS.md` to eliminate Git rebase conflicts in CI.
+    - **CI Hardening**: Resolved "EDITOR unset" rebase failures in GitHub Actions.
+- **v3.7.6**: **Visual Integrity Hardening**.
+    - **Black/White Box Fix**: Implemented universal `RGB` mode conversion in the compression engine to prevent corrupted renders on ArXiv-style links.
+    - **Fidelity Guards**: Hardened broadcasting logic to ensure atomic image delivery and graceful text fallbacks to prevent placeholder distortions.
+- **v3.7.5**: **Content & Infrastructure Optimization**.
+    - **Smart Truncate**: Implemented word-boundary-aware truncation for Mastodon and Threads to prevent mid-word cutoffs.
+    - **Persistence Hardening**: Resolved automated `README.md` rebase conflicts and implemented session ID masking in CI logs.
+- **v3.7.3**: **Stabilization & Visibility Patch**.
+    - **Stability Fix**: Restored the missing `published` timestamp in the curation engine to satisfy `Article` model requirements.
+    - **Session Visibility**: Enhanced the broadcast stage with explicit logging for Bluesky session cache restoration.
+- **v3.7.2**: **Production Hardening Patch**.
+    - **Model Stability**: Resolved a critical `TypeError` in the Article dataclass by supporting diagnostic `_score_debug` metadata.
+    - **Infra Alignment**: Updated GitHub Actions environment to cleanly support Node.js 24 runners.
+- **v3.7.0**: **The Natural Vibe Engine Release**.
     - **Style Memory**: Integrated stylistic persistence to ensure editorial variety between consecutive runs.
     - **Session Granularity**: Increased temporal resolution to 5 sessions with manual intercept awareness.
     - **Architectural Cleanup**: Formalized absolute `src.` imports across the entire project, resolving `pytest` isolation issues.
