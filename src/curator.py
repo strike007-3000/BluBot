@@ -257,6 +257,7 @@ async def generate_mentor_insight(context):
             if "BODY:" in summary:
                 summary = summary.split("BODY:", 1)[1].strip()
 
+            from .config import GEMINI_MODEL_PRIORITY
             return strip_markdown(summary), None, "Strategy", (model_id != GEMINI_MODEL_PRIORITY[0])
         except Exception as e:
             SafeLogger.warn(f"Mentor Fallback failed on {model_id}: {e}")
