@@ -497,10 +497,12 @@ def smart_truncate(text, max_chars, suffix='...'):
         
     return f"{truncated.rstrip()}{suffix}"
 
-def smart_split(text, limit):
+def smart_split(text, limit, max_chunks=None):
     """Splits text into chunks within the limit, prioritizing paragraph and sentence boundaries."""
     if not text:
         return []
+        
+    # Expert Review: If text fits in one part, return immediately
     if len(text) <= limit:
         return [text]
     
@@ -508,6 +510,15 @@ def smart_split(text, limit):
     remaining = text
     
     while remaining:
+        # Check if we've hit the thread cap
+        if max_chunks and len(chunks) >= max_chunks:
+            # Ensure the last chunk indicates truncation if there was more content
+            if chunks:
+                last = chunks[-1]
+                if not last.endswith("..."):
+                    chunks[-1] = last.rstrip() + "..."
+            break
+
         if len(remaining) <= limit:
             chunks.append(remaining)
             break

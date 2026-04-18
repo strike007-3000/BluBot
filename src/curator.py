@@ -200,6 +200,12 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
                     
             except Exception as e:
                 SafeLogger.warn(f"Model {model_id} attempt {attempt} failed: {e}")
+                
+                # Infrastructure Resilience: Add delay for 503 errors to allow service to recover
+                if "503" in str(e) or "UNAVAILABLE" in str(e).upper():
+                    SafeLogger.info(f"Service spike detected. Cooling down for 2s...")
+                    await asyncio.sleep(2)
+                    
                 if attempt == MODEL_ATTEMPT_RETRIES and idx == len(GEMINI_MODEL_PRIORITY) - 1:
                     raise e
     return None, None, "General", False, None
@@ -220,7 +226,9 @@ async def generate_mentor_insight(context):
             summary = response.text.strip()
             if "BODY:" in summary:
                 summary = summary.split("BODY:", 1)[1].strip()
-            return strip_markdown(summary), None, "Strategy", (model_id != settings.gemini_model_priority[0])
+
+            from .config import GEMINI_MODEL_PRIORITY
+            return strip_markdown(summary), None, "Strategy", (model_id != GEMINI_MODEL_PRIORITY[0])
         except Exception as e:
             SafeLogger.warn(f"Mentor Fallback failed on {model_id}: {e}")
     return None, None, "Strategy", False
