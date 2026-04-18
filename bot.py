@@ -1424,6 +1424,70 @@ async def interaction_stage(bsky_client, session_context: dict) -> InteractionRe
     save_seen_interactions(seen_ids)
     return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
 
+async def interaction_stage(bsky_client, session_context: dict) -> InteractionResult:
+    """Handles social interactions (mentions/replies) with humanized engagement."""
+    SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
+    seen_ids = load_seen_interactions()
+    replied_ids = []
+    errors = []
+    
+    # 1. Fetch mentions
+    bsky_mentions = await fetch_bluesky_mentions(bsky_client)
+    mastodon_mentions = await fetch_mastodon_mentions()
+    all_mentions = bsky_mentions + mastodon_mentions
+    
+    # Filter and prioritize
+    unseen = [m for m in all_mentions if m.id not in seen_ids]
+    SafeLogger.info(f"Found {len(unseen)} new mentions to process.")
+    
+    import random
+    for mention in unseen[:INTERACTION_LIMIT]:
+        # Probabilistic engagement (Humanization)
+        if random.random() > MENTION_REPLY_PROB:
+            SafeLogger.info(f"Decision: Skipping reply to @{mention.author} (Engagement Roll).")
+            seen_ids.append(mention.id)
+            continue
+            
+        try:
+            SafeLogger.info(f"Generating reply for @{mention.author} on {mention.platform}...")
+            reply_text = await generate_interactive_reply(mention.text, mention.author, session_context)
+            
+            if not reply_text:
+                continue
+                
+            # Human Delay before interaction
+            await human_delay(10, 30)
+            
+            if mention.platform == "bluesky" and bsky_client:
+                # Bluesky Reply with Threading
+                parent_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.uri, cid=mention.cid)
+                root_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.root_uri, cid=mention.root_cid) if mention.root_uri else parent_ref
+                
+                reply_ref = models.AppBskyFeedPost.ReplyRef(parent=parent_ref, root=root_ref)
+                await bsky_client.send_post(text=reply_text, reply_to=reply_ref)
+                
+                if AUTO_LIKE_INTERACTIONS:
+                    await bsky_client.like(mention.uri, mention.cid)
+                    
+            elif mention.platform == "mastodon":
+                # Mastodon Reply
+                from mastodon import Mastodon
+                m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
+                await asyncio.to_thread(m.status_post, reply_text, in_reply_to_id=mention.id)
+                if AUTO_LIKE_INTERACTIONS:
+                    await asyncio.to_thread(m.status_favourite, mention.id)
+            
+            replied_ids.append(mention.id)
+            seen_ids.append(mention.id)
+            SafeLogger.info(f"Successfully replied to @{mention.author} on {mention.platform}!")
+            
+        except Exception as e:
+            SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
+            errors.append(str(e))
+
+    save_seen_interactions(seen_ids)
+    return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
+
 async def main():
     if not settings.validate():
         return
