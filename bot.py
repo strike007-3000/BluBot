@@ -3,7 +3,7 @@ import os
 import httpx
 import logging
 from datetime import datetime, timezone
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 # Elite Architecture Imports
 from src.settings import settings
