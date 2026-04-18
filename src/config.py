@@ -83,9 +83,6 @@ RSS_FEEDS = [
     "https://jack-clark.net/feed/",
     "https://www.oneusefulthing.org/feed",
     "https://newsletter.maartengrootendorst.com/feed",
-    "https://alphasignalai.beehiiv.com/feed",
-    "https://thesequence.substack.com/feed",
-    "https://tldr.tech/ai/rss",
     
     # === Tier 3: Research & Academic ===
     "https://arxiv.org/rss/cs.LG",
