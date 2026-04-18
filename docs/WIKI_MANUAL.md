@@ -11,6 +11,26 @@ The BluBot is an **Impact-Aware Intelligence** designed to separate the *signal*
 ### The Vision
 The Sage looks for **Product Shifts** (real code) and **Technical Gems** (research papers, deep engineering blogs). It shares findings as a mentor, not just a news aggregator.
 
+## Security & Supply Chain
+
+BluBot uses elite hardening to protect its environment and secrets.
+
+### Dependency Locking (pip-tools)
+To prevent supply-chain attacks via unvetted transitive dependencies, BluBot uses **`pip-tools`**.
+- `requirements.in`: The source file where you list high-level libraries.
+- `requirements.txt`: The **lockfile** (generated) containing specific versions and cryptographic hashes.
+
+**How to update dependencies:**
+1. Add the new library to `requirements.in`.
+2. Run: `pip-compile requirements.in --generate-hashes`.
+3. Commit both files.
+
+### SSRF Protection
+The bot implements a **DNS Pinner** and **Public IP Validator** in `src/utils.py`. It refuses to fetch metadata or images from local or internal network addresses, thwarting potential exploits in ephemeral cloud runners.
+
+### Secret Redaction
+The `SafeLogger` automatically redacts secrets based on both keyword matching and **statistical entropy analysis**, ensuring that accidentally logged tokens are masked before hitting CI logs.
+
 ### Platform Synergy
 - **Bluesky**: The central technical hub.
 - **Mastodon**: The academic and decentralized pulse.
@@ -97,6 +117,9 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 
 ## 💾 Page 8: 3-Tier State Resilience (v3.8.0)
 
+- [3-Tier State Resilience](#3-tier-state-resilience)
+- [Security & Supply Chain](#security--supply-chain)
+- [The Weaver (Threading)](#the-weaver-threading)
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
 ### The Recovery Sequence

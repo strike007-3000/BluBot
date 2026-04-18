@@ -102,6 +102,8 @@ async def post_to_mastodon(text, image_data=None):
 
     chunks = smart_split(text, settings.mastodon_limit)
     
+    loop = asyncio.get_running_loop()
+    
     def _post_thread():
         m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
         media_ids = []
