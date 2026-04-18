@@ -12,6 +12,7 @@ README_FILE_PATH = os.path.join(BASE_DIR, "README.md")
 VERSION_FILE_PATH = os.path.join(BASE_DIR, "VERSION")
 SESSION_FILE_PATH = os.path.join(BASE_DIR, "bluesky_session.txt")
 STATUS_FILE_PATH = os.path.join(BASE_DIR, "STATUS.md")
+VANGUARD_STATE_PATH = os.path.join(BASE_DIR, "broken_feeds.json")
 
 # API Keys (Standard initialization)
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
@@ -76,6 +77,9 @@ RSS_FEEDS = [
     "https://jack-clark.net/feed/",
     "https://www.oneusefulthing.org/feed",
     "https://newsletter.maartengrootendorst.com/feed",
+    "https://alphasignalai.beehiiv.com/feed",
+    "https://thesequence.substack.com/feed",
+    "https://tldr.tech/ai/rss",
     
     # === Tier 3: Research & Academic ===
     "https://arxiv.org/rss/cs.LG",

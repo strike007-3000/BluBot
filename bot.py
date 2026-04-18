@@ -64,10 +64,18 @@ async def update_status_dashboard(session_name: str, topic: str):
 
 async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
+    from src.feed_vanguard import VanguardManager
+    vanguard = VanguardManager()
+    
+    # Pre-flight: Refresh blacklist based on current health
+    SafeLogger.info("Vanguard: Running pre-flight RSS health check...")
+    await vanguard.audit_and_update(client)
+    active_feeds = vanguard.get_active_feeds()
+    
     seen_data = load_seen_articles()
     context = get_temporal_context()
     
-    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"])
+    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
     articles = [Article(**item) for item in raw_news]
     
     return CurationResult(
