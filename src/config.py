@@ -72,9 +72,6 @@ JITTER_RANGE = 2.0
 
 RSS_FEEDS = [
     # === Tier 1: AI Lab Official Blogs ===
-    "https://blog.google/rss/",
-    "https://www.apple.com/newsroom/rss-feed.rss",
-    "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
     "https://openai.com/news/rss.xml",
     "https://huggingface.co/blog/feed.xml",
     "https://deepmind.google/blog/rss.xml",
