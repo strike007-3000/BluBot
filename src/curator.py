@@ -337,29 +337,23 @@ async def generate_nvidia_image(client, prompt):
 async def generate_interactive_reply(original_text, author, context):
     """Generates an AI reply for a social mention, maintaining the Sage persona."""
     try:
-        genai_client = genai.Client(api_key=settings.gemini_key)
+        genai_client = genai.Client(api_key=settings.gemini_api_key)
         
         # Format the system instruction with current temporal/session context
         system_instruction = INTERACTIVE_REPLY_INSTRUCTION.format(
             context=f"{context['session']} - {context['day']}"
         )
         
-        config_args = {
-            "temperature": 0.7,
-            "max_output_tokens": 100
-        }
-        
-        # Check for system_instruction support
-        if "gemma" not in settings.gemini_model.lower():
-            config_args["system_instruction"] = system_instruction
-            
         prompt = f"User @{author} mentioned you: '{original_text}'. Respond insightfully as the Elite Sage."
-        contents = f"{system_instruction}\n\n{prompt}" if "gemma" in settings.gemini_model.lower() else prompt
         
         response = await genai_client.aio.models.generate_content(
             model=settings.gemini_model,
-            contents=contents,
-            config=types.GenerateContentConfig(**config_args)
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.7,
+                max_output_tokens=150
+            )
         )
         
         return response.text.strip()
