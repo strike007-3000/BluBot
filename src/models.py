@@ -42,3 +42,23 @@ class BroadcastResult:
     success: bool
     error: Optional[str] = None
     post_id: Optional[str] = None
+
+@dataclass(frozen=True)
+class InteractionNote:
+    """Metadata for a social mention or reply."""
+    platform: str
+    id: str
+    author: str
+    text: str
+    timestamp: str
+    uri: Optional[str] = None  # Bluesky specific
+    cid: Optional[str] = None  # Bluesky specific
+    root_uri: Optional[str] = None
+    root_cid: Optional[str] = None
+
+@dataclass(frozen=True)
+class InteractionResult:
+    """Tracking the result of an automated reply session."""
+    processed_count: int
+    replied_ids: List[str]
+    errors: List[str]

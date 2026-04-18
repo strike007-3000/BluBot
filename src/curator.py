@@ -13,6 +13,7 @@ from src.settings import settings
 from src.config import (
     RSS_FEEDS, TIER_1_SOURCES, TIER_2_SOURCES, HIDDEN_GEM_SOURCES, 
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
+    INTERACTIVE_REPLY_INSTRUCTION,
     SAGE_DESIGNER_INSTRUCTION, SECONDARY_TOPICS, GEMINI_MODEL_PRIORITY,
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
@@ -117,10 +118,11 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         return items
     except Exception: return []
 
-async def fetch_news(client, seen_links=None, recent_topics=None):
+async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None):
     """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity."""
     now_utc = datetime.now(timezone.utc)
-    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=2), now_utc, seen_links or [], recent_topics) for url in RSS_FEEDS]
+    source_list = feed_list if feed_list is not None else RSS_FEEDS
+    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=2), now_utc, seen_links or [], recent_topics) for url in source_list]
     results = await asyncio.gather(*tasks)
     
     all_raw_entries = [e for sublist in results for e in sublist]
@@ -303,3 +305,30 @@ async def generate_nvidia_image(client, prompt):
     except Exception as e:
         SafeLogger.warn(f"NVIDIA NIM failed: {e}")
     return None
+
+async def generate_interactive_reply(original_text, author, context):
+    """Generates an AI reply for a social mention, maintaining the Sage persona."""
+    try:
+        genai_client = genai.Client(api_key=settings.gemini_api_key)
+        
+        # Format the system instruction with current temporal/session context
+        system_instruction = INTERACTIVE_REPLY_INSTRUCTION.format(
+            context=f"{context['session']} - {context['day']}"
+        )
+        
+        prompt = f"User @{author} mentioned you: '{original_text}'. Respond insightfully as the Elite Sage."
+        
+        response = await genai_client.aio.models.generate_content(
+            model=settings.gemini_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.7,
+                max_output_tokens=150
+            )
+        )
+        
+        return response.text.strip()
+    except Exception as e:
+        SafeLogger.error(f"Interaction generation failed: {e}")
+        return None
