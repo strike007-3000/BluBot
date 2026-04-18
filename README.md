@@ -90,11 +90,12 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.8.2 (Current)**: **Hardening, Humanization & The Vanguard**.
-    - **Feed Vanguard**: Automated RSS resilience engine — audits all sources, silences broken ones, and auto-recovers.
-    - **Elite Expansion**: Added high-signal sources: **AlphaSignal**, **TLDR AI**, and **TheSequence**.
-    - **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
-    - **Bug Remediation**: Resolved critical `NameErrors` in `bot.py` and `src/broadcaster.py`.
+- **v3.8.2 (Current)**: **Hardening, Humanization & The Interaction Engine**.
+    - 🛡️ **Feed Vanguard**: Automated RSS resilience engine with soft-disable backoff and pre-flight auditing.
+    - 💬 **Interactive Sage**: Conversational AI (Mention Replies) for Bluesky and Mastodon with persona-aligned logic.
+    - 🛰️ **Elite Expansion**: Added high-signal sources: **AlphaSignal**, **TLDR AI**, and **TheSequence**.
+    - 🔒 **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
+    - 🐛 **Bug Remediation**: Resolved critical P0/P1 issues in threading and broadcaster logic.
     - **Thread Rhythm**: Implemented randomized pauses between thread posts.
     - **Dynamic Bio**: Profiles now update automatically with live curation telemetry.
 - **v3.8.0**: **The Weaver & Resilience Engine**.
