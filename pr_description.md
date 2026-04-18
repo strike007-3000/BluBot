@@ -20,10 +20,11 @@ Resolved the "Session" logic from 2 slots to **5 granular sessions**, ensuring c
 - **Afternoon Deep Dive** (15:00 - 19:00)
 - **Evening Synthesis** (19:00 - 24:00)
 
-### 3. Manual Intercept Mode
-The bot now detects if it was triggered manually via `workflow_dispatch`.
-- **Logic**: Automatically appends **"(Intercept)"** to the session name.
-- **Effect**: Shifts the AI logic into an "Ad-hoc briefing" mode, preventing it from producing scheduled-sounding content during an off-hour manual trigger.
+### 3. Feed Vanguard Automation
+Implemented an industrial-grade health engine to manage our elite **29-feed network**:
+- **Soft-Disable Strategy**: Automatically silences feeds (HTTP 4xx/5xx or Stale) for 12-72 hours instead of hard-deleting.
+- **Pre-flight Audit**: The bot now validates all sources before curation, ensuring zero cycles are wasted on broken links.
+- **Elite Coverage**: Expanded to include **AlphaSignal**, **TheSequence**, and **TLDR AI**.
 
 ### 4. Architectural Hardening
 - **Absolute Imports**: Converted all relative imports to absolute `src.` paths to resolve `pytest` isolation issues and standardizing the source tree.
