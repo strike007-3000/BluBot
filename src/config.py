@@ -11,6 +11,7 @@ SEEN_FILE_PATH = os.path.join(BASE_DIR, "seen_articles.json")
 README_FILE_PATH = os.path.join(BASE_DIR, "README.md")
 VERSION_FILE_PATH = os.path.join(BASE_DIR, "VERSION")
 SESSION_FILE_PATH = os.path.join(BASE_DIR, "bluesky_session.txt")
+STATUS_FILE_PATH = os.path.join(BASE_DIR, "STATUS.md")
 
 # API Keys (Standard initialization)
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")

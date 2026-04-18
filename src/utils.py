@@ -20,6 +20,7 @@ from .config import (
 )
 
 from .logger import SafeLogger
+from .settings import settings
 
 try:
     import fcntl
@@ -114,26 +115,105 @@ class FileLock:
         except Exception:
             pass
 
+def _load_gist_state(filename: str) -> Optional[dict]:
+    """Helper to pull state from a private GitHub Gist."""
+    if not settings.gist_id or not settings.gist_token:
+        return None
+    
+    try:
+        url = f"https://api.github.com/gists/{settings.gist_id}"
+        headers = {
+            "Authorization": f"token {settings.gist_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(url, headers=headers)
+            resp.raise_for_status()
+            files = resp.json().get("files", {})
+            if filename in files:
+                content = files[filename].get("content")
+                return json.loads(content) if content else None
+    except Exception as e:
+        SafeLogger.warn(f"Failed to load state from Gist: {e}")
+    return None
+
+def _save_gist_state(filename: str, data: dict) -> bool:
+    """Helper to push state to a private GitHub Gist."""
+    if not settings.gist_id or not settings.gist_token:
+        return False
+        
+    try:
+        url = f"https://api.github.com/gists/{settings.gist_id}"
+        headers = {
+            "Authorization": f"token {settings.gist_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        payload = {
+            "files": {
+                filename: {"content": json.dumps(data, indent=2)}
+            }
+        }
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.patch(url, headers=headers, json=payload)
+            resp.raise_for_status()
+            return True
+    except Exception as e:
+        SafeLogger.error(f"Failed to save state to Gist: {e}")
+        return False
+
 def load_seen_articles():
+    """3-Tier Resilience: Local -> Backup -> Gist -> Default."""
+    default_state = {"links": [], "recent_topics": [], "last_dialect": None}
+    
     with FileLock(SEEN_FILE_PATH):
+        # Tier 1: Local primary
         if os.path.exists(SEEN_FILE_PATH):
             try:
                 with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
                     return json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                SafeLogger.warn(f"Local seen articles file corrupted: {e}. Trying backup...")
+
+        # Tier 2: Local backup (.bak)
+        bak_path = f"{SEEN_FILE_PATH}.bak"
+        if os.path.exists(bak_path):
+            try:
+                with open(bak_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    SafeLogger.info("Restored seen articles from local backup.")
+                    return data
             except (json.JSONDecodeError, IOError):
-                return {"links": [], "recent_topics": [], "last_dialect": None}
-        return {"links": [], "recent_topics": [], "last_dialect": None}
+                SafeLogger.warn("Local backup corrupted as well.")
+
+        # Tier 3: Remote Gist
+        gist_data = _load_gist_state("seen_articles.json")
+        if gist_data:
+            SafeLogger.info("Restored seen articles from GitHub Gist.")
+            return gist_data
+            
+        return default_state
 
 def save_seen_articles(data):
+    """3-Tier Persistence: Atomic Write -> Backup Commit -> Remote Sync."""
     try:
         with FileLock(SEEN_FILE_PATH):
-            # P1 Bug Fix: Atomic write to avoid state corruption
+            # 1. Local Backup Rotation
+            if os.path.exists(SEEN_FILE_PATH):
+                bak_path = f"{SEEN_FILE_PATH}.bak"
+                os.replace(SEEN_FILE_PATH, bak_path)
+            
+            # 2. Atomic Primary Write
             temp_path = f"{SEEN_FILE_PATH}.tmp"
             with open(temp_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             os.replace(temp_path, SEEN_FILE_PATH)
+            
+            # 3. Remote Synchronization (Gist)
+            if settings.gist_id and settings.gist_token:
+                _save_gist_state("seen_articles.json", data)
+                
     except Exception as e:
-        SafeLogger.error(f"Critical error saving state: {e}")
+        SafeLogger.error(f"Critical error in state persistence: {e}")
 
 def normalize_url(url: str, base_url: Optional[str] = None) -> str:
     """

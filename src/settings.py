@@ -16,6 +16,8 @@ class Settings:
     mastodon_base_url: Optional[str] = None
     threads_token: Optional[str] = None
     threads_user_id: Optional[str] = None
+    gist_id: Optional[str] = None
+    gist_token: Optional[str] = None
     
     # Modes & Flags
     is_dry_run: bool = False
@@ -53,7 +55,9 @@ class Settings:
             "is_ci": is_ci,
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
-            "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true"
+            "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true",
+            "gist_id": os.getenv("GIST_ID"),
+            "gist_token": os.getenv("GIST_TOKEN")
         }
         
         if is_dry_run:
