@@ -78,8 +78,14 @@ class Settings:
 
     @property
     def is_manual_run(self) -> bool:
-        """Determines if the current execution was manually triggered."""
-        return self.github_event == "workflow_dispatch" or not self.is_ci
+        """Determines if the current execution was manually triggered (Persona logic)."""
+        return self.github_event == "workflow_dispatch"
+
+    @property
+    def should_bypass_rest(self) -> bool:
+        """Determines if scheduling rest locks should be ignored (Infrastructure logic)."""
+        # Bypass if not in CI (local) or if triggered by anything other than the cron schedule (Push, Dispatch)
+        return not self.is_ci or self.github_event != "schedule"
 
     def validate(self) -> bool:
         """Validates critical settings and returns True if valid."""
