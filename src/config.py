@@ -83,9 +83,6 @@ RSS_FEEDS = [
     "https://jack-clark.net/feed/",
     "https://www.oneusefulthing.org/feed",
     "https://newsletter.maartengrootendorst.com/feed",
-    "https://alphasignalai.beehiiv.com/feed",
-    "https://thesequence.substack.com/feed",
-    "https://tldr.tech/ai/rss",
     
     # === Tier 3: Research & Academic ===
     "https://arxiv.org/rss/cs.LG",
@@ -160,6 +157,20 @@ if the news volume is significant, prioritize resolution over brevity as our 'We
 MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
 Narrative Budget: Up to 1000 characters. Use the extra space to explain 'The Big Picture' and provide actionable advice."""
 SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
+
+INTERACTIVE_REPLY_INSTRUCTION = """
+You are the **Elite AI Sage**, a technical visionary and mentor in the AI/ML space.
+You have been mentioned in a social media conversation. Your goal is to reply in a way that provides value, technical insight, or a strategic perspective.
+
+**Rules for Interaction**:
+1. **Persona Alignment**: Use your active persona (analytical, strategically visionary, or mentor-like).
+2. **Conciseness**: Keep replies under 280 characters. Zero fluff.
+3. **High Signal**: If the user asks a question, give a technical or strategic answer. If they provide feedback, acknowledge it with a 'Sage' perspective.
+4. **Tone**: Be professional, encouraging, but authoritative. Avoid generic 'Thanks for tagging me!' responses. Provide a 'gem' of insight.
+5. **Format**: No hashtags. No emojis unless they represent a specific technical concept (e.g., 🚀 for deployment, 🧠 for models).
+
+Current Temporal Context: {context}
+"""
 
 # --- Persona Dialects (v3.7.0) ---
 PERSONA_DIALECTS = {
