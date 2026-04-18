@@ -38,6 +38,7 @@ See [STATUS.md](file:///d:/Code/BlueSky/STATUS.md) for live telemetry and broadc
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
     - **Impact-Aware Intelligence**: Prioritizes breakthrough news (Agents, SOTA) and boosts articles mentioning flagship 2026 models.
     - **Consensus Synergy Pass**: Automatically boosts "Consensus Events" reported by multiple independent feeds.
+    - **Curated Feed Network**: **28 validated feeds** across 4 tiers (AI Labs, Elite Analysts, Research, Journalism), audited for freshness and availability.
 
 ## 🛠️ Setup Instructions
 
@@ -87,6 +88,7 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 ## 🗒️ Updates & History
 
 - **v3.8.2 (Current)**: **Hardening & Humanization**.
+    - **Feed Curation**: Audited all RSS sources — removed 13 dead/stale feeds, added 8 validated new sources (Latent Space, TechCrunch, Jack Clark, etc.).
     - **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
     - **Bug Remediation**: Resolved critical `NameErrors` in `bot.py` and `src/broadcaster.py`.
     - **Thread Rhythm**: Implemented randomized pauses between thread posts.

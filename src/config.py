@@ -62,37 +62,39 @@ BACKOFF_FACTOR = 3.0
 JITTER_RANGE = 2.0
 
 RSS_FEEDS = [
+    # === Tier 1: AI Lab Official Blogs ===
     "https://openai.com/news/rss.xml",
     "https://huggingface.co/blog/feed.xml",
     "https://deepmind.google/blog/rss.xml",
-    "https://anthropic.com/news.rss",
-    "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
-    "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
-    "https://aheadofai.substack.com/feed",
-    "https://www.semianalysis.com/feed",
+    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
+    "https://www.microsoft.com/en-us/research/blog/feed/",
+    
+    # === Tier 2: Elite Newsletters & Analysts ===
     "https://www.interconnects.ai/feed",
-    "https://simonwillison.net/search/?q=AI&format=atom",
-    "https://arxiv.org/rss/cs.AI",
+    "https://magazine.sebastianraschka.com/feed",
+    "https://www.latent.space/feed",
+    "https://jack-clark.net/feed/",
+    "https://www.oneusefulthing.org/feed",
+    "https://newsletter.maartengrootendorst.com/feed",
+    
+    # === Tier 3: Research & Academic ===
     "https://arxiv.org/rss/cs.LG",
-    "https://www.the-decoder.com/feed/",
-    "https://404media.co/rss/",
-    "https://www.artificialanalysis.ai/feed",
-    "https://www.wired.com/feed/tag/ai/latest/rss",
     "https://thegradient.pub/rss/",
     "https://vkrakovna.wordpress.com/feed/",
-    "https://aiacceleratorinstitute.com/rss/",
-    "https://synthedia.substack.com/feed",
-    "https://magazine.sebastianraschka.com/feed",
-    "https://stability.ai/blog?format=rss",
-    "https://siliconangle.com/category/ai/feed/",
-    "https://www.assemblyai.com/blog/rss/",
-    "https://mistral.ai/news/rss.xml",
     "https://bair.berkeley.edu/blog/feed.xml",
-    "https://ai.stanford.edu/blog/feed.xml",
-    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
-    "https://ai.meta.com/blog/rss/",
-    "https://www.microsoft.com/en-us/research/blog/feed/",
-    "https://cohere.com/blog/rss.xml",
+    "https://machinelearningmastery.com/feed/",
+    
+    # === Tier 4: Industry & Journalism ===
+    "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
+    "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
+    "https://www.the-decoder.com/feed/",
+    "https://404media.co/rss/",
+    "https://www.wired.com/feed/tag/ai/latest/rss",
+    "https://siliconangle.com/category/ai/feed/",
+    "https://aiacceleratorinstitute.com/rss/",
+    "https://www.marktechpost.com/feed/",
+    "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "https://venturebeat.com/category/ai/feed/",
 ]
 
 # --- Breakthrough Scoring Engine Constants ---
@@ -117,9 +119,9 @@ SYNERGY_BONUS = 15
 DIVERSITY_PENALTY = 25
 MAX_TOPIC_RECURRENCE = 3
 
-TIER_1_SOURCES = ["openai.com", "deepmind.google", "anthropic.com", "huggingface.co", "mistral.ai"]
-TIER_2_SOURCES = ["semianalysis.com", "interconnects.ai", "aheadofai.substack.com", "simonwillison.net"]
-HIDDEN_GEM_SOURCES = ["arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", "magazine.sebastianraschka.com", "bair.berkeley.edu", "ai.stanford.edu", "blogs.nvidia.com"]
+TIER_1_SOURCES = ["openai.com", "deepmind.google", "huggingface.co", "blogs.nvidia.com", "microsoft.com"]
+TIER_2_SOURCES = ["interconnects.ai", "latent.space", "jack-clark.net", "oneusefulthing.org", "magazine.sebastianraschka.com"]
+HIDDEN_GEM_SOURCES = ["arxiv.org", "thegradient.pub", "vkrakovna.wordpress.com", "bair.berkeley.edu", "newsletter.maartengrootendorst.com", "machinelearningmastery.com"]
 
 TOPIC_MAP = {
     "LLMs": ["GPT", "Llama", "Claude", "Gemini", "Model", "Train", "Dataset"],
