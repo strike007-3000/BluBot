@@ -17,20 +17,33 @@ from src.curator import (
     get_temporal_context, generate_visual_prompt, generate_nvidia_image
 )
 from src.broadcaster import post_to_bluesky, post_to_mastodon, post_to_threads
-from src.config import README_FILE_PATH, IMAGEN_MODEL
+from src.config import STATUS_FILE_PATH, IMAGEN_MODEL
 from google.genai import types
 from google import genai
 from atproto import AsyncClient, AsyncRequest
 
-async def update_readme_dashboard(session_name: str, topic: str):
-    """Automatically update the README dashboard status."""
+async def update_status_dashboard(session_name: str, topic: str):
+    """Automatically update the STATUS.md dashboard."""
     try:
-        if not os.path.exists(README_FILE_PATH):
-            return
-        with open(README_FILE_PATH, "r", encoding="utf-8") as f:
-            lines = f.readlines()
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         icon = "🚀" if "Morning" in session_name else "🔍"
+        
+        # Initialize if missing
+        if not os.path.exists(STATUS_FILE_PATH):
+            content = [
+                "# 📊 BluBot System Telemetry\n\n",
+                "Live status updates from the AI news curation engine.\n\n",
+                "| Component | Status | Last Run | Mode |\n",
+                "|:---|:---|:---|:---|\n",
+                f"| **Broadcaster** | Operational | {today} | {icon} {session_name} ({topic}) |\n",
+                "| **Signal Strength** | Elite (Natural) | -- | -- |\n"
+            ]
+            with open(STATUS_FILE_PATH, "w", encoding="utf-8") as f:
+                f.writelines(content)
+            return
+
+        with open(STATUS_FILE_PATH, "r", encoding="utf-8") as f:
+            lines = f.readlines()
         
         new_lines = []
         for line in lines:
@@ -40,7 +53,8 @@ async def update_readme_dashboard(session_name: str, topic: str):
                 new_lines.append(f"| **Signal Strength** | Elite (Natural) | -- | -- |\n")
             else:
                 new_lines.append(line)
-        with open(README_FILE_PATH, "w", encoding="utf-8") as f:
+        
+        with open(STATUS_FILE_PATH, "w", encoding="utf-8") as f:
             f.writelines(new_lines)
     except Exception as e:
         SafeLogger.debug(f"Dashboard update failed: {e}")
@@ -168,7 +182,7 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
         "recent_topics": curation.recent_topics,
         "last_dialect": curation.last_dialect
     })
-    await update_readme_dashboard(curation.session_name, synthesis.topic)
+    await update_status_dashboard(curation.session_name, synthesis.topic)
 
 async def main():
     if not settings.validate():
