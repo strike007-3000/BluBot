@@ -169,21 +169,12 @@ def _save_gist_state(filename: str, data: dict) -> bool:
         SafeLogger.error(f"Failed to save state to Gist: {e}")
         return False
 
-def load_json_state(file_path: str):
-    """Helper to load JSON data from a file path."""
-    with open(file_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json_state(file_path: str, data, indent=4):
-    """Helper to save state to a JSON file."""
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=indent)
-
 def load_seen_interactions() -> List[str]:
     """Loads the list of social interaction IDs we've already responded to."""
     if os.path.exists(INTERACTIONS_STATE_PATH):
         try:
-            return load_json_state(INTERACTIONS_STATE_PATH)
+            with open(INTERACTIONS_STATE_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
         except Exception:
             return []
     return []
@@ -191,7 +182,8 @@ def load_seen_interactions() -> List[str]:
 def save_seen_interactions(interacted_ids: List[str]):
     """Saves the list of social interaction IDs to persistent store."""
     try:
-        save_json_state(INTERACTIONS_STATE_PATH, interacted_ids[-500:], indent=4)
+        with open(INTERACTIONS_STATE_PATH, "w", encoding="utf-8") as f:
+            json.dump(interacted_ids[-500:], f, indent=4) # Keep last 500
     except Exception as e:
         SafeLogger.error(f"Failed to save interactions: {e}")
 
