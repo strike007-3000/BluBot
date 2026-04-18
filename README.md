@@ -86,7 +86,7 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 - `bot.py`: Main Orchestrator (Staged Pipeline).
 - `src/`: Modular logic layers (Config, Settings, Models, Logger, Curator, Utils, Broadcaster).
 - `src/tests/`: **Automated Test Suite** (Security, Scoring, Redaction).
-- `test_models.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
+- `scripts/diagnostic.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
 
 ## 🗒️ Updates & History
 
@@ -138,7 +138,7 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
     - **Zero-Duplicate Strategy**: Implemented initial Threads delivery validation.
 - **v3.6.0**: **NVIDIA NIM Image Integration**.
     - Bypassed Imagen 4 restrictions by moving to NVIDIA SD3.
-    - Added interactive console input for keys in `test_models.py`.
+    - Added interactive console input for keys in `scripts/diagnostic.py`.
 - **v3.5.12**: **Persistence & Retry Hardening**.
     - Implemented `--autostash` for state updates and branch bootstrapping logic.
     - Narrowed retry behavior to skip terminal 403/400 errors.
