@@ -22,8 +22,8 @@ Resolved the "Session" logic from 2 slots to **5 granular sessions**, ensuring c
 
 ### 3. Feed Vanguard Automation
 Implemented an industrial-grade health engine to manage our elite **29-feed network**:
-- **Soft-Disable Strategy**: Automatically silences feeds (HTTP 4xx/5xx or Stale) for 12-72 hours instead of hard-deleting.
-- **Pre-flight Audit**: The bot now validates all sources before curation, ensuring zero cycles are wasted on broken links.
+- **Hiccup Resilience**: The first failure only triggers a warning. Silent mode (1h → 12h → 72h) only begins on consecutive failures to prevent transient dropouts.
+- **Pre-flight Audit**: The bot validates all sources before curation, ensuring zero cycles are wasted on broken links.
 - **Elite Coverage**: Expanded to include **AlphaSignal**, **TheSequence**, and **TLDR AI**.
 
 ### 4. Architectural Hardening
