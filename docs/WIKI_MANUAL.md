@@ -120,6 +120,7 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 - [3-Tier State Resilience](#3-tier-state-resilience)
 - [Security & Supply Chain](#security--supply-chain)
 - [The Weaver (Threading)](#the-weaver-threading)
+- [Feed Vanguard Automation](#feed-vanguard-automation)
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
 ### The Recovery Sequence
@@ -204,4 +205,20 @@ To eliminate "Rebase Conflicts" in CI, live status updates (Operational status, 
 - **CI-Friendly**: Because `README.md` is no longer churned by every run, your main repository remains clean and conflict-free.
 
 ---
-*Built with ❤️ for the AI Community*
+
+---
+
+## 📡 Page 13: Feed Vanguard Automation (v3.8.2)
+
+To maintain 100% signal quality, BluBot uses the **Feed Vanguard** to automatically manage RSS health.
+
+### The "Soft-Disable" Strategy
+Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transient Blacklist**:
+1. **Audit**: Every run begins with a pre-flight health check using `VanguardManager`.
+2. **Penalty**: If a feed fails (404, 403, or Stale), it is moved to `broken_feeds.json` with an incrementing failure count.
+3. **Backoff**: The feed is silenced for an increasing window (12h → 24h → 48h → 72h).
+4. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
+
+### Managing Feeds
+- **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
+- **Manual Override**: Removing a URL from `broken_feeds.json` forces an immediate recovery attempt on the next run.
