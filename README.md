@@ -90,8 +90,9 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.8.2 (Current)**: **Hardening & Humanization**.
-    - **Feed Curation**: Audited all RSS sources — removed 13 dead/stale feeds, added 8 validated new sources (Latent Space, TechCrunch, Jack Clark, etc.).
+- **v3.8.2 (Current)**: **Hardening, Humanization & The Vanguard**.
+    - **Feed Vanguard**: Automated RSS resilience engine — audits all sources, silences broken ones, and auto-recovers.
+    - **Elite Expansion**: Added high-signal sources: **AlphaSignal**, **TLDR AI**, and **TheSequence**.
     - **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
     - **Bug Remediation**: Resolved critical `NameErrors` in `bot.py` and `src/broadcaster.py`.
     - **Thread Rhythm**: Implemented randomized pauses between thread posts.
