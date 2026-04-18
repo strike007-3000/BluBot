@@ -22,6 +22,9 @@ jobs:
           echo "::add-mask::${{ github.run_attempt }}"
 
       - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Restore persistence state
         run: |
