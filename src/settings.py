@@ -26,11 +26,16 @@ class Settings:
     image_provider: str = "nvidia"
     enable_image_gen: bool = True
     enable_bio_management: bool = True
+    enable_interactions: bool = True
+    
+    # Observability
+    log_format: str = "pretty" # "pretty" or "json"
     
     # Limits
     bluesky_limit: int = 300
     mastodon_limit: int = 500
     threads_limit: int = 500
+    max_thread_parts: int = 2
     max_api_retries: int = 3
     backoff_factor: float = 3.0
     thread_pause_min: int = 10
@@ -47,6 +52,13 @@ class Settings:
         # Core validation logic moved from config.py
         settings_dict = {
             "gemini_key": os.getenv("GEMINI_KEY", ""),
+            "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true",
+            "enable_bio_management": os.getenv("ENABLE_BIO_MGMT", "true").lower() == "true",
+            "enable_interactions": os.getenv("ENABLE_INTERACTIONS", "true").lower() == "true",
+            "log_format": os.getenv("LOG_FORMAT", "json" if is_ci else "pretty").lower(),
+            "max_thread_parts": int(os.getenv("MAX_THREAD_PARTS", "2")),
+            "gist_id": os.getenv("GIST_ID"),
+            "gist_token": os.getenv("GIST_TOKEN"),
             "nvidia_key": os.getenv("NVIDIA_KEY"),
             "bsky_handle": os.getenv("BSKY_HANDLE", ""),
             "bsky_password": os.getenv("BSKY_APP_PASSWORD", ""),
@@ -58,10 +70,6 @@ class Settings:
             "is_ci": is_ci,
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
-            "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true",
-            "enable_bio_management": os.getenv("ENABLE_BIO_MGMT", "true").lower() == "true",
-            "gist_id": os.getenv("GIST_ID"),
-            "gist_token": os.getenv("GIST_TOKEN")
         }
         
         if is_dry_run:

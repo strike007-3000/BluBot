@@ -106,6 +106,12 @@ The Sage provides a robust **Full Pipeline Dry Run** via `scripts/diagnostic.py`
 ```bash
 python scripts/diagnostic.py
 ```
+
+### 🎨 Sage Console (Logging)
+As of **v3.8.5**, BluBot supports multiple logging formats:
+- **`LOG_FORMAT=pretty`** (Default for local): Colored, human-friendly text.
+- **`LOG_FORMAT=json`** (Default for CI): Structured JSON for long-term auditability.
+*Note: Secret redaction remains active in BOTH modes.*
 You can test the entire bot locally **without social media credentials**. 
 1. **Interactive Entry**: If `GEMINI_KEY` or `NVIDIA_KEY` are missing from your `.env`, the script will prompt you to paste them in the console.
 2. **Elite Rigidity**: The `Settings.from_env()` engine automatically injects "Mock" values for `BSKY_HANDLE` during dry runs, allowing you to verify synthesis logic with only AI keys.
@@ -118,8 +124,10 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 
 - [3-Tier State Resilience](#3-tier-state-resilience)
 - [Security & Supply Chain](#security--supply-chain)
-- [The Weaver (Threading)](#the-weaver-threading)
-- [Feed Vanguard Automation](#feed-vanguard-automation)
+- [Page 12: Media Pipeline & NVIDIA NIM](#page-12-media-pipeline--nvidia-nim)
+- [Page 14: Interaction Engine (Mention Replies)](#page-14-interaction-engine-mention-replies)
+- [Page 15: Precision Threading (The Weaver Cap)](#page-15-precision-threading-the-weaver-cap)
+
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
 ### The Recovery Sequence
@@ -224,3 +232,19 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
 ### Managing Feeds
 - **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
 - **Manual Override**: Removing a URL from `broken_feeds.json` forces an immediate recovery attempt on the next run.
+
+---
+
+## 🧶 Page 15: Precision Threading (The Weaver Cap)
+
+To maintain "Elite" signal-to-noise ratios and avoid feed fatigue, BluBot v3.8.5 introduces a localized thread cap.
+
+### Configuration
+- **`MAX_THREAD_PARTS=2`** (Default): Enforces a strict 2-post limit per thread. 
+- **The Weaver Split Logic**: If AI synthesis produces a long narrative, the logic intelligently splits it into 2 parts. If more content exists, it truncates with `...` and relies on the linked article for full details.
+
+### Character Safety Buffers
+We now apply a character "Safety Buffer" to prevent rejection from platform APIs (Mastodon, Threads):
+- **Mastodon**: 485 chars (Limit 500 - 15)
+- **Bluesky/Threads**: 290 chars (Limit 300 - 10)
+This ensures that the pagination markers (e.g., `(1/2)`) never push a post over the platform-specific character limit.
