@@ -36,9 +36,9 @@ The "Brain" of the bot ranked by a weighted matrix.
 The Sage is designed to be **unbreakable**.
 
 ### Hardening Features
-- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) encountered in synthesis and broadcast logs to prevent accidental leakages.
+- **3-Tier State Resilience (v3.8.0)**: BluBot now implements a redundant persistence model. If the primary `seen_articles.json` is corrupted or missing, it automatically falls back to a local `.bak` rotation and finally a remote **GitHub Gist**.
+- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) to prevent leakages.
 - **Visual Integrity Defense (v3.7.6)**: Implements **Universal RGB Conversion** in the image engine to handle grayscale (ArXiv) and specialized modes, preventing solid-black/white artifact regressions.
-- **Resilient Rebase Strategy (v3.7.5)**: Integrated an automated `git checkout --ours` strategy for `README.md` dashboards. Even under high concurrency or manual edits, the bot will resolve its own rebase conflicts to protect article history.
 - **SSRF Prevention Logic**: The metadata scraper (`get_link_metadata`) uses **DNS Pinning** to prevent rebinding attacks and **IP Validation** to ensure secure extraction.
 
 ---
@@ -72,6 +72,8 @@ Scanning over **30 premium feeds**.
 | `NVIDIA_KEY` | NVIDIA Build API Key (for SD3) |
 | `BSKY_HANDLE` | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | BlueSky App Password |
+| `GIST_ID` | Private GitHub Gist ID |
+| `GIST_TOKEN` | GitHub Token with `gist` scope |
 | `IMAGE_PROVIDER` | `nvidia` (default) or `imagen` |
 
 ---
@@ -93,13 +95,14 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 
 ---
 
-## 💾 Page 8: Linear State Persistence
+## 💾 Page 8: 3-Tier State Resilience (v3.8.0)
 
-To protect your "Seen Articles" history on a restricted repository, the bot uses a dedicated `automated/state` branch.
+To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
-### The 'Zero-Clobber' Strategy
-1. **Concurrency Guard**: Ensures only one bot run updates the state at a time.
-2. **Autostash Rebase**: Performs `git pull --rebase --autostash` to merge `seen_articles.json` and `README.md` safely without workspace conflicts.
+### The Recovery Sequence
+1. **Primary Local**: Fast loading from `seen_articles.json` with advisory `FileLock`.
+2. **Local Backup**: On every run, the previous state is saved to `.bak`. If the primary is corrupted, the bot auto-restores from this file.
+3. **Remote Gist (The Cloud Memory)**: Syncs state with a private GitHub Gist. This allows the bot to maintain "Seen Articles" across different CI/CD runners without incurring Git merge conflicts.
 
 ---
 ## 🧪 Page 9: Automated Quality Control (v3.6.5)
@@ -165,6 +168,17 @@ Instead of hard truncation, the bot now uses `smart_split` to chunk text at natu
 
 ### 3. Narrative Expansion
 The Weaver allows the AI to use a **1000-character budget**, transforming the daily brief into a deep technical deep-dive without the fear of character limits.
+
+---
+
+## 📊 Page 12: System Telemetry Dashboards
+
+Version 3.8.0 introduces high-resolution telemetry separated from the main documentation.
+
+### The STATUS.md Advantage
+To eliminate "Rebase Conflicts" in CI, live status updates (Operational status, Last Run, Session Mode, and Current Topic) are now maintained in **STATUS.md**.
+- **Auto-Initialization**: If the file is missing, the bot bootstraps it with a professional header.
+- **CI-Friendly**: Because `README.md` is no longer churned by every run, your main repository remains clean and conflict-free.
 
 ---
 *Built with ❤️ for the AI Community*

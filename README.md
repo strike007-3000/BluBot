@@ -3,10 +3,8 @@
 Automated AI news curator that fetches updates twice daily, synthesizes them using **Sage Intelligence (Multi-Model Failover)**, and broadcasts insightfully to **Bluesky**, **Mastodon**, and **Threads**—all running entirely for free on **GitHub Actions**.
 
 ## 📊 System Status
-| Component | Status | Last Run | Mode |
-|:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-04-18 | 🖼️ NVIDIA SD3 Generation |
-| **Signal Strength** | Elite (Natural) | -- | -- |
+
+See [STATUS.md](file:///d:/Code/BlueSky/STATUS.md) for live telemetry and broadcaster status.
 
 ## 🚀 Key Features
 
@@ -66,6 +64,16 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL |
 | `THREADS_ACCESS_TOKEN` | No | Your Threads Long-Lived Access Token |
 | `THREADS_USER_ID` | No | Your Threads User ID |
+| `GIST_ID` | No | (Optional) Private GitHub Gist ID for remote state |
+| `GIST_TOKEN` | No | (Optional) GitHub PAT with `gist` scope |
+
+## 🛡️ Resilience Architecture (v3.8.0)
+
+BluBot now implements a **3-Tier State Persistence** system to ensure it never "forgets" which articles it has curated, even if local storage is wiped (e.g., in ephemeral CI environments).
+
+1.  **Tier 1: Atomic Local Storage**: Primary state is saved using atomic writes to prevent data corruption.
+2.  **Tier 2: Automatic Local Backups**: On every save, the previous state is rotated to `seen_articles.json.bak`. If the primary file is corrupted, BluBot automatically restores from this backup.
+3.  **Tier 3: Remote Gist Synchronization**: If `GIST_ID` and `GIST_TOKEN` are configured, BluBot pulls the state from a private GitHub Gist on startup and pushes updates back after each run. This acts as a "cloud memory" for the bot.
 
 ## 📂 Project Structure
 
@@ -76,10 +84,12 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🗒️ Updates & History
 
-- **v3.8.0 (Current)**: **The Weaver Release**.
-    - **Conditional Threading**: Implemented 'The Weaver' architecture to automatically chain long-form analysis into platform-native threads (Bluesky, Mastodon, Threads).
-    - **Smart Spacing**: Enhanced text processing with `smart_split` to respect paragraph and sentence boundaries for seamless reading.
-    - **Narrative Budget**: Expanded the AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
+- **v3.8.0 (Current)**: **The Weaver & Resilience Engine**.
+    - **The Weaver**: Integrated a conditional multi-post threading engine with paragraph-aware `smart_split` logic for high-fidelity narration across Bluesky, Mastodon, and Threads.
+    - **Narrative Expansion**: Expanded AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
+    - **3-Tier Persistence**: Implemented a redundant state model (Primary → Local Backup → Remote Gist) with automatic corruption recovery.
+    - **Dashboard Migration**: Moved high-churn telemetry to a dedicated `STATUS.md` to eliminate Git rebase conflicts in CI.
+    - **CI Hardening**: Resolved "EDITOR unset" rebase failures in GitHub Actions.
 - **v3.7.6**: **Visual Integrity Hardening**.
     - **Black/White Box Fix**: Implemented universal `RGB` mode conversion in the compression engine to prevent corrupted renders on ArXiv-style links.
     - **Fidelity Guards**: Hardened broadcasting logic to ensure atomic image delivery and graceful text fallbacks to prevent placeholder distortions.
