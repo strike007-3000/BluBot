@@ -119,8 +119,9 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 
 - [3-Tier State Resilience](#3-tier-state-resilience)
 - [Security & Supply Chain](#security--supply-chain)
-- [The Weaver (Threading)](#the-weaver-threading)
-- [Feed Vanguard Automation](#feed-vanguard-automation)
+- [Page 12: Media Pipeline & NVIDIA NIM](#page-12-media-pipeline--nvidia-nim)
+- [Page 13: Feed Vanguard Automation](#page-13-feed-vanguard-automation)
+- [Page 14: Interaction Engine (Mention Replies)](#page-14-interaction-engine-mention-replies)
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
 ### The Recovery Sequence
@@ -221,6 +222,31 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
    - **3rd failure**: Silenced for 12 hours.
    - **4th+ failure**: Exponential increase (24h → 48h → 72h max).
 3. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
+
+---
+
+## Page 14: Interaction Engine (Mention Replies)
+
+BluBot is no longer a broadcast-only curator. The **Interaction Engine** bridges the gap between static news and conversational engagement.
+
+### Core Architecture
+The engine runs post-broadcast in `bot.py` and performs the following:
+1. **Mention Polling**: Scans notifications on Bluesky and Mastodon for reasons like `mention` or `reply`.
+2. **Selective Engagement**: To prevent bot-spam signaling, the `MENTION_REPLY_PROB` (default 0.8) ensures the bot only engages with high-quality interactions.
+3. **The Sage Persona**: Generates technical, insightful replies using a dedicated system instruction that emphasizes technical mentorship over generic gratitude.
+4. **Resilient Threading**:
+   - **Bluesky**: Corrects for `root` vs `parent` refs to maintain perfect thread integrity.
+   - **Mastodon**: Uses status-id reply chaining.
+
+### Security & Anti-Spam
+- **Interaction Limit**: Hard-capped at 5 interactions per run to prevent "tag-bombing" from exhausting AI tokens.
+- **Seen Interactions**: Notification IDs are tracked in `seen_interactions.json` to prevent double-replies.
+- **Engagement Jitter**: Implements a 10-30s delay to simulate human narrative thought.
+
+### Configuration
+Set these in `config.py` (or as environment variables):
+- `MENTION_REPLY_PROB`: Adjust balance between silence and engagement.
+- `AUTO_LIKE_INTERACTIONS`: Enable/Disable bot "Likes" on interacted posts.
 
 ### Managing Feeds
 - **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
