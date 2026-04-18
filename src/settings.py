@@ -25,6 +25,7 @@ class Settings:
     github_event: str = "schedule"
     image_provider: str = "nvidia"
     enable_image_gen: bool = True
+    enable_bio_management: bool = True
     
     # Limits
     bluesky_limit: int = 300
@@ -32,6 +33,8 @@ class Settings:
     threads_limit: int = 500
     max_api_retries: int = 3
     backoff_factor: float = 3.0
+    thread_pause_min: int = 10
+    thread_pause_max: int = 30
     
     @classmethod
     def from_env(cls) -> "Settings":
@@ -56,6 +59,7 @@ class Settings:
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
             "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true",
+            "enable_bio_management": os.getenv("ENABLE_BIO_MGMT", "true").lower() == "true",
             "gist_id": os.getenv("GIST_ID"),
             "gist_token": os.getenv("GIST_TOKEN")
         }
