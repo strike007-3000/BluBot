@@ -4,7 +4,8 @@ from mastodon import Mastodon
 from atproto import AsyncClient, models
 from src.utils import (
     retry_with_backoff, get_link_metadata, compress_image, 
-    SafeLogger, truncate_bytes, get_image_mime, smart_truncate, smart_split
+    SafeLogger, truncate_bytes, get_image_mime, smart_truncate, smart_split,
+    human_delay
 )
 from src.settings import settings
 
@@ -75,6 +76,10 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
                 parent=models.ComAtprotoRepoStrongRef.Main(uri=parent_post.uri, cid=parent_post.cid)
             )
 
+        # Chaining Delay
+        if i > 0:
+            await human_delay(settings.thread_pause_min, settings.thread_pause_max)
+
         # Post chunk
         resp = await bsky_client.send_post(
             text=current_text, 
@@ -115,6 +120,13 @@ async def post_to_mastodon(text, image_data=None):
             if len(chunks) > 1:
                 current_text = f"{chunk} ({i+1}/{len(chunks)})"
             
+            # Chaining Delay
+            if i > 0:
+                asyncio.run_coroutine_threadsafe(
+                    human_delay(settings.thread_pause_min, settings.thread_pause_max),
+                    loop
+                ).result()
+
             # Post chunk (Media only on the first post)
             status = m.status_post(
                 current_text, 
@@ -183,4 +195,37 @@ async def post_to_threads(client, text, image_url=None):
         if i == 0:
             root_post_id = publish_res.json().get("id")
 
+        # Chaining Delay
+        if i < len(chunks) - 1:
+            await human_delay(settings.thread_pause_min, settings.thread_pause_max)
+
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Threads!")
+
+async def update_social_profiles(bsky_client, mastodon_token, count, dialect, topic):
+    """Dynamically update social media bios with exciting telemetry."""
+    if not settings.enable_bio_management:
+        return
+
+    bio = f"🤖 BluBot v3.8 | {count:,} stories narrated | 🔍 Voice: {dialect} | Latest: {topic}"
+    
+    # 1. Bluesky
+    if bsky_client and settings.bsky_handle:
+        try:
+            # actor.putProfile updates the profile record
+            await bsky_client.app.bsky.actor.put_profile(data={
+                "description": bio,
+                "displayName": "BluBot Elite Sage"
+            })
+            SafeLogger.info("Bluesky bio updated successfully.")
+        except Exception as e:
+            SafeLogger.warn(f"Bluesky bio update failed: {e}")
+
+    # 2. Mastodon
+    if mastodon_token and settings.mastodon_base_url:
+        try:
+            from mastodon import Mastodon
+            m = Mastodon(access_token=mastodon_token, api_base_url=settings.mastodon_base_url)
+            m.account_update_credentials(note=bio)
+            SafeLogger.info("Mastodon bio updated successfully.")
+        except Exception as e:
+            SafeLogger.warn(f"Mastodon bio update failed: {e}")
