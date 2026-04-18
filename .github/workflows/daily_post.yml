@@ -15,13 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      NODE_NO_WARNINGS: "1"
-      GIT_EDITOR: "true"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Full history needed for rebase
 
@@ -34,9 +30,9 @@ jobs:
           git checkout origin/automated/state -- seen_articles.json || echo "seen_articles.json not found in state branch"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Install dependencies
         run: |
@@ -44,7 +40,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Restore BlueSky session
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: bluesky_session.txt
           key: bsky-session-${{ github.run_id }}
@@ -68,7 +64,7 @@ jobs:
 
       - name: Save BlueSky session
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: bluesky_session.txt
           key: bsky-session-${{ github.run_id }}
