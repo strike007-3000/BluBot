@@ -16,9 +16,6 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
     if not settings.bsky_handle or not bsky_client:
         return
 
-    # Clean hashtags if disabled for Bluesky
-    text = clean_hashtags_if_needed(text, settings.enable_hashtags_bsky)
-
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)")
     safe_limit = settings.bluesky_limit - 10
     chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
@@ -105,10 +102,6 @@ async def post_to_mastodon(text, image_data=None, image_alt_text=None):
     """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return
-        
-    # Clean hashtags if disabled for Mastodon
-    text = clean_hashtags_if_needed(text, settings.enable_hashtags_mastodon)
-
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)") with higher margin for Mastodon
     safe_limit = settings.mastodon_limit - 15
     chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
@@ -154,9 +147,6 @@ async def post_to_mastodon(text, image_data=None, image_alt_text=None):
 @retry_with_backoff
 async def post_to_threads(client, text, image_url=None, image_alt_text=None):
     """Posts to Threads with Conditional Multi-Post Threading (The Weaver)."""
-    # Clean hashtags if disabled for Threads
-    text = clean_hashtags_if_needed(text, settings.enable_hashtags_threads)
-
     # Safety Buffer: Account for pagination suffixes
     safe_limit = settings.threads_limit - 10
     chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
