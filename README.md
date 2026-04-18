@@ -24,7 +24,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
         - *Precision Buffers*: Implements safety offsets (`limit - 10` for Bluesky/Threads, `limit - 15` for Mastodon) to account for pagination suffixes (e.g. `(1/2)`) without API limit rejections.
         - *Thread Limits*: Enforces a strict `MAX_THREAD_PARTS=2` constraint to avoid feed fatigue, trailing summaries with `...` when truncated.
     - **🥁 Thread Rhythm (v3.8.1)**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
-    - **🤖 Dynamic Bio Management (v3.11.0)**: Profiles now showcase an active day streak and the currently tracked topic (e.g., "AI signal, zero noise. Day 68. | Currently tracking: On-device agents").
+    - **🤖 Dynamic Bio Management (v3.8.1)**: Profiles now showcase live telemetry and curation statistics (e.g., "1,245 stories narrated | Voice: Analytical").
     - **🛡️ Supply Chain Hardening (v3.8.2)**: Migrated to `pip-tools` with cryptographic hashes.
     - **📡 Feed Vanguard (v3.8.2)**: Automated RSS resilience engine that audits sources for health, silencing broken feeds with exponential backoff.
     - **Typed Pipeline Stages**: Immutable stages powered by frozen `dataclasses` and a typed `Settings` singleton.
@@ -128,8 +128,9 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.8.2 (Current)**: **Hardening & Humanization**.
-    - **Feed Curation**: Audited all RSS sources — removed 13 dead/stale feeds, added 8 validated new sources (Latent Space, TechCrunch, Jack Clark, etc.).
+- **v3.8.2 (Current)**: **Hardening, Humanization & The Vanguard**.
+    - **Feed Vanguard**: Automated RSS resilience engine — audits all sources, silences broken ones, and auto-recovers.
+    - **Elite Expansion**: Added high-signal sources: **AlphaSignal**, **TLDR AI**, and **TheSequence**.
     - **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
     - **Bug Remediation**: Resolved critical `NameErrors` in `bot.py` and `src/broadcaster.py`.
     - **Thread Rhythm**: Implemented randomized pauses between thread posts.
