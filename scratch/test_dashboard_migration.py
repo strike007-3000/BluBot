@@ -8,9 +8,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from bot import update_status_dashboard
 from src.config import STATUS_FILE_PATH
 
-import pytest
-
-@pytest.mark.asyncio
 async def test_dashboard():
     print("--- Dashboard Migration Diagnostic ---")
     
