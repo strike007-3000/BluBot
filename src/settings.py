@@ -70,7 +70,7 @@ class Settings:
             "is_ci": is_ci,
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
-,ReplacementChunks:[{AllowMultiple:false,EndLine:64,ReplacementContent:        }
+        }
         
         if is_dry_run:
             # Inject mock credentials for dry run diagnostic
