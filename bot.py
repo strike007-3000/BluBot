@@ -342,7 +342,7 @@ async def main():
 
     # Weekend Rest logic
     now = datetime.now(timezone.utc)
-    if now.weekday() >= 5 and now.hour >= 12:
+    if now.weekday() >= 5 and now.hour >= 12 and not settings.should_bypass_rest:
         SafeLogger.info("Weekend rest initiated. Skipping post.")
         return
 
