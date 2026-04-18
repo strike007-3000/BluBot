@@ -90,7 +90,31 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.7.0 (Current)**: **The Natural Vibe Engine Release**.
+- **v3.8.2 (Current)**: **Hardening & Humanization**.
+    - **Feed Curation**: Audited all RSS sources — removed 13 dead/stale feeds, added 8 validated new sources (Latent Space, TechCrunch, Jack Clark, etc.).
+    - **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
+    - **Bug Remediation**: Resolved critical `NameErrors` in `bot.py` and `src/broadcaster.py`.
+    - **Thread Rhythm**: Implemented randomized pauses between thread posts.
+    - **Dynamic Bio**: Profiles now update automatically with live curation telemetry.
+- **v3.8.0**: **The Weaver & Resilience Engine**.
+    - **The Weaver**: Integrated a conditional multi-post threading engine with paragraph-aware `smart_split` logic.
+    - **Narrative Expansion**: Expanded AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
+    - **3-Tier Persistence**: Implemented a redundant state model (Primary → Local Backup → Remote Gist) with automatic corruption recovery.
+    - **Dashboard Migration**: Moved high-churn telemetry to a dedicated `STATUS.md` to eliminate Git rebase conflicts in CI.
+    - **CI Hardening**: Resolved "EDITOR unset" rebase failures in GitHub Actions.
+- **v3.7.6**: **Visual Integrity Hardening**.
+    - **Black/White Box Fix**: Implemented universal `RGB` mode conversion in the compression engine to prevent corrupted renders on ArXiv-style links.
+    - **Fidelity Guards**: Hardened broadcasting logic to ensure atomic image delivery and graceful text fallbacks to prevent placeholder distortions.
+- **v3.7.5**: **Content & Infrastructure Optimization**.
+    - **Smart Truncate**: Implemented word-boundary-aware truncation for Mastodon and Threads to prevent mid-word cutoffs.
+    - **Persistence Hardening**: Resolved automated `README.md` rebase conflicts and implemented session ID masking in CI logs.
+- **v3.7.3**: **Stabilization & Visibility Patch**.
+    - **Stability Fix**: Restored the missing `published` timestamp in the curation engine to satisfy `Article` model requirements.
+    - **Session Visibility**: Enhanced the broadcast stage with explicit logging for Bluesky session cache restoration.
+- **v3.7.2**: **Production Hardening Patch**.
+    - **Model Stability**: Resolved a critical `TypeError` in the Article dataclass by supporting diagnostic `_score_debug` metadata.
+    - **Infra Alignment**: Updated GitHub Actions environment to cleanly support Node.js 24 runners.
+- **v3.7.0**: **The Natural Vibe Engine Release**.
     - **Style Memory**: Integrated stylistic persistence to ensure editorial variety between consecutive runs.
     - **Session Granularity**: Increased temporal resolution to 5 sessions with manual intercept awareness.
     - **Architectural Cleanup**: Formalized absolute `src.` imports across the entire project, resolving `pytest` isolation issues.
