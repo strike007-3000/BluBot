@@ -2,7 +2,7 @@
 # Use 'pip-compile requirements.in' to generate requirements.txt
 
 atproto>=0.0.65
-google-genai>=1.72.0
+google-genai>=1.74.0
 feedparser>=6.0.12
 python-dotenv>=1.2.1
 requests==2.33.1
@@ -16,7 +16,7 @@ cryptography==46.0.7
 urllib3==2.6.3
 anyio==4.13.0
 zipp==3.23.1
-dnspython==2.6.1
+dnspython==2.8.0
 
 # Testing
 pytest>=8.0.0
