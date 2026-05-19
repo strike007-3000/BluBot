@@ -287,7 +287,7 @@ async def update_social_profiles(bsky_client, mastodon_token, count, dialect, to
         try:
             from mastodon import Mastodon
             m = Mastodon(access_token=mastodon_token, api_base_url=settings.mastodon_base_url)
-            m.account_update_credentials(note=bio)
+            await asyncio.to_thread(m.account_update_credentials, note=bio)
             SafeLogger.info("Mastodon bio updated successfully.")
         except Exception as e:
             SafeLogger.warn(f"Mastodon bio update failed: {e}")

@@ -94,22 +94,24 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
     """Fetches and parses a single RSS feed with Bozo resilience."""
     try:
         response = await client.get(url, timeout=10)
-        feed = await asyncio.to_thread(feedparser.parse, response.text)
+        feed = await asyncio.to_thread(feedparser.parse, response.content)
         items = []
         for entry in feed.entries:
+            link = getattr(entry, 'link', None)
+            if not link or link in seen_links:
+                continue
+                
             pub_date = None
             if hasattr(entry, 'published_parsed') and entry.published_parsed:
                 pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
             else:
                 pub_date = now_utc
             
-            if entry.link in seen_links: continue
-                
             clean_summary = BeautifulSoup(getattr(entry, 'summary', getattr(entry, 'description', "")), "html.parser").get_text()
             item = {
-                "title": entry.title,
+                "title": getattr(entry, 'title', 'Untitled'),
                 "summary": clean_summary[:FEED_SUMMARY_MAX_CHARS],
-                "link": entry.link,
+                "link": link,
                 "published": pub_date.isoformat(),
                 "source": getattr(feed.feed, 'title', url)
             }

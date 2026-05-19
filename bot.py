@@ -34,8 +34,8 @@ from google.genai import types
 from google import genai
 from atproto import AsyncClient, AsyncRequest, models
 
-async def update_status_dashboard(session_name: str, topic: str):
-    """Automatically update the STATUS.md dashboard."""
+def _update_status_dashboard_sync(session_name: str, topic: str):
+    """Synchronous implementation of STATUS.md update to be offloaded to thread."""
     try:
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         icon = "🚀" if "Morning" in session_name else "🔍"
@@ -71,6 +71,10 @@ async def update_status_dashboard(session_name: str, topic: str):
     except Exception as e:
         SafeLogger.debug(f"Dashboard update failed: {e}")
 
+async def update_status_dashboard(session_name: str, topic: str):
+    """Automatically update the STATUS.md dashboard without blocking the event loop."""
+    await asyncio.to_thread(_update_status_dashboard_sync, session_name, topic)
+
 async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
     from src.feed_vanguard import VanguardManager
@@ -81,7 +85,7 @@ async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
     await vanguard.audit_and_update(client)
     active_feeds = vanguard.get_active_feeds()
     
-    seen_data = load_seen_articles()
+    seen_data = await asyncio.to_thread(load_seen_articles)
     context = get_temporal_context()
     
     raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
@@ -158,14 +162,15 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
     # Bluesky Session Hardening
     bsky_client = AsyncClient(request=AsyncRequest(timeout=30.0))
     try:
-        cached_session = load_session_string()
+        cached_session = await asyncio.to_thread(load_session_string)
         if cached_session:
             SafeLogger.info("Restoring cached Bluesky session...")
             await bsky_client.login(session_string=cached_session)
         else:
             SafeLogger.info("Initiating new Bluesky login...")
             await bsky_client.login(settings.bsky_handle, settings.bsky_password)
-        save_session_string(bsky_client.export_session_string())
+        session_str = bsky_client.export_session_string()
+        await asyncio.to_thread(save_session_string, session_str)
     except Exception as e:
         SafeLogger.error(f"Bluesky auth failed: {e}")
         bsky_client = None
@@ -190,7 +195,7 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
 async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
     """Stage 4: State Synchronization."""
     # Load fresh state to ensure we have the latest counter
-    state = load_seen_articles()
+    state = await asyncio.to_thread(load_seen_articles)
     
     seen_links = set(state.get("links", []))
     for article in curation.top_articles[:10]:
@@ -209,7 +214,7 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     state["links"] = state["links"][-500:]
     state["recent_topics"] = state["recent_topics"][-20:]
 
-    save_seen_articles(state)
+    await asyncio.to_thread(save_seen_articles, state)
     await update_status_dashboard(curation.session_name, synthesis.topic)
 
     # Dynamic Bio Update
@@ -224,7 +229,7 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
 async def interaction_stage(bsky_client, session_context: dict) -> InteractionResult:
     """Handles social interactions (mentions/replies) with humanized engagement."""
     SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
-    seen_ids = load_seen_interactions()
+    seen_ids = await asyncio.to_thread(load_seen_interactions)
     replied_ids = []
     errors = []
     
@@ -282,7 +287,7 @@ async def interaction_stage(bsky_client, session_context: dict) -> InteractionRe
             SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
             errors.append(str(e))
 
-    save_seen_interactions(seen_ids)
+    await asyncio.to_thread(save_seen_interactions, seen_ids)
     return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
 
 async def main():
