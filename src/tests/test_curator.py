@@ -130,7 +130,6 @@ async def test_summarize_news_with_thinking_budget(monkeypatch):
          patch("src.curator.settings") as mock_settings:
         mock_settings.gemini_key = "test_key"
         mock_settings.thinking_budget = 500
-        mock_settings.is_dry_run = False
         
         # We need some dummy news items
         news_items = [{"title": "Important AI Breakthrough", "link": "https://openai.com/1", "source": "OpenAI", "score": 100}]
