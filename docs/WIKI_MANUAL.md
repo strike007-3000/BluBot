@@ -126,6 +126,11 @@ Scanning over **30 premium feeds**.
 - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield the application from decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
 - **Resilient RSS Parsing**: Incorporates raw byte parsing via `response.content` and robust fallback handling for malformed XML schemas. It uses safe lookups (`getattr(entry, 'link', None)`) and skips invalid entries to prevent single-feed crashes from dropping whole RSS sources.
 
+### Hardening & Event-Loop Optimization
+- **Non-Blocking I/O**: File persistence (`load_seen_articles`/`save_seen_articles`, `load_seen_interactions`/`save_seen_interactions`, `load_session_string`/`save_session_string`), social media profile bio updates, status dashboard telemetry, and feed vanguard state tracking are completely offloaded to background worker threads via `asyncio.to_thread`. This guarantees that the core async event loop is never blocked during high-concurrency periods.
+- **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield the application from decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
+- **Resilient RSS Parsing**: Incorporates raw byte parsing via `response.content` and robust fallback handling for malformed XML schemas. It uses safe lookups (`getattr(entry, 'link', None)`) and skips invalid entries to prevent single-feed crashes from dropping whole RSS sources.
+
 ---
 
 ## 🧪 Page 7: Local Testing & Interactive Diagnostics
