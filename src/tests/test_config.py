@@ -36,3 +36,31 @@ def test_gemini_priority_validation_ci_mode():
     """Verify that validation passes in CI mode without real API keys."""
     os.environ["CI"] = "true"
     assert validate_gemini_model_priority() is True
+
+def test_validate_gemini_model_priority_pruning(monkeypatch):
+    """Verify that validate_gemini_model_priority prunes model priority based on API listing."""
+    monkeypatch.setenv("CI", "false")
+    monkeypatch.setenv("GEMINI_KEY", "test_key")
+    
+    from src.config import GEMINI_MODEL_PRIORITY
+    original_priority = list(GEMINI_MODEL_PRIORITY)
+    
+    from unittest.mock import MagicMock, patch
+    mock_client = MagicMock()
+    m1 = MagicMock()
+    m1.name = "models/gemma-4-31b-it"
+    m2 = MagicMock()
+    m2.name = "models/gemini-2.5-flash-lite"
+    mock_model_list = [m1, m2]
+    mock_client.models.list.return_value = mock_model_list
+    
+    with patch("google.genai.Client", return_value=mock_client):
+        assert validate_gemini_model_priority() is True
+        
+    assert "models/gemma-4-31b-it" in GEMINI_MODEL_PRIORITY
+    assert "models/gemini-2.5-flash-lite" in GEMINI_MODEL_PRIORITY
+    assert "models/gemini-3.1-flash-lite-preview" not in GEMINI_MODEL_PRIORITY
+    
+    # Restore original priority list for other tests
+    GEMINI_MODEL_PRIORITY.clear()
+    GEMINI_MODEL_PRIORITY.extend(original_priority)
