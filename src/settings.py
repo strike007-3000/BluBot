@@ -18,6 +18,8 @@ class Settings:
     threads_user_id: Optional[str] = None
     gist_id: Optional[str] = None
     gist_token: Optional[str] = None
+    thinking_budget: Optional[int] = None
+    gemini_model: str = "models/gemini-2.5-flash-lite"
     
     # Modes & Flags
     is_dry_run: bool = False
@@ -49,6 +51,10 @@ class Settings:
         is_ci = os.getenv("CI", "false").lower() == "true"
         image_provider = os.getenv("IMAGE_PROVIDER", "nvidia")
         
+        # Parse thinking budget safely
+        tb_env = os.getenv("THINKING_BUDGET")
+        thinking_budget = int(tb_env) if tb_env and tb_env.strip().isdigit() else None
+
         # Core validation logic moved from config.py
         settings_dict = {
             "gemini_key": os.getenv("GEMINI_KEY", ""),
@@ -70,6 +76,8 @@ class Settings:
             "is_ci": is_ci,
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
+            "thinking_budget": thinking_budget,
+            "gemini_model": os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-lite"),
         }
         
         if is_dry_run:

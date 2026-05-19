@@ -192,5 +192,33 @@ def validate_config():
 
 def validate_gemini_model_priority():
     """Legacy wrapper for Gemini model self-discovery."""
-    # This logic has been moved to the Settings initialization or can be called explicitly
-    return True # Placeholder for CI compatibility
+    if os.getenv("CI", "false").lower() == "true":
+        return True
+    key = os.getenv("GEMINI_KEY") or os.getenv("GEMINI_API_KEY")
+    if not key:
+        SafeLogger.warn("Gemini Validation: No key found in environment for model discovery.")
+        return True  # Fall back to defaults
+    try:
+        from google import genai
+        client = genai.Client(api_key=key)
+        # List models synchronously
+        SafeLogger.info("Gemini Validation: Querying available models from API...")
+        available = [m.name for m in client.models.list()]
+        
+        # Prune prioritised list in-place
+        pruned = []
+        for model_id in GEMINI_MODEL_PRIORITY:
+            norm_id = model_id.lower()
+            if any(norm_id in m.lower() or m.lower() in norm_id for m in available):
+                pruned.append(model_id)
+                
+        if pruned:
+            SafeLogger.info(f"Gemini Validation: Discovered active models: {pruned}")
+            GEMINI_MODEL_PRIORITY.clear()
+            GEMINI_MODEL_PRIORITY.extend(pruned)
+        else:
+            SafeLogger.warn("Gemini Validation: None of the prioritized models were returned by the API. Keeping defaults.")
+        return True
+    except Exception as e:
+        SafeLogger.warn(f"Gemini Validation: Discovery failed ({e}). Falling back to configured defaults.")
+        return True  # Return True to avoid blocking execution due to API network glitches
