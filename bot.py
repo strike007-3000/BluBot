@@ -6575,7 +6575,7 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
 async def interaction_stage(bsky_client, session_context: dict) -> InteractionResult:
     """Handles social interactions (mentions/replies) with humanized engagement."""
     SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
-    seen_ids = load_seen_interactions()
+    seen_ids = await asyncio.to_thread(load_seen_interactions)
     replied_ids = []
     errors = []
     
@@ -6633,7 +6633,7 @@ async def interaction_stage(bsky_client, session_context: dict) -> InteractionRe
             SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
             errors.append(str(e))
 
-    save_seen_interactions(seen_ids)
+    await asyncio.to_thread(save_seen_interactions, seen_ids)
     return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
 
 async def main():
