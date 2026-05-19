@@ -143,12 +143,15 @@ def strip_markdown(text):
     if not text: return text
     return re.sub(r'(\*\*|__|\*)', '', text).strip()
 
-def supports_thinking(model_id: str) -> bool:
-    """Helper to detect if a model supports thinking configs (like Gemini 2.0/2.5 models)."""
-    model_lower = model_id.lower()
-    if "gemma" in model_lower:
+def supports_thinking(model_name: str) -> bool:
+    """
+    Determines if a model supports the thinking_budget parameter.
+    Currently supported by: gemini-2.0 and gemini-2.5 pro/flash/flash-lite.
+    """
+    if not model_name:
         return False
-    if "lite" in model_lower:
+    model_lower = model_name.lower()
+    if "gemini-2.0" not in model_lower and "gemini-2.5" not in model_lower:
         return False
     if "gemini-2.0" in model_lower or "gemini-2.5" in model_lower:
         return True
@@ -161,7 +164,7 @@ async def prune_gemini_model_priority_async(genai_client):
     try:
         SafeLogger.info("Gemini Model Discovery: Querying available models from API...")
         available_models = []
-        async for m in genai_client.aio.models.list():
+        async for m in await genai_client.aio.models.list():
             available_models.append(m.name)
             
         pruned = []
