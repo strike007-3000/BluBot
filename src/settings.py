@@ -76,7 +76,9 @@ class Settings:
             "is_ci": is_ci,
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
-,ReplacementChunks:[{AllowMultiple:false,EndLine:64,ReplacementContent:        }
+            "thinking_budget": thinking_budget,
+            "gemini_model": os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-lite"),
+        }
         
         if is_dry_run:
             # Inject mock credentials for dry run diagnostic
