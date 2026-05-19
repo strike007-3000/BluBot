@@ -20,7 +20,7 @@ from src.utils import (
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
     get_temporal_context, generate_visual_prompt, generate_nvidia_image,
-    generate_interactive_reply
+    generate_interactive_reply, prune_gemini_model_priority_async
 )
 from src.broadcaster import (
     post_to_bluesky, post_to_mastodon, post_to_threads,
@@ -4255,6 +4255,9 @@ async def main():
 
     async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
         genai_client = genai.Client(api_key=settings.gemini_key)
+        
+        # Prune models dynamically at startup based on API limits
+        await prune_gemini_model_priority_async(genai_client)
         
         # 1. Curation
         curation = await curation_stage(client)
