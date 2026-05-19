@@ -62,3 +62,87 @@ async def test_fetch_news_synergy_and_deduplication(mock_httpx_client, mocker):
     assert top_news[0]["title"] == "Story A"
     assert top_news[1]["title"] == "Story C"
     assert top_news[0]["score"] == 10 + SYNERGY_BONUS
+
+from src.curator import supports_thinking, prune_gemini_model_priority_async, summarize_news
+from src.config import GEMINI_MODEL_PRIORITY
+from unittest.mock import MagicMock, AsyncMock, patch
+
+def test_supports_thinking():
+    assert supports_thinking("models/gemini-2.5-pro") is True
+    assert supports_thinking("models/gemini-2.5-flash") is True
+    assert supports_thinking("models/gemma-4-31b-it") is False
+    assert supports_thinking("models/gemini-2.5-flash-lite") is False
+
+@pytest.mark.asyncio
+async def test_prune_gemini_model_priority_async(monkeypatch):
+    monkeypatch.setenv("CI", "false")
+    original_priority = list(GEMINI_MODEL_PRIORITY)
+    
+    # Mock list models async generator
+    class AsyncListMock:
+        def __init__(self, models):
+            self.models = models
+        def __aiter__(self):
+            self.models_iter = iter(self.models)
+            return self
+        async def __anext__(self):
+            try:
+                return next(self.models_iter)
+            except StopIteration:
+                raise StopAsyncIteration
+
+    mock_client = MagicMock()
+    m1 = MagicMock()
+    m1.name = "models/gemma-4-31b-it"
+    m2 = MagicMock()
+    m2.name = "models/gemini-2.5-flash-lite"
+    mock_model_list = [m1, m2]
+    mock_client.aio.models.list.return_value = AsyncListMock(mock_model_list)
+    
+    await prune_gemini_model_priority_async(mock_client)
+    
+    assert "models/gemma-4-31b-it" in GEMINI_MODEL_PRIORITY
+    assert "models/gemini-2.5-flash-lite" in GEMINI_MODEL_PRIORITY
+    assert "models/gemini-3.1-flash-lite-preview" not in GEMINI_MODEL_PRIORITY
+    
+    # Restore
+    GEMINI_MODEL_PRIORITY.clear()
+    GEMINI_MODEL_PRIORITY.extend(original_priority)
+
+@pytest.mark.asyncio
+async def test_summarize_news_with_thinking_budget(monkeypatch):
+    """Verify that summarize_news includes thinking_config when supported by the model."""
+    monkeypatch.setenv("CI", "true")
+    
+    # Force GEMINI_MODEL_PRIORITY to only contain a model supporting thinking
+    original_priority = list(GEMINI_MODEL_PRIORITY)
+    GEMINI_MODEL_PRIORITY.clear()
+    GEMINI_MODEL_PRIORITY.append("models/gemini-2.5-flash")
+    
+    # Mock client and response
+    mock_client = MagicMock()
+    mock_response = AsyncMock()
+    mock_response.text = "TOPIC: LLMs\nBODY: This is the news brief."
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+    
+    # Patch genai.Client and settings singleton
+    with patch("google.genai.Client", return_value=mock_client), \
+         patch("src.curator.settings") as mock_settings:
+        mock_settings.gemini_key = "test_key"
+        mock_settings.thinking_budget = 500
+        
+        # We need some dummy news items
+        news_items = [{"title": "Important AI Breakthrough", "link": "https://openai.com/1", "source": "OpenAI", "score": 100}]
+        context = {"day": "Monday", "session": "Morning"}
+        await summarize_news(news_items, context)
+        
+    # Verify generate_content was called with thinking_config containing the budget
+    args, kwargs = mock_client.aio.models.generate_content.call_args
+    config = kwargs.get("config")
+    assert config is not None
+    assert config.thinking_config is not None
+    assert config.thinking_config.thinking_budget == 500
+    
+    # Restore
+    GEMINI_MODEL_PRIORITY.clear()
+    GEMINI_MODEL_PRIORITY.extend(original_priority)

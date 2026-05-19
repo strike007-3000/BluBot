@@ -88,8 +88,10 @@ Scanning over **30 premium feeds**.
 ### Environment Secrets
 | Variable | Description |
 | :--- | :--- |
-| `GEMINI_KEY` | Google AI Studio Key |
+| `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
 | `NVIDIA_KEY` | NVIDIA Build API Key (for SD3) |
+| `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024) |
+| `GEMINI_MODEL` | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
 | `BSKY_HANDLE` | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | BlueSky App Password |
 | `GIST_ID` | Private GitHub Gist ID |

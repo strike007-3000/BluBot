@@ -63,8 +63,10 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 |-------------|----------|-------------|
 | `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky App Password |
-| `GEMINI_KEY` | **Yes** | Your Google Gemini API Key |
+| `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
 | `NVIDIA_KEY` | **Yes** | Your NVIDIA API Key (for SD3) |
+| `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
+| `GEMINI_MODEL` | No | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
 | `IMAGE_PROVIDER` | No | Default: `nvidia`. Set to `imagen` to switch back. |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL |
