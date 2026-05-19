@@ -81,8 +81,16 @@ async def update_status_dashboard(session_name: str, topic: str):
     """Automatically update the STATUS.md dashboard without blocking the event loop."""
     await asyncio.to_thread(_update_status_dashboard_sync, session_name, topic)
 
-async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
+async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
+    from src.feed_vanguard import VanguardManager
+    vanguard = VanguardManager()
+    
+    # Pre-flight: Refresh blacklist based on current health
+    SafeLogger.info("Vanguard: Running pre-flight RSS health check...")
+    await vanguard.audit_and_update(client)
+    active_feeds = vanguard.get_active_feeds()
+    
     seen_data = await asyncio.to_thread(load_seen_articles)
     context = get_temporal_context()
 
@@ -261,17 +269,31 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
         state.setdefault("recent_topics", []).append(synthesis.topic)
 
-    save_seen_articles({
-        "links": curation.seen_links,
-        "recent_topics": curation.recent_topics,
-        "last_dialect": curation.last_dialect
-    })
-    await update_readme_dashboard(curation.session_name, synthesis.topic)
+    # Update stats
+    count_this_run = len(curation.top_articles)
+    state["total_posts_curated"] = state.get("total_posts_curated", 0) + count_this_run
+    state["last_dialect"] = curation.last_dialect
+    
+    # Cap history to prevent state bloat (Tier 1 constraint)
+    state["links"] = state["links"][-500:]
+    state["recent_topics"] = state["recent_topics"][-20:]
+
+    await asyncio.to_thread(save_seen_articles, state)
+    await update_status_dashboard(curation.session_name, synthesis.topic)
+
+    # Dynamic Bio Update
+    await update_social_profiles(
+        client_bsky, 
+        settings.mastodon_token, 
+        state["total_posts_curated"],
+        curation.last_dialect,
+        synthesis.topic
+    )
 
 async def interaction_stage(bsky_client, session_context: dict) -> InteractionResult:
     """Handles social interactions (mentions/replies) with humanized engagement."""
     SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
-    seen_ids = load_seen_interactions()
+    seen_ids = await asyncio.to_thread(load_seen_interactions)
     replied_ids = []
     errors = []
     
@@ -329,7 +351,7 @@ async def interaction_stage(bsky_client, session_context: dict) -> InteractionRe
             SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
             errors.append(str(e))
 
-    save_seen_interactions(seen_ids)
+    await asyncio.to_thread(save_seen_interactions, seen_ids)
     return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
 
 async def main():
