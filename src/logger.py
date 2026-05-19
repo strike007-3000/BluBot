@@ -62,7 +62,9 @@ class _SecretRedactionFilter(logging.Filter):
     def _sanitize(self, value: Any) -> Any:
         if value is None:
             return None
-        text = str(value)
+        if not isinstance(value, str):
+            return value
+        text = value
         if not self._secret_patterns:
             return text
         
@@ -164,6 +166,8 @@ class SafeLogger:
     @classmethod
     def configure(cls, platform: Optional[str] = None, mode: Optional[str] = None):
         cls._configure_if_needed()
+        if cls._redaction_filter:
+            cls._redaction_filter.refresh_secrets()
         if platform: cls._context["platform"] = platform
         if mode: cls._context["mode"] = mode
 
