@@ -1,5 +1,6 @@
 import asyncio
 import re
+from datetime import datetime, timezone, timedelta
 from mastodon import Mastodon
 from atproto import AsyncClient, models
 from src.utils import (
@@ -8,6 +9,7 @@ from src.utils import (
     human_delay
 )
 from src.settings import settings
+from src.config import VERSION
 
 @retry_with_backoff
 async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None):
@@ -179,7 +181,7 @@ async def post_to_threads(client, text, image_url=None):
                 "access_token": settings.threads_token
             }
             if root_post_id:
-                data["reply_to"] = root_post_id
+                data["reply_to_id"] = root_post_id
                 
             res = await client.post(base_url, data=data, timeout=20)
             res.raise_for_status()
@@ -207,16 +209,45 @@ async def post_to_threads(client, text, image_url=None):
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Threads!")
 
 async def fetch_bluesky_mentions(bsky_client):
-    """Fetches recent mentions from Bluesky."""
+    """Fetches recent mentions and replies from Bluesky within 24 hours."""
     if not bsky_client:
         return []
     
     try:
         from src.models import InteractionNote
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         resp = await bsky_client.app.bsky.notification.list_notifications()
         mentions = []
+        
+        # Decide which reasons to include based on settings
+        valid_reasons = {'mention'}
+        if settings.enable_bsky_comment_replies:
+            valid_reasons.add('reply')
+
         for n in resp.notifications:
-            if n.reason == 'mention' and hasattr(n, 'record'):
+            if n.reason in valid_reasons and hasattr(n, 'record') and hasattr(n.record, 'text'):
+                try:
+                    indexed_dt = datetime.fromisoformat(n.indexed_at.replace("Z", "+00:00"))
+                except Exception:
+                    continue
+                
+                # Enforce 24-hour lookback
+                if indexed_dt < cutoff:
+                    continue
+
+                # Filter self-replies
+                if n.author.handle == settings.bsky_handle:
+                    continue
+
+                clean_text = n.record.text.strip()
+                # Apply length and content filters to replies
+                if n.reason == 'reply':
+                    if len(clean_text) < 10 or not any(c.isalnum() for c in clean_text):
+                        continue
+                else:  # Direct mention
+                    if len(clean_text) < 2 or not any(c.isalnum() for c in clean_text):
+                        continue
+
                 # Extract threading metadata
                 root_uri = n.record.reply.root.uri if hasattr(n.record, 'reply') else n.uri
                 root_cid = n.record.reply.root.cid if hasattr(n.record, 'reply') else n.cid
@@ -238,12 +269,13 @@ async def fetch_bluesky_mentions(bsky_client):
         return []
 
 async def fetch_mastodon_mentions():
-    """Fetches recent mentions from Mastodon."""
+    """Fetches recent mentions and replies from Mastodon within 24 hours."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return []
     
     try:
         from src.models import InteractionNote
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
         # Use asyncio.to_thread for synchronous mastodon calls
         notifications = await asyncio.to_thread(m.notifications, types=['mention'])
@@ -251,16 +283,120 @@ async def fetch_mastodon_mentions():
         for n in notifications:
             status = n.get('status')
             if status:
+                is_reply = status.get('in_reply_to_id') is not None
+                if is_reply and not settings.enable_mastodon_comment_replies:
+                    continue
+
+                created_at = status.get('created_at')
+                if created_at:
+                    if created_at.tzinfo is None:
+                        created_at = created_at.replace(tzinfo=timezone.utc)
+                    # Enforce 24-hour lookback
+                    if created_at < cutoff:
+                        continue
+
+                text = re.sub(r'<[^>]+>', '', status['content'])  # Strip HTML
+                clean_text = text.strip()
+                
+                # Pre-filter logic
+                if is_reply:
+                    if len(clean_text) < 10 or not any(c.isalnum() for c in clean_text):
+                        continue
+                else:
+                    if len(clean_text) < 2 or not any(c.isalnum() for c in clean_text):
+                        continue
+
                 mentions.append(InteractionNote(
                     platform="mastodon",
                     id=str(status['id']),
                     author=status['account']['acct'],
-                    text=re.sub(r'<[^>]+>', '', status['content']), # Strip HTML
-                    timestamp=status['created_at'].isoformat() if hasattr(status['created_at'], 'isoformat') else str(status['created_at'])
+                    text=text,
+                    timestamp=status['created_at'].isoformat() if hasattr(status['created_at'], 'isoformat') else str(status['created_at']),
+                    root_uri=str(status['in_reply_to_id']) if status.get('in_reply_to_id') else None
                 ))
         return mentions
     except Exception as e:
         SafeLogger.debug(f"Failed to fetch Mastodon mentions: {e}")
+        return []
+
+async def fetch_threads_replies(client):
+    """Fetches recent replies to Threads posts within 24 hours."""
+    if not settings.threads_token or not settings.threads_user_id or not settings.enable_threads_comment_replies:
+        return []
+    
+    try:
+        from src.models import InteractionNote
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+        
+        # Determine the bot's username to filter out self-replies
+        own_username = None
+        try:
+            me_res = await client.get("https://graph.threads.net/v1.0/me", params={
+                "fields": "username",
+                "access_token": settings.threads_token
+            }, timeout=10)
+            if me_res.status_code == 200:
+                own_username = me_res.json().get("username")
+        except Exception:
+            pass
+
+        # 1. Fetch user's recent posts
+        url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
+        res = await client.get(url, params={
+            "fields": "id,text,created_at",
+            "access_token": settings.threads_token
+        }, timeout=15)
+        res.raise_for_status()
+        posts = res.json().get("data", [])
+        
+        replies = []
+        for post in posts:
+            post_time_str = post.get("created_at")
+            if not post_time_str:
+                continue
+            post_dt = datetime.fromisoformat(post_time_str.replace("Z", "+00:00"))
+            # Skip checking posts older than 24 hours
+            if post_dt < cutoff:
+                continue
+            
+            # Fetch replies for this post
+            replies_url = f"https://graph.threads.net/v1.0/{post['id']}/replies"
+            rep_res = await client.get(replies_url, params={
+                "fields": "id,text,username,created_at",
+                "access_token": settings.threads_token
+            }, timeout=15)
+            rep_res.raise_for_status()
+            for reply_data in rep_res.json().get("data", []):
+                username = reply_data.get("username")
+                if own_username and username == own_username:
+                    continue
+
+                reply_time_str = reply_data.get("created_at")
+                if not reply_time_str:
+                    continue
+                reply_dt = datetime.fromisoformat(reply_time_str.replace("Z", "+00:00"))
+                # Enforce 24-hour lookback on reply itself
+                if reply_dt < cutoff:
+                    continue
+                
+                text = reply_data.get("text", "")
+                if len(text.strip()) < 10 or not any(c.isalnum() for c in text):
+                    continue
+                
+                replies.append(InteractionNote(
+                    platform="threads",
+                    id=reply_data["id"],
+                    author=username or "unknown",
+                    text=text,
+                    timestamp=reply_time_str,
+                    uri=reply_data["id"],
+                    cid=reply_data["id"],
+                    root_uri=post["id"],
+                    root_cid=post["id"]
+                ))
+        return replies
+    except Exception as e:
+        SafeLogger.debug(f"Failed to fetch Threads replies: {e}")
         return []
 
 async def update_social_profiles(bsky_client, mastodon_token, count, dialect, topic):
@@ -268,7 +404,7 @@ async def update_social_profiles(bsky_client, mastodon_token, count, dialect, to
     if not settings.enable_bio_management:
         return
 
-    bio = f"🤖 BluBot v3.8 | {count:,} stories narrated | 🔍 Voice: {dialect} | Latest: {topic}"
+    bio = f"🤖 BluBot v{VERSION} | {count:,} stories narrated | 🔍 Voice: {dialect} | Latest: {topic}"
     
     # 1. Bluesky
     if bsky_client and settings.bsky_handle:
@@ -287,7 +423,7 @@ async def update_social_profiles(bsky_client, mastodon_token, count, dialect, to
         try:
             from mastodon import Mastodon
             m = Mastodon(access_token=mastodon_token, api_base_url=settings.mastodon_base_url)
-            m.account_update_credentials(note=bio)
+            await asyncio.to_thread(m.account_update_credentials, note=bio)
             SafeLogger.info("Mastodon bio updated successfully.")
         except Exception as e:
             SafeLogger.warn(f"Mastodon bio update failed: {e}")
