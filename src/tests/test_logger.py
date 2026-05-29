@@ -48,3 +48,14 @@ def test_entropy_calculation():
     assert _SecretRedactionFilter._has_min_entropy("aaaaaaaa") is False
     # High entropy
     assert _SecretRedactionFilter._has_min_entropy("aB1!cD2@eE") is True # 10 chars, varied
+
+def test_sanitize_non_string_args():
+    """Verify that formatting log records with non-string arguments does not raise TypeError."""
+    redactor = _SecretRedactionFilter()
+    record = logging.LogRecord(
+        name="test", level=logging.INFO, pathname="test.py", lineno=10,
+        msg="Count is %d", args=(42,), exc_info=None
+    )
+    assert redactor.filter(record) is True
+    # The formatter should be able to format this without raising TypeError
+    assert record.args == (42,)

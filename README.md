@@ -28,8 +28,11 @@ See [STATUS.md](file:///d:/Code/BlueSky/STATUS.md) for live telemetry and broadc
     - **Universal RGB Defense**: Image mode detection and conversion engine that prevents "Black/White Box" artifacts from non-standard (ArXiv) thumbnails.
     - **Resilient Rebase Logic**: Automated conflict resolution for `README.md` dashboards (using `git checkout --ours`) ensuring 100% state persistence uptime.
     - **Smart Truncation (v3.7.5)**: Word-boundary-aware trimming for Mastodon and Threads to prevent mid-word cutoffs.
-- **Fortress Hardening (v3.6.5)**: 
-    - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity).
+- **Fortress Hardening (v3.9.0)**: 
+    - **Non-Blocking I/O**: Offloads all disk persistence, social bio updates, status telemetry updates, and feed vanguard state saving to background worker threads via `asyncio.to_thread`.
+    - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield against decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
+    - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) and uses safe lookups to survive malformed feed entries.
+    - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity), fixing `TypeError` formatting bugs for non-string args.
     - **SSRF Prevention Architecture**: Hardened the metadata scraper with **DNS Pinning** and **IP validation** to block all internal/private network requests.
     - **Zero-Duplicate Threads Logic**: Implemented "Catch & Log" delivery validation to prevent duplicate posts during transient API failures.
 - **🧠 Natural Vibe Engine (v3.7.0)**:
@@ -72,6 +75,9 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `THREADS_USER_ID` | No | Your Threads User ID |
 | `GIST_ID` | No | (Optional) Private GitHub Gist ID for remote state |
 | `GIST_TOKEN` | No | (Optional) GitHub PAT with `gist` scope |
+| `ENABLE_BSKY_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
+| `ENABLE_MASTODON_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
+| `ENABLE_THREADS_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
 
 ## 🛡️ Resilience Architecture (v3.8.0)
 
@@ -90,7 +96,12 @@ BluBot now implements a **3-Tier State Persistence** system to ensure it never "
 
 ## 🗒️ Updates & History
 
-- **v3.8.5 (Current)**: **Production Recovery & Precision Threading**.
+- **v3.10.0 (Current)**: **Configurable & Token-Efficient Comment Replies**.
+    - 💬 **Configurable Social Comments**: Enable comment replying separately across Bluesky (`true` by default), Mastodon (`false` by default), and Threads (`false` by default) via GitHub Actions variables.
+    - 📅 **24-Hour Lookback**: Restrict comment replies to posts/notifications from the last 24 hours to prevent checking entire profiles.
+    - 🧠 **Token Optimization**: Disabled thinking configurations and capped max output to `100` tokens for interactive replies to minimize token usage.
+    - 🗣️ **Conversational Quality**: Prompted the model to avoid robotic pre-ambles, replying as a human peer.
+- **v3.8.5**: **Production Recovery & Precision Threading**.
     - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum to maintain high signal-to-noise.
     - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
     - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).

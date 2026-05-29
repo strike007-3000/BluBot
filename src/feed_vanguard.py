@@ -71,7 +71,7 @@ class VanguardManager:
                 self._penalize_feed(url, error_msg)
         
         if updates_made:
-            self._save_state()
+            await asyncio.to_thread(self._save_state)
 
     def _penalize_feed(self, url, error_msg):
         now = datetime.now(timezone.utc)
