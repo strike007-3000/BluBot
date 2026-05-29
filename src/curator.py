@@ -403,17 +403,12 @@ async def generate_interactive_reply(original_text, author, context):
         
         config_args = {
             "temperature": 0.7,
-            "max_output_tokens": 150
+            "max_output_tokens": 100
         }
         
         # Check for system_instruction support
         if "gemma" not in settings.gemini_model.lower():
             config_args["system_instruction"] = system_instruction
-            
-        # Apply thinking config if supported
-        if supports_thinking(settings.gemini_model):
-            budget = settings.thinking_budget if settings.thinking_budget is not None else 1024
-            config_args["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
             
         prompt = f"User @{author} mentioned you: '{original_text}'. Respond insightfully as the Elite Sage."
         contents = f"{system_instruction}\n\n{prompt}" if "gemma" in settings.gemini_model.lower() else prompt
