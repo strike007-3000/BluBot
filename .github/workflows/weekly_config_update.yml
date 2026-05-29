@@ -35,6 +35,7 @@ jobs:
           BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
           BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
           IMAGE_PROVIDER: nvidia
+          LOG_FORMAT: pretty
         run: python scripts/update_config_keywords.py
 
       - name: Commit and push changes
