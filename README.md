@@ -128,7 +128,12 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.8.5 (Current)**: **Production Recovery & Precision Threading**.
+- **v3.10.0 (Current)**: **Configurable & Token-Efficient Comment Replies**.
+    - 💬 **Configurable Social Comments**: Enable comment replying separately across Bluesky (`true` by default), Mastodon (`false` by default), and Threads (`false` by default) via GitHub Actions variables.
+    - 📅 **24-Hour Lookback**: Restrict comment replies to posts/notifications from the last 24 hours to prevent checking entire profiles.
+    - 🧠 **Token Optimization**: Disabled thinking configurations and capped max output to `100` tokens for interactive replies to minimize token usage.
+    - 🗣️ **Conversational Quality**: Prompted the model to avoid robotic pre-ambles, replying as a human peer.
+- **v3.8.5**: **Production Recovery & Precision Threading**.
     - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum to maintain high signal-to-noise.
     - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
     - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).
