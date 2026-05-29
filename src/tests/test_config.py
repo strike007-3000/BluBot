@@ -64,3 +64,23 @@ def test_validate_gemini_model_priority_pruning(monkeypatch):
     # Restore original priority list for other tests
     GEMINI_MODEL_PRIORITY.clear()
     GEMINI_MODEL_PRIORITY.extend(original_priority)
+
+def test_get_version(tmp_path):
+    from src.config import get_version
+    import src.config
+    
+    # 1. Test existing version file
+    test_version_file = tmp_path / "VERSION"
+    test_version_file.write_text("v3.9.0\n", encoding="utf-8")
+    
+    original_path = src.config.VERSION_FILE_PATH
+    src.config.VERSION_FILE_PATH = str(test_version_file)
+    try:
+        assert get_version() == "v3.9.0"
+        
+        # 2. Test missing version file (graceful degradation)
+        if test_version_file.exists():
+            test_version_file.unlink()
+        assert get_version() == "Unknown"
+    finally:
+        src.config.VERSION_FILE_PATH = original_path
