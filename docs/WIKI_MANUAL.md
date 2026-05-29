@@ -83,7 +83,7 @@ Scanning over **30 premium feeds**.
 
 ---
 
-## ⚙️ Page 6: Technical Configuration (v3.9.0)
+## ⚙️ Page 6: Technical Configuration (v3.10.0)
 
 ### Environment Secrets
 | Variable | Description |
@@ -100,21 +100,6 @@ Scanning over **30 premium feeds**.
 | `ENABLE_BSKY_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
-
-### Hardening & Event-Loop Optimization
-- **Non-Blocking I/O**: File persistence (`load_seen_articles`/`save_seen_articles`, `load_seen_interactions`/`save_seen_interactions`, `load_session_string`/`save_session_string`), social media profile bio updates, status dashboard telemetry, and feed vanguard state tracking are completely offloaded to background worker threads via `asyncio.to_thread`. This guarantees that the core async event loop is never blocked during high-concurrency periods.
-- **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield the application from decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
-- **Resilient RSS Parsing**: Incorporates raw byte parsing via `response.content` and robust fallback handling for malformed XML schemas. It uses safe lookups (`getattr(entry, 'link', None)`) and skips invalid entries to prevent single-feed crashes from dropping whole RSS sources.
-
-### Hardening & Event-Loop Optimization
-- **Non-Blocking I/O**: File persistence (`load_seen_articles`/`save_seen_articles`, `load_seen_interactions`/`save_seen_interactions`, `load_session_string`/`save_session_string`), social media profile bio updates, status dashboard telemetry, and feed vanguard state tracking are completely offloaded to background worker threads via `asyncio.to_thread`. This guarantees that the core async event loop is never blocked during high-concurrency periods.
-- **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield the application from decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
-- **Resilient RSS Parsing**: Incorporates raw byte parsing via `response.content` and robust fallback handling for malformed XML schemas. It uses safe lookups (`getattr(entry, 'link', None)`) and skips invalid entries to prevent single-feed crashes from dropping whole RSS sources.
-
-### Hardening & Event-Loop Optimization
-- **Non-Blocking I/O**: File persistence (`load_seen_articles`/`save_seen_articles`, `load_seen_interactions`/`save_seen_interactions`, `load_session_string`/`save_session_string`), social media profile bio updates, status dashboard telemetry, and feed vanguard state tracking are completely offloaded to background worker threads via `asyncio.to_thread`. This guarantees that the core async event loop is never blocked during high-concurrency periods.
-- **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield the application from decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
-- **Resilient RSS Parsing**: Incorporates raw byte parsing via `response.content` and robust fallback handling for malformed XML schemas. It uses safe lookups (`getattr(entry, 'link', None)`) and skips invalid entries to prevent single-feed crashes from dropping whole RSS sources.
 
 ---
 
@@ -249,6 +234,32 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
    - **4th+ failure**: Exponential increase (24h → 48h → 72h max).
 3. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
 
+---
+
+## Page 14: Interaction Engine (Mention Replies & Comments) (v3.10.0)
+
+BluBot is no longer a broadcast-only curator. The **Interaction Engine** bridges the gap between static news and conversational engagement by supporting direct mentions and configurable comment replies.
+
+### Core Architecture
+The engine runs post-broadcast in `bot.py` and performs the following:
+1. **Mention & Comment Polling**: Scans notifications on Bluesky and Mastodon for reasons like `mention` or `reply`, and queries Threads recent posts and replies.
+2. **24-Hour Lookback Window**: The engine filters all comments and notifications to only process items published or indexed within the last 24 hours.
+3. **Selective Engagement**: To prevent bot-spam signaling, `MENTION_REPLY_PROB` (default 0.8) and `COMMENT_REPLY_PROB` (default 0.5) ensure the bot only engages with high-quality interactions.
+4. **Conversational Human Tone**: Generates natural, peer-like, authentic replies using a dedicated system instruction that enforces low latency, strict 100-token boundaries, and disables thinking models to optimize token consumption.
+4. **Resilient Threading**:
+   - **Bluesky**: Corrects for `root` vs `parent` refs to maintain perfect thread integrity.
+   - **Mastodon**: Uses status-id reply chaining.
+
+### Security & Anti-Spam
+- **Interaction Limit**: Hard-capped at 5 interactions per run to prevent "tag-bombing" from exhausting AI tokens.
+- **Seen Interactions**: Notification IDs are tracked in `seen_interactions.json` to prevent double-replies.
+- **Engagement Jitter**: Implements a 10-30s delay to simulate human narrative thought.
+
+### Configuration
+Set these in `config.py` (or as environment variables):
+- `MENTION_REPLY_PROB`: Adjust balance between silence and engagement.
+- `AUTO_LIKE_INTERACTIONS`: Enable/Disable bot "Likes" on interacted posts.
+
 ### Managing Feeds
 - **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
 - **Manual Override**: Removing a URL from `broken_feeds.json` forces an immediate recovery attempt on the next run.
@@ -268,3 +279,16 @@ We now apply a character "Safety Buffer" to prevent rejection from platform APIs
 - **Mastodon**: 485 chars (Limit 500 - 15)
 - **Bluesky/Threads**: 290 chars (Limit 300 - 10)
 This ensures that the pagination markers (e.g., `(1/2)`) never push a post over the platform-specific character limit.
+
+---
+
+## 📅 Page 16: Automated Config Updates & Friday Release Focus
+
+### 1. Dynamic Keyword & Product Updates
+To prevent search terms from becoming outdated, BluBot utilizes `scripts/update_config_keywords.py` and a weekly GitHub Actions workflow `weekly_config_update.yml` running every Friday morning at 2:00 AM UTC.
+* **Functionality**: The script automatically fetches recent headlines from the feed network and calls Gemini to extract the top 10 momentum products and top 12 high-signal developer event/tech keywords.
+* **State Push / Pull Request**: The workflow attempts to commit updates back to `main`. If branch protection is active, it automatically creates a new branch and logs a GitHub Pull Request.
+
+### 2. Friday Release Curation Focus
+On Friday mornings, the curation prompt automatically shifts. The bot appends a specialized instruction to focus exclusively on product launches and developer releases from the past week, creating a weekly roundup digest.
+
