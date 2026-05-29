@@ -74,8 +74,8 @@ Respond STRICTLY with a JSON object in this format (no markdown, no backticks, j
         raw_text = response.text.strip()
         data = json.loads(raw_text)
         
-        momentum_products = data.get("momentum_products", [])
-        high_signal_keywords = data.get("high_signal_keywords", [])
+        momentum_products = [item.lower() for item in data.get("momentum_products", [])]
+        high_signal_keywords = [item.lower() for item in data.get("high_signal_keywords", [])]
         
         if not momentum_products or not high_signal_keywords:
             SafeLogger.error("Empty response or missing fields from Gemini.")
