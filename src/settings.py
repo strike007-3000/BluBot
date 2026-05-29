@@ -29,6 +29,9 @@ class Settings:
     enable_image_gen: bool = True
     enable_bio_management: bool = True
     enable_interactions: bool = True
+    enable_bsky_comment_replies: bool = True
+    enable_mastodon_comment_replies: bool = False
+    enable_threads_comment_replies: bool = False
     
     # Observability
     log_format: str = "pretty" # "pretty" or "json"
@@ -61,6 +64,9 @@ class Settings:
             "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true",
             "enable_bio_management": os.getenv("ENABLE_BIO_MGMT", "true").lower() == "true",
             "enable_interactions": os.getenv("ENABLE_INTERACTIONS", "true").lower() == "true",
+            "enable_bsky_comment_replies": os.getenv("ENABLE_BSKY_COMMENT_REPLIES", "true").lower() == "true",
+            "enable_mastodon_comment_replies": os.getenv("ENABLE_MASTODON_COMMENT_REPLIES", "false").lower() == "true",
+            "enable_threads_comment_replies": os.getenv("ENABLE_THREADS_COMMENT_REPLIES", "false").lower() == "true",
             "log_format": os.getenv("LOG_FORMAT", "json" if is_ci else "pretty").lower(),
             "max_thread_parts": int(os.getenv("MAX_THREAD_PARTS", "2")),
             "gist_id": os.getenv("GIST_ID"),

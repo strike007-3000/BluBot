@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = 10_000_000  # Prevent decompression bomb DoS attacks
 from .config import (
     MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
     SEEN_FILE_PATH, SESSION_FILE_PATH, GENERIC_IMAGE_PATTERNS,

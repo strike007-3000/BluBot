@@ -94,22 +94,24 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
     """Fetches and parses a single RSS feed with Bozo resilience."""
     try:
         response = await client.get(url, timeout=10)
-        feed = await asyncio.to_thread(feedparser.parse, response.text)
+        feed = await asyncio.to_thread(feedparser.parse, response.content)
         items = []
         for entry in feed.entries:
+            link = getattr(entry, 'link', None)
+            if not link or link in seen_links:
+                continue
+                
             pub_date = None
             if hasattr(entry, 'published_parsed') and entry.published_parsed:
                 pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
             else:
                 pub_date = now_utc
             
-            if entry.link in seen_links: continue
-                
             clean_summary = BeautifulSoup(getattr(entry, 'summary', getattr(entry, 'description', "")), "html.parser").get_text()
             item = {
-                "title": entry.title,
+                "title": getattr(entry, 'title', 'Untitled'),
                 "summary": clean_summary[:FEED_SUMMARY_MAX_CHARS],
-                "link": entry.link,
+                "link": link,
                 "published": pub_date.isoformat(),
                 "source": getattr(feed.feed, 'title', url)
             }
@@ -141,12 +143,15 @@ def strip_markdown(text):
     if not text: return text
     return re.sub(r'(\*\*|__|\*)', '', text).strip()
 
-def supports_thinking(model_id: str) -> bool:
-    """Helper to detect if a model supports thinking configs (like Gemini 2.0/2.5 models)."""
-    model_lower = model_id.lower()
-    if "gemma" in model_lower:
+def supports_thinking(model_name: str) -> bool:
+    """
+    Determines if a model supports the thinking_budget parameter.
+    Currently supported by: gemini-2.0 and gemini-2.5 pro/flash/flash-lite.
+    """
+    if not model_name:
         return False
-    if "lite" in model_lower:
+    model_lower = model_name.lower()
+    if "gemini-2.0" not in model_lower and "gemini-2.5" not in model_lower:
         return False
     if "gemini-2.0" in model_lower or "gemini-2.5" in model_lower:
         return True
@@ -159,7 +164,7 @@ async def prune_gemini_model_priority_async(genai_client):
     try:
         SafeLogger.info("Gemini Model Discovery: Querying available models from API...")
         available_models = []
-        async for m in genai_client.aio.models.list():
+        async for m in await genai_client.aio.models.list():
             available_models.append(m.name)
             
         pruned = []
@@ -385,17 +390,12 @@ async def generate_interactive_reply(original_text, author, context):
         
         config_args = {
             "temperature": 0.7,
-            "max_output_tokens": 150
+            "max_output_tokens": 100
         }
         
         # Check for system_instruction support
         if "gemma" not in settings.gemini_model.lower():
             config_args["system_instruction"] = system_instruction
-            
-        # Apply thinking config if supported
-        if supports_thinking(settings.gemini_model):
-            budget = settings.thinking_budget if settings.thinking_budget is not None else 1024
-            config_args["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
             
         prompt = f"User @{author} mentioned you: '{original_text}'. Respond insightfully as the Elite Sage."
         contents = f"{system_instruction}\n\n{prompt}" if "gemma" in settings.gemini_model.lower() else prompt
