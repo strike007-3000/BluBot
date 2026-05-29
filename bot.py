@@ -5469,7 +5469,7 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
                 res = await http_client.post(base_url, data={
                     "media_type": "TEXT",
                     "text": reply_text,
-                    "reply_to": mention.id,
+                    "reply_to_id": mention.id,
                     "access_token": settings.threads_token
                 }, timeout=20)
                 res.raise_for_status()

@@ -181,7 +181,7 @@ async def post_to_threads(client, text, image_url=None):
                 "access_token": settings.threads_token
             }
             if root_post_id:
-                data["reply_to"] = root_post_id
+                data["reply_to_id"] = root_post_id
                 
             res = await client.post(base_url, data=data, timeout=20)
             res.raise_for_status()
