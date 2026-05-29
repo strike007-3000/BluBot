@@ -70,6 +70,9 @@ JITTER_RANGE = 2.0
 
 RSS_FEEDS = [
     # === Tier 1: AI Lab Official Blogs ===
+    "https://blog.google/rss/",
+    "https://www.apple.com/newsroom/rss-feed.rss",
+    "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
     "https://openai.com/news/rss.xml",
     "https://huggingface.co/blog/feed.xml",
     "https://deepmind.google/blog/rss.xml",
@@ -118,7 +121,7 @@ MOMENTUM_PRODUCTS = [
 
 # Weighting Matrix
 BASE_TIER_1 = 30
-BASE_HIDDEN_GEM = 25
+BASE_HIDDEN_GEM = 15
 BASE_TIER_2 = 15
 SIGNAL_BOOST = 12
 MOMENTUM_BOOST = 18
