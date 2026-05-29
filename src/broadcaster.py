@@ -409,11 +409,34 @@ async def update_social_profiles(bsky_client, mastodon_token, count, dialect, to
     # 1. Bluesky
     if bsky_client and settings.bsky_handle:
         try:
-            # actor.putProfile updates the profile record
-            await bsky_client.app.bsky.actor.put_profile(data={
-                "description": bio,
-                "displayName": "BluBot Elite Sage"
-            })
+            # Fetch current profile to preserve all existing fields
+            profile = None
+            try:
+                profile = await bsky_client.app.bsky.actor.profile.get(
+                    repo=bsky_client.me.did,
+                    rkey='self'
+                )
+            except Exception:
+                pass
+
+            if profile and profile.value:
+                # Mutate the existing record object to preserve other fields (e.g. pinnedPost, self-labels, joinedViaStarterPack, pronouns, website)
+                record = profile.value
+                record.description = bio
+            else:
+                record = models.AppBskyActorProfile.Record(
+                    description=bio,
+                    display_name="BluBot Elite Sage"
+                )
+
+            await bsky_client.com.atproto.repo.put_record(
+                models.ComAtprotoRepoPutRecord.Data(
+                    collection='app.bsky.actor.profile',
+                    repo=bsky_client.me.did,
+                    rkey='self',
+                    record=record
+                )
+            )
             SafeLogger.info("Bluesky bio updated successfully.")
         except Exception as e:
             SafeLogger.warn(f"Bluesky bio update failed: {e}")
