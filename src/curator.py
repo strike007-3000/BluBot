@@ -206,6 +206,11 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
     combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
     
+    # Friday Morning Curation focus overlay
+    is_friday_morning = context.get('day') == 'Friday' and 'Morning' in context.get('session', '')
+    if is_friday_morning:
+        combined_instruction += "\n\nRELEASE ROUNDUP INSTRUCTION: Focus exclusively on summarizing the latest market launches, product updates, and developer releases from the past week (Weekly Release Roundup format). Highlight the most impactful commercial developer announcements."
+
     user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
     
     for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
