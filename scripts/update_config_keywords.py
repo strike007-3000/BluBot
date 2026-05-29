@@ -79,7 +79,7 @@ Respond STRICTLY with a JSON object in this format (no markdown, no backticks, j
         
         if not momentum_products or not high_signal_keywords:
             SafeLogger.error("Empty response or missing fields from Gemini.")
-            return
+            sys.exit(1)
 
         # 3. Update src/config.py
         config_path = os.path.join(os.path.dirname(__file__), "..", "src", "config.py")
@@ -111,6 +111,7 @@ Respond STRICTLY with a JSON object in this format (no markdown, no backticks, j
         
     except Exception as e:
         SafeLogger.error(f"Failed to update curation config: {e}")
+        raise e
 
 if __name__ == "__main__":
     asyncio.run(main())
