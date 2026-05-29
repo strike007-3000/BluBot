@@ -62,6 +62,9 @@ jobs:
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
           GIST_ID: ${{ secrets.GIST_ID }}
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          ENABLE_BSKY_COMMENT_REPLIES: ${{ vars.ENABLE_BSKY_COMMENT_REPLIES || 'true' }}
+          ENABLE_MASTODON_COMMENT_REPLIES: ${{ vars.ENABLE_MASTODON_COMMENT_REPLIES || 'false' }}
+          ENABLE_THREADS_COMMENT_REPLIES: ${{ vars.ENABLE_THREADS_COMMENT_REPLIES || 'false' }}
         run: python bot.py
 
       - name: Save BlueSky session

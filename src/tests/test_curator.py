@@ -71,7 +71,7 @@ def test_supports_thinking():
     assert supports_thinking("models/gemini-2.5-pro") is True
     assert supports_thinking("models/gemini-2.5-flash") is True
     assert supports_thinking("models/gemma-4-31b-it") is False
-    assert supports_thinking("models/gemini-2.5-flash-lite") is False
+    assert supports_thinking("models/gemini-2.5-flash-lite") is True
 
 @pytest.mark.asyncio
 async def test_prune_gemini_model_priority_async(monkeypatch):
@@ -97,7 +97,7 @@ async def test_prune_gemini_model_priority_async(monkeypatch):
     m2 = MagicMock()
     m2.name = "models/gemini-2.5-flash-lite"
     mock_model_list = [m1, m2]
-    mock_client.aio.models.list.return_value = AsyncListMock(mock_model_list)
+    mock_client.aio.models.list = AsyncMock(return_value=AsyncListMock(mock_model_list))
     
     await prune_gemini_model_priority_async(mock_client)
     

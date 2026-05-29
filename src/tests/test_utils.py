@@ -122,3 +122,56 @@ def test_normalize_url_scenarios():
     # 5. Null/Malformed
     assert normalize_url(None) == ""
     assert normalize_url("not-a-url") == "not-a-url"
+
+def test_smart_truncate_edge_cases():
+    from src.utils import smart_truncate
+    # 1. Short input
+    assert smart_truncate("short", 10) == "short"
+    # 2. None or empty
+    assert smart_truncate(None, 10) is None
+    assert smart_truncate("", 10) == ""
+    # 3. Exact length
+    assert smart_truncate("1234567890", 10) == "1234567890"
+    # 4. Long input with space backtracking
+    assert smart_truncate("Hello World Testing", 15) == "Hello World..."
+    # 5. Long input with no space (hard cut fallback)
+    assert smart_truncate("HelloWorldTesting", 10) == "HelloWo..."
+
+def test_smart_split_edge_cases():
+    from src.utils import smart_split
+    # 1. None or empty
+    assert smart_split(None, 10) == []
+    assert smart_split("", 10) == []
+    # 2. Fits in one part
+    assert smart_split("abc", 5) == ["abc"]
+    # 3. Paragraph boundary split
+    text_para = "Para1\n\nPara2"
+    assert smart_split(text_para, 8) == ["Para1", "Para2"]
+    # 4. Sentence boundary split
+    text_sent = "Sentence one. Sentence two."
+    assert smart_split(text_sent, 18) == ["Sentence one.", "Sentence two."]
+    # 5. Word boundary split
+    text_word = "Word1 Word2 Word3"
+    assert smart_split(text_word, 12) == ["Word1 Word2", "Word3"]
+    # 6. Max chunks limit
+    text_long = "One. Two. Three. Four."
+    assert smart_split(text_long, 6, max_chunks=2) == ["One.", "Two...."]
+
+def test_seen_interactions_persistence(tmp_path):
+    from src.utils import load_seen_interactions, save_seen_interactions
+    import src.utils
+    
+    # Override the path for testing
+    test_path = str(tmp_path / "test_interactions.json")
+    original_path = src.utils.INTERACTIONS_STATE_PATH
+    src.utils.INTERACTIONS_STATE_PATH = test_path
+    try:
+        # Load from non-existent file
+        assert load_seen_interactions() == []
+        
+        # Save and load
+        ids = ["id1", "id2", "id3"]
+        save_seen_interactions(ids)
+        assert load_seen_interactions() == ids
+    finally:
+        src.utils.INTERACTIONS_STATE_PATH = original_path
