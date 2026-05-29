@@ -29,8 +29,8 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 - **🛡️ Industrial Stabilization**: 
     - **Universal RGB Defense**: Image mode detection and conversion engine that prevents "Black/White Box" artifacts from non-standard (ArXiv) thumbnails.
     - **Resilient Rebase Logic**: Automated conflict resolution for `README.md` dashboards (using `git checkout --ours`) ensuring 100% state persistence uptime.
-    - **Smart Truncation**: Word-boundary-aware trimming for Mastodon and Threads to prevent mid-word cutoffs.
-- **Fortress Hardening**: 
+    - **Smart Truncation (v3.7.5)**: Word-boundary-aware trimming for Mastodon and Threads to prevent mid-word cutoffs.
+- **Fortress Hardening (v3.9.0)**: 
     - **Non-Blocking I/O**: Offloads all disk persistence, social bio updates, status telemetry updates, and feed vanguard state saving to background worker threads via `asyncio.to_thread`.
     - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield against decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
     - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) and uses safe lookups to survive malformed feed entries.
@@ -125,7 +125,12 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.8.5 (Current)**: **Production Recovery & Precision Threading**.
+- **v3.10.0 (Current)**: **Configurable & Token-Efficient Comment Replies**.
+    - 💬 **Configurable Social Comments**: Enable comment replying separately across Bluesky (`true` by default), Mastodon (`false` by default), and Threads (`false` by default) via GitHub Actions variables.
+    - 📅 **24-Hour Lookback**: Restrict comment replies to posts/notifications from the last 24 hours to prevent checking entire profiles.
+    - 🧠 **Token Optimization**: Disabled thinking configurations and capped max output to `100` tokens for interactive replies to minimize token usage.
+    - 🗣️ **Conversational Quality**: Prompted the model to avoid robotic pre-ambles, replying as a human peer.
+- **v3.8.5**: **Production Recovery & Precision Threading**.
     - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum to maintain high signal-to-noise.
     - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
     - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).
