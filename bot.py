@@ -30,11 +30,12 @@ from src.curator import (
 )
 from src.broadcaster import (
     post_to_bluesky, post_to_mastodon, post_to_threads,
-    update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions
+    update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions,
+    fetch_threads_replies
 )
 from src.config import (
     STATUS_FILE_PATH, IMAGEN_MODEL,
-    MENTION_REPLY_PROB, INTERACTION_LIMIT, AUTO_LIKE_INTERACTIONS
+    MENTION_REPLY_PROB, COMMENT_REPLY_PROB, INTERACTION_LIMIT, AUTO_LIKE_INTERACTIONS
 )
 from google.genai import types
 from google import genai
@@ -81,50 +82,7 @@ async def update_status_dashboard(session_name: str, topic: str):
     """Automatically update the STATUS.md dashboard without blocking the event loop."""
     await asyncio.to_thread(_update_status_dashboard_sync, session_name, topic)
 
-def article_matches_topic(title: str, summary: str, topic: str) -> bool:
-    """Returns True if all significant keywords from topic match (with inflections on word boundaries) the article title or summary."""
-    if not topic:
-        return False
-    import re
-    # Normalize and extract keywords from the topic, ignoring common stopwords
-    stopwords = {
-        "why", "how", "what", "who", "where", "when", "did", "could", "would", "should", 
-        "does", "is", "was", "were", "are", "be", "been", "a", "an", "the", "and", "or", 
-        "but", "if", "for", "on", "about", "to", "in", "of", "with", "at", "by", "from", 
-        "concerning", "about", "discuss", "write", "post"
-    }
-    words = re.findall(r'\b\w+\b', topic.lower())
-    keywords = [w for w in words if w not in stopwords and len(w) > 2]
-    
-    if not keywords:
-        return False
-        
-    title_lower = title.lower()
-    summary_lower = summary.lower()
-    target_words = set(re.findall(r'\b\w+\b', f"{title_lower} {summary_lower}"))
-    
-    for kw in keywords:
-        # Generate valid inflection candidates for each keyword
-        candidates = {kw}
-        if kw.endswith('e'):
-            root = kw[:-1]
-            candidates.update({kw + 's', kw + 'd', root + 'ing', root + 'ition', root + 'itions'})
-        else:
-            candidates.update({kw + 's', kw + 'ed', kw + 'ing', kw + 'ion', kw + 'ions'})
-            
-        # Specific mappings for common terms
-        if kw == 'acquire':
-            candidates.update({'acquisition', 'acquisitions'})
-        elif kw == 'acquisition':
-            candidates.update({'acquire', 'acquires', 'acquired', 'acquiring'})
-            
-        # If none of the candidates exist as a full word in the target text, it's not a match
-        if not (candidates & target_words):
-            return False
-            
-    return True
-
-async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
+async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
     seen_data = await asyncio.to_thread(load_seen_articles)
     context = get_temporal_context()
@@ -137,39 +95,11 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
     await vanguard.audit_and_update(client)
     active_feeds = vanguard.get_active_feeds()
     
-    # If a telegram_topic is requested, bypass default top-8 limit to filter the full candidate list
-    raw_news = await fetch_news(
-        client, 
-        seen_data["links"], 
-        seen_data["recent_topics"], 
-        feed_list=active_feeds, 
-        limit=None if telegram_topic else 8
-    )
-    all_articles = [Article(**item) for item in raw_news]
-
-    if telegram_topic:
-        SafeLogger.info(f"Curation Stage: Filtering RSS articles for Telegram topic request: '{telegram_topic}'")
-        matching_articles = []
-        for a in all_articles:
-            if article_matches_topic(a.title, a.summary, telegram_topic):
-                matching_articles.append(a)
-        
-        if matching_articles:
-            SafeLogger.info(f"Curation Stage: Found {len(matching_articles)} matching articles in RSS feeds.")
-            articles = matching_articles
-        else:
-            SafeLogger.info(f"Curation Stage: No matching articles found in feeds for '{telegram_topic}'. Falling back to raw focus.")
-            articles = [Article(
-                title=f"On-demand topic request: {telegram_topic}",
-                link="https://telegram.org",
-                summary=f"Synthesize strategic insights regarding the topic: {telegram_topic}.",
-                published=datetime.now(timezone.utc).isoformat(),
-                source="Telegram Intercept",
-                score=100,
-                topic=telegram_topic
-            )]
-    else:
-        articles = all_articles
+    seen_data = await asyncio.to_thread(load_seen_articles)
+    context = get_temporal_context()
+    
+    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
+    articles = [Article(**item) for item in raw_news]
     
     return CurationResult(
         top_articles=articles,
@@ -323,34 +253,58 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
         state.setdefault("recent_topics", []).append(synthesis.topic)
 
-    save_seen_articles({
-        "links": curation.seen_links,
-        "recent_topics": curation.recent_topics,
-        "last_dialect": curation.last_dialect
-    })
-    await update_readme_dashboard(curation.session_name, synthesis.topic)
+    # Update stats
+    count_this_run = len(curation.top_articles)
+    state["total_posts_curated"] = state.get("total_posts_curated", 0) + count_this_run
+    state["last_dialect"] = curation.last_dialect
+    
+    # Cap history to prevent state bloat (Tier 1 constraint)
+    state["links"] = state["links"][-500:]
+    state["recent_topics"] = state["recent_topics"][-20:]
 
-async def interaction_stage(bsky_client, session_context: dict) -> InteractionResult:
+    await asyncio.to_thread(save_seen_articles, state)
+    await update_status_dashboard(curation.session_name, synthesis.topic)
+
+    # Dynamic Bio Update
+    await update_social_profiles(
+        client_bsky, 
+        settings.mastodon_token, 
+        state["total_posts_curated"],
+        curation.last_dialect,
+        synthesis.topic
+    )
+
+async def interaction_stage(bsky_client, http_client, session_context: dict) -> InteractionResult:
     """Handles social interactions (mentions/replies) with humanized engagement."""
     SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
-    seen_ids = load_seen_interactions()
+    seen_ids = await asyncio.to_thread(load_seen_interactions)
     replied_ids = []
     errors = []
     
     # 1. Fetch mentions
     bsky_mentions = await fetch_bluesky_mentions(bsky_client)
     mastodon_mentions = await fetch_mastodon_mentions()
-    all_mentions = bsky_mentions + mastodon_mentions
+    
+    # 2. Fetch Threads replies
+    threads_replies = []
+    if settings.enable_threads_comment_replies:
+        threads_replies = await fetch_threads_replies(http_client)
+        
+    all_mentions = bsky_mentions + mastodon_mentions + threads_replies
     
     # Filter and prioritize
     unseen = [m for m in all_mentions if m.id not in seen_ids]
-    SafeLogger.info(f"Found {len(unseen)} new mentions to process.")
+    SafeLogger.info(f"Found {len(unseen)} new mentions/comments to process.")
     
     import random
     for mention in unseen[:INTERACTION_LIMIT]:
+        # Differentiate replies from direct mentions
+        is_reply = mention.root_uri is not None and mention.root_uri != mention.id
+        reply_prob = COMMENT_REPLY_PROB if is_reply else MENTION_REPLY_PROB
+        
         # Probabilistic engagement (Humanization)
-        if random.random() > MENTION_REPLY_PROB:
-            SafeLogger.info(f"Decision: Skipping reply to @{mention.author} (Engagement Roll).")
+        if random.random() > reply_prob:
+            SafeLogger.info(f"Decision: Skipping reply to @{mention.author} on {mention.platform} (Engagement Roll).")
             seen_ids.append(mention.id)
             continue
             
@@ -382,6 +336,35 @@ async def interaction_stage(bsky_client, session_context: dict) -> InteractionRe
                 await asyncio.to_thread(m.status_post, reply_text, in_reply_to_id=mention.id)
                 if AUTO_LIKE_INTERACTIONS:
                     await asyncio.to_thread(m.status_favourite, mention.id)
+                    
+            elif mention.platform == "threads":
+                # Threads Reply
+                base_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
+                publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
+                
+                res = await http_client.post(base_url, data={
+                    "media_type": "TEXT",
+                    "text": reply_text,
+                    "reply_to": mention.id,
+                    "access_token": settings.threads_token
+                }, timeout=20)
+                res.raise_for_status()
+                container_id = res.json().get("id")
+                
+                for _ in range(3):
+                    status_res = await http_client.get(
+                        f"https://graph.threads.net/v1.0/{container_id}", 
+                        params={"fields": "status", "access_token": settings.threads_token}
+                    )
+                    if status_res.status_code == 200 and status_res.json().get("status") == "FINISHED":
+                        break
+                    await asyncio.sleep(2)
+                
+                publish_res = await http_client.post(publish_url, data={
+                    "creation_id": container_id,
+                    "access_token": settings.threads_token
+                }, timeout=20)
+                publish_res.raise_for_status()
             
             replied_ids.append(mention.id)
             seen_ids.append(mention.id)
@@ -391,7 +374,7 @@ async def interaction_stage(bsky_client, session_context: dict) -> InteractionRe
             SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
             errors.append(str(e))
 
-    save_seen_interactions(seen_ids)
+    await asyncio.to_thread(save_seen_interactions, seen_ids)
     return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
 
 async def main():
@@ -441,7 +424,7 @@ async def main():
 
         # 4. Interaction (Mention Replies)
         if settings.enable_interactions:
-            interaction_res = await interaction_stage(bsky_client, context)
+            interaction_res = await interaction_stage(bsky_client, client, context)
             SafeLogger.info(f"Interaction Session Complete: {len(interaction_res.replied_ids)} replies sent.")
 
         # 5. Persistence
