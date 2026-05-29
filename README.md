@@ -83,13 +83,6 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `ENABLE_BSKY_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
-| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token |
-| `TELEGRAM_USER_ID` | No | (Optional) Your numeric Telegram User ID (for authentication) |
-| `TELEGRAM_TIMEOUT_MINUTES` | No | (Optional) Telegram polling timeout in minutes (default: `5`) |
-| `ENABLE_TELEGRAM_APPROVAL` | No | (Optional) Toggle Telegram draft approval (default: `true` if bot token set) |
-| `ENABLE_HASHTAGS_BSKY` | No | (Optional) Enable/disable hashtags on Bluesky (default: `false`) |
-| `ENABLE_HASHTAGS_MASTODON` | No | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
-| `ENABLE_HASHTAGS_THREADS` | No | (Optional) Enable/disable hashtags on Threads (default: `true`) |
 
 ## 🛡️ Resilience Architecture
 
@@ -135,7 +128,12 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.8.5 (Current)**: **Production Recovery & Precision Threading**.
+- **v3.10.0 (Current)**: **Configurable & Token-Efficient Comment Replies**.
+    - 💬 **Configurable Social Comments**: Enable comment replying separately across Bluesky (`true` by default), Mastodon (`false` by default), and Threads (`false` by default) via GitHub Actions variables.
+    - 📅 **24-Hour Lookback**: Restrict comment replies to posts/notifications from the last 24 hours to prevent checking entire profiles.
+    - 🧠 **Token Optimization**: Disabled thinking configurations and capped max output to `100` tokens for interactive replies to minimize token usage.
+    - 🗣️ **Conversational Quality**: Prompted the model to avoid robotic pre-ambles, replying as a human peer.
+- **v3.8.5**: **Production Recovery & Precision Threading**.
     - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum to maintain high signal-to-noise.
     - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
     - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).
