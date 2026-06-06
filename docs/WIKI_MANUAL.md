@@ -123,7 +123,7 @@ Scanning over **30 premium feeds**.
 
 ---
 
-## ⚙️ Page 6: Technical Configuration (v3.9.0)
+## ⚙️ Page 6: Technical Configuration (v3.10.1)
 
 ### Environment Secrets
 | Variable | Description |
@@ -424,7 +424,8 @@ Version 3.7.0 transforms the bot from a script into a **living editorial entity*
 
 ### 1. The Editorial Pulse (Stylistic Memory)
 The bot now tracks its previous tone to ensure consecutive updates feel varied:
-- **Style Memory**: Saves the `last_dialect` to `seen_articles.json`.
+- **Style Memory**: Saves the `last_dialect` key to `seen_articles.json` after successfully posting.
+- **Tone Rotation Logic**: During news synthesis in `summarize_news`, the system loads the `last_dialect` from the state. It dynamically prunes the active dialect choice pool (`available_dialects = list(PERSONA_DIALECTS.keys())`) by removing the `last_dialect`. This guarantees the bot never uses the same editorial persona twice in a row.
 - **The Diversity Pool**: 
     - **Analytical**: High-fidelity technical specs and benchmarks.
     - **Practical**: Developer utility and "How-to" engineering.
@@ -484,6 +485,12 @@ To eliminate "Rebase Conflicts" in CI, live status updates (Operational status, 
 
 To maintain 100% signal quality, BluBot uses the **Feed Vanguard** to automatically manage RSS health.
 
+### The Auditing Logic
+Every run begins with a pre-flight health scan using `VanguardManager._check_feed()`:
+1. **Network Fetch**: Fetches each feed with a 15-second timeout and follows redirects.
+2. **Response Code check**: Returns a failure if status is not `200`.
+3. **Parse Check**: Processes raw content with `feedparser.parse()`. If parser reports `bozo` (malformed XML) and there are no entries, or if the feed is entirely empty, it is marked as unhealthy.
+
 ### The "Soft-Disable" Strategy
 Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transient Blacklist**:
 1. **Audit**: Every run begins with a pre-flight health check using `VanguardManager`.
@@ -491,24 +498,82 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
    - **1st failure**: Marked as a `WARNING` only; the feed remains active.
    - **2nd failure**: Silenced for 1 hour.
    - **3rd failure**: Silenced for 12 hours.
-   - **4th+ failure**: Exponential increase (24h → 48h → 72h max).
+   - **4th failure**: Silenced for 24 hours.
+   - **5th failure**: Silenced for 48 hours.
+   - **6th+ failure**: Silenced for 72 hours max. Marked as `TERMINAL` state once failures hit 6+.
 3. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
+
+### Curation Feed Network (32 Validated Feeds)
+
+#### Tier 1: AI Lab Blogs
+- Google Blog (`blog.google/rss/`)
+- Apple Newsroom (`apple.com/newsroom/rss-feed.rss`)
+- Verge AI (`theverge.com/ai-artificial-intelligence/rss/index.xml`)
+- OpenAI (`openai.com/news/rss.xml`)
+- Hugging Face (`huggingface.co/blog/feed.xml`)
+- DeepMind (`deepmind.google/blog/rss.xml`)
+- NVIDIA Deep Learning (`blogs.nvidia.com/blog/category/deep-learning/feed/`)
+- Microsoft Research (`microsoft.com/en-us/research/blog/feed/`)
+
+#### Tier 2: Elite Newsletters & Analysts
+- Interconnects (`interconnects.ai/feed`)
+- Sebastian Raschka (`magazine.sebastianraschka.com/feed`)
+- Latent Space (`latent.space/feed`)
+- Import AI / Jack Clark (`jack-clark.net/feed/`)
+- One Useful Thing / Ethan Mollick (`oneusefulthing.org/feed`)
+- Maarten Grootendorst (`newsletter.maartengrootendorst.com/feed`)
+- AlphaSignal AI (`alphasignalai.beehiiv.com/feed`)
+- TheSequence (`thesequence.substack.com/feed`)
+- TLDR AI (`tldr.tech/ai/rss`)
+
+#### Tier 3: Research & Academic (Hidden Gems)
+- ArXiv cs.LG (`arxiv.org/rss/cs.LG`)
+- The Gradient (`thegradient.pub/rss/`)
+- Victoria Krakovna (`vkrakovna.wordpress.com/feed/`)
+- BAIR Berkeley (`bair.berkeley.edu/blog/feed.xml`)
+- Machine Learning Mastery (`machinelearningmastery.com/feed/`)
+
+#### Tier 4: Industry & Journalism
+- MIT Technology Review (`technologyreview.com/topic/artificial-intelligence/feed/`)
+- IEEE Spectrum AI (`spectrum.ieee.org/feeds/topic/artificial-intelligence.rss`)
+- The Decoder (`the-decoder.com/feed/`)
+- 404 Media (`404media.co/rss/`)
+- Wired AI (`wired.com/feed/tag/ai/latest/rss`)
+- SiliconANGLE AI (`siliconangle.com/category/ai/feed/`)
+- AI Accelerator Institute (`aiacceleratorinstitute.com/rss/`)
+- Marktechpost (`marktechpost.com/feed/`)
+- TechCrunch AI (`techcrunch.com/category/artificial-intelligence/feed/`)
+- VentureBeat AI (`venturebeat.com/category/ai/feed/`)
 
 ---
 
-## Page 14: Interaction Engine (Mention Replies & Comments) (v3.10.0)
+## Page 14: Interaction Engine (Mention Replies & Comments) (v3.10.1)
 
 BluBot is no longer a broadcast-only curator. The **Interaction Engine** bridges the gap between static news and conversational engagement by supporting direct mentions and configurable comment replies.
 
 ### Core Architecture
 The engine runs post-broadcast in `bot.py` and performs the following:
 1. **Mention & Comment Polling**: Scans notifications on Bluesky and Mastodon for reasons like `mention` or `reply`, and queries Threads recent posts and replies.
-2. **24-Hour Lookback Window**: The engine filters all comments and notifications to only process items published or indexed within the last 24 hours.
+2. **24-Hour Lookback Window**: Filters all comments and notifications to only process items published or indexed within the last 24 hours.
 3. **Selective Engagement**: To prevent bot-spam signaling, `MENTION_REPLY_PROB` (default 0.8) and `COMMENT_REPLY_PROB` (default 0.5) ensure the bot only engages with high-quality interactions.
-4. **Conversational Human Tone**: Generates natural, peer-like, authentic replies using a dedicated system instruction that enforces low latency, strict 100-token boundaries, and disables thinking models to optimize token consumption.
 4. **Resilient Threading**:
    - **Bluesky**: Corrects for `root` vs `parent` refs to maintain perfect thread integrity.
    - **Mastodon**: Uses status-id reply chaining.
+
+### Token & Cost Optimization
+To optimize inference cost and minimize latency during interactive reply synthesis, the engine enforces strict token bounds:
+- **Disabled Thinking**: By default, the `generate_interactive_reply` API call bypasses the `thinking_config` parameters entirely. Bypassing reasoning models prevents runaway token usage on simple dialog.
+- **Strict Token Budget**: Enforces a max output limit of `100` tokens (`max_output_tokens=100`), ensuring that responses are concise, focused, and token-efficient.
+
+### Conversational Persona & Prompts
+To prevent robotic-sounding AI replies, the model utilizes `INTERACTIVE_REPLY_INSTRUCTION` prompting rules:
+1. **Human-like Authenticity**: Avoid robotic pre-ambles, clichés, and greeting formulas (e.g., do NOT start with "As the Elite AI Sage...", "Indeed,", "Greetings,"). Speak as a peer sharing a quick insight.
+2. **High Signal**: Provide a genuine piece of strategic or technical insight. Avoid generic "Thanks for the comment!" templates.
+3. **Strict Constraints**: No hashtags. Emojis are blocked unless representing a specific technical concept (e.g., 🚀, 🧠). Under 280 characters limit.
+
+**Example Prompt & Output:**
+* *Input*: "User @dev1 mentioned you: 'What is the impact of gemma 4 on edge computing?'. Respond insightfully as the Elite Sage."
+* *Response*: "Gemma 4's lightweight variants significantly optimize memory-bound edge environments. Look for major efficiency gains in localized agent pipelines."
 
 ### Security & Anti-Spam
 - **Interaction Limit**: Hard-capped at 5 interactions per run to prevent "tag-bombing" from exhausting AI tokens.
@@ -516,9 +581,13 @@ The engine runs post-broadcast in `bot.py` and performs the following:
 - **Engagement Jitter**: Implements a 10-30s delay to simulate human narrative thought.
 
 ### Configuration
-Set these in `config.py` (or as environment variables):
-- `MENTION_REPLY_PROB`: Adjust balance between silence and engagement.
-- `AUTO_LIKE_INTERACTIONS`: Enable/Disable bot "Likes" on interacted posts.
+Set these in `config.py` or as environment variables:
+- `ENABLE_BSKY_COMMENT_REPLIES`: Enable/disable comment replying on Bluesky (default: `true`).
+- `ENABLE_MASTODON_COMMENT_REPLIES`: Enable/disable comment replying on Mastodon (default: `false`).
+- `ENABLE_THREADS_COMMENT_REPLIES`: Enable/disable comment replying on Threads (default: `false`).
+- `MENTION_REPLY_PROB`: Adjust balance between silence and engagement (default: `0.8`).
+- `COMMENT_REPLY_PROB`: Adjust balance for replying to non-mentions (default: `0.5`).
+- `AUTO_LIKE_INTERACTIONS`: Enable/Disable bot "Likes" on interacted posts (default: `true`).
 
 ### Managing Feeds
 - **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
