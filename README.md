@@ -19,7 +19,10 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture (v3.8.2)**:
-    - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads (Bluesky, Mastodon, Threads).
+    - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
+        - *Smart Split Algorithm*: Intelligently segments text at priority boundaries (first `\n\n` for paragraphs, then `. ` for sentences, then spaces ` ` for words) instead of crude character cuts.
+        - *Precision Buffers*: Implements safety offsets (`limit - 10` for Bluesky/Threads, `limit - 15` for Mastodon) to account for pagination suffixes (e.g. `(1/2)`) without API limit rejections.
+        - *Thread Limits*: Enforces a strict `MAX_THREAD_PARTS=2` constraint to avoid feed fatigue, trailing summaries with `...` when truncated.
     - **🥁 Thread Rhythm (v3.8.1)**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
     - **🤖 Dynamic Bio Management (v3.8.1)**: Profiles now showcase live telemetry and curation statistics (e.g., "1,245 stories narrated | Voice: Analytical").
     - **🛡️ Supply Chain Hardening (v3.8.2)**: Migrated to `pip-tools` with cryptographic hashes.
@@ -41,10 +44,26 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Stylistic Memory**: The bot now remembers its previous "vibe" and ensures it never repeats the same tone twice in a row, switching between **Analytical**, **Practical**, **Sage**, **Concise**, and **Philosophical** dialects.
     - **Temporal Intelligence**: Upgraded from 2 to **5 granular sessions** (Dawn, Morning, Midday, Afternoon, Evening) for hyper-relevant time-of-day awareness.
     - **Manual Run "Intercept"**: Automatically detects manual `workflow_dispatch` runs and labels them as **"(Intercept)"**, shifting the AI into an urgent, ad-hoc reporting mode.
+- **💬 Interaction Engine (v3.10.1)**:
+    - **Configurable Comments & Replies**: Platforms can have comments/replies toggled independently (Bluesky `true`, Mastodon/Threads `false` by default).
+    - **24-Hour Lookback Filters**: Strict timestamp boundaries filter out notifications/comments older than 24 hours to prevent scanning entire profile histories.
+    - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
+    - **Conversational Quality & Persona**: System prompts are highly tailored to speak in a natural, peer-like mentor/analyst voice, stripping robotic introductory pre-ambles and hashtags.
 - **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
-    - **Impact-Aware Intelligence**: Prioritizes breakthrough news (Agents, SOTA) and boosts articles mentioning flagship 2026 models.
-    - **Consensus Synergy Pass**: Automatically boosts "Consensus Events" reported by multiple independent feeds.
-    - **Curated Feed Network**: **28 validated feeds** across 4 tiers (AI Labs, Elite Analysts, Research, Journalism), audited for freshness and availability.
+    - **Weighted Curation Matrix**:
+        
+        | Factor / Signal | Weight / Modification | Notes |
+        | :--- | :--- | :--- |
+        | **Tier 1 Sources** | `+30` | Top-tier AI Labs (OpenAI, DeepMind, etc.) |
+        | **Hidden Gems / Tier 3** | `+15` | Research/Academic (ArXiv, BAIR, Stanford) |
+        | **Tier 2 Sources** | `+15` | Elite Analysts & Newsletters |
+        | **High-Signal Keywords** | `+12` | Boosts *SOTA, agentic, world model, open weights*, etc. |
+        | **Momentum Products** | `+18` | Boosts *GPT-5, Llama 4, Gemini 3, Gemma 4*, etc. |
+        | **Consensus Synergy** | `+15` | Story present across multiple independent feeds |
+        | **Topic Diversity Penalty**| `-12` * | Applied if topic is in recent_topics (config lists penalty as `25`) |
+        | **Time Decay** | `-0.5` / hour | Linearly decays relevance score over time |
+    - **Curated Feed Network**: **32 active feeds** across 4 tiers (AI Labs, Elite Analysts, Research, Journalism), dynamically audited for freshness.
+
 
 ## 🛠️ Setup Instructions
 
@@ -125,12 +144,10 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.10.0 (Current)**: **Configurable & Token-Efficient Comment Replies**.
-    - 💬 **Configurable Social Comments**: Enable comment replying separately across Bluesky (`true` by default), Mastodon (`false` by default), and Threads (`false` by default) via GitHub Actions variables.
-    - 📅 **24-Hour Lookback**: Restrict comment replies to posts/notifications from the last 24 hours to prevent checking entire profiles.
-    - 🧠 **Token Optimization**: Disabled thinking configurations and capped max output to `100` tokens for interactive replies to minimize token usage.
-    - 🗣️ **Conversational Quality**: Prompted the model to avoid robotic pre-ambles, replying as a human peer.
-- **v3.8.5**: **Production Recovery & Precision Threading**.
+- **v3.10.1 (Current)**: **Curation Script Hardening & Documentation Sync**.
+    - 🔒 **Weekly Curation Hardening**: Added structured Pydantic response schemas and robust regex-based JSON boundary extraction to `update_config_keywords.py` to prevent JSON decode failures. Added API key environment guards.
+    - 📖 **Documentation Synchronization**: Updated `README.md` and manual wiki with exact scoring engine weights, 3-tier persistence flowcharts, Weaver splits, and comment system configurations.
+- **v3.10.0**: **Configurable & Token-Efficient Comment Replies**.
     - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum to maintain high signal-to-noise.
     - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
     - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).
