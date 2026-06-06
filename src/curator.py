@@ -131,9 +131,11 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
     
     unique_by_link = {}
     for e in all_raw_entries:
-        if e['link'] not in unique_by_link: unique_by_link[e['link']] = e
+        if e['link'] not in unique_by_link: 
+            unique_by_link[e['link']] = e
         else:
             unique_by_link[e['link']]['score'] += SYNERGY_BONUS
+            unique_by_link[e['link']]['consensus_synergy'] = True
             
     entries = list(unique_by_link.values())
     entries.sort(key=lambda x: x["score"], reverse=True)
@@ -205,6 +207,11 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
     # Combine instructions
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
     combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
+    
+    # Check for Consensus Curation (allows threads opt-in)
+    has_consensus = any(item.get('consensus_synergy', False) for item in news_items)
+    if has_consensus:
+        combined_instruction += "\n\nCONSENSUS EVENT INSTRUCTION: Multiple independent feeds have reported on a major breakthrough. You are authorized to expand this curation summary into a detailed, multi-post thread of up to 1000 characters (our Weaver engine will handle the splitting at paragraph and sentence boundaries)."
     
     # Friday Morning Curation focus overlay
     is_friday_morning = context.get('day') == 'Friday' and 'Morning' in context.get('session', '')
@@ -361,24 +368,10 @@ async def generate_nvidia_image(client, prompt):
     }
     
     try:
-        response = None
-        result = None
-        try:
-            response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
-            response.raise_for_status()
-            result = response.json()
-        except Exception as e:
-            SafeLogger.warn(f"NVIDIA NIM primary endpoint failed ({e}). Attempting OpenAI-compatible endpoint fallback...")
-            fallback_url = "https://ai.api.nvidia.com/v1/images/generations"
-            fallback_payload = {
-                "prompt": prompt,
-                "model": "stabilityai/stable-diffusion-3-medium",
-                "response_format": "b64_json"
-            }
-            response = await client.post(fallback_url, headers=headers, json=fallback_payload, timeout=45)
-            response.raise_for_status()
-            result = response.json()
-
+        response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
+        response.raise_for_status()
+        result = response.json()
+        
         # Expert Review Fix: Robust multi-format base64 parsing (artifacts vs direct image field)
         image_b64 = None
         if "image" in result:
