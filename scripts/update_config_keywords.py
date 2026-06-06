@@ -45,7 +45,12 @@ async def main():
     SafeLogger.info(f"Collected {len(all_headlines)} headlines. Invoking Gemini model for trending insights...")
 
     # 2. Call Gemini
-    genai_client = genai.Client(api_key=settings.gemini_key)
+    api_key = settings.gemini_key or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        SafeLogger.error("GEMINI_KEY or GEMINI_API_KEY is not set in environment. Cannot update keywords.")
+        sys.exit(1)
+        
+    genai_client = genai.Client(api_key=api_key)
     
     prompt = f"""
 Analyze the following recent news headlines to extract the top 10 most trending AI products/developer releases (momentum products) and top 12 high-signal developer event/technical keywords.
@@ -62,18 +67,55 @@ Respond STRICTLY with a JSON object in this format (no markdown, no backticks, j
 }}
 """
     try:
+        model_name = settings.gemini_model or "models/gemini-2.5-flash-lite"
+        config_args = {
+            "temperature": 0.3,
+            "response_mime_type": "application/json"
+        }
+        
+        # Apply structured output schema for Gemini models to ensure guaranteed JSON compliance
+        if "gemini" in model_name.lower():
+            try:
+                from pydantic import BaseModel, Field
+                class CurationKeywords(BaseModel):
+                    momentum_products: list[str] = Field(description="List of top 10 momentum products")
+                    high_signal_keywords: list[str] = Field(description="List of top 12 high-signal keywords")
+                config_args["response_schema"] = CurationKeywords
+            except ImportError:
+                pass
+                
         response = genai_client.models.generate_content(
-            model=settings.gemini_model,
+            model=model_name,
             contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3,
-                response_mime_type="application/json"
-            )
+            config=types.GenerateContentConfig(**config_args)
         )
         
         raw_text = response.text.strip()
-        data = json.loads(raw_text)
         
+        # Robust JSON extraction utility
+        data = None
+        try:
+            data = json.loads(raw_text)
+        except json.JSONDecodeError:
+            # Attempt to strip markdown fences
+            cleaned = re.sub(r"^```(?:json)?\n", "", raw_text, flags=re.IGNORECASE)
+            cleaned = re.sub(r"\n```$", "", cleaned)
+            cleaned = cleaned.strip()
+            try:
+                data = json.loads(cleaned)
+            except json.JSONDecodeError:
+                # Try finding the first '{' and last '}'
+                start_idx = raw_text.find('{')
+                end_idx = raw_text.rfind('}')
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    try:
+                        data = json.loads(raw_text[start_idx:end_idx+1])
+                    except json.JSONDecodeError:
+                        pass
+                        
+        if not data:
+            raise ValueError(f"Could not parse valid JSON from Gemini response. First 500 characters:\n{raw_text[:500]}")
+            
         momentum_products = [item.lower() for item in data.get("momentum_products", [])]
         high_signal_keywords = [item.lower() for item in data.get("high_signal_keywords", [])]
         
