@@ -205,6 +205,16 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
     combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
     
+    # Check for Consensus Curation (allows threads opt-in)
+    has_consensus = any(item.get('consensus_synergy', False) for item in news_items)
+    if has_consensus:
+        combined_instruction += "\n\nCONSENSUS EVENT INSTRUCTION: Multiple independent feeds have reported on a major breakthrough. You are authorized to expand this curation summary into a detailed, multi-post thread of up to 1000 characters (our Weaver engine will handle the splitting at paragraph and sentence boundaries)."
+    
+    # Friday Morning Curation focus overlay
+    is_friday_morning = context.get('day') == 'Friday' and 'Morning' in context.get('session', '')
+    if is_friday_morning:
+        combined_instruction += "\n\nRELEASE ROUNDUP INSTRUCTION: Focus exclusively on summarizing the latest market launches, product updates, and developer releases from the past week (Weekly Release Roundup format). Highlight the most impactful commercial developer announcements."
+
     user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
     
     for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
