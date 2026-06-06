@@ -153,35 +153,8 @@ SECONDARY_TOPICS = [
     "The Evolving Role of Junior Engineers"
 ]
 
-CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a compact, human, business-relevant short-form post.
-
-Do not write an academic summary. Extract the real-world implication and express one clear point of view.
-
-ANTI-PATTERNS (DO NOT USE):
-* Generic openings like "AI is transforming...", "The future of...", or "In today's rapidly evolving...".
-* Hype words like "game-changing", "revolutionary", "frontier", or "systemic intelligence".
-* Dense academic jargon or dry article abstracts.
-* Repeating the exact same "not X, but Y" structure in every post.
-* Stuffing too many ideas into one post.
-
-REUSABLE STRUCTURES (choose one based on the story):
-1. Strategic Contrast: contrast the old assumption with the new reality.
-2. Practical Enterprise Implication: explain what changes for business, product, vendors, ROI, or operations.
-3. Risk/Accountability Lens: explain what must be trusted, verified, secured, or governed.
-
-STYLE:
-* Write like a thoughtful human, not a press release.
-* Use short sentences.
-* Prefer concrete business language over technical jargon.
-* Make one strong point.
-* If using line breaks, keep them minimal because the post is short-form.
-* Hashtags are optional. Use 0-2 relevant hashtags only when they add discovery value. Never sacrifice clarity or the main thesis for hashtags.
-
-LENGTH:
-* Target 260-290 characters for normal posts.
-* Stay within the platform-safe short-form limit without relying on truncation.
-* If space is tight, keep the thesis and remove supporting detail."""
-
+CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a single, high-fidelity brief. 
+Focus on 'Why it Matters' for tech leaders. STRICTLY limit your output to a single post under 280 characters."""
 MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
 STRICTLY limit your output to a single post under 280 characters, presenting the core lesson with zero fluff."""
 SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
