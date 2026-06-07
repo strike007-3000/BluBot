@@ -399,12 +399,12 @@ async def fetch_threads_replies(client):
         SafeLogger.debug(f"Failed to fetch Threads replies: {e}")
         return []
 
-async def update_social_profiles(bsky_client, mastodon_token, count, dialect, topic):
+async def update_social_profiles(bsky_client, mastodon_token, active_day, topic):
     """Dynamically update social media bios with exciting telemetry."""
     if not settings.enable_bio_management:
         return
 
-    bio = f"🤖 BluBot v{VERSION} | {count:,} stories narrated | 🔍 Voice: {dialect} | Latest: {topic}"
+    bio = f"AI signal, zero noise. Day {active_day}. | Currently tracking: {topic}"
     
     # 1. Bluesky
     if bsky_client and settings.bsky_handle:
