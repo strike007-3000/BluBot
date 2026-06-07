@@ -367,9 +367,23 @@ async def generate_nvidia_image(client, prompt):
     }
     
     try:
-        response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
-        response.raise_for_status()
-        result = response.json()
+        response = None
+        result = None
+        try:
+            response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
+            response.raise_for_status()
+            result = response.json()
+        except Exception as e:
+            SafeLogger.warn(f"NVIDIA NIM primary endpoint failed ({e}). Attempting OpenAI-compatible endpoint fallback...")
+            fallback_url = "https://ai.api.nvidia.com/v1/images/generations"
+            fallback_payload = {
+                "prompt": prompt,
+                "model": "flux.2-klein-4b",
+                "response_format": "b64_json"
+            }
+            response = await client.post(fallback_url, headers=headers, json=fallback_payload, timeout=45)
+            response.raise_for_status()
+            result = response.json()
         
         # Expert Review Fix: Robust multi-format base64 parsing (artifacts vs direct image field)
         image_b64 = None
