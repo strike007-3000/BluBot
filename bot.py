@@ -207,8 +207,19 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
         state.setdefault("recent_topics", []).append(synthesis.topic)
 
     # Update stats
-    count_this_run = len(curation.top_articles)
-    state["total_posts_curated"] = state.get("total_posts_curated", 0) + count_this_run
+    today_date = datetime.now(timezone.utc).date()
+    if "start_date" not in state:
+        state["start_date"] = "2026-03-31"
+    
+    try:
+        from datetime import date
+        start_dt = date.fromisoformat(state["start_date"])
+        active_day = (today_date - start_dt).days + 1
+    except Exception:
+        active_day = 68  # Fallback
+
+    # Increment total posts by 1 (actual synthesized post broadcast)
+    state["total_posts_curated"] = state.get("total_posts_curated", 0) + 1
     state["last_dialect"] = curation.last_dialect
     
     # Cap history to prevent state bloat (Tier 1 constraint)
@@ -222,8 +233,7 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     await update_social_profiles(
         client_bsky, 
         settings.mastodon_token, 
-        state["total_posts_curated"],
-        curation.last_dialect,
+        active_day,
         synthesis.topic
     )
 

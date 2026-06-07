@@ -7,3 +7,4 @@ venv/
 .vscode/
 .idea/
 bluesky_session.txt
+DOCUMENTATION_COMPARISON.md
