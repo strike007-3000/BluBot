@@ -379,7 +379,7 @@ async def generate_nvidia_image(client, prompt):
             fallback_url = "https://ai.api.nvidia.com/v1/images/generations"
             fallback_payload = {
                 "prompt": prompt,
-                "model": "flux.2-klein-4b",
+                "model": "black-forest-labs/flux.2-klein-4b",
                 "response_format": "b64_json"
             }
             response = await client.post(fallback_url, headers=headers, json=fallback_payload, timeout=45)
