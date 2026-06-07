@@ -13,6 +13,7 @@ class Article:
     score: Optional[int] = 0
     topic: Optional[str] = "General"
     _score_debug: Optional[Any] = None
+    consensus_synergy: Optional[bool] = False
 
 @dataclass(frozen=True)
 class CurationResult:
