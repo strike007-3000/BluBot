@@ -123,7 +123,7 @@ Scanning over **30 premium feeds**.
 
 ---
 
-## ⚙️ Page 6: Technical Configuration (v3.10.1)
+## ⚙️ Page 6: Technical Configuration (v3.11.0)
 
 ### Environment Secrets
 | Variable | Description |
@@ -662,7 +662,7 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
 
 ---
 
-## Page 14: Interaction Engine (Mention Replies & Comments) (v3.10.1)
+## Page 14: Interaction Engine (Mention Replies & Comments) (v3.11.0)
 
 BluBot is no longer a broadcast-only curator. The **Interaction Engine** bridges the gap between static news and conversational engagement by supporting direct mentions and configurable comment replies.
 
