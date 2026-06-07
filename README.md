@@ -24,7 +24,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
         - *Precision Buffers*: Implements safety offsets (`limit - 10` for Bluesky/Threads, `limit - 15` for Mastodon) to account for pagination suffixes (e.g. `(1/2)`) without API limit rejections.
         - *Thread Limits*: Enforces a strict `MAX_THREAD_PARTS=2` constraint to avoid feed fatigue, trailing summaries with `...` when truncated.
     - **🥁 Thread Rhythm (v3.8.1)**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
-    - **🤖 Dynamic Bio Management (v3.8.1)**: Profiles now showcase live telemetry and curation statistics (e.g., "1,245 stories narrated | Voice: Analytical").
+    - **🤖 Dynamic Bio Management (v3.11.0)**: Profiles now showcase an active day streak and the currently tracked topic (e.g., "AI signal, zero noise. Day 68. | Currently tracking: On-device agents").
     - **🛡️ Supply Chain Hardening (v3.8.2)**: Migrated to `pip-tools` with cryptographic hashes.
     - **📡 Feed Vanguard (v3.8.2)**: Automated RSS resilience engine that audits sources for health, silencing broken feeds with exponential backoff.
     - **Typed Pipeline Stages**: Immutable stages powered by frozen `dataclasses` and a typed `Settings` singleton.
@@ -44,7 +44,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
     - **Stylistic Memory**: The bot now remembers its previous "vibe" and ensures it never repeats the same tone twice in a row, switching between **Analytical**, **Practical**, **Sage**, **Concise**, and **Philosophical** dialects.
     - **Temporal Intelligence**: Upgraded from 2 to **5 granular sessions** (Dawn, Morning, Midday, Afternoon, Evening) for hyper-relevant time-of-day awareness.
     - **Manual Run "Intercept"**: Automatically detects manual `workflow_dispatch` runs and labels them as **"(Intercept)"**, shifting the AI into an urgent, ad-hoc reporting mode.
-- **💬 Interaction Engine (v3.10.1)**:
+- **💬 Interaction Engine (v3.11.0)**:
     - **Configurable Comments & Replies**: Platforms can have comments/replies toggled independently (Bluesky `true`, Mastodon/Threads `false` by default).
     - **24-Hour Lookback Filters**: Strict timestamp boundaries filter out notifications/comments older than 24 hours to prevent scanning entire profile histories.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
@@ -144,7 +144,10 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.10.1 (Current)**: **Curation Script Hardening & Documentation Sync**.
+- **v3.11.0 (Current)**: **Dynamic Bio Engagement & Precision Counting**.
+    - 🤖 **Dynamic Bio Overhaul**: Profiles now display an active day count (streak) and the currently tracked topic instead of raw/confusing stats.
+    - 📊 **Accurate Post Incrementing**: Fixed a logic bug where `total_posts_curated` was incremented by the raw incoming article count rather than the actual published synthesis posts.
+- **v3.10.1**: **Curation Script Hardening & Documentation Sync**.
     - 🔒 **Weekly Curation Hardening**: Added structured Pydantic response schemas and robust regex-based JSON boundary extraction to `update_config_keywords.py` to prevent JSON decode failures. Added API key environment guards.
     - 📖 **Documentation Synchronization**: Updated `README.md` and manual wiki with exact scoring engine weights, 3-tier persistence flowcharts, Weaver splits, and comment system configurations.
 - **v3.10.0**: **Configurable & Token-Efficient Comment Replies**.
