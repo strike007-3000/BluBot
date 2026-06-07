@@ -64,9 +64,9 @@ def retry_with_backoff(func):
                 err_msg = str(e).lower()
                 if "rate limit" in err_msg or "429" in err_msg:
                     SafeLogger.warn(f"Rate limited. Waiting {wait_time:.2f}s before retry {retries}/{MAX_API_RETRIES}...")
-                elif "forbidden" in err_msg or "403" in err_msg:
-                    # P1 Badge: 403 is usually permanent (permission/scope issue)
-                    SafeLogger.error(f"Forbidden (403) error in {func.__name__}. Skipping retries.")
+                elif "forbidden" in err_msg or "403" in err_msg or "unauthorized" in err_msg or "401" in err_msg:
+                    # P1 Badge: 403 / 401 is usually permanent (permission/scope/token issue)
+                    SafeLogger.error(f"Authentication/Permission error (403/401) in {func.__name__}. Skipping retries.")
                     raise e
                 elif "invalidrequest" in err_msg:
                     # P1 Badge Restrict 400 matching: Only skip retries for explicit atproto validation errors
