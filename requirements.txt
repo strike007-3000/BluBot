@@ -19,9 +19,9 @@ atproto==0.0.67 \
     --hash=sha256:161c3b729675118d35d98d37cd7ff199cbb6d9b05a6dc7b582a86a43ef917daf \
     --hash=sha256:c2b76e7de13252ea6f0a665a9a22cb27fe35a7d2fe2eff1a3da2802701f104f8
     # via -r requirements.in
-beautifulsoup4==4.14.3 \
-    --hash=sha256:0918bfe44902e6ad8d57732ba310582e98da931428d231a5ecb9e7c703a735bb \
-    --hash=sha256:6292b1c5186d356bba669ef9f7f051757099565ad9ada5dd630bd9de5fa7fb86
+beautifulsoup4==4.15.0 \
+    --hash=sha256:288e3ca7d54b06f2ac191970bc275c1939cb46d450b255bf6718b04aa37ab4f7 \
+    --hash=sha256:d6f88de62e1d4e38ecb1077eb9724cd0eff29d2a08ca16a401e9b9e93f117cf9
     # via -r requirements.in
 certifi==2026.2.25 \
     --hash=sha256:027692e4402ad994f1c42e52a4997a9763c646b73e4096e4d5d6db8af1d6f0fa \
@@ -327,9 +327,9 @@ google-auth[requests]==2.49.2 \
     --hash=sha256:c1ae38500e73065dcae57355adb6278cf8b5c8e391994ae9cbadbcb9631ab409 \
     --hash=sha256:c2720924dfc82dedb962c9f52cabb2ab16714fd0a6a707e40561d217574ed6d5
     # via google-genai
-google-genai==2.7.0 \
-    --hash=sha256:21cac381e09a869151706aba797b6a4f96cfe92c484e13204d092caee7ff11cb \
-    --hash=sha256:3c6f32f5ced9877ededd1b384b5e5b7f09c20046ec3390b662b16d8cd1882ac5
+google-genai==2.8.0 \
+    --hash=sha256:37a9b3cb127d763e7f4ca47452ae3562c87728773bd1b149f7b559c239da2bc1 \
+    --hash=sha256:4da0a223a100f4b37f609a68b835e3326ab0fa313314dc0fd9d34e76ee293844
     # via -r requirements.in
 h11==0.16.0 \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
