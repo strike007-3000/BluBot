@@ -2,12 +2,12 @@
 # Use 'pip-compile requirements.in' to generate requirements.txt
 
 atproto>=0.0.67
-google-genai>=2.7.0
+google-genai>=2.8.0
 feedparser>=6.0.12
 python-dotenv>=1.2.1
 requests==2.34.2
 Mastodon.py>=2.2.1
-beautifulsoup4>=4.14.0
+beautifulsoup4>=4.15.0
 httpx>=0.28.0
 Pillow==12.2.0
 
