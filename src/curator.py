@@ -214,7 +214,7 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
     # Check for Consensus Curation (allows threads opt-in)
     has_consensus = any(item.get('consensus_synergy', False) for item in news_items)
     if has_consensus:
-        combined_instruction += "\n\nCONSENSUS EVENT INSTRUCTION: Multiple independent feeds have reported on a major breakthrough. You are authorized to expand this curation summary into a detailed, multi-post thread of up to 1000 characters (our Weaver engine will handle the splitting at paragraph and sentence boundaries)."
+        combined_instruction += "\n\nCONSENSUS EVENT INSTRUCTION: Multiple independent feeds have reported the same major breakthrough. You may expand the post up to 500 characters only when the existing platform-specific limits and splitter can safely handle it. Do not pad. Do not write a long summary. State one clear thesis, explain why the consensus matters, and keep the tone human, concise, and business-relevant."
     
     # Friday Morning Curation focus overlay
     is_friday_morning = context.get('day') == 'Friday' and 'Morning' in context.get('session', '')
