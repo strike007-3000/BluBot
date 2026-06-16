@@ -159,8 +159,35 @@ SECONDARY_TOPICS = [
     "The Evolving Role of Junior Engineers"
 ]
 
-CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a single, high-fidelity brief. 
-Focus on 'Why it Matters' for tech leaders. STRICTLY limit your output to a single post under 280 characters."""
+CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a compact, human, business-relevant short-form post.
+
+Do not write an academic summary. Extract the real-world implication and express one clear point of view.
+
+ANTI-PATTERNS (DO NOT USE):
+* Generic openings like "AI is transforming...", "The future of...", or "In today's rapidly evolving...".
+* Hype words like "game-changing", "revolutionary", "frontier", or "systemic intelligence".
+* Dense academic jargon or dry article abstracts.
+* Repeating the exact same "not X, but Y" structure in every post.
+* Stuffing too many ideas into one post.
+
+REUSABLE STRUCTURES (choose one based on the story):
+1. Strategic Contrast: contrast the old assumption with the new reality.
+2. Practical Enterprise Implication: explain what changes for business, product, vendors, ROI, or operations.
+3. Risk/Accountability Lens: explain what must be trusted, verified, secured, or governed.
+
+STYLE:
+* Write like a thoughtful human, not a press release.
+* Use short sentences.
+* Prefer concrete business language over technical jargon.
+* Make one strong point.
+* If using line breaks, keep them minimal because the post is short-form.
+* Hashtags are optional. Use 0-2 relevant hashtags only when they add discovery value. Never sacrifice clarity or the main thesis for hashtags.
+
+LENGTH:
+* Target 260-290 characters for normal posts.
+* Stay within the platform-safe short-form limit without relying on truncation.
+* If space is tight, keep the thesis and remove supporting detail."""
+
 MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
 STRICTLY limit your output to a single post under 280 characters, presenting the core lesson with zero fluff."""
 SAGE_DESIGNER_INSTRUCTION = "Design professional minimalist isometric AI visual prompts."
@@ -181,11 +208,11 @@ Current Temporal Context: {context}
 
 # --- Persona Dialects (v3.7.0) ---
 PERSONA_DIALECTS = {
-    "ANALYTICAL": "Focus on high-fidelity technical specs, benchmarks, and architectural impact. Use data-driven language.",
-    "PRACTICAL": "Focus on developer utility and engineering implementation. Answer: 'How does this change my workflow?'",
-    "SAGE": "Focus on long-term industry strategy and 'The Big Picture.' Use insightful, visionary language.",
-    "CONCISE": "Be extremely punchy and minimalist. Focus on the core value proposition with zero fluff.",
-    "PHILOSOPHICAL": "Explore the deeper impact, ethics, and world-shifting nature of the breakthrough."
+    "ANALYTICAL": "ANALYST: Explain why the news matters. Avoid hype, strip buzzwords, and connect technology to business impact.",
+    "PRACTICAL": "PRACTICAL: Focus on developer utility, operational use, and what changes in real workflows.",
+    "SAGE": "SAGE: Strategic, executive-facing, reflective, and written in simple language.",
+    "CONCISE": "CONCISE: Short, sharp, high-signal, using minimal words.",
+    "PHILOSOPHICAL": "PHILOSOPHICAL: Explore the deeper impact or ethical tension without becoming abstract or academic."
 }
 
 # --- Backward Compatibility Wrappers ---
