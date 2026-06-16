@@ -12,7 +12,7 @@ httpx>=0.28.0
 Pillow==12.2.0
 
 # Security Hardening (Specific Transitive Pins)
-cryptography==46.0.7
+cryptography>=46.0.7,<47
 urllib3==2.7.0
 anyio==4.13.0
 zipp==4.1.0
