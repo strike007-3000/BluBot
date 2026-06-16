@@ -3,10 +3,8 @@
 Automated AI news curator that fetches updates twice daily, synthesizes them using **Sage Intelligence (Multi-Model Failover)**, and broadcasts insightfully to **Bluesky**, **Mastodon**, and **Threads**—all running entirely for free on **GitHub Actions**.
 
 ## 📊 System Status
-| Component | Status | Last Run | Mode |
-|:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-04-18 | 🖼️ NVIDIA SD3 Generation |
-| **Signal Strength** | Elite (Natural) | -- | -- |
+
+See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 
 ## 🚀 Key Features
 
