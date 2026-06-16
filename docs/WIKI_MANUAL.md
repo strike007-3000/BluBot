@@ -469,11 +469,11 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 - [Page 14: Interaction Engine (Mention Replies & Comments) (v3.11.0)](#page-14-interaction-engine-mention-replies--comments-v3110)
 - [Page 15: Precision Threading (The Weaver Cap)](#-page-15-precision-threading-the-weaver-cap)
 
-- [3-Tier State Resilience](#3-tier-state-resilience)
-- [Security & Supply Chain](#security--supply-chain)
-- [Page 12: Media Pipeline & NVIDIA NIM](#page-12-media-pipeline--nvidia-nim)
-- [Page 14: Interaction Engine (Mention Replies)](#page-14-interaction-engine-mention-replies)
-- [Page 15: Precision Threading (The Weaver Cap)](#page-15-precision-threading-the-weaver-cap)
+- [Page 8: 3-Tier State Resilience (v3.8.0)](#-page-8-3-tier-state-resilience-v380)
+- [Page 3: Reliability & The Fortress (v3.9.0)](#-page-3-reliability--the-fortress-v390)
+- [Page 4: NVIDIA NIM Image Generation (v3.6)](#-page-4-nvidia-nim-image-generation-v36)
+- [Page 14: Interaction Engine (Mention Replies & Comments) (v3.11.0)](#page-14-interaction-engine-mention-replies--comments-v3110)
+- [Page 15: Precision Threading (The Weaver Cap)](#-page-15-precision-threading-the-weaver-cap)
 
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
