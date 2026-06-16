@@ -169,12 +169,21 @@ def _save_gist_state(filename: str, data: dict) -> bool:
         SafeLogger.error(f"Failed to save state to Gist: {e}")
         return False
 
+def load_json_state(file_path: str):
+    """Helper to load JSON data from a file path."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_json_state(file_path: str, data, indent=4):
+    """Helper to save state to a JSON file."""
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=indent)
+
 def load_seen_interactions() -> List[str]:
     """Loads the list of social interaction IDs we've already responded to."""
     if os.path.exists(INTERACTIONS_STATE_PATH):
         try:
-            with open(INTERACTIONS_STATE_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
+            return load_json_state(INTERACTIONS_STATE_PATH)
         except Exception:
             return []
     return []
@@ -182,8 +191,7 @@ def load_seen_interactions() -> List[str]:
 def save_seen_interactions(interacted_ids: List[str]):
     """Saves the list of social interaction IDs to persistent store."""
     try:
-        with open(INTERACTIONS_STATE_PATH, "w", encoding="utf-8") as f:
-            json.dump(interacted_ids[-500:], f, indent=4) # Keep last 500
+        save_json_state(INTERACTIONS_STATE_PATH, interacted_ids[-500:], indent=4)
     except Exception as e:
         SafeLogger.error(f"Failed to save interactions: {e}")
 
@@ -195,8 +203,7 @@ def load_seen_articles():
         # Tier 1: Local primary
         if os.path.exists(SEEN_FILE_PATH):
             try:
-                with open(SEEN_FILE_PATH, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                return load_json_state(SEEN_FILE_PATH)
             except (json.JSONDecodeError, IOError) as e:
                 SafeLogger.warn(f"Local seen articles file corrupted: {e}. Trying backup...")
 
@@ -204,10 +211,7 @@ def load_seen_articles():
         bak_path = f"{SEEN_FILE_PATH}.bak"
         if os.path.exists(bak_path):
             try:
-                with open(bak_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    SafeLogger.info("Restored seen articles from local backup.")
-                    return data
+                return load_json_state(bak_path)
             except (json.JSONDecodeError, IOError):
                 return {"links": [], "recent_topics": [], "last_dialect": None}
         return {"links": [], "recent_topics": [], "last_dialect": None}
@@ -225,8 +229,7 @@ def save_seen_articles(data):
             
             # 2. Atomic Primary Write
             temp_path = f"{SEEN_FILE_PATH}.tmp"
-            with open(temp_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
+            save_json_state(temp_path, data, indent=2)
             os.replace(temp_path, SEEN_FILE_PATH)
             
             # 3. Remote Synchronization (Gist)
