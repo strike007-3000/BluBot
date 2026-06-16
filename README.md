@@ -4,7 +4,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 
 ## 📊 System Status
 
-See [STATUS.md](file:///d:/Code/BlueSky/STATUS.md) for live telemetry and broadcaster status.
+See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 
 ## 🚀 Key Features
 
@@ -227,7 +227,7 @@ Targeting **SSRF protection**, **Scoring fidelity**, and **Secret redaction**.
 ### 2. Interactive Diagnostic (Developer Tool)
 Run the playground to see manual scoring breakdowns and AI drafts:
 ```bash
-python test_models.py
+python scripts/diagnostic.py
 ```
 
 ---
