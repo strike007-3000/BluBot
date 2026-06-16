@@ -1,39 +1,33 @@
-# PR Description: The Fortress & The Narrator (v3.8.2) 🏰🥁
+# PR Description: Refactored State Persistence & Hardened Humanization Prompts (v3.11.1) 🛠️✍️
 
-This PR completes the v3.8.x development cycle, transforming BluBot into an industry-grade autonomous entity with "cloud memory," natural pacing, and elite supply-chain security.
+This PR introduces optimizations to local state persistence, refactors regular expression operations, updates system instructions for short-form human-written posts, and excludes the `graphify-out/` visualization output directory from source control tracking.
 
-## 🌟 Key Features (v3.8.0 - v3.8.2)
+## 🌟 Key Updates
 
-### 1. 3-Tier State Resilience (The Fortress)
-BluBot now has "cloud memory" that survives even if the local CI environment is wiped.
-- **Tier 1 (Local)**: Atomic writes with `FileLock` protection.
-- **Tier 2 (Backup)**: Automatic rotation to `.bak` files with self-repair logic.
-- **Tier 3 (Remote)**: Synchronizes state with a private GitHub Gist for cross-runner persistence.
+### 1. Refactored JSON State Persistence
+Consolidated the state-saving logic across multiple systems to avoid duplicate file-handling code:
+- Introduced generic `load_json_state` and `save_json_state` helper functions in `src/utils.py`.
+- Updated `load_seen_interactions`/`save_seen_interactions` and `load_seen_articles`/`save_seen_articles` to use these helpers.
+- Preserved all original exceptions, file rotation patterns, advisory `FileLock` layers, and backup Gist synchronization logic.
 
-### 2. Humanization Patterning (The Narrator)
-Closed the "Turing Gap" by implementing natural activity markers:
-- **🥁 Thread Rhythm**: Randomized 10-30s pauses between posts in a multi-part thread. This prevents "burst-spam" detection and simulates human narration.
-- **🤖 Dynamic Bio Management**: Automatically updates social bios on Bluesky and Mastodon with live telemetry (e.g., *"1,245 stories curated | Voice: Analytical"*).
+### 2. Precompiled Regular Expressions
+Moved the inline regular expression compilation inside `strip_markdown` (in `src/curator.py`) to the module scope (`_MARKDOWN_STRIP_RE`). This prevents recompilation overhead on every curation run.
 
-### 3. Feed Vanguard Automation
-Implemented an industrial-grade health engine to manage our elite **29-feed network**:
-- **Hiccup Resilience**: The first failure only triggers a warning. Silent mode (1h → 12h → 72h) only begins on consecutive failures to prevent transient dropouts.
-- **Pre-flight Audit**: The bot validates all sources before curation, ensuring zero cycles are wasted on broken links.
-- **Elite Coverage**: Expanded to include **AlphaSignal**, **TheSequence**, and **TLDR AI**.
+### 3. Hardened Humanization & Short-Form Prompts
+Upgraded the curation prompts to ensure social posts are highly engaging, human-sounding, and correctly sized for short-form platforms (Bluesky, Threads, and Mastodon):
+- **Normal Post Length**: Bounded targets directly in `CURATOR_SYSTEM_INSTRUCTION` to stay within 260–290 characters naturally without relying on harsh downstream truncation.
+- **Consensus Post Length**: Bounded consensus/breakthrough posts to a maximum of 500 characters when the platforms and splitter can safely support it.
+- **Anti-Patterns Added**: Explicitly banned buzzwords/clichés (e.g., *"AI is transforming..."*, *"frontier"*, *"systemic intelligence"*) and repetitive structural formulas.
+- **Strategic Reusable Structures**: Instructed the models to use distinct structures (Strategic Contrast, Practical Enterprise Implication, Risk/Accountability Lens) depending on the story context.
+- **Dialect Updates**: Distinctly mapped out `SAGE` (strategic/executive), `CONCISE` (minimalist), and `ANALYST` (business impact) personas.
+- **Hashtags Strategy**: Made hashtags optional, instructing the model to use 0-2 hashtags only when they add discovery value, never sacrificing clarity or content.
 
-### 4. Critical Bug Remediation
-- **Typing Fix**: Resolved P0 `NameError` in `bot.py` by properly importing `Any` for type annotations.
-- **Async Fix**: Resolved P1 `NameError` in `broadcaster.py` by correctly capturing the event loop for threaded Mastodon delivery.
+### 4. Repository Cleanup
+Added `graphify-out/` to `.gitignore` to prevent localized AST graph visualization files from being pushed to Git.
 
-## 🧪 Verification & Stability
-- ✅ **Dry-Run Validation**: Bot successfully initializes and validates settings without NameErrors.
-- ✅ **Humanization Diagnostic**: Verified `human_delay` timing accuracy and state counter persistence via `test_humanization.py`.
-- ✅ **Compilations**: Successfully generated hashed `requirements.txt` from `requirements.in`.
-
-## 📊 Documentation Updates
-- **README.md**: Updated with v3.8.2 features and expanded resilience documentation.
-- **WIKI_MANUAL.md**: Added sections for **Security & Supply Chain** and handled v3.8 navigation.
-- **VERSION**: Bumped to **3.8.2**.
+## 🧪 Verification & Testing
+- ✅ **Test Coverage**: All 34 tests in `src/tests/` passed successfully (including verification of markdown stripping and config settings validations).
+- ✅ **Graph Validation**: Executed `graphify update .` to ensure the local AST repository graph is synchronized.
 
 ---
-*Hardened and Humanized - Ready for the v3.8.2 Production Merge*
+*Optimized Curation Prompting and Clean Persistence Engineering - Ready for Merge*

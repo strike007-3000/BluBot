@@ -142,7 +142,12 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.11.0 (Current)**: **Dynamic Bio Engagement & Precision Counting**.
+- **v3.11.1 (Current)**: **Refactored Persistence & Humanized Short-Form Prompts**.
+    - 🛠️ **Refactored Persistence Helpers**: Integrated generic `load_json_state` and `save_json_state` functions in `src/utils.py` to consolidate local state storage and prevent duplicate code.
+    - 🔒 **Performance Optimization**: Moved the regular expression compilation inside `strip_markdown` in `src/curator.py` to module scope.
+    - ✍️ **Humanized Short-Form Prompts**: Overhauled `CURATOR_SYSTEM_INSTRUCTION` and dialect descriptions to target engaging, short-form posts (260-290 characters) naturally, avoiding buzzwords/clichés and adding anti-patterns and strategic structures.
+    - 📁 **Repository Ignorance**: Added `graphify-out/` to `.gitignore` to prevent local graph visualizations from polluting Git tracking.
+- **v3.11.0**: **Dynamic Bio Engagement & Precision Counting**.
     - 🤖 **Dynamic Bio Overhaul**: Profiles now display an active day count (streak) and the currently tracked topic instead of raw/confusing stats.
     - 📊 **Accurate Post Incrementing**: Fixed a logic bug where `total_posts_curated` was incremented by the raw incoming article count rather than the actual published synthesis posts.
 - **v3.10.1**: **Curation Script Hardening & Documentation Sync**.
