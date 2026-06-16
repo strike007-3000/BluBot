@@ -15,9 +15,9 @@ anyio==4.13.0 \
     #   -r requirements.in
     #   google-genai
     #   httpx
-atproto==0.0.67 \
-    --hash=sha256:161c3b729675118d35d98d37cd7ff199cbb6d9b05a6dc7b582a86a43ef917daf \
-    --hash=sha256:c2b76e7de13252ea6f0a665a9a22cb27fe35a7d2fe2eff1a3da2802701f104f8
+atproto==0.0.68 \
+    --hash=sha256:6ac124520ef9c40f20cc584cb1efa6f68a3a7a05f6275bfedf2438f31072eed8 \
+    --hash=sha256:ddd41964d7ccd2e84e278923f89c2182bc29892ec04d1b71e4211a8ab5081024
     # via -r requirements.in
 beautifulsoup4==4.15.0 \
     --hash=sha256:288e3ca7d54b06f2ac191970bc275c1939cb46d450b255bf6718b04aa37ab4f7 \
@@ -705,9 +705,9 @@ pygments==2.20.0 \
     --hash=sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f \
     --hash=sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176
     # via pytest
-pytest==9.0.3 \
-    --hash=sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9 \
-    --hash=sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c
+pytest==9.1.0 \
+    --hash=sha256:41dd9148c08072446394cefd3d79701701335a9f4cae69ba92e39f6c7f5c061c \
+    --hash=sha256:8ebb0e7888bdf2bdfc602ec51f8f62d50200af37356c74e503c79a94f5c81f32
     # via
     #   -r requirements.in
     #   pytest-asyncio
