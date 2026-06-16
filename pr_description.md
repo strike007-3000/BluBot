@@ -1,44 +1,33 @@
-# PR Description: Natural Vibe Engine (v3.7.0) 🎭🚀
+# PR Description: Refactored State Persistence & Hardened Humanization Prompts (v3.11.1) 🛠️✍️
 
-This PR evolves BluBot from a scheduled automation script into a **Dynamic Editorial Entity**. It introduces high-resolution temporal intelligence, stylistic memory, and automated manual-run detection to make the bot feel significantly more natural and varied in its social media feed.
+This PR introduces optimizations to local state persistence, refactors regular expression operations, updates system instructions for short-form human-written posts, and excludes the `graphify-out/` visualization output directory from source control tracking.
 
-## 🌟 Key Features (v3.7.0)
+## 🌟 Key Updates
 
-### 1. The Natural Vibe Engine (Stylistic Memory)
-BluBot now has "memory" of its own persona. It records its last used style and ensures the next run uses a different one from a pool of 5 distinct dialects:
-- **ANALYTICAL**: Data-driven specs and arch impact.
-- **PRACTICAL**: Engineering utility and "How-to".
-- **SAGE**: Visionary strategy and industry shifts.
-- **CONCISE**: High-velocity scanner updates.
-- **PHILOSOPHICAL**: Ethical exploration and the "Big Picture".
+### 1. Refactored JSON State Persistence
+Consolidated the state-saving logic across multiple systems to avoid duplicate file-handling code:
+- Introduced generic `load_json_state` and `save_json_state` helper functions in `src/utils.py`.
+- Updated `load_seen_interactions`/`save_seen_interactions` and `load_seen_articles`/`save_seen_articles` to use these helpers.
+- Preserved all original exceptions, file rotation patterns, advisory `FileLock` layers, and backup Gist synchronization logic.
 
-### 2. High-Resolution Temporal Intelligence
-Resolved the "Session" logic from 2 slots to **5 granular sessions**, ensuring content is perfectly aligned with the time of day:
-- **Night Reflection** (00:00 - 06:00)
-- **Morning Intelligence** (06:00 - 11:00)
-- **Midday Briefing** (11:00 - 15:00)
-- **Afternoon Deep Dive** (15:00 - 19:00)
-- **Evening Synthesis** (19:00 - 24:00)
+### 2. Precompiled Regular Expressions
+Moved the inline regular expression compilation inside `strip_markdown` (in `src/curator.py`) to the module scope (`_MARKDOWN_STRIP_RE`). This prevents recompilation overhead on every curation run.
 
-### 3. Feed Vanguard Automation
-Implemented an industrial-grade health engine to manage our elite **29-feed network**:
-- **Hiccup Resilience**: The first failure only triggers a warning. Silent mode (1h → 12h → 72h) only begins on consecutive failures to prevent transient dropouts.
-- **Pre-flight Audit**: The bot validates all sources before curation, ensuring zero cycles are wasted on broken links.
-- **Elite Coverage**: Expanded to include **AlphaSignal**, **TheSequence**, and **TLDR AI**.
+### 3. Hardened Humanization & Short-Form Prompts
+Upgraded the curation prompts to ensure social posts are highly engaging, human-sounding, and correctly sized for short-form platforms (Bluesky, Threads, and Mastodon):
+- **Normal Post Length**: Bounded targets directly in `CURATOR_SYSTEM_INSTRUCTION` to stay within 260–290 characters naturally without relying on harsh downstream truncation.
+- **Consensus Post Length**: Bounded consensus/breakthrough posts to a maximum of 500 characters when the platforms and splitter can safely support it.
+- **Anti-Patterns Added**: Explicitly banned buzzwords/clichés (e.g., *"AI is transforming..."*, *"frontier"*, *"systemic intelligence"*) and repetitive structural formulas.
+- **Strategic Reusable Structures**: Instructed the models to use distinct structures (Strategic Contrast, Practical Enterprise Implication, Risk/Accountability Lens) depending on the story context.
+- **Dialect Updates**: Distinctly mapped out `SAGE` (strategic/executive), `CONCISE` (minimalist), and `ANALYST` (business impact) personas.
+- **Hashtags Strategy**: Made hashtags optional, instructing the model to use 0-2 hashtags only when they add discovery value, never sacrificing clarity or content.
 
-### 4. Architectural Hardening
-- **Absolute Imports**: Converted all relative imports to absolute `src.` paths to resolve `pytest` isolation issues and standardizing the source tree.
-- **State Persistence**: Extended the atomic persistence logic to track `last_dialect`.
+### 4. Repository Cleanup
+Added `graphify-out/` to `.gitignore` to prevent localized AST graph visualization files from being pushed to Git.
 
-## 🧪 Verification Results
-
-- **Automated Tests**: Passed 100% of the 15-test regression suite (`pytest src/tests/`).
-- **Regression Check**: Verified internal constant consistency (restored `CURATOR_SYSTEM_INSTRUCTION`).
-- **Dry-Run Validation**: Successful execution via `test_models.py` with mock-ad-hoc interception.
-
-## 📊 Documentation Updates
-- **README.md**: Updated with v3.7.0 key features and Status Dashboard.
-- **WIKI_MANUAL.md**: Added Page 10 (The Natural Vibe Engine).
+## 🧪 Verification & Testing
+- ✅ **Test Coverage**: All 34 tests in `src/tests/` passed successfully (including verification of markdown stripping and config settings validations).
+- ✅ **Graph Validation**: Executed `graphify update .` to ensure the local AST repository graph is synchronized.
 
 ---
-*Built for the Elite Sage released under v3.7.0*
+*Optimized Curation Prompting and Clean Persistence Engineering - Ready for Merge*
