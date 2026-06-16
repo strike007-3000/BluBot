@@ -8,3 +8,5 @@ venv/
 .idea/
 bluesky_session.txt
 DOCUMENTATION_COMPARISON.md
+graphify-out/
+
