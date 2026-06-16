@@ -11,7 +11,11 @@ updates:
       python-dependencies:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "cryptography"
+        versions: [">= 47.0.0"]
     open-pull-requests-limit: 10
+
 
   # Maintain GitHub Actions
   - package-ecosystem: "github-actions"

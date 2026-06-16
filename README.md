@@ -144,7 +144,10 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.11.1 (Current)**: **Refactored Persistence & Humanized Short-Form Prompts**.
+- **v3.11.2 (Current)**: **Supply Chain Resilience & Dependabot Mitigation**.
+    - 🛡️ **Supply Chain Constraints**: Adjusted `cryptography` range dependency in `requirements.in` to `>=46.0.7,<47` to comply with the transitive constraint restrictions of the `atproto` SDK client library.
+    - 🤖 **Dependabot Security Gates**: Configured Dependabot to ignore version upgrades `>= 47.0.0` for `cryptography`, resolving the unresolvable dependency updater loop while keeping active path checks.
+- **v3.11.1**: **Refactored Persistence & Humanized Short-Form Prompts**.
     - 🛠️ **Refactored Persistence Helpers**: Integrated generic `load_json_state` and `save_json_state` functions in `src/utils.py` to consolidate local state storage and prevent duplicate code.
     - 🔒 **Performance Optimization**: Moved the regular expression compilation inside `strip_markdown` in `src/curator.py` to module scope.
     - ✍️ **Humanized Short-Form Prompts**: Overhauled `CURATOR_SYSTEM_INSTRUCTION` and dialect descriptions to target engaging, short-form posts (260-290 characters) naturally, avoiding buzzwords/clichés and adding anti-patterns and strategic structures.
