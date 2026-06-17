@@ -747,3 +747,29 @@ To prevent search terms from becoming outdated, BluBot utilizes `scripts/update_
 ### 2. Friday Release Curation Focus
 On Friday mornings, the curation prompt automatically shifts. The bot appends a specialized instruction to focus exclusively on product launches and developer releases from the past week, creating a weekly roundup digest.
 
+---
+
+## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.0)
+
+BluBot v3.12.0 introduces three massive upgrades for manual intervention, accessibility, and platform culture alignment:
+
+### 1. Interactive Telegram Gateway & Approval Queue
+You can control the bot directly from Telegram. The integration supports two key workflows:
+* **The Approval Queue**: Before publishing, the bot posts the text draft + generated image card directly to your Telegram chat using Inline Buttons (`[✅ Approve]`, `[❌ Reject]`).
+  - **Wait-and-Poll**: The GitHub Action waits up to `TELEGRAM_TIMEOUT_MINUTES` (default: 5) for your choice.
+  - **Auto-Post Fallback**: If you do not respond in time, the bot automatically posts the draft to avoid scheduling delays.
+  - **Security Gate**: The bot only processes updates matching `TELEGRAM_USER_ID`.
+* **On-Demand Topic Curation**: Send `/topic <your_keyword>` or `/curate <your_keyword>` to your Telegram bot. When the GHA runner starts, it intercepts the schedule, curates news for *that specific topic*, and builds a draft for your approval.
+
+### 2. Screen Reader Multimodal Alt-Text
+Accessibility is native. If the bot generates or attaches an image:
+* It calls Gemini Vision (`models/gemini-2.5-flash-lite`) with the image bytes and the generation prompt.
+* Gemini generates a descriptive, screen-reader-ready alt text under 100 characters.
+* Alt text is automatically broadcasted alongside the image to Mastodon and Threads.
+
+### 3. Cultural Hashtag Alignment
+Hashtags are now toggleable per platform to fit their social norms:
+* **Bluesky** (`ENABLE_HASHTAGS_BSKY=false`): Strips hashtags to keep posts clean.
+* **Mastodon** (`ENABLE_HASHTAGS_MASTODON=true`): Keeps hashtags for feed discoverability.
+* **Threads** (`ENABLE_HASHTAGS_THREADS=true`): Keeps hashtags intact.
+* Standalone hashtags are cleanly deleted, and inline hashtags (e.g. `#AI`) are stripped of their `#` prefix (e.g. `AI`).
