@@ -33,6 +33,17 @@ class Settings:
     enable_mastodon_comment_replies: bool = False
     enable_threads_comment_replies: bool = False
     
+    # Telegram Integration Config
+    telegram_bot_token: Optional[str] = None
+    telegram_user_id: Optional[str] = None
+    telegram_timeout_minutes: int = 5
+    enable_telegram_approval: bool = False
+    
+    # Platform Hashtag Controls
+    enable_hashtags_bsky: bool = False
+    enable_hashtags_mastodon: bool = True
+    enable_hashtags_threads: bool = True
+    
     # Observability
     log_format: str = "pretty" # "pretty" or "json"
     
@@ -84,6 +95,17 @@ class Settings:
             "image_provider": image_provider,
             "thinking_budget": thinking_budget,
             "gemini_model": os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-lite"),
+            
+            # Telegram configuration
+            "telegram_bot_token": os.getenv("TELEGRAM_BOT_TOKEN"),
+            "telegram_user_id": os.getenv("TELEGRAM_USER_ID"),
+            "telegram_timeout_minutes": int(os.getenv("TELEGRAM_TIMEOUT_MINUTES", "5")),
+            "enable_telegram_approval": os.getenv("ENABLE_TELEGRAM_APPROVAL", "true").lower() == "true",
+
+            # Hashtags configuration
+            "enable_hashtags_bsky": os.getenv("ENABLE_HASHTAGS_BSKY", "false").lower() == "true",
+            "enable_hashtags_mastodon": os.getenv("ENABLE_HASHTAGS_MASTODON", "true").lower() == "true",
+            "enable_hashtags_threads": os.getenv("ENABLE_HASHTAGS_THREADS", "true").lower() == "true",
         }
         
         if is_dry_run:
