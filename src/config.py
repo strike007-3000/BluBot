@@ -180,6 +180,7 @@ STYLE:
 * Use short sentences.
 * Prefer concrete business language over technical jargon.
 * Make one strong point.
+* Factuality: Do not invent events or state unverified rumors/hypothetical scenarios as established facts. If a topic is speculative or conditional, frame it explicitly as a possibility or scenario rather than an accomplished event.
 * If using line breaks, keep them minimal because the post is short-form.
 * Always append 1-2 relevant technical hashtags at the very end of the post (e.g. #AI, #ML, #LLMs) to ensure discoverability across platforms.
 
