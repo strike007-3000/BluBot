@@ -139,7 +139,12 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         SafeLogger.info(f"Synthesis Stage: Generating on-demand post for topic: '{telegram_topic}'")
         try:
             from src.config import CURATOR_SYSTEM_INSTRUCTION
-            prompt = f"Write an elite tech insight post on the topic: '{telegram_topic}'."
+            prompt = (
+                f"Write an elite tech insight post on the topic: '{telegram_topic}'.\n"
+                "CRITICAL: If this topic is hypothetical, speculative, or references a potential future scenario (e.g. 'could be', 'what if', 'speculation'), "
+                "do NOT write as if it has already occurred or is an established fact. Frame it hypothetically (e.g., 'If Cursor were to be acquired...'). "
+                "Do not state unverified assumptions as facts."
+            )
             response = await genai_client.aio.models.generate_content(
                 model=settings.gemini_model,
                 contents=prompt,
