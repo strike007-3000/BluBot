@@ -1,9 +1,15 @@
-import asyncio
+import sys
 import os
+
+# Intercept --dry-run CLI argument before any configuration is loaded
+if "--dry-run" in sys.argv:
+    os.environ["DRY_RUN"] = "true"
+
+import asyncio
 import httpx
 import logging
 from datetime import datetime, timezone
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
 
 # Elite Architecture Imports
 from src.settings import settings
@@ -20,12 +26,16 @@ from src.utils import (
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
     get_temporal_context, generate_visual_prompt, generate_nvidia_image,
-    generate_interactive_reply, prune_gemini_model_priority_async
+    generate_interactive_reply, prune_gemini_model_priority_async,
+    generate_image_alt_text, strip_markdown
 )
 from src.broadcaster import (
     post_to_bluesky, post_to_mastodon, post_to_threads,
     update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions,
     fetch_threads_replies
+)
+from src.telegram_gateway import (
+    send_draft_for_approval, check_for_telegram_topic
 )
 from src.config import (
     STATUS_FILE_PATH, IMAGEN_MODEL,
@@ -76,21 +86,33 @@ async def update_status_dashboard(session_name: str, topic: str):
     """Automatically update the STATUS.md dashboard without blocking the event loop."""
     await asyncio.to_thread(_update_status_dashboard_sync, session_name, topic)
 
-async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
+async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
-    from src.feed_vanguard import VanguardManager
-    vanguard = VanguardManager()
-    
-    # Pre-flight: Refresh blacklist based on current health
-    SafeLogger.info("Vanguard: Running pre-flight RSS health check...")
-    await vanguard.audit_and_update(client)
-    active_feeds = vanguard.get_active_feeds()
-    
     seen_data = await asyncio.to_thread(load_seen_articles)
     context = get_temporal_context()
-    
-    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
-    articles = [Article(**item) for item in raw_news]
+
+    if telegram_topic:
+        SafeLogger.info(f"Curation Stage: Bypassing RSS for Telegram topic request: '{telegram_topic}'")
+        articles = [Article(
+            title=f"On-demand topic request: {telegram_topic}",
+            link="https://telegram.org",
+            summary=f"Synthesize strategic insights regarding the topic: {telegram_topic}.",
+            published=datetime.now(timezone.utc).isoformat(),
+            source="Telegram Intercept",
+            score=100,
+            topic=telegram_topic
+        )]
+    else:
+        from src.feed_vanguard import VanguardManager
+        vanguard = VanguardManager()
+        
+        # Pre-flight: Refresh blacklist based on current health
+        SafeLogger.info("Vanguard: Running pre-flight RSS health check...")
+        await vanguard.audit_and_update(client)
+        active_feeds = vanguard.get_active_feeds()
+        
+        raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
+        articles = [Article(**item) for item in raw_news]
     
     return CurationResult(
         top_articles=articles,
@@ -100,14 +122,30 @@ async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
         session_name=context['session']
     )
 
-async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult) -> Tuple[SynthesisResult, CurationResult]:
+async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult, telegram_topic: Optional[str] = None) -> Tuple[SynthesisResult, CurationResult]:
     """Stage 2: AI Summarization and Persona Application."""
     context = get_temporal_context()
     news_count = len(curation.top_articles)
     
     summary, lead_link, topic, is_failover = None, None, "General", False
     
-    if news_count > 3:
+    if telegram_topic:
+        SafeLogger.info(f"Synthesis Stage: Generating on-demand post for topic: '{telegram_topic}'")
+        try:
+            from src.config import CURATOR_SYSTEM_INSTRUCTION
+            prompt = f"Write an elite tech insight post on the topic: '{telegram_topic}'."
+            response = await genai_client.aio.models.generate_content(
+                model=settings.gemini_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.7)
+            )
+            summary = strip_markdown(response.text.strip())
+            lead_link = "https://telegram.org"
+            topic = telegram_topic
+        except Exception as e:
+            SafeLogger.warn(f"Telegram topic synthesis failed: {e}")
+            summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
+    elif news_count > 3:
         # v3.7.0 logic: Morning/Midday -> Curator, Afternoon/Evening/Night -> Mentor
         is_mentor_time = any(x in curation.session_name for x in ["Afternoon", "Evening", "Night"])
         mode = "Mentor" if is_mentor_time else "Curator"
@@ -136,8 +174,10 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     if not summary:
         return SynthesisResult(content="", lead_link=None, topic="General"), curation
 
+
     # Visual Asset Creation
     image_data, image_url = None, None
+    visual_prompt = None
     if lead_link:
         meta = await get_link_metadata(client, lead_link)
         if meta:
@@ -149,17 +189,35 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
             else:
                 image_data = meta.get('image')
 
+    # Alt text generation
+    image_alt_text = None
+    if image_data:
+        alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
+        image_alt_text = await generate_image_alt_text(image_data, alt_prompt)
+
     return SynthesisResult(
         content=summary, 
         lead_link=lead_link, 
         topic=topic, 
         is_failover=is_failover,
         image_data=image_data,
-        image_url=image_url
+        image_url=image_url,
+        image_alt_text=image_alt_text
     ), curation
 
 async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> Tuple[List[BroadcastResult], Any]:
     """Stage 3: Multi-platform delivery."""
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Skip broadcasting to social networks.")
+        SafeLogger.info(f"DRY RUN Synthesis:\n{synthesis.content}")
+        if synthesis.image_alt_text:
+            SafeLogger.info(f"DRY RUN Image Alt Text: {synthesis.image_alt_text}")
+        return [
+            BroadcastResult(platform="Bluesky", success=True),
+            BroadcastResult(platform="Mastodon", success=True),
+            BroadcastResult(platform="Threads", success=True)
+        ], None
+
     # Bluesky Session Hardening
     bsky_client = AsyncClient(request=AsyncRequest(timeout=30.0))
     try:
@@ -177,9 +235,9 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
         bsky_client = None
 
     tasks = [
-        ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.image_data)) if bsky_client else None,
-        ("Mastodon", post_to_mastodon(synthesis.content, synthesis.image_data)),
-        ("Threads", post_to_threads(client, synthesis.content, synthesis.image_url))
+        ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.image_data, synthesis.image_alt_text)) if bsky_client else None,
+        ("Mastodon", post_to_mastodon(synthesis.content, synthesis.image_data, synthesis.image_alt_text)),
+        ("Threads", post_to_threads(client, synthesis.content, synthesis.image_url, synthesis.image_alt_text))
     ]
     
     active = [t for t in tasks if t]
@@ -195,6 +253,10 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
 
 async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
     """Stage 4: State Synchronization."""
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Skip state persistence updates.")
+        return
+
     # Load fresh state to ensure we have the latest counter
     state = await asyncio.to_thread(load_seen_articles)
     
@@ -359,15 +421,25 @@ async def main():
         # Prune models dynamically at startup based on API limits
         await prune_gemini_model_priority_async(genai_client)
         
+        # Check for on-demand Telegram topic intercept
+        telegram_topic = await check_for_telegram_topic()
+
         # 1. Curation
-        curation = await curation_stage(client)
+        curation = await curation_stage(client, telegram_topic=telegram_topic)
         
         # 2. Synthesis
         context = get_temporal_context()
-        synthesis, curation = await synthesis_stage(client, genai_client, curation)
+        synthesis, curation = await synthesis_stage(client, genai_client, curation, telegram_topic=telegram_topic)
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
+
+        # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
+        if settings.enable_telegram_approval and not settings.is_dry_run:
+            approved = await send_draft_for_approval(synthesis.content, synthesis.image_data)
+            if not approved:
+                SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
+                return
 
         # 3. Broadcast
         SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")
@@ -379,7 +451,7 @@ async def main():
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
 
         # 4. Interaction (Mention Replies)
-        if settings.enable_interactions:
+        if settings.enable_interactions and not settings.is_dry_run:
             interaction_res = await interaction_stage(bsky_client, client, context)
             SafeLogger.info(f"Interaction Session Complete: {len(interaction_res.replied_ids)} replies sent.")
 
