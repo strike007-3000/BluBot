@@ -26,12 +26,16 @@ from src.utils import (
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
     get_temporal_context, generate_visual_prompt, generate_nvidia_image,
-    generate_interactive_reply, prune_gemini_model_priority_async
+    generate_interactive_reply, prune_gemini_model_priority_async,
+    generate_image_alt_text
 )
 from src.broadcaster import (
     post_to_bluesky, post_to_mastodon, post_to_threads,
     update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions,
     fetch_threads_replies
+)
+from src.telegram_gateway import (
+    send_draft_for_approval, check_for_telegram_topic
 )
 from src.config import (
     STATUS_FILE_PATH, IMAGEN_MODEL,
@@ -82,16 +86,8 @@ async def update_status_dashboard(session_name: str, topic: str):
     """Automatically update the STATUS.md dashboard without blocking the event loop."""
     await asyncio.to_thread(_update_status_dashboard_sync, session_name, topic)
 
-async def curation_stage(client: httpx.AsyncClient) -> CurationResult:
+async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
-    from src.feed_vanguard import VanguardManager
-    vanguard = VanguardManager()
-    
-    # Pre-flight: Refresh blacklist based on current health
-    SafeLogger.info("Vanguard: Running pre-flight RSS health check...")
-    await vanguard.audit_and_update(client)
-    active_feeds = vanguard.get_active_feeds()
-    
     seen_data = await asyncio.to_thread(load_seen_articles)
     context = get_temporal_context()
 
@@ -133,7 +129,23 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     
     summary, lead_link, topic, is_failover = None, None, "General", False
     
-    if news_count > 3:
+    if telegram_topic:
+        SafeLogger.info(f"Synthesis Stage: Generating on-demand post for topic: '{telegram_topic}'")
+        try:
+            from src.config import CURATOR_SYSTEM_INSTRUCTION
+            prompt = f"Write an elite tech insight post on the topic: '{telegram_topic}'."
+            response = await genai_client.aio.models.generate_content(
+                model=settings.gemini_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.7)
+            )
+            summary = strip_markdown(response.text.strip())
+            lead_link = "https://telegram.org"
+            topic = telegram_topic
+        except Exception as e:
+            SafeLogger.warn(f"Telegram topic synthesis failed: {e}")
+            summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
+    elif news_count > 3:
         # v3.7.0 logic: Morning/Midday -> Curator, Afternoon/Evening/Night -> Mentor
         is_mentor_time = any(x in curation.session_name for x in ["Afternoon", "Evening", "Night"])
         mode = "Mentor" if is_mentor_time else "Curator"
@@ -163,6 +175,8 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     if not summary:
         return SynthesisResult(content="", lead_link=None, topic="General"), curation
 
+    # Strip formatting function (imported / defined inline)
+    from src.curator import strip_markdown
 
     # Visual Asset Creation
     image_data, image_url = None, None
@@ -222,6 +236,17 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
     except Exception as e:
         SafeLogger.error(f"Bluesky auth failed: {e}")
         bsky_client = None
+
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Skip broadcasting to social networks.")
+        SafeLogger.info(f"DRY RUN Synthesis:\n{synthesis.content}")
+        if synthesis.image_alt_text:
+            SafeLogger.info(f"DRY RUN Image Alt Text: {synthesis.image_alt_text}")
+        return [
+            BroadcastResult(platform="Bluesky", success=True),
+            BroadcastResult(platform="Mastodon", success=True),
+            BroadcastResult(platform="Threads", success=True)
+        ], None
 
     tasks = [
         ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.image_data, synthesis.image_alt_text)) if bsky_client else None,
@@ -410,12 +435,15 @@ async def main():
         # Prune models dynamically at startup based on API limits
         await prune_gemini_model_priority_async(genai_client)
         
+        # Check for on-demand Telegram topic intercept
+        telegram_topic = await check_for_telegram_topic()
+
         # 1. Curation
         curation = await curation_stage(client, telegram_topic=telegram_topic)
         
         # 2. Synthesis
         context = get_temporal_context()
-        synthesis, curation = await synthesis_stage(client, genai_client, curation)
+        synthesis, curation = await synthesis_stage(client, genai_client, curation, telegram_topic=telegram_topic)
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
@@ -437,7 +465,7 @@ async def main():
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
 
         # 4. Interaction (Mention Replies)
-        if settings.enable_interactions:
+        if settings.enable_interactions and not settings.is_dry_run:
             interaction_res = await interaction_stage(bsky_client, client, context)
             SafeLogger.info(f"Interaction Session Complete: {len(interaction_res.replied_ids)} replies sent.")
 
