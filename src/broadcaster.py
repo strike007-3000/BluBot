@@ -10,12 +10,23 @@ from src.utils import (
 )
 from src.settings import settings
 from src.config import VERSION
+def clean_hashtags_if_needed(text: str, enabled: bool) -> str:
+    """Helper to strip or format hashtags based on platform settings."""
+    if not enabled:
+        # Strip trailing hashtags (space followed by #word at the end of string or before other whitespace/end)
+        text = re.sub(r'\s+#\w+(?=\s|$)', '', text)
+        # Inline hashtags (e.g. #AI -> AI)
+        text = text.replace('#', '')
+    return text.strip()
 
 @retry_with_backoff
-async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None):
+async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None, image_alt_text=None):
     """Posts to Bluesky with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.bsky_handle or not bsky_client:
         return
+
+    # Clean hashtags if disabled for Bluesky
+    text = clean_hashtags_if_needed(text, settings.enable_hashtags_bsky)
 
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)")
     safe_limit = settings.bluesky_limit - 10
@@ -99,10 +110,14 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Bluesky!")
 
 @retry_with_backoff
-async def post_to_mastodon(text, image_data=None):
+async def post_to_mastodon(text, image_data=None, image_alt_text=None):
     """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return
+        
+    # Clean hashtags if disabled for Mastodon
+    text = clean_hashtags_if_needed(text, settings.enable_hashtags_mastodon)
+
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)") with higher margin for Mastodon
     safe_limit = settings.mastodon_limit - 15
     chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
@@ -116,7 +131,7 @@ async def post_to_mastodon(text, image_data=None):
             try:
                 mime = get_image_mime(image_data)
                 if mime:
-                    media = m.media_post(image_data, mime_type=mime)
+                    media = m.media_post(image_data, mime_type=mime, description=image_alt_text)
                     media_ids.append(media['id'])
             except Exception as e:
                 SafeLogger.warn(f"Mastodon media failed: {e}")
@@ -146,8 +161,11 @@ async def post_to_mastodon(text, image_data=None):
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Mastodon!")
 
 @retry_with_backoff
-async def post_to_threads(client, text, image_url=None):
+async def post_to_threads(client, text, image_url=None, image_alt_text=None):
     """Posts to Threads with Conditional Multi-Post Threading (The Weaver)."""
+    # Clean hashtags if disabled for Threads
+    text = clean_hashtags_if_needed(text, settings.enable_hashtags_threads)
+
     # Safety Buffer: Account for pagination suffixes
     safe_limit = settings.threads_limit - 10
     chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
@@ -166,10 +184,14 @@ async def post_to_threads(client, text, image_url=None):
         # Lead Image ONLY on the first post
         if i == 0 and image_url:
             try:
-                res = await client.post(base_url, data={
+                payload = {
                     "media_type": "IMAGE", "image_url": image_url,
                     "text": current_text, "access_token": settings.threads_token
-                }, timeout=20)
+                }
+                if image_alt_text:
+                    payload["alt_text"] = image_alt_text
+                    
+                res = await client.post(base_url, data=payload, timeout=20)
                 res.raise_for_status()
                 container_id = res.json().get("id")
             except Exception:
