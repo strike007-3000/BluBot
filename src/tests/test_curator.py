@@ -75,6 +75,8 @@ def test_supports_thinking():
 
 @pytest.mark.asyncio
 async def test_prune_gemini_model_priority_async(monkeypatch):
+    from src.settings import Settings
+    monkeypatch.setattr("src.curator.settings", Settings(gemini_key="mock", is_dry_run=False))
     monkeypatch.setenv("CI", "false")
     original_priority = list(GEMINI_MODEL_PRIORITY)
     
