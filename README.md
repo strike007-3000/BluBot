@@ -149,7 +149,9 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.12.0 (Current)**: **Telegram Control, Alt-Text, and Hashtag Management**.
+- **v3.12.1 (Current)**: **RSS-Grounded Custom Topics**.
+    - 🔍 **Real-Time Fact Grounding**: User-submitted Telegram topics are now run against the live RSS curation feeds. If keyword matches (e.g. "Cursor acquisition") are found, the bot curates and synthesizes directly from the actual news articles (preserving source links/facts) rather than relying on stale/hallucinated parametric knowledge. Bypasses to raw generation only if no matches exist.
+- **v3.12.0**: **Telegram Control, Alt-Text, and Hashtag Management**.
     - 🎮 **Telegram Control & Approval Queue**: Intercepts the post pipeline to request manual review (`[✅ Approve]`, `[❌ Reject]`) via a Telegram message. Automatically posts on timeout (default 5 minutes) to avoid runner hang-ups.
     - 📥 **On-Demand Topic Curation**: Send a message starting with `/topic <keyword>` or `/curate <keyword>` to your Telegram Bot. During its startup sequence, the bot checks for recent user commands (last 15 minutes) and curates a post specifically on that topic instead of the normal RSS loop.
     - ♿ **Alt-Text Generation**: Added Gemini Vision integration (`models/gemini-2.5-flash-lite`) to automatically generate descriptive, screen-reader-ready alt text (under 100 characters) for generated thumbnails, publishing to Mastodon and Threads.

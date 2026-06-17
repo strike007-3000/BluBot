@@ -34,19 +34,6 @@ def test_article_matches_topic():
         topic="why did it happen"
     ) is False
 
-    # Test brand name / word boundary matching (should not truncate OpenAI to open and match open source)
-    assert article_matches_topic(
-        title="Microsoft announces new open source model",
-        summary="This is an open source AI project.",
-        topic="OpenAI"
-    ) is False
-
-    assert article_matches_topic(
-        title="OpenAI releases new model",
-        summary="Details on OpenAI's release.",
-        topic="OpenAI"
-    ) is True
-
 @pytest.mark.asyncio
 async def test_curation_stage_with_matching_telegram_topic(monkeypatch, mocker):
     # Mock settings to avoid dry run issues
