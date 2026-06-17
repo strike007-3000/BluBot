@@ -87,7 +87,7 @@ async def update_status_dashboard(session_name: str, topic: str):
     await asyncio.to_thread(_update_status_dashboard_sync, session_name, topic)
 
 def article_matches_topic(title: str, summary: str, topic: str) -> bool:
-    """Returns True if any significant keyword from topic matches the article title or summary."""
+    """Returns True if all significant keywords from topic match (with inflections on word boundaries) the article title or summary."""
     if not topic:
         return False
     import re
@@ -106,8 +106,28 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
         
     title_lower = title.lower()
     summary_lower = summary.lower()
+    target_words = set(re.findall(r'\b\w+\b', f"{title_lower} {summary_lower}"))
     
-    return any(kw in title_lower or kw in summary_lower for kw in keywords)
+    for kw in keywords:
+        # Generate valid inflection candidates for each keyword
+        candidates = {kw}
+        if kw.endswith('e'):
+            root = kw[:-1]
+            candidates.update({kw + 's', kw + 'd', root + 'ing', root + 'ition', root + 'itions'})
+        else:
+            candidates.update({kw + 's', kw + 'ed', kw + 'ing', kw + 'ion', kw + 'ions'})
+            
+        # Specific mappings for common terms
+        if kw == 'acquire':
+            candidates.update({'acquisition', 'acquisitions'})
+        elif kw == 'acquisition':
+            candidates.update({'acquire', 'acquires', 'acquired', 'acquiring'})
+            
+        # If none of the candidates exist as a full word in the target text, it's not a match
+        if not (candidates & target_words):
+            return False
+            
+    return True
 
 async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
@@ -122,7 +142,14 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
     await vanguard.audit_and_update(client)
     active_feeds = vanguard.get_active_feeds()
     
-    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
+    # If a telegram_topic is requested, bypass default top-8 limit to filter the full candidate list
+    raw_news = await fetch_news(
+        client, 
+        seen_data["links"], 
+        seen_data["recent_topics"], 
+        feed_list=active_feeds, 
+        limit=None if telegram_topic else 8
+    )
     all_articles = [Article(**item) for item in raw_news]
 
     if telegram_topic:
