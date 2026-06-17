@@ -122,7 +122,7 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         return items
     except Exception: return []
 
-async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None):
+async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8):
     """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity."""
     now_utc = datetime.now(timezone.utc)
     source_list = feed_list if feed_list is not None else RSS_FEEDS
@@ -141,7 +141,9 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
             
     entries = list(unique_by_link.values())
     entries.sort(key=lambda x: x["score"], reverse=True)
-    return entries[:8]
+    if limit is None:
+        return entries
+    return entries[:limit]
 
 def strip_markdown(text):
     if not text: return text
