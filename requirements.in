@@ -10,6 +10,7 @@ Mastodon.py>=2.2.1
 beautifulsoup4>=4.15.0
 httpx>=0.28.0
 Pillow==12.2.0
+python-telegram-bot[ext]>=21.0
 
 # Security Hardening (Specific Transitive Pins)
 # SECURITY-NOTE: cryptography is currently constrained by atproto's dependency cap (<47).

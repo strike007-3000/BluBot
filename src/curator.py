@@ -187,6 +187,10 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
     """Synthesizes news with full Failover Loop and randomized Dialect adaptation."""
     if not news_items: return None, None, "General", False, None
     
+    if settings.is_dry_run:
+        SafeLogger.info("Dry run: Bypassing Gemini synthesis call.")
+        return "Mock Dry-Run Post Summary: BluBot is operating correctly in dry-run mode. #AI #News", news_items[0]['link'], "Dry Run Curation", False, "ANALYTICAL"
+
     # Professional Architecture: Use settings singleton
     client = genai.Client(api_key=settings.gemini_key)
     
@@ -270,6 +274,10 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None)
     return None, None, "General", False, None
 
 async def generate_mentor_insight(context):
+    if settings.is_dry_run:
+        SafeLogger.info("Dry run: Bypassing Gemini mentor insight call.")
+        return "Mock Dry-Run Mentor Insight: Focus on strategic scaling in dry-run mode. #Strategy", None, "Strategy", False
+
     key = os.getenv("GEMINI_KEY")
     client = genai.Client(api_key=key)
     topic = SECONDARY_TOPICS[0]
@@ -302,7 +310,6 @@ async def generate_mentor_insight(context):
             if "BODY:" in summary:
                 summary = summary.split("BODY:", 1)[1].strip()
 
-            from .config import GEMINI_MODEL_PRIORITY
             return strip_markdown(summary), None, "Strategy", (model_id != GEMINI_MODEL_PRIORITY[0])
         except Exception as e:
             SafeLogger.warn(f"Mentor Fallback failed on {model_id}: {e}")
@@ -347,6 +354,29 @@ async def generate_visual_prompt(client, summary, topic):
         )
         return response.text.strip()
     except Exception: return f"Minimalist tech illustration of {topic}"
+
+async def generate_image_alt_text(image_bytes: bytes, prompt: str) -> str:
+    """Generates screen-reader-friendly alt text for the generated image using Gemini Vision."""
+    try:
+        # Use settings singleton for key
+        client = genai.Client(api_key=settings.gemini_key)
+        # Use a model from priority list that supports multimodal inputs, falling back to gemini-2.5-flash-lite
+        model_to_use = GEMINI_MODEL_PRIORITY[0] if "gemma" not in GEMINI_MODEL_PRIORITY[0].lower() else "models/gemini-2.5-flash-lite"
+        
+        response = await client.aio.models.generate_content(
+            model=model_to_use,
+            contents=[
+                types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type="image/jpeg",
+                ),
+                f"Describe this tech illustration in one concise sentence (maximum 100 characters) for use as screen-reader alt text. The prompt used to generate it was: '{prompt}'. Do not include metadata, preambles, or hashtags."
+            ]
+        )
+        return response.text.strip().replace('"', '').replace('\n', ' ')
+    except Exception as e:
+        SafeLogger.warn(f"Failed to generate alt text via Gemini Vision: {e}. Falling back to default.")
+        return f"Tech illustration of: {prompt}"
 
 @retry_with_backoff
 async def generate_nvidia_image(client, prompt):
