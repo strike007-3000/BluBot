@@ -181,7 +181,7 @@ STYLE:
 * Prefer concrete business language over technical jargon.
 * Make one strong point.
 * If using line breaks, keep them minimal because the post is short-form.
-* Hashtags are optional. Use 0-2 relevant hashtags only when they add discovery value. Never sacrifice clarity or the main thesis for hashtags.
+* Always append 1-2 relevant technical hashtags at the very end of the post (e.g. #AI, #ML, #LLMs) to ensure discoverability across platforms.
 
 LENGTH:
 * Target 260-290 characters for normal posts.
