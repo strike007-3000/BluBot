@@ -1,6 +1,6 @@
 # 📖 BluBot Elite Sage: The Complete Manual
 
-Welcome to the official Wiki for the **Elite Sage** (BluBot v3.7.0). This guide balances the technical inner workings with the "Sage" persona's philosophy.
+Welcome to the official Wiki for the **Elite Sage** (BluBot). This guide balances the technical inner workings with the "Sage" persona's philosophy.
 
 ---
 
@@ -56,14 +56,14 @@ The "Brain" of the bot ranked by a weighted matrix.
 
 ---
 
-## 🛡️ Page 3: Reliability & The Fortress (v3.9.0)
+## 🛡️ Page 3: Reliability & The Fortress
 
 The Sage is designed to be **unbreakable**.
 
 ### Hardening Features
-- **3-Tier State Resilience (v3.8.0)**: BluBot implements a redundant persistence model. If the primary `seen_articles.json` is corrupted or missing, it automatically falls back to a local `.bak` rotation and finally a remote **GitHub Gist**.
-- **Structured Logging (v3.6.5)**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) using entropy and keyword matching to prevent leakages in CI.
-- **Visual Integrity Defense (v3.7.6)**: Implements **Universal RGB Conversion** in the image engine (`compress_image`) to handle grayscale (ArXiv) and specialized modes (such as CMYK), converting them to RGB before compression to avoid solid black/white artifact regressions.
+- **3-Tier State Resilience**: BluBot implements a redundant persistence model. If the primary `seen_articles.json` is corrupted or missing, it automatically falls back to a local `.bak` rotation and finally a remote **GitHub Gist**.
+- **Structured Logging**: The `SafeLogger` uses Python's `logging` module with a custom `JsonFormatter` and `RedactionFilter`. It automatically masks high-entropy strings (JWTs, API tokens) using entropy and keyword matching to prevent leakages in CI.
+- **Visual Integrity Defense**: Implements **Universal RGB Conversion** in the image engine (`compress_image`) to handle grayscale (ArXiv) and specialized modes (such as CMYK), converting them to RGB before compression to avoid solid black/white artifact regressions.
 - **SSRF Prevention Logic**: The metadata scraper (`get_link_metadata`) uses **DNS Pinning** to lock down the hostname to pre-resolved IPs and **IP Validation** to ensure no private/internal network addresses are called (mitigating Server-Side Request Forgery).
 - **Zero-Duplicate Threads Logic ("Catch & Log")**: Prevents duplicate postings during transient API failures or runner timeouts. If a stage fails after publishing partial thread contents, the exception is caught, logged, and state is immediately persisted with successfully broadcast post identifiers. This ensures that a subsequent run does not publish the same content again.
 - **Decompression Bomb Protection**: Restricts Pillow's image loading engine (`Image.MAX_IMAGE_PIXELS`) to a maximum of `10,000,000` pixels to shield the app from memory exhaustion attacks when retrieving large media files.
@@ -71,7 +71,7 @@ The Sage is designed to be **unbreakable**.
 
 ---
 
-## 🎨 Page 4: NVIDIA NIM Image Generation (v3.6)
+## 🎨 Page 4: NVIDIA NIM Image Generation
 
 The Sage uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider.
 
@@ -123,7 +123,7 @@ Scanning over **30 premium feeds**.
 
 ---
 
-## ⚙️ Page 6: Technical Configuration (v3.11.0)
+## ⚙️ Page 6: Technical Configuration
 
 ### Environment Secrets
 | Variable | Description |
@@ -170,13 +170,13 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 
 ---
 
-## 💾 Page 8: 3-Tier State Resilience (v3.8.0)
+## 💾 Page 8: 3-Tier State Resilience
 
-- [3-Tier State Resilience](#3-tier-state-resilience)
-- [Security & Supply Chain](#security--supply-chain)
-- [Page 12: Media Pipeline & NVIDIA NIM](#page-12-media-pipeline--nvidia-nim)
-- [Page 14: Interaction Engine (Mention Replies)](#page-14-interaction-engine-mention-replies)
-- [Page 15: Precision Threading (The Weaver Cap)](#page-15-precision-threading-the-weaver-cap)
+- [Page 8: 3-Tier State Resilience](#-page-8-3-tier-state-resilience)
+- [Page 3: Reliability & The Fortress](#-page-3-reliability--the-fortress)
+- [Page 4: NVIDIA NIM Image Generation](#-page-4-nvidia-nim-image-generation)
+- [Page 14: Interaction Engine (Mention Replies & Comments)](#page-14-interaction-engine-mention-replies--comments)
+- [Page 15: Precision Threading (The Weaver Cap)](#-page-15-precision-threading-the-weaver-cap)
 
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
@@ -186,7 +186,7 @@ To ensure the Sage never "forgets" even in ephemeral runner environments, we use
 3. **Remote Gist (The Cloud Memory)**: Syncs state with a private GitHub Gist. This allows the bot to maintain "Seen Articles" across different CI/CD runners without incurring Git merge conflicts.
 
 ---
-## 🧪 Page 9: Automated Quality Control (v3.6.5)
+## 🧪 Page 9: Automated Quality Control
 
 BluBot v3.6.5 introduces a professional **Automated Test Suite** powered by `pytest`.
 
@@ -203,7 +203,7 @@ pytest src/tests/
 
 ---
 
-## 🎭 Page 10: The Natural Vibe Engine (v3.7.0)
+## 🎭 Page 10: The Natural Vibe Engine
 
 Version 3.7.0 transforms the bot from a script into a **living editorial entity**.
 
@@ -266,7 +266,7 @@ To eliminate "Rebase Conflicts" in CI, live status updates (Operational status, 
 
 ---
 
-## 📡 Page 13: Feed Vanguard Automation (v3.8.2)
+## 📡 Page 13: Feed Vanguard Automation
 
 To maintain 100% signal quality, BluBot uses the **Feed Vanguard** to automatically manage RSS health.
 
@@ -332,7 +332,7 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
 
 ---
 
-## Page 14: Interaction Engine (Mention Replies & Comments) (v3.11.0)
+## Page 14: Interaction Engine (Mention Replies & Comments)
 
 BluBot is no longer a broadcast-only curator. The **Interaction Engine** bridges the gap between static news and conversational engagement by supporting direct mentions and configurable comment replies.
 

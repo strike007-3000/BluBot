@@ -4,7 +4,7 @@ Automated AI news curator that fetches updates twice daily, synthesizes them usi
 
 ## 📊 System Status
 
-See [STATUS.md](file:///d:/Code/BlueSky/STATUS.md) for live telemetry and broadcaster status.
+See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 
 ## 🚀 Key Features
 
@@ -13,36 +13,36 @@ See [STATUS.md](file:///d:/Code/BlueSky/STATUS.md) for live telemetry and broadc
     - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
-- **🖼️ Self-Healing Image Generation (v3.6)**: 
+- **🖼️ Self-Healing Image Generation**: 
     - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
-- **Elite Architecture (v3.8.2)**:
+- **Elite Architecture**:
     - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
         - *Smart Split Algorithm*: Intelligently segments text at priority boundaries (first `\n\n` for paragraphs, then `. ` for sentences, then spaces ` ` for words) instead of crude character cuts.
         - *Precision Buffers*: Implements safety offsets (`limit - 10` for Bluesky/Threads, `limit - 15` for Mastodon) to account for pagination suffixes (e.g. `(1/2)`) without API limit rejections.
         - *Thread Limits*: Enforces a strict `MAX_THREAD_PARTS=2` constraint to avoid feed fatigue, trailing summaries with `...` when truncated.
-    - **🥁 Thread Rhythm (v3.8.1)**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
-    - **🤖 Dynamic Bio Management (v3.11.0)**: Profiles now showcase an active day streak and the currently tracked topic (e.g., "AI signal, zero noise. Day 68. | Currently tracking: On-device agents").
-    - **🛡️ Supply Chain Hardening (v3.8.2)**: Migrated to `pip-tools` with cryptographic hashes.
-    - **📡 Feed Vanguard (v3.8.2)**: Automated RSS resilience engine that audits sources for health, silencing broken feeds with exponential backoff.
+    - **🥁 Thread Rhythm**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
+    - **🤖 Dynamic Bio Management**: Profiles now showcase an active day streak and the currently tracked topic (e.g., "AI signal, zero noise. Day 68. | Currently tracking: On-device agents").
+    - **🛡️ Supply Chain Hardening**: Migrated to `pip-tools` with cryptographic hashes.
+    - **📡 Feed Vanguard**: Automated RSS resilience engine that audits sources for health, silencing broken feeds with exponential backoff.
     - **Typed Pipeline Stages**: Immutable stages powered by frozen `dataclasses` and a typed `Settings` singleton.
     - **Advisory File Locking**: Cross-platform `FileLock` for state persistence, preventing race conditions during concurrent CI/local runs.
-- **🛡️ Industrial Stabilization (v3.7.6)**: 
+- **🛡️ Industrial Stabilization**: 
     - **Universal RGB Defense**: Image mode detection and conversion engine that prevents "Black/White Box" artifacts from non-standard (ArXiv) thumbnails.
     - **Resilient Rebase Logic**: Automated conflict resolution for `README.md` dashboards (using `git checkout --ours`) ensuring 100% state persistence uptime.
-    - **Smart Truncation (v3.7.5)**: Word-boundary-aware trimming for Mastodon and Threads to prevent mid-word cutoffs.
-- **Fortress Hardening (v3.9.0)**: 
+    - **Smart Truncation**: Word-boundary-aware trimming for Mastodon and Threads to prevent mid-word cutoffs.
+- **Fortress Hardening**: 
     - **Non-Blocking I/O**: Offloads all disk persistence, social bio updates, status telemetry updates, and feed vanguard state saving to background worker threads via `asyncio.to_thread`.
     - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield against decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
     - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) and uses safe lookups to survive malformed feed entries.
     - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity), fixing `TypeError` formatting bugs for non-string args.
     - **SSRF Prevention Architecture**: Hardened the metadata scraper with **DNS Pinning** and **IP validation** to block all internal/private network requests.
     - **Zero-Duplicate Threads Logic**: Implemented "Catch & Log" delivery validation to prevent duplicate posts during transient API failures.
-- **🧠 Natural Vibe Engine (v3.7.0)**:
+- **🧠 Natural Vibe Engine**:
     - **Stylistic Memory**: The bot now remembers its previous "vibe" and ensures it never repeats the same tone twice in a row, switching between **Analytical**, **Practical**, **Sage**, **Concise**, and **Philosophical** dialects.
     - **Temporal Intelligence**: Upgraded from 2 to **5 granular sessions** (Dawn, Morning, Midday, Afternoon, Evening) for hyper-relevant time-of-day awareness.
     - **Manual Run "Intercept"**: Automatically detects manual `workflow_dispatch` runs and labels them as **"(Intercept)"**, shifting the AI into an urgent, ad-hoc reporting mode.
-- **💬 Interaction Engine (v3.11.0)**:
+- **💬 Interaction Engine**:
     - **Configurable Comments & Replies**: Platforms can have comments/replies toggled independently (Bluesky `true`, Mastodon/Threads `false` by default).
     - **24-Hour Lookback Filters**: Strict timestamp boundaries filter out notifications/comments older than 24 hours to prevent scanning entire profile histories.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
@@ -105,7 +105,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `ENABLE_HASHTAGS_MASTODON` | No | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
 | `ENABLE_HASHTAGS_THREADS` | No | (Optional) Enable/disable hashtags on Threads (default: `true`) |
 
-## 🛡️ Resilience Architecture (v3.8.0)
+## 🛡️ Resilience Architecture
 
 BluBot implements a **3-Tier State Persistence** system to ensure it never "forgets" which articles it has curated, even if local storage is wiped (e.g., in ephemeral CI environments).
 
@@ -234,7 +234,7 @@ Targeting **SSRF protection**, **Scoring fidelity**, and **Secret redaction**.
 ### 2. Interactive Diagnostic (Developer Tool)
 Run the playground to see manual scoring breakdowns and AI drafts:
 ```bash
-python test_models.py
+python scripts/diagnostic.py
 ```
 
 ---
