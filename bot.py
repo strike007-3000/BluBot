@@ -87,7 +87,7 @@ async def update_status_dashboard(session_name: str, topic: str):
     await asyncio.to_thread(_update_status_dashboard_sync, session_name, topic)
 
 def article_matches_topic(title: str, summary: str, topic: str) -> bool:
-    """Returns True if any significant keyword from topic matches the article title or summary."""
+    """Returns True if all significant keywords from topic match (as prefix stems) the article title or summary."""
     if not topic:
         return False
     import re
@@ -104,10 +104,19 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
     if not keywords:
         return False
         
+    # To handle inflections, extract the prefix stem of each keyword (min length 4)
+    stems = []
+    for kw in keywords:
+        if len(kw) >= 5:
+            stems.append(kw[:4])
+        else:
+            stems.append(kw)
+            
     title_lower = title.lower()
     summary_lower = summary.lower()
     
-    return any(kw in title_lower or kw in summary_lower for kw in keywords)
+    # Require ALL stems to match somewhere in the title or summary
+    return all(stem in title_lower or stem in summary_lower for stem in stems)
 
 async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
@@ -122,7 +131,14 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
     await vanguard.audit_and_update(client)
     active_feeds = vanguard.get_active_feeds()
     
-    raw_news = await fetch_news(client, seen_data["links"], seen_data["recent_topics"], feed_list=active_feeds)
+    # If a telegram_topic is requested, bypass default top-8 limit to filter the full candidate list
+    raw_news = await fetch_news(
+        client, 
+        seen_data["links"], 
+        seen_data["recent_topics"], 
+        feed_list=active_feeds, 
+        limit=None if telegram_topic else 8
+    )
     all_articles = [Article(**item) for item in raw_news]
 
     if telegram_topic:
