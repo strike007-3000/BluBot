@@ -40,7 +40,7 @@ class Settings:
     enable_telegram_approval: bool = False
     
     # Platform Hashtag Controls
-    enable_hashtags_bsky: bool = False
+    enable_hashtags_bsky: bool = True
     enable_hashtags_mastodon: bool = True
     enable_hashtags_threads: bool = True
     
