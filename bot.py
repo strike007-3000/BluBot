@@ -129,7 +129,13 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     
     summary, lead_link, topic, is_failover = None, None, "General", False
     
-    if telegram_topic:
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Generating mock synthesis summary.")
+        summary = "DRY RUN: This is a mock synthesis summary of AI breakthrough news. #AI #Tech"
+        lead_link = "https://example.com/mock-lead-link"
+        topic = telegram_topic if telegram_topic else "DryRun"
+        is_failover = False
+    elif telegram_topic:
         SafeLogger.info(f"Synthesis Stage: Generating on-demand post for topic: '{telegram_topic}'")
         try:
             from src.config import CURATOR_SYSTEM_INSTRUCTION
@@ -181,7 +187,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     # Visual Asset Creation
     image_data, image_url = None, None
     visual_prompt = None
-    if lead_link:
+    if not settings.is_dry_run and lead_link:
         meta = await get_link_metadata(client, lead_link)
         if meta:
             image_url = meta.get('image_url')
@@ -194,7 +200,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
 
     # Alt text generation
     image_alt_text = None
-    if image_data:
+    if not settings.is_dry_run and image_data:
         alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
         image_alt_text = await generate_image_alt_text(image_data, alt_prompt)
 

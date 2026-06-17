@@ -65,6 +65,14 @@ jobs:
           ENABLE_BSKY_COMMENT_REPLIES: ${{ vars.ENABLE_BSKY_COMMENT_REPLIES || 'true' }}
           ENABLE_MASTODON_COMMENT_REPLIES: ${{ vars.ENABLE_MASTODON_COMMENT_REPLIES || 'false' }}
           ENABLE_THREADS_COMMENT_REPLIES: ${{ vars.ENABLE_THREADS_COMMENT_REPLIES || 'false' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_USER_ID }}
+          TELEGRAM_TIMEOUT_MINUTES: ${{ secrets.TELEGRAM_TIMEOUT_MINUTES || '5' }}
+          ENABLE_TELEGRAM_APPROVAL: ${{ secrets.ENABLE_TELEGRAM_APPROVAL || 'true' }}
+          ENABLE_HASHTAGS_BSKY: ${{ secrets.ENABLE_HASHTAGS_BSKY || 'false' }}
+          ENABLE_HASHTAGS_MASTODON: ${{ secrets.ENABLE_HASHTAGS_MASTODON || 'true' }}
+          ENABLE_HASHTAGS_THREADS: ${{ secrets.ENABLE_HASHTAGS_THREADS || 'true' }}
+          LOG_FORMAT: pretty
         run: python bot.py
 
       - name: Save BlueSky session
