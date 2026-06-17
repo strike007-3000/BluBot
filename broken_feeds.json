@@ -1,16 +1,23 @@
 {
     "https://alphasignalai.beehiiv.com/feed": {
-        "fail_count": 1,
+        "fail_count": 2,
         "last_error": "Parse error/Invalid RSS",
-        "last_seen": "2026-04-18T14:41:16.538755+00:00",
-        "retry_at": "2026-04-18T14:41:16.538755+00:00",
-        "status": "WARNING"
+        "last_seen": "2026-06-17T17:29:00.068356+00:00",
+        "retry_at": "2026-06-17T18:29:00.068356+00:00",
+        "status": "PENALIZED"
     },
     "https://tldr.tech/ai/rss": {
-        "fail_count": 1,
+        "fail_count": 2,
         "last_error": "HTTP 404",
-        "last_seen": "2026-04-18T14:41:16.541715+00:00",
-        "retry_at": "2026-04-18T14:41:16.541715+00:00",
-        "status": "WARNING"
+        "last_seen": "2026-06-17T17:29:00.068582+00:00",
+        "retry_at": "2026-06-17T18:29:00.068582+00:00",
+        "status": "PENALIZED"
+    },
+    "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml": {
+        "fail_count": 2,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-06-17T17:29:48.348007+00:00",
+        "retry_at": "2026-06-17T18:29:48.348007+00:00",
+        "status": "PENALIZED"
     }
 }
