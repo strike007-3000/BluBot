@@ -9,7 +9,7 @@ import asyncio
 import httpx
 import logging
 from datetime import datetime, timezone
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
 
 # Elite Architecture Imports
 from src.settings import settings
@@ -27,7 +27,7 @@ from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
     get_temporal_context, generate_visual_prompt, generate_nvidia_image,
     generate_interactive_reply, prune_gemini_model_priority_async,
-    generate_image_alt_text
+    generate_image_alt_text, strip_markdown
 )
 from src.broadcaster import (
     post_to_bluesky, post_to_mastodon, post_to_threads,
@@ -174,8 +174,6 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     if not summary:
         return SynthesisResult(content="", lead_link=None, topic="General"), curation
 
-    # Strip formatting function (imported / defined inline)
-    from src.curator import strip_markdown
 
     # Visual Asset Creation
     image_data, image_url = None, None
@@ -209,6 +207,17 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
 
 async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> Tuple[List[BroadcastResult], Any]:
     """Stage 3: Multi-platform delivery."""
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Skip broadcasting to social networks.")
+        SafeLogger.info(f"DRY RUN Synthesis:\n{synthesis.content}")
+        if synthesis.image_alt_text:
+            SafeLogger.info(f"DRY RUN Image Alt Text: {synthesis.image_alt_text}")
+        return [
+            BroadcastResult(platform="Bluesky", success=True),
+            BroadcastResult(platform="Mastodon", success=True),
+            BroadcastResult(platform="Threads", success=True)
+        ], None
+
     # Bluesky Session Hardening
     bsky_client = AsyncClient(request=AsyncRequest(timeout=30.0))
     try:
@@ -224,17 +233,6 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
     except Exception as e:
         SafeLogger.error(f"Bluesky auth failed: {e}")
         bsky_client = None
-
-    if settings.is_dry_run:
-        SafeLogger.info("DRY RUN: Skip broadcasting to social networks.")
-        SafeLogger.info(f"DRY RUN Synthesis:\n{synthesis.content}")
-        if synthesis.image_alt_text:
-            SafeLogger.info(f"DRY RUN Image Alt Text: {synthesis.image_alt_text}")
-        return [
-            BroadcastResult(platform="Bluesky", success=True),
-            BroadcastResult(platform="Mastodon", success=True),
-            BroadcastResult(platform="Threads", success=True)
-        ], None
 
     tasks = [
         ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.image_data, synthesis.image_alt_text)) if bsky_client else None,
