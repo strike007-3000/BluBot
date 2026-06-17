@@ -35,6 +35,7 @@ class SynthesisResult:
     visual_prompt: Optional[str] = None
     image_data: Optional[bytes] = None
     image_url: Optional[str] = None
+    image_alt_text: Optional[str] = None
 
 @dataclass(frozen=True)
 class BroadcastResult:

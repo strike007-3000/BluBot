@@ -10,8 +10,14 @@ Mastodon.py>=2.2.1
 beautifulsoup4>=4.15.0
 httpx>=0.28.0
 Pillow==12.2.0
+python-telegram-bot[ext]>=21.0
 
 # Security Hardening (Specific Transitive Pins)
+# SECURITY-NOTE: cryptography is currently constrained by atproto's dependency cap (<47).
+# The fixed cryptography version is >=48.0.1. Dependabot cannot resolve the upgrade
+# until atproto relaxes its cryptography constraint. We are accepting the risk temporarily
+# because the bot runs as a short-lived GitHub Actions job and is not a persistent
+# public web service. Revisit this when atproto releases a compatible version.
 cryptography>=46.0.7,<47
 urllib3==2.7.0
 anyio==4.14.0
