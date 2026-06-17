@@ -160,7 +160,7 @@ def supports_thinking(model_id: str) -> bool:
 
 async def prune_gemini_model_priority_async(genai_client):
     """Asynchronously lists available models and prunes the GEMINI_MODEL_PRIORITY in-place."""
-    if os.getenv("CI", "false").lower() == "true":
+    if settings.is_dry_run or os.getenv("CI", "false").lower() == "true":
         return
     try:
         SafeLogger.info("Gemini Model Discovery: Querying available models from API...")
