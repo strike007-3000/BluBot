@@ -62,3 +62,21 @@ def test_settings_should_bypass_rest():
     # In CI, workflow dispatch -> bypass rest
     s3 = Settings(gemini_key="key", is_ci=True, github_event="workflow_dispatch")
     assert s3.should_bypass_rest is True
+
+def test_telegram_settings_defaults(monkeypatch):
+    """Verify that settings correctly capture Telegram environment variables."""
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123:abc")
+    monkeypatch.setenv("TELEGRAM_USER_ID", "98765")
+    monkeypatch.setenv("TELEGRAM_TIMEOUT_MINUTES", "10")
+    monkeypatch.setenv("ENABLE_TELEGRAM_APPROVAL", "true")
+    monkeypatch.setenv("ENABLE_HASHTAGS_BSKY", "true")
+    monkeypatch.setenv("GEMINI_KEY", "test_gemini")
+    monkeypatch.setenv("BSKY_HANDLE", "test_handle")
+    monkeypatch.setenv("BSKY_APP_PASSWORD", "test_pass")
+
+    settings = Settings.from_env()
+    assert settings.telegram_bot_token == "123:abc"
+    assert settings.telegram_user_id == "98765"
+    assert settings.telegram_timeout_minutes == 10
+    assert settings.enable_telegram_approval is True
+    assert settings.enable_hashtags_bsky is True
