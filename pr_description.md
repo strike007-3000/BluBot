@@ -1,33 +1,36 @@
-# PR Description: Refactored State Persistence & Hardened Humanization Prompts (v3.11.1) 🛠️✍️
+# 🚀 PR v3.12.0: Interactive Telegram Control, Alt Text, and Hashtag Management
 
-This PR introduces optimizations to local state persistence, refactors regular expression operations, updates system instructions for short-form human-written posts, and excludes the `graphify-out/` visualization output directory from source control tracking.
+This PR introduces interactive Telegram bot control (remote curating and approval queue), screen-reader multimodal alt-text generation, per-platform hashtag alignment, and a side-effect-free dry-run execution mode.
 
-## 🌟 Key Updates
+## Proposed Upgrades
 
-### 1. Refactored JSON State Persistence
-Consolidated the state-saving logic across multiple systems to avoid duplicate file-handling code:
-- Introduced generic `load_json_state` and `save_json_state` helper functions in `src/utils.py`.
-- Updated `load_seen_interactions`/`save_seen_interactions` and `load_seen_articles`/`save_seen_articles` to use these helpers.
-- Preserved all original exceptions, file rotation patterns, advisory `FileLock` layers, and backup Gist synchronization logic.
+### 🎮 1. Telegram Control & Approval Queue
+- **Wait-and-Poll Approval**: Intercepts the post pipeline to request manual review (`[✅ Approve]`, `[❌ Reject]`) via a Telegram message. Automatically posts on timeout (default 5 minutes) to avoid runner hang-ups.
+- **On-Demand Topic Curation**: Intercepts curation to fetch, score, and summarize a custom topic if a `/topic <keyword>` command is received from the authorized `TELEGRAM_USER_ID` within the last 15 minutes.
 
-### 2. Precompiled Regular Expressions
-Moved the inline regular expression compilation inside `strip_markdown` (in `src/curator.py`) to the module scope (`_MARKDOWN_STRIP_RE`). This prevents recompilation overhead on every curation run.
+### ♿ 2. Screen Reader Multimodal Alt-Text
+- Implemented `generate_image_alt_text` using Gemini Vision (`models/gemini-2.5-flash-lite`) to generate 100-character descriptions for all visual assets. Alt-text is attached to Mastodon and Threads uploads.
 
-### 3. Hardened Humanization & Short-Form Prompts
-Upgraded the curation prompts to ensure social posts are highly engaging, human-sounding, and correctly sized for short-form platforms (Bluesky, Threads, and Mastodon):
-- **Normal Post Length**: Bounded targets directly in `CURATOR_SYSTEM_INSTRUCTION` to stay within 260–290 characters naturally without relying on harsh downstream truncation.
-- **Consensus Post Length**: Bounded consensus/breakthrough posts to a maximum of 500 characters when the platforms and splitter can safely support it.
-- **Anti-Patterns Added**: Explicitly banned buzzwords/clichés (e.g., *"AI is transforming..."*, *"frontier"*, *"systemic intelligence"*) and repetitive structural formulas.
-- **Strategic Reusable Structures**: Instructed the models to use distinct structures (Strategic Contrast, Practical Enterprise Implication, Risk/Accountability Lens) depending on the story context.
-- **Dialect Updates**: Distinctly mapped out `SAGE` (strategic/executive), `CONCISE` (minimalist), and `ANALYST` (business impact) personas.
-- **Hashtags Strategy**: Made hashtags optional, instructing the model to use 0-2 hashtags only when they add discovery value, never sacrificing clarity or content.
+### 🏷️ 3. Per-Platform Hashtags
+- Toggles hashtags per platform via settings (`ENABLE_HASHTAGS_BSKY=false` by default). Safely strips standalone hashtags and preserves inline keywords by stripping formatting characters.
 
-### 4. Repository Cleanup
-Added `graphify-out/` to `.gitignore` to prevent localized AST graph visualization files from being pushed to Git.
-
-## 🧪 Verification & Testing
-- ✅ **Test Coverage**: All 34 tests in `src/tests/` passed successfully (including verification of markdown stripping and config settings validations).
-- ✅ **Graph Validation**: Executed `graphify update .` to ensure the local AST repository graph is synchronized.
+### 🛡️ 4. Side-Effect-Free Dry Run
+- The `--dry-run` flag bypasses all external broadcasts, state file persistence, and live AI API calls (substituting mock summaries and alt-text) to enable offline local diagnostics.
 
 ---
-*Optimized Curation Prompting and Clean Persistence Engineering - Ready for Merge*
+
+## 🛠️ Compliance with `AGENTS.md` Rules
+
+### 1. What was Deleted or Simplified
+- **Simplified Scopes in `src/curator.py`**: Removed local import statements for configuration parameters (`from .config import GEMINI_MODEL_PRIORITY`) that caused `UnboundLocalError` when accessed inside fallback functions.
+- **Bypassed Action Complexity**: Implemented inline Telegram updates polling instead of persistent webhook listeners, keeping the architecture extremely simple and fit for ephemeral CI runners.
+
+### 2. Why the Simpler Version is Safe
+- Inline polling using the official `python-telegram-bot` wrapper avoids running persistent threads or opening network ports in GitHub Actions.
+- Local dry-run checks in `summarize_news`, `broadcast_stage`, and `persistence_stage` guarantee that runs executed with `--dry-run` are 100% side-effect-free, even with invalid API keys.
+
+### 3. Verification & Tests Run
+- Added `test_dry_run_broadcaster_bypasses_real_posts` and `test_dry_run_persistence_does_not_save` to verify the new diagnostic flag.
+- Added `test_telegram_settings_defaults` to verify environment mapping.
+- Ran **37 tests successfully** using `pytest src/tests/`.
+- Ran `python bot.py --dry-run` to verify end-to-end telemetry and dry-run safety.
