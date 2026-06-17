@@ -26,34 +26,34 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "bot",
-      "community": 1,
+      "community": 15,
       "norm_label": "bot.py"
     },
     {
       "label": "_update_status_dashboard_sync()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L38",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "bot_update_status_dashboard_sync",
-      "community": 1,
+      "community": 15,
       "norm_label": "_update_status_dashboard_sync()"
     },
     {
       "label": "update_status_dashboard()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L75",
+      "source_location": "L85",
       "_origin": "ast",
       "id": "bot_update_status_dashboard",
-      "community": 13,
+      "community": 15,
       "norm_label": "update_status_dashboard()"
     },
     {
       "label": "curation_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L79",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "bot_curation_stage",
       "community": 1,
@@ -63,7 +63,7 @@
       "label": "AsyncClient",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L79",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "bot_py_asyncclient",
       "community": 1,
@@ -73,7 +73,7 @@
       "label": "CurationResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L79",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "curationresult",
       "community": 1,
@@ -83,7 +83,7 @@
       "label": "synthesis_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L103",
+      "source_location": "L125",
       "_origin": "ast",
       "id": "bot_synthesis_stage",
       "community": 1,
@@ -93,7 +93,7 @@
       "label": "Client",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L103",
+      "source_location": "L125",
       "_origin": "ast",
       "id": "client",
       "community": 1,
@@ -103,7 +103,7 @@
       "label": "SynthesisResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L103",
+      "source_location": "L125",
       "_origin": "ast",
       "id": "synthesisresult",
       "community": 1,
@@ -113,7 +113,7 @@
       "label": "broadcast_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L161",
+      "source_location": "L219",
       "_origin": "ast",
       "id": "bot_broadcast_stage",
       "community": 1,
@@ -123,7 +123,7 @@
       "label": "BroadcastResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L161",
+      "source_location": "L219",
       "_origin": "ast",
       "id": "broadcastresult",
       "community": 1,
@@ -133,7 +133,7 @@
       "label": "Any",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L161",
+      "source_location": "L219",
       "_origin": "ast",
       "id": "bot_py_any",
       "community": 1,
@@ -143,7 +143,7 @@
       "label": "persistence_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L196",
+      "source_location": "L265",
       "_origin": "ast",
       "id": "bot_persistence_stage",
       "community": 1,
@@ -153,17 +153,17 @@
       "label": "interaction_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L240",
+      "source_location": "L313",
       "_origin": "ast",
       "id": "bot_interaction_stage",
-      "community": 1,
+      "community": 15,
       "norm_label": "interaction_stage()"
     },
     {
       "label": "InteractionResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L240",
+      "source_location": "L313",
       "_origin": "ast",
       "id": "interactionresult",
       "community": 1,
@@ -173,7 +173,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L343",
+      "source_location": "L416",
       "_origin": "ast",
       "id": "bot_main",
       "community": 1,
@@ -183,29 +183,29 @@
       "label": "Synchronous implementation of STATUS.md update to be offloaded to thread.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L39",
+      "source_location": "L49",
       "_origin": "ast",
-      "id": "bot_rationale_39",
-      "community": 1,
+      "id": "bot_rationale_49",
+      "community": 15,
       "norm_label": "synchronous implementation of status.md update to be offloaded to thread."
     },
     {
       "label": "Automatically update the STATUS.md dashboard without blocking the event loop.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L76",
+      "source_location": "L86",
       "_origin": "ast",
-      "id": "bot_rationale_76",
-      "community": 13,
+      "id": "bot_rationale_86",
+      "community": 15,
       "norm_label": "automatically update the status.md dashboard without blocking the event loop."
     },
     {
       "label": "Stage 1: Fetch and Score Raw News.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L80",
+      "source_location": "L90",
       "_origin": "ast",
-      "id": "bot_rationale_80",
+      "id": "bot_rationale_90",
       "community": 1,
       "norm_label": "stage 1: fetch and score raw news."
     },
@@ -213,9 +213,9 @@
       "label": "Stage 2: AI Summarization and Persona Application.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L104",
+      "source_location": "L126",
       "_origin": "ast",
-      "id": "bot_rationale_104",
+      "id": "bot_rationale_126",
       "community": 1,
       "norm_label": "stage 2: ai summarization and persona application."
     },
@@ -223,9 +223,9 @@
       "label": "Stage 3: Multi-platform delivery.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L162",
+      "source_location": "L220",
       "_origin": "ast",
-      "id": "bot_rationale_162",
+      "id": "bot_rationale_220",
       "community": 1,
       "norm_label": "stage 3: multi-platform delivery."
     },
@@ -233,9 +233,9 @@
       "label": "Stage 4: State Synchronization.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L197",
+      "source_location": "L266",
       "_origin": "ast",
-      "id": "bot_rationale_197",
+      "id": "bot_rationale_266",
       "community": 1,
       "norm_label": "stage 4: state synchronization."
     },
@@ -243,71 +243,11 @@
       "label": "Handles social interactions (mentions/replies) with humanized engagement.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L241",
+      "source_location": "L314",
       "_origin": "ast",
-      "id": "bot_rationale_241",
-      "community": 1,
+      "id": "bot_rationale_314",
+      "community": 15,
       "norm_label": "handles social interactions (mentions/replies) with humanized engagement."
-    },
-    {
-      "label": "test_dashboard_migration.py",
-      "file_type": "code",
-      "source_file": "scratch/test_dashboard_migration.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_test_dashboard_migration",
-      "community": 13,
-      "norm_label": "test_dashboard_migration.py"
-    },
-    {
-      "label": "test_dashboard()",
-      "file_type": "code",
-      "source_file": "scratch/test_dashboard_migration.py",
-      "source_location": "L14",
-      "_origin": "ast",
-      "id": "scratch_test_dashboard_migration_test_dashboard",
-      "community": 13,
-      "norm_label": "test_dashboard()"
-    },
-    {
-      "label": "test_persistence_resilience.py",
-      "file_type": "code",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_test_persistence_resilience",
-      "community": 6,
-      "norm_label": "test_persistence_resilience.py"
-    },
-    {
-      "label": "test_persistence_resilience()",
-      "file_type": "code",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L12",
-      "_origin": "ast",
-      "id": "scratch_test_persistence_resilience_test_persistence_resilience",
-      "community": 6,
-      "norm_label": "test_persistence_resilience()"
-    },
-    {
-      "label": "verify_config.py",
-      "file_type": "code",
-      "source_file": "scratch/verify_config.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_verify_config",
-      "community": 13,
-      "norm_label": "verify_config.py"
-    },
-    {
-      "label": "test_config_validation()",
-      "file_type": "code",
-      "source_file": "scratch/verify_config.py",
-      "source_location": "L13",
-      "_origin": "ast",
-      "id": "scratch_verify_config_test_config_validation",
-      "community": 13,
-      "norm_label": "test_config_validation()"
     },
     {
       "label": "diagnostic.py",
@@ -316,7 +256,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_diagnostic",
-      "community": 4,
+      "community": 13,
       "norm_label": "diagnostic.py"
     },
     {
@@ -326,7 +266,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_diagnostic_test_scoring",
-      "community": 4,
+      "community": 13,
       "norm_label": "test_scoring()"
     },
     {
@@ -336,7 +276,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "scripts_diagnostic_test_full_dry_run",
-      "community": 4,
+      "community": 13,
       "norm_label": "test_full_dry_run()"
     },
     {
@@ -346,7 +286,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "scripts_diagnostic_main",
-      "community": 4,
+      "community": 13,
       "norm_label": "main()"
     },
     {
@@ -356,7 +296,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_feed_audit",
-      "community": 13,
+      "community": 7,
       "norm_label": "feed_audit.py"
     },
     {
@@ -366,7 +306,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "scripts_feed_audit_run_standalone_audit",
-      "community": 13,
+      "community": 5,
       "norm_label": "run_standalone_audit()"
     },
     {
@@ -376,8 +316,28 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "scripts_feed_audit_rationale_20",
-      "community": 13,
+      "community": 5,
       "norm_label": "performs a comprehensive feed audit and displays a health report."
+    },
+    {
+      "label": "test_telegram_setup.py",
+      "file_type": "code",
+      "source_file": "scripts/test_telegram_setup.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripts_test_telegram_setup",
+      "community": 7,
+      "norm_label": "test_telegram_setup.py"
+    },
+    {
+      "label": "run_telegram_test()",
+      "file_type": "code",
+      "source_file": "scripts/test_telegram_setup.py",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "scripts_test_telegram_setup_run_telegram_test",
+      "community": 7,
+      "norm_label": "run_telegram_test()"
     },
     {
       "label": "update_config_keywords.py",
@@ -386,7 +346,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_update_config_keywords",
-      "community": 3,
+      "community": 29,
       "norm_label": "update_config_keywords.py"
     },
     {
@@ -396,7 +356,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_fetch_feed_headlines",
-      "community": 3,
+      "community": 29,
       "norm_label": "fetch_feed_headlines()"
     },
     {
@@ -406,7 +366,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_main",
-      "community": 3,
+      "community": 29,
       "norm_label": "main()"
     },
     {
@@ -416,7 +376,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_rationale_19",
-      "community": 3,
+      "community": 29,
       "norm_label": "fetches first 5 headlines from a single rss feed."
     },
     {
@@ -450,10 +410,20 @@
       "norm_label": "broadcaster.py"
     },
     {
+      "label": "clean_hashtags_if_needed()",
+      "file_type": "code",
+      "source_file": "src/broadcaster.py",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "src_broadcaster_clean_hashtags_if_needed",
+      "community": 15,
+      "norm_label": "clean_hashtags_if_needed()"
+    },
+    {
       "label": "post_to_bluesky()",
       "file_type": "code",
       "source_file": "src/broadcaster.py",
-      "source_location": "L15",
+      "source_location": "L23",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_bluesky",
       "community": 15,
@@ -463,7 +433,7 @@
       "label": "post_to_mastodon()",
       "file_type": "code",
       "source_file": "src/broadcaster.py",
-      "source_location": "L102",
+      "source_location": "L113",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_mastodon",
       "community": 15,
@@ -473,7 +443,7 @@
       "label": "post_to_threads()",
       "file_type": "code",
       "source_file": "src/broadcaster.py",
-      "source_location": "L149",
+      "source_location": "L164",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_threads",
       "community": 15,
@@ -483,49 +453,59 @@
       "label": "fetch_bluesky_mentions()",
       "file_type": "code",
       "source_file": "src/broadcaster.py",
-      "source_location": "L211",
+      "source_location": "L233",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_bluesky_mentions",
-      "community": 1,
+      "community": 15,
       "norm_label": "fetch_bluesky_mentions()"
     },
     {
       "label": "fetch_mastodon_mentions()",
       "file_type": "code",
       "source_file": "src/broadcaster.py",
-      "source_location": "L271",
+      "source_location": "L293",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_mastodon_mentions",
-      "community": 1,
+      "community": 15,
       "norm_label": "fetch_mastodon_mentions()"
     },
     {
       "label": "fetch_threads_replies()",
       "file_type": "code",
       "source_file": "src/broadcaster.py",
-      "source_location": "L322",
+      "source_location": "L344",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_threads_replies",
-      "community": 1,
+      "community": 15,
       "norm_label": "fetch_threads_replies()"
     },
     {
       "label": "update_social_profiles()",
       "file_type": "code",
       "source_file": "src/broadcaster.py",
-      "source_location": "L402",
+      "source_location": "L424",
       "_origin": "ast",
       "id": "src_broadcaster_update_social_profiles",
-      "community": 1,
+      "community": 15,
       "norm_label": "update_social_profiles()"
+    },
+    {
+      "label": "Helper to strip or format hashtags based on platform settings.",
+      "file_type": "rationale",
+      "source_file": "src/broadcaster.py",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "src_broadcaster_rationale_14",
+      "community": 15,
+      "norm_label": "helper to strip or format hashtags based on platform settings."
     },
     {
       "label": "Posts to Bluesky with Conditional Multi-Post Threading (The Weaver).",
       "file_type": "rationale",
       "source_file": "src/broadcaster.py",
-      "source_location": "L16",
+      "source_location": "L24",
       "_origin": "ast",
-      "id": "src_broadcaster_rationale_16",
+      "id": "src_broadcaster_rationale_24",
       "community": 15,
       "norm_label": "posts to bluesky with conditional multi-post threading (the weaver)."
     },
@@ -533,9 +513,9 @@
       "label": "Posts to Mastodon with Conditional Multi-Post Threading (The Weaver).",
       "file_type": "rationale",
       "source_file": "src/broadcaster.py",
-      "source_location": "L103",
+      "source_location": "L114",
       "_origin": "ast",
-      "id": "src_broadcaster_rationale_103",
+      "id": "src_broadcaster_rationale_114",
       "community": 15,
       "norm_label": "posts to mastodon with conditional multi-post threading (the weaver)."
     },
@@ -543,9 +523,9 @@
       "label": "Posts to Threads with Conditional Multi-Post Threading (The Weaver).",
       "file_type": "rationale",
       "source_file": "src/broadcaster.py",
-      "source_location": "L150",
+      "source_location": "L165",
       "_origin": "ast",
-      "id": "src_broadcaster_rationale_150",
+      "id": "src_broadcaster_rationale_165",
       "community": 15,
       "norm_label": "posts to threads with conditional multi-post threading (the weaver)."
     },
@@ -553,40 +533,40 @@
       "label": "Fetches recent mentions and replies from Bluesky within 24 hours.",
       "file_type": "rationale",
       "source_file": "src/broadcaster.py",
-      "source_location": "L212",
+      "source_location": "L234",
       "_origin": "ast",
-      "id": "src_broadcaster_rationale_212",
-      "community": 1,
+      "id": "src_broadcaster_rationale_234",
+      "community": 15,
       "norm_label": "fetches recent mentions and replies from bluesky within 24 hours."
     },
     {
       "label": "Fetches recent mentions and replies from Mastodon within 24 hours.",
       "file_type": "rationale",
       "source_file": "src/broadcaster.py",
-      "source_location": "L272",
+      "source_location": "L294",
       "_origin": "ast",
-      "id": "src_broadcaster_rationale_272",
-      "community": 1,
+      "id": "src_broadcaster_rationale_294",
+      "community": 15,
       "norm_label": "fetches recent mentions and replies from mastodon within 24 hours."
     },
     {
       "label": "Fetches recent replies to Threads posts within 24 hours.",
       "file_type": "rationale",
       "source_file": "src/broadcaster.py",
-      "source_location": "L323",
+      "source_location": "L345",
       "_origin": "ast",
-      "id": "src_broadcaster_rationale_323",
-      "community": 1,
+      "id": "src_broadcaster_rationale_345",
+      "community": 15,
       "norm_label": "fetches recent replies to threads posts within 24 hours."
     },
     {
       "label": "Dynamically update social media bios with exciting telemetry.",
       "file_type": "rationale",
       "source_file": "src/broadcaster.py",
-      "source_location": "L403",
+      "source_location": "L425",
       "_origin": "ast",
-      "id": "src_broadcaster_rationale_403",
-      "community": 1,
+      "id": "src_broadcaster_rationale_425",
+      "community": 15,
       "norm_label": "dynamically update social media bios with exciting telemetry."
     },
     {
@@ -596,7 +576,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_config",
-      "community": 13,
+      "community": 7,
       "norm_label": "config.py"
     },
     {
@@ -613,7 +593,7 @@
       "label": "validate_config()",
       "file_type": "code",
       "source_file": "src/config.py",
-      "source_location": "L219",
+      "source_location": "L220",
       "_origin": "ast",
       "id": "src_config_validate_config",
       "community": 13,
@@ -623,19 +603,19 @@
       "label": "validate_gemini_model_priority()",
       "file_type": "code",
       "source_file": "src/config.py",
-      "source_location": "L224",
+      "source_location": "L225",
       "_origin": "ast",
       "id": "src_config_validate_gemini_model_priority",
-      "community": 4,
+      "community": 13,
       "norm_label": "validate_gemini_model_priority()"
     },
     {
       "label": "Legacy wrapper for the new Settings validation logic.",
       "file_type": "rationale",
       "source_file": "src/config.py",
-      "source_location": "L220",
+      "source_location": "L221",
       "_origin": "ast",
-      "id": "src_config_rationale_220",
+      "id": "src_config_rationale_221",
       "community": 13,
       "norm_label": "legacy wrapper for the new settings validation logic."
     },
@@ -643,10 +623,10 @@
       "label": "Legacy wrapper for Gemini model self-discovery.",
       "file_type": "rationale",
       "source_file": "src/config.py",
-      "source_location": "L225",
+      "source_location": "L226",
       "_origin": "ast",
-      "id": "src_config_rationale_225",
-      "community": 4,
+      "id": "src_config_rationale_226",
+      "community": 13,
       "norm_label": "legacy wrapper for gemini model self-discovery."
     },
     {
@@ -733,7 +713,7 @@
       "label": "generate_mentor_insight()",
       "file_type": "code",
       "source_file": "src/curator.py",
-      "source_location": "L275",
+      "source_location": "L279",
       "_origin": "ast",
       "id": "src_curator_generate_mentor_insight",
       "community": 4,
@@ -743,7 +723,7 @@
       "label": "get_temporal_context()",
       "file_type": "code",
       "source_file": "src/curator.py",
-      "source_location": "L314",
+      "source_location": "L321",
       "_origin": "ast",
       "id": "src_curator_get_temporal_context",
       "community": 1,
@@ -753,30 +733,40 @@
       "label": "generate_visual_prompt()",
       "file_type": "code",
       "source_file": "src/curator.py",
-      "source_location": "L344",
+      "source_location": "L351",
       "_origin": "ast",
       "id": "src_curator_generate_visual_prompt",
-      "community": 1,
+      "community": 4,
       "norm_label": "generate_visual_prompt()"
+    },
+    {
+      "label": "generate_image_alt_text()",
+      "file_type": "code",
+      "source_file": "src/curator.py",
+      "source_location": "L361",
+      "_origin": "ast",
+      "id": "src_curator_generate_image_alt_text",
+      "community": 4,
+      "norm_label": "generate_image_alt_text()"
     },
     {
       "label": "generate_nvidia_image()",
       "file_type": "code",
       "source_file": "src/curator.py",
-      "source_location": "L355",
+      "source_location": "L385",
       "_origin": "ast",
       "id": "src_curator_generate_nvidia_image",
-      "community": 1,
+      "community": 4,
       "norm_label": "generate_nvidia_image()"
     },
     {
       "label": "generate_interactive_reply()",
       "file_type": "code",
       "source_file": "src/curator.py",
-      "source_location": "L409",
+      "source_location": "L439",
       "_origin": "ast",
       "id": "src_curator_generate_interactive_reply",
-      "community": 1,
+      "community": 15,
       "norm_label": "generate_interactive_reply()"
     },
     {
@@ -843,30 +833,40 @@
       "label": "Enhanced Temporal Awareness for v3.7.0 (High Resolution + Manual Intercept).",
       "file_type": "rationale",
       "source_file": "src/curator.py",
-      "source_location": "L315",
+      "source_location": "L322",
       "_origin": "ast",
-      "id": "src_curator_rationale_315",
+      "id": "src_curator_rationale_322",
       "community": 1,
       "norm_label": "enhanced temporal awareness for v3.7.0 (high resolution + manual intercept)."
+    },
+    {
+      "label": "Generates screen-reader-friendly alt text for the generated image using Gemini V",
+      "file_type": "rationale",
+      "source_file": "src/curator.py",
+      "source_location": "L362",
+      "_origin": "ast",
+      "id": "src_curator_rationale_362",
+      "community": 4,
+      "norm_label": "generates screen-reader-friendly alt text for the generated image using gemini v"
     },
     {
       "label": "Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing.",
       "file_type": "rationale",
       "source_file": "src/curator.py",
-      "source_location": "L356",
+      "source_location": "L386",
       "_origin": "ast",
-      "id": "src_curator_rationale_356",
-      "community": 1,
+      "id": "src_curator_rationale_386",
+      "community": 4,
       "norm_label": "calls nvidia nim for sd3-medium image generation with robust response parsing."
     },
     {
       "label": "Generates an AI reply for a social mention, maintaining the Sage persona.",
       "file_type": "rationale",
       "source_file": "src/curator.py",
-      "source_location": "L410",
+      "source_location": "L440",
       "_origin": "ast",
-      "id": "src_curator_rationale_410",
-      "community": 1,
+      "id": "src_curator_rationale_440",
+      "community": 15,
       "norm_label": "generates an ai reply for a social mention, maintaining the sage persona."
     },
     {
@@ -876,7 +876,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_feed_vanguard",
-      "community": 13,
+      "community": 7,
       "norm_label": "feed_vanguard.py"
     },
     {
@@ -886,7 +886,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager",
-      "community": 1,
+      "community": 5,
       "norm_label": "vanguardmanager"
     },
     {
@@ -896,7 +896,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_init",
-      "community": 1,
+      "community": 5,
       "norm_label": ".__init__()"
     },
     {
@@ -906,7 +906,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_load_state",
-      "community": 1,
+      "community": 5,
       "norm_label": "._load_state()"
     },
     {
@@ -916,7 +916,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_save_state",
-      "community": 1,
+      "community": 5,
       "norm_label": "._save_state()"
     },
     {
@@ -986,7 +986,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_feed_vanguard_rationale_11",
-      "community": 1,
+      "community": 5,
       "norm_label": "manages rss feed health and identifies problematic sources for soft-disable."
     },
     {
@@ -1323,7 +1323,7 @@
       "label": "BroadcastResult",
       "file_type": "code",
       "source_file": "src/models.py",
-      "source_location": "L40",
+      "source_location": "L41",
       "_origin": "ast",
       "id": "src_models_broadcastresult",
       "community": 1,
@@ -1333,7 +1333,7 @@
       "label": "InteractionNote",
       "file_type": "code",
       "source_file": "src/models.py",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast",
       "id": "src_models_interactionnote",
       "community": 1,
@@ -1343,7 +1343,7 @@
       "label": "InteractionResult",
       "file_type": "code",
       "source_file": "src/models.py",
-      "source_location": "L61",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "src_models_interactionresult",
       "community": 1,
@@ -1383,9 +1383,9 @@
       "label": "Status details per platform after broadcasting.",
       "file_type": "rationale",
       "source_file": "src/models.py",
-      "source_location": "L41",
+      "source_location": "L42",
       "_origin": "ast",
-      "id": "src_models_rationale_41",
+      "id": "src_models_rationale_42",
       "community": 1,
       "norm_label": "status details per platform after broadcasting."
     },
@@ -1393,9 +1393,9 @@
       "label": "Metadata for a social mention or reply.",
       "file_type": "rationale",
       "source_file": "src/models.py",
-      "source_location": "L49",
+      "source_location": "L50",
       "_origin": "ast",
-      "id": "src_models_rationale_49",
+      "id": "src_models_rationale_50",
       "community": 1,
       "norm_label": "metadata for a social mention or reply."
     },
@@ -1403,9 +1403,9 @@
       "label": "Tracking the result of an automated reply session.",
       "file_type": "rationale",
       "source_file": "src/models.py",
-      "source_location": "L62",
+      "source_location": "L63",
       "_origin": "ast",
-      "id": "src_models_rationale_62",
+      "id": "src_models_rationale_63",
       "community": 1,
       "norm_label": "tracking the result of an automated reply session."
     },
@@ -1416,7 +1416,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_settings",
-      "community": 3,
+      "community": 15,
       "norm_label": "settings.py"
     },
     {
@@ -1433,7 +1433,7 @@
       "label": ".from_env()",
       "file_type": "code",
       "source_file": "src/settings.py",
-      "source_location": "L50",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "src_settings_settings_from_env",
       "community": 3,
@@ -1443,7 +1443,7 @@
       "label": ".is_manual_run()",
       "file_type": "code",
       "source_file": "src/settings.py",
-      "source_location": "L102",
+      "source_location": "L127",
       "_origin": "ast",
       "id": "src_settings_settings_is_manual_run",
       "community": 3,
@@ -1453,7 +1453,7 @@
       "label": ".should_bypass_rest()",
       "file_type": "code",
       "source_file": "src/settings.py",
-      "source_location": "L107",
+      "source_location": "L132",
       "_origin": "ast",
       "id": "src_settings_settings_should_bypass_rest",
       "community": 3,
@@ -1463,7 +1463,7 @@
       "label": ".validate()",
       "file_type": "code",
       "source_file": "src/settings.py",
-      "source_location": "L112",
+      "source_location": "L137",
       "_origin": "ast",
       "id": "src_settings_settings_validate",
       "community": 3,
@@ -1483,9 +1483,9 @@
       "label": "Determines if the current execution was manually triggered (Persona logic).",
       "file_type": "rationale",
       "source_file": "src/settings.py",
-      "source_location": "L103",
+      "source_location": "L128",
       "_origin": "ast",
-      "id": "src_settings_rationale_103",
+      "id": "src_settings_rationale_128",
       "community": 3,
       "norm_label": "determines if the current execution was manually triggered (persona logic)."
     },
@@ -1493,9 +1493,9 @@
       "label": "Determines if scheduling rest locks should be ignored (Infrastructure logic).",
       "file_type": "rationale",
       "source_file": "src/settings.py",
-      "source_location": "L108",
+      "source_location": "L133",
       "_origin": "ast",
-      "id": "src_settings_rationale_108",
+      "id": "src_settings_rationale_133",
       "community": 3,
       "norm_label": "determines if scheduling rest locks should be ignored (infrastructure logic)."
     },
@@ -1503,11 +1503,61 @@
       "label": "Validates critical settings and returns True if valid.",
       "file_type": "rationale",
       "source_file": "src/settings.py",
-      "source_location": "L113",
+      "source_location": "L138",
       "_origin": "ast",
-      "id": "src_settings_rationale_113",
+      "id": "src_settings_rationale_138",
       "community": 3,
       "norm_label": "validates critical settings and returns true if valid."
+    },
+    {
+      "label": "telegram_gateway.py",
+      "file_type": "code",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_telegram_gateway",
+      "community": 15,
+      "norm_label": "telegram_gateway.py"
+    },
+    {
+      "label": "send_draft_for_approval()",
+      "file_type": "code",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "src_telegram_gateway_send_draft_for_approval",
+      "community": 15,
+      "norm_label": "send_draft_for_approval()"
+    },
+    {
+      "label": "check_for_telegram_topic()",
+      "file_type": "code",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L108",
+      "_origin": "ast",
+      "id": "src_telegram_gateway_check_for_telegram_topic",
+      "community": 15,
+      "norm_label": "check_for_telegram_topic()"
+    },
+    {
+      "label": "Sends the generated post draft and image to Telegram for approval.     Waits up",
+      "file_type": "rationale",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "src_telegram_gateway_rationale_9",
+      "community": 15,
+      "norm_label": "sends the generated post draft and image to telegram for approval.     waits up"
+    },
+    {
+      "label": "Checks if there's a recent /topic or /curate command sent by the authorized user",
+      "file_type": "rationale",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L109",
+      "_origin": "ast",
+      "id": "src_telegram_gateway_rationale_109",
+      "community": 15,
+      "norm_label": "checks if there's a recent /topic or /curate command sent by the authorized user"
     },
     {
       "label": "__init__.py",
@@ -1773,7 +1823,7 @@
       "label": "test_summarize_news_with_thinking_budget()",
       "file_type": "code",
       "source_file": "src/tests/test_curator.py",
-      "source_location": "L113",
+      "source_location": "L115",
       "_origin": "ast",
       "id": "tests_test_curator_test_summarize_news_with_thinking_budget",
       "community": 4,
@@ -1813,11 +1863,61 @@
       "label": "Verify that summarize_news includes thinking_config when supported by the model.",
       "file_type": "rationale",
       "source_file": "src/tests/test_curator.py",
-      "source_location": "L114",
+      "source_location": "L116",
       "_origin": "ast",
-      "id": "tests_test_curator_rationale_114",
+      "id": "tests_test_curator_rationale_116",
       "community": 4,
       "norm_label": "verify that summarize_news includes thinking_config when supported by the model."
+    },
+    {
+      "label": "test_dry_run.py",
+      "file_type": "code",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_dry_run",
+      "community": 1,
+      "norm_label": "test_dry_run.py"
+    },
+    {
+      "label": "test_dry_run_broadcaster_bypasses_real_posts()",
+      "file_type": "code",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "tests_test_dry_run_test_dry_run_broadcaster_bypasses_real_posts",
+      "community": 1,
+      "norm_label": "test_dry_run_broadcaster_bypasses_real_posts()"
+    },
+    {
+      "label": "test_dry_run_persistence_does_not_save()",
+      "file_type": "code",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "tests_test_dry_run_test_dry_run_persistence_does_not_save",
+      "community": 1,
+      "norm_label": "test_dry_run_persistence_does_not_save()"
+    },
+    {
+      "label": "Verify that broadcast_stage returns mock successes and does not post to APIs in",
+      "file_type": "rationale",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "tests_test_dry_run_rationale_10",
+      "community": 1,
+      "norm_label": "verify that broadcast_stage returns mock successes and does not post to apis in"
+    },
+    {
+      "label": "Verify that persistence_stage skips saving files in dry-run mode.",
+      "file_type": "rationale",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L32",
+      "_origin": "ast",
+      "id": "tests_test_dry_run_rationale_32",
+      "community": 1,
+      "norm_label": "verify that persistence_stage skips saving files in dry-run mode."
     },
     {
       "label": "test_logger.py",
@@ -2070,6 +2170,16 @@
       "norm_label": "test_settings_should_bypass_rest()"
     },
     {
+      "label": "test_telegram_settings_defaults()",
+      "file_type": "code",
+      "source_file": "src/tests/test_settings.py",
+      "source_location": "L66",
+      "_origin": "ast",
+      "id": "tests_test_settings_test_telegram_settings_defaults",
+      "community": 3,
+      "norm_label": "test_telegram_settings_defaults()"
+    },
+    {
       "label": "Verify that Settings.from_env() reads correct defaults.",
       "file_type": "rationale",
       "source_file": "src/tests/test_settings.py",
@@ -2130,6 +2240,16 @@
       "norm_label": "verify should_bypass_rest determines when rest is bypassed."
     },
     {
+      "label": "Verify that settings correctly capture Telegram environment variables.",
+      "file_type": "rationale",
+      "source_file": "src/tests/test_settings.py",
+      "source_location": "L67",
+      "_origin": "ast",
+      "id": "tests_test_settings_rationale_67",
+      "community": 3,
+      "norm_label": "verify that settings correctly capture telegram environment variables."
+    },
+    {
       "label": "test_utils.py",
       "file_type": "code",
       "source_file": "src/tests/test_utils.py",
@@ -2166,7 +2286,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_utils_test_get_image_mime_detection",
-      "community": 8,
+      "community": 14,
       "norm_label": "test_get_image_mime_detection()"
     },
     {
@@ -2216,7 +2336,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "tests_test_utils_test_smart_split_edge_cases",
-      "community": 15,
+      "community": 14,
       "norm_label": "test_smart_split_edge_cases()"
     },
     {
@@ -2226,7 +2346,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "tests_test_utils_test_seen_interactions_persistence",
-      "community": 7,
+      "community": 8,
       "norm_label": "test_seen_interactions_persistence()"
     },
     {
@@ -2256,7 +2376,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_45",
-      "community": 8,
+      "community": 14,
       "norm_label": "verify mime type detection for different image headers."
     },
     {
@@ -2316,7 +2436,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_utils_retry_with_backoff",
-      "community": 15,
+      "community": 7,
       "norm_label": "retry_with_backoff()"
     },
     {
@@ -2396,7 +2516,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "src_utils_save_gist_state",
-      "community": 6,
+      "community": 27,
       "norm_label": "_save_gist_state()"
     },
     {
@@ -2406,7 +2526,7 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "src_utils_load_json_state",
-      "community": 7,
+      "community": 8,
       "norm_label": "load_json_state()"
     },
     {
@@ -2416,7 +2536,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "src_utils_save_json_state",
-      "community": 7,
+      "community": 27,
       "norm_label": "save_json_state()"
     },
     {
@@ -2426,7 +2546,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "src_utils_load_seen_interactions",
-      "community": 7,
+      "community": 8,
       "norm_label": "load_seen_interactions()"
     },
     {
@@ -2436,7 +2556,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "src_utils_save_seen_interactions",
-      "community": 7,
+      "community": 8,
       "norm_label": "save_seen_interactions()"
     },
     {
@@ -2456,7 +2576,7 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "src_utils_save_seen_articles",
-      "community": 6,
+      "community": 27,
       "norm_label": "save_seen_articles()"
     },
     {
@@ -2536,7 +2656,7 @@
       "source_location": "L473",
       "_origin": "ast",
       "id": "src_utils_get_image_mime",
-      "community": 8,
+      "community": 14,
       "norm_label": "get_image_mime()"
     },
     {
@@ -2586,7 +2706,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_utils_rationale_44",
-      "community": 15,
+      "community": 7,
       "norm_label": "decorator to retry an async function with exponential backoff and jitter."
     },
     {
@@ -2636,7 +2756,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "src_utils_rationale_149",
-      "community": 6,
+      "community": 27,
       "norm_label": "helper to push state to a private github gist."
     },
     {
@@ -2646,7 +2766,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "src_utils_rationale_173",
-      "community": 7,
+      "community": 8,
       "norm_label": "helper to load json data from a file path."
     },
     {
@@ -2656,7 +2776,7 @@
       "source_location": "L178",
       "_origin": "ast",
       "id": "src_utils_rationale_178",
-      "community": 7,
+      "community": 27,
       "norm_label": "helper to save state to a json file."
     },
     {
@@ -2666,7 +2786,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "src_utils_rationale_183",
-      "community": 7,
+      "community": 8,
       "norm_label": "loads the list of social interaction ids we've already responded to."
     },
     {
@@ -2676,7 +2796,7 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "src_utils_rationale_192",
-      "community": 7,
+      "community": 8,
       "norm_label": "saves the list of social interaction ids to persistent store."
     },
     {
@@ -2696,7 +2816,7 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "src_utils_rationale_227",
-      "community": 6,
+      "community": 27,
       "norm_label": "3-tier persistence: atomic write -> backup commit -> remote sync."
     },
     {
@@ -2776,7 +2896,7 @@
       "source_location": "L474",
       "_origin": "ast",
       "id": "src_utils_rationale_474",
-      "community": 8,
+      "community": 14,
       "norm_label": "detects mime type from image bytes for broadcaster fidelity."
     },
     {
@@ -3100,20 +3220,20 @@
       "norm_label": "\ud83e\udd2b2. configure github secrets"
     },
     {
-      "label": "\ud83d\udee1\ufe0f Resilience Architecture (v3.8.0)",
+      "label": "\ud83d\udee1\ufe0f Resilience Architecture",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L101",
+      "source_location": "L108",
       "_origin": "ast",
-      "id": "readme_resilience_architecture_v3_8_0",
+      "id": "readme_resilience_architecture",
       "community": 0,
-      "norm_label": "\ud83d\udee1\ufe0f resilience architecture (v3.8.0)"
+      "norm_label": "\ud83d\udee1\ufe0f resilience architecture"
     },
     {
       "label": "\ud83d\udcc2 Project Structure",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L136",
+      "source_location": "L143",
       "_origin": "ast",
       "id": "readme_project_structure",
       "community": 0,
@@ -3123,7 +3243,7 @@
       "label": "\ud83d\uddd2\ufe0f Updates & History",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L143",
+      "source_location": "L150",
       "_origin": "ast",
       "id": "readme_updates_history",
       "community": 0,
@@ -3133,7 +3253,7 @@
       "label": "\ud83e\uddea Testing",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L213",
+      "source_location": "L229",
       "_origin": "ast",
       "id": "readme_testing",
       "community": 0,
@@ -3143,7 +3263,7 @@
       "label": "1. Automated Regression (CI-Ready)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L217",
+      "source_location": "L233",
       "_origin": "ast",
       "id": "readme_1_automated_regression_ci_ready",
       "community": 0,
@@ -3153,7 +3273,7 @@
       "label": "2. Interactive Diagnostic (Developer Tool)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L224",
+      "source_location": "L240",
       "_origin": "ast",
       "id": "readme_2_interactive_diagnostic_developer_tool",
       "community": 0,
@@ -3163,7 +3283,7 @@
       "label": "\ud83e\udd1d Community & Security",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L232",
+      "source_location": "L248",
       "_origin": "ast",
       "id": "readme_community_security",
       "community": 0,
@@ -3350,14 +3470,14 @@
       "norm_label": "the curation & scoring pipeline"
     },
     {
-      "label": "\ud83d\udee1\ufe0f Page 3: Reliability & The Fortress (v3.9.0)",
+      "label": "\ud83d\udee1\ufe0f Page 3: Reliability & The Fortress",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L59",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_3_reliability_the_fortress_v3_9_0",
+      "id": "docs_wiki_manual_page_3_reliability_the_fortress",
       "community": 25,
-      "norm_label": "\ud83d\udee1\ufe0f page 3: reliability & the fortress (v3.9.0)"
+      "norm_label": "\ud83d\udee1\ufe0f page 3: reliability & the fortress"
     },
     {
       "label": "Hardening Features",
@@ -3370,14 +3490,14 @@
       "norm_label": "hardening features"
     },
     {
-      "label": "\ud83c\udfa8 Page 4: NVIDIA NIM Image Generation (v3.6)",
+      "label": "\ud83c\udfa8 Page 4: NVIDIA NIM Image Generation",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L74",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_4_nvidia_nim_image_generation_v3_6",
-      "community": 56,
-      "norm_label": "\ud83c\udfa8 page 4: nvidia nim image generation (v3.6)"
+      "id": "docs_wiki_manual_page_4_nvidia_nim_image_generation",
+      "community": 25,
+      "norm_label": "\ud83c\udfa8 page 4: nvidia nim image generation"
     },
     {
       "label": "The Designer & Image Pipeline",
@@ -3386,7 +3506,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "docs_wiki_manual_the_designer_image_pipeline",
-      "community": 56,
+      "community": 25,
       "norm_label": "the designer & image pipeline"
     },
     {
@@ -3400,14 +3520,14 @@
       "norm_label": "\ud83d\udef0\ufe0f page 5: source intelligence"
     },
     {
-      "label": "\u2699\ufe0f Page 6: Technical Configuration (v3.11.0)",
+      "label": "\u2699\ufe0f Page 6: Technical Configuration",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L126",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_6_technical_configuration_v3_11_0",
+      "id": "docs_wiki_manual_page_6_technical_configuration",
       "community": 53,
-      "norm_label": "\u2699\ufe0f page 6: technical configuration (v3.11.0)"
+      "norm_label": "\u2699\ufe0f page 6: technical configuration"
     },
     {
       "label": "Environment Secrets",
@@ -3460,14 +3580,14 @@
       "norm_label": "\ud83c\udfa8 sage console (logging)"
     },
     {
-      "label": "\ud83d\udcbe Page 8: 3-Tier State Resilience (v3.8.0)",
+      "label": "\ud83d\udcbe Page 8: 3-Tier State Resilience",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L173",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_8_3_tier_state_resilience_v3_8_0",
+      "id": "docs_wiki_manual_page_8_3_tier_state_resilience",
       "community": 25,
-      "norm_label": "\ud83d\udcbe page 8: 3-tier state resilience (v3.8.0)"
+      "norm_label": "\ud83d\udcbe page 8: 3-tier state resilience"
     },
     {
       "label": "The Recovery Sequence",
@@ -3480,14 +3600,14 @@
       "norm_label": "the recovery sequence"
     },
     {
-      "label": "\ud83e\uddea Page 9: Automated Quality Control (v3.6.5)",
+      "label": "\ud83e\uddea Page 9: Automated Quality Control",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L189",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_9_automated_quality_control_v3_6_5",
+      "id": "docs_wiki_manual_page_9_automated_quality_control",
       "community": 55,
-      "norm_label": "\ud83e\uddea page 9: automated quality control (v3.6.5)"
+      "norm_label": "\ud83e\uddea page 9: automated quality control"
     },
     {
       "label": "The Test Layers",
@@ -3510,14 +3630,14 @@
       "norm_label": "running automated tests"
     },
     {
-      "label": "\ud83c\udfad Page 10: The Natural Vibe Engine (v3.7.0)",
+      "label": "\ud83c\udfad Page 10: The Natural Vibe Engine",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L206",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_10_the_natural_vibe_engine_v3_7_0",
+      "id": "docs_wiki_manual_page_10_the_natural_vibe_engine",
       "community": 49,
-      "norm_label": "\ud83c\udfad page 10: the natural vibe engine (v3.7.0)"
+      "norm_label": "\ud83c\udfad page 10: the natural vibe engine"
     },
     {
       "label": "1. The Editorial Pulse (Stylistic Memory)",
@@ -3610,14 +3730,14 @@
       "norm_label": "the status.md advantage"
     },
     {
-      "label": "\ud83d\udce1 Page 13: Feed Vanguard Automation (v3.8.2)",
+      "label": "\ud83d\udce1 Page 13: Feed Vanguard Automation",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L269",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_13_feed_vanguard_automation_v3_8_2",
+      "id": "docs_wiki_manual_page_13_feed_vanguard_automation",
       "community": 42,
-      "norm_label": "\ud83d\udce1 page 13: feed vanguard automation (v3.8.2)"
+      "norm_label": "\ud83d\udce1 page 13: feed vanguard automation"
     },
     {
       "label": "The Auditing Logic",
@@ -3690,14 +3810,14 @@
       "norm_label": "tier 4: industry & journalism"
     },
     {
-      "label": "Page 14: Interaction Engine (Mention Replies & Comments) (v3.11.0)",
+      "label": "Page 14: Interaction Engine (Mention Replies & Comments)",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L335",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0",
+      "id": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments",
       "community": 44,
-      "norm_label": "page 14: interaction engine (mention replies & comments) (v3.11.0)"
+      "norm_label": "page 14: interaction engine (mention replies & comments)"
     },
     {
       "label": "Core Architecture",
@@ -3820,6 +3940,46 @@
       "norm_label": "2. friday release curation focus"
     },
     {
+      "label": "\ud83d\ude80 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.0)",
+      "file_type": "document",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L412",
+      "_origin": "ast",
+      "id": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_0",
+      "community": 28,
+      "norm_label": "\ud83d\ude80 page 17: interactive telegram control, alt text, and hashtag management (v3.12.0)"
+    },
+    {
+      "label": "1. Interactive Telegram Gateway & Approval Queue",
+      "file_type": "document",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L416",
+      "_origin": "ast",
+      "id": "docs_wiki_manual_1_interactive_telegram_gateway_approval_queue",
+      "community": 28,
+      "norm_label": "1. interactive telegram gateway & approval queue"
+    },
+    {
+      "label": "2. Screen Reader Multimodal Alt-Text",
+      "file_type": "document",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L424",
+      "_origin": "ast",
+      "id": "docs_wiki_manual_2_screen_reader_multimodal_alt_text",
+      "community": 28,
+      "norm_label": "2. screen reader multimodal alt-text"
+    },
+    {
+      "label": "3. Cultural Hashtag Alignment",
+      "file_type": "document",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L430",
+      "_origin": "ast",
+      "id": "docs_wiki_manual_3_cultural_hashtag_alignment",
+      "community": 28,
+      "norm_label": "3. cultural hashtag alignment"
+    },
+    {
       "label": "pr_description.md",
       "file_type": "document",
       "source_file": "pr_description.md",
@@ -3830,384 +3990,104 @@
       "norm_label": "pr_description.md"
     },
     {
-      "label": "PR Description: Refactored State Persistence & Hardened Humanization Prompts (v3.11.1) \ud83d\udee0\ufe0f\u270d\ufe0f",
+      "label": "\ud83d\ude80 PR v3.12.0: Interactive Telegram Control, Alt Text, and Hashtag Management",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "pr_description_pr_description_refactored_state_persistence_hardened_humanization_prompts_v3_11_1",
+      "id": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management",
       "community": 12,
-      "norm_label": "pr description: refactored state persistence & hardened humanization prompts (v3.11.1) \ud83d\udee0\ufe0f\u270d\ufe0f"
+      "norm_label": "\ud83d\ude80 pr v3.12.0: interactive telegram control, alt text, and hashtag management"
     },
     {
-      "label": "\ud83c\udf1f Key Updates",
+      "label": "Proposed Upgrades",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L5",
       "_origin": "ast",
-      "id": "pr_description_key_updates",
+      "id": "pr_description_proposed_upgrades",
       "community": 12,
-      "norm_label": "\ud83c\udf1f key updates"
+      "norm_label": "proposed upgrades"
     },
     {
-      "label": "1. Refactored JSON State Persistence",
+      "label": "\ud83c\udfae 1. Telegram Control & Approval Queue",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L7",
       "_origin": "ast",
-      "id": "pr_description_1_refactored_json_state_persistence",
+      "id": "pr_description_1_telegram_control_approval_queue",
       "community": 12,
-      "norm_label": "1. refactored json state persistence"
+      "norm_label": "\ud83c\udfae 1. telegram control & approval queue"
     },
     {
-      "label": "2. Precompiled Regular Expressions",
+      "label": "\u267f 2. Screen Reader Multimodal Alt-Text",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L13",
+      "source_location": "L11",
       "_origin": "ast",
-      "id": "pr_description_2_precompiled_regular_expressions",
+      "id": "pr_description_2_screen_reader_multimodal_alt_text",
       "community": 12,
-      "norm_label": "2. precompiled regular expressions"
+      "norm_label": "\u267f 2. screen reader multimodal alt-text"
     },
     {
-      "label": "3. Hardened Humanization & Short-Form Prompts",
+      "label": "\ud83c\udff7\ufe0f 3. Per-Platform Hashtags",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L16",
+      "source_location": "L14",
       "_origin": "ast",
-      "id": "pr_description_3_hardened_humanization_short_form_prompts",
+      "id": "pr_description_3_per_platform_hashtags",
       "community": 12,
-      "norm_label": "3. hardened humanization & short-form prompts"
+      "norm_label": "\ud83c\udff7\ufe0f 3. per-platform hashtags"
     },
     {
-      "label": "4. Repository Cleanup",
+      "label": "\ud83d\udee1\ufe0f 4. Side-Effect-Free Dry Run",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L25",
+      "source_location": "L17",
       "_origin": "ast",
-      "id": "pr_description_4_repository_cleanup",
+      "id": "pr_description_4_side_effect_free_dry_run",
       "community": 12,
-      "norm_label": "4. repository cleanup"
+      "norm_label": "\ud83d\udee1\ufe0f 4. side-effect-free dry run"
     },
     {
-      "label": "\ud83e\uddea Verification & Testing",
+      "label": "\ud83d\udee0\ufe0f Compliance with `AGENTS.md` Rules",
+      "file_type": "document",
+      "source_file": "pr_description.md",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "pr_description_compliance_with_agents_md_rules",
+      "community": 12,
+      "norm_label": "\ud83d\udee0\ufe0f compliance with `agents.md` rules"
+    },
+    {
+      "label": "1. What was Deleted or Simplified",
+      "file_type": "document",
+      "source_file": "pr_description.md",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "pr_description_1_what_was_deleted_or_simplified",
+      "community": 12,
+      "norm_label": "1. what was deleted or simplified"
+    },
+    {
+      "label": "2. Why the Simpler Version is Safe",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L28",
       "_origin": "ast",
-      "id": "pr_description_verification_testing",
+      "id": "pr_description_2_why_the_simpler_version_is_safe",
       "community": 12,
-      "norm_label": "\ud83e\uddea verification & testing"
+      "norm_label": "2. why the simpler version is safe"
     },
     {
-      "label": "issue1_body.md",
+      "label": "3. Verification & Tests Run",
       "file_type": "document",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L1",
+      "source_file": "pr_description.md",
+      "source_location": "L32",
       "_origin": "ast",
-      "id": "scratch_issue1_body",
-      "community": 27,
-      "norm_label": "issue1_body.md"
-    },
-    {
-      "label": "Description",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_description",
-      "community": 27,
-      "norm_label": "description"
-    },
-    {
-      "label": "Traceback",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_traceback",
-      "community": 27,
-      "norm_label": "traceback"
-    },
-    {
-      "label": "Root Cause",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L11",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_root_cause",
-      "community": 27,
-      "norm_label": "root cause"
-    },
-    {
-      "label": "Proposed Fix",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L14",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_proposed_fix",
-      "community": 27,
-      "norm_label": "proposed fix"
-    },
-    {
-      "label": "issue1_body_v2.md",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_v2",
-      "community": 28,
-      "norm_label": "issue1_body_v2.md"
-    },
-    {
-      "label": "Description",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_v2_description",
-      "community": 28,
-      "norm_label": "description"
-    },
-    {
-      "label": "Traceback",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_v2_traceback",
-      "community": 28,
-      "norm_label": "traceback"
-    },
-    {
-      "label": "Root Cause",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L11",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_v2_root_cause",
-      "community": 28,
-      "norm_label": "root cause"
-    },
-    {
-      "label": "Proposed Fix",
-      "file_type": "document",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L14",
-      "_origin": "ast",
-      "id": "scratch_issue1_body_v2_proposed_fix",
-      "community": 28,
-      "norm_label": "proposed fix"
-    },
-    {
-      "label": "issue2_body.md",
-      "file_type": "document",
-      "source_file": "scratch/issue2_body.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue2_body",
-      "community": 29,
-      "norm_label": "issue2_body.md"
-    },
-    {
-      "label": "Description",
-      "file_type": "document",
-      "source_file": "scratch/issue2_body.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue2_body_description",
-      "community": 29,
-      "norm_label": "description"
-    },
-    {
-      "label": "Actions Affected",
-      "file_type": "document",
-      "source_file": "scratch/issue2_body.md",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "scratch_issue2_body_actions_affected",
-      "community": 29,
-      "norm_label": "actions affected"
-    },
-    {
-      "label": "Proposed Fix",
-      "file_type": "document",
-      "source_file": "scratch/issue2_body.md",
-      "source_location": "L10",
-      "_origin": "ast",
-      "id": "scratch_issue2_body_proposed_fix",
-      "community": 29,
-      "norm_label": "proposed fix"
-    },
-    {
-      "label": "issue7_body.md",
-      "file_type": "document",
-      "source_file": "scratch/issue7_body.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue7_body",
-      "community": 30,
-      "norm_label": "issue7_body.md"
-    },
-    {
-      "label": "Description",
-      "file_type": "document",
-      "source_file": "scratch/issue7_body.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue7_body_description",
-      "community": 30,
-      "norm_label": "description"
-    },
-    {
-      "label": "Goal",
-      "file_type": "document",
-      "source_file": "scratch/issue7_body.md",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "scratch_issue7_body_goal",
-      "community": 30,
-      "norm_label": "goal"
-    },
-    {
-      "label": "issue8_body.md",
-      "file_type": "document",
-      "source_file": "scratch/issue8_body.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue8_body",
-      "community": 31,
-      "norm_label": "issue8_body.md"
-    },
-    {
-      "label": "Description",
-      "file_type": "document",
-      "source_file": "scratch/issue8_body.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue8_body_description",
-      "community": 31,
-      "norm_label": "description"
-    },
-    {
-      "label": "Goal",
-      "file_type": "document",
-      "source_file": "scratch/issue8_body.md",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "scratch_issue8_body_goal",
-      "community": 31,
-      "norm_label": "goal"
-    },
-    {
-      "label": "issue_flux_nvidia_fallback_model_id.md",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id",
-      "community": 32,
-      "norm_label": "issue_flux_nvidia_fallback_model_id.md"
-    },
-    {
-      "label": "Bug: NVIDIA OpenAI-compatible fallback rejects shortened FLUX model id",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "community": 32,
-      "norm_label": "bug: nvidia openai-compatible fallback rejects shortened flux model id"
-    },
-    {
-      "label": "Summary",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L3",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_summary",
-      "community": 32,
-      "norm_label": "summary"
-    },
-    {
-      "label": "Where",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L6",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_where",
-      "community": 32,
-      "norm_label": "where"
-    },
-    {
-      "label": "Expected behavior",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L11",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_expected_behavior",
-      "community": 32,
-      "norm_label": "expected behavior"
-    },
-    {
-      "label": "Actual behavior",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L18",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_actual_behavior",
-      "community": 32,
-      "norm_label": "actual behavior"
-    },
-    {
-      "label": "Why the fallback still fails",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L24",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_why_the_fallback_still_fails",
-      "community": 32,
-      "norm_label": "why the fallback still fails"
-    },
-    {
-      "label": "Suggested fix (no code changes in this issue)",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L27",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_suggested_fix_no_code_changes_in_this_issue",
-      "community": 32,
-      "norm_label": "suggested fix (no code changes in this issue)"
-    },
-    {
-      "label": "Reproduction (operational)",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L31",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_reproduction_operational",
-      "community": 32,
-      "norm_label": "reproduction (operational)"
-    },
-    {
-      "label": "Impact",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L36",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_impact",
-      "community": 32,
-      "norm_label": "impact"
-    },
-    {
-      "label": "Labels (suggested)",
-      "file_type": "document",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L40",
-      "_origin": "ast",
-      "id": "scratch_issue_flux_nvidia_fallback_model_id_labels_suggested",
-      "community": 32,
-      "norm_label": "labels (suggested)"
+      "id": "pr_description_3_verification_tests_run",
+      "community": 12,
+      "norm_label": "3. verification & tests run"
     },
     {
       "label": "Doc: dependabot.yml",
@@ -4416,7 +4296,7 @@
       "author": null,
       "contributor": null,
       "rationale": "RSS resilience engine auditing feed health with backoff",
-      "community": 13,
+      "community": 7,
       "norm_label": "feed vanguard",
       "id": "feed_vanguard"
     },
@@ -4430,7 +4310,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Primary local -> backup local -> remote Gist storage",
-      "community": 13,
+      "community": 7,
       "norm_label": "three-tier state persistence",
       "id": "resilience_engine"
     },
@@ -4718,6 +4598,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "bot",
+      "target": "src_curator_generate_image_alt_text"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "bot.py",
       "source_location": "L20",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -4778,6 +4669,17 @@
       "confidence_score": 1.0,
       "source": "bot",
       "target": "src_curator_prune_gemini_model_priority_async"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "bot.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "bot",
+      "target": "src_curator_strip_markdown"
     },
     {
       "relation": "imports",
@@ -4894,6 +4796,39 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "bot",
+      "target": "src_telegram_gateway"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "bot.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "bot",
+      "target": "src_telegram_gateway_check_for_telegram_topic"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "bot.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "bot",
+      "target": "src_telegram_gateway_send_draft_for_approval"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "bot.py",
       "source_location": "L15",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -4992,21 +4927,21 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "scratch/test_dashboard_migration.py",
-      "source_location": "L8",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L5",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "scratch_test_dashboard_migration",
+      "source": "tests_test_dry_run",
       "target": "bot"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L39",
+      "source_location": "L49",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bot_rationale_39",
+      "source": "bot_rationale_49",
       "target": "bot_update_status_dashboard_sync"
     },
     {
@@ -5024,32 +4959,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L76",
+      "source_location": "L86",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bot_rationale_76",
-      "target": "bot_update_status_dashboard"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_dashboard_migration.py",
-      "source_location": "L8",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_dashboard_migration",
-      "target": "bot_update_status_dashboard"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "scratch/test_dashboard_migration.py",
-      "source_location": "L24",
-      "weight": 1.0,
-      "source": "scratch_test_dashboard_migration_test_dashboard",
+      "source": "bot_rationale_86",
       "target": "bot_update_status_dashboard"
     },
     {
@@ -5144,10 +5057,21 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L80",
+      "source_location": "L90",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bot_rationale_80",
+      "source": "bot_rationale_90",
+      "target": "bot_curation_stage"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
       "target": "bot_curation_stage"
     },
     {
@@ -5360,10 +5284,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L104",
+      "source_location": "L126",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bot_rationale_104",
+      "source": "bot_rationale_126",
       "target": "bot_synthesis_stage"
     },
     {
@@ -5376,6 +5300,17 @@
       "confidence_score": 1.0,
       "source": "bot_synthesis_stage",
       "target": "client"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "bot.py",
+      "source_location": "L202",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "bot_synthesis_stage",
+      "target": "src_curator_generate_image_alt_text"
     },
     {
       "relation": "calls",
@@ -5420,6 +5355,17 @@
       "confidence_score": 1.0,
       "source": "bot_synthesis_stage",
       "target": "src_curator_get_temporal_context"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "bot.py",
+      "source_location": "L148",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "bot_synthesis_stage",
+      "target": "src_curator_strip_markdown"
     },
     {
       "relation": "calls",
@@ -5475,6 +5421,17 @@
       "confidence_score": 1.0,
       "source": "bot_synthesis_stage",
       "target": "synthesisresult"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
+      "target": "bot_synthesis_stage"
     },
     {
       "relation": "calls",
@@ -5730,10 +5687,32 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L162",
+      "source_location": "L220",
+      "weight": 1.0,
+      "source": "bot_rationale_220",
+      "target": "bot_broadcast_stage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L5",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bot_rationale_162",
+      "source": "tests_test_dry_run",
+      "target": "bot_broadcast_stage"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "tests_test_dry_run_test_dry_run_broadcaster_bypasses_real_posts",
       "target": "bot_broadcast_stage"
     },
     {
@@ -5913,10 +5892,32 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L197",
+      "source_location": "L266",
+      "weight": 1.0,
+      "source": "bot_rationale_266",
+      "target": "bot_persistence_stage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L5",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bot_rationale_197",
+      "source": "tests_test_dry_run",
+      "target": "bot_persistence_stage"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "tests_test_dry_run_test_dry_run_persistence_does_not_save",
       "target": "bot_persistence_stage"
     },
     {
@@ -6011,11 +6012,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L241",
+      "source_location": "L314",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "bot_rationale_241",
-      "target": "bot_interaction_stage"
+      "source": "bot_rationale_314",
+      "target": "bot_interaction_stage",
+      "confidence_score": 1.0
     },
     {
       "relation": "uses",
@@ -6110,144 +6111,26 @@
       "target": "src_curator_prune_gemini_model_priority_async"
     },
     {
-      "relation": "contains",
+      "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "scratch/test_dashboard_migration.py",
-      "source_location": "L14",
+      "source_file": "bot.py",
+      "source_location": "L431",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "scratch_test_dashboard_migration",
-      "target": "scratch_test_dashboard_migration_test_dashboard"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_dashboard_migration.py",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_dashboard_migration",
-      "target": "src_config"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L12",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_persistence_resilience",
-      "target": "scratch_test_persistence_resilience_test_persistence_resilience"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L10",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_persistence_resilience",
-      "target": "src_config"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_persistence_resilience",
-      "target": "src_utils"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_persistence_resilience",
-      "target": "src_utils_load_seen_articles"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_persistence_resilience",
-      "target": "src_utils_save_seen_articles"
+      "source": "bot_main",
+      "target": "src_telegram_gateway_check_for_telegram_topic"
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L49",
+      "source_file": "bot.py",
+      "source_location": "L445",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "scratch_test_persistence_resilience_test_persistence_resilience",
-      "target": "src_utils_load_seen_articles"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/test_persistence_resilience.py",
-      "source_location": "L24",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_test_persistence_resilience_test_persistence_resilience",
-      "target": "src_utils_save_seen_articles"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/verify_config.py",
-      "source_location": "L13",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_verify_config",
-      "target": "scratch_verify_config_test_config_validation"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/verify_config.py",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_verify_config",
-      "target": "src_config"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/verify_config.py",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_verify_config",
-      "target": "src_config_validate_config"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/verify_config.py",
-      "source_location": "L23",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_verify_config_test_config_validation",
-      "target": "src_config_validate_config"
+      "source": "bot_main",
+      "target": "src_telegram_gateway_send_draft_for_approval"
     },
     {
       "relation": "contains",
@@ -6478,6 +6361,27 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "scripts/test_telegram_setup.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripts_test_telegram_setup",
+      "target": "scripts_test_telegram_setup_run_telegram_test"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/test_telegram_setup.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripts_test_telegram_setup",
+      "target": "src_utils"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "scripts/update_config_keywords.py",
       "source_location": "L18",
       "weight": 1.0,
@@ -6558,6 +6462,16 @@
       "weight": 1.0,
       "source": "src_broadcaster",
       "target": "interaction_engine"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/broadcaster.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_broadcaster",
+      "target": "src_broadcaster_clean_hashtags_if_needed"
     },
     {
       "relation": "contains",
@@ -6775,6 +6689,49 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
+      "source_file": "src/broadcaster.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_broadcaster_post_to_bluesky",
+      "target": "src_broadcaster_clean_hashtags_if_needed"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/broadcaster.py",
+      "source_location": "L119",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_broadcaster_post_to_mastodon",
+      "target": "src_broadcaster_clean_hashtags_if_needed"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/broadcaster.py",
+      "source_location": "L167",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_broadcaster_post_to_threads",
+      "target": "src_broadcaster_clean_hashtags_if_needed"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/broadcaster.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_broadcaster_rationale_14",
+      "target": "src_broadcaster_clean_hashtags_if_needed"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/broadcaster.py",
       "source_location": "L29",
@@ -6808,10 +6765,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/broadcaster.py",
-      "source_location": "L16",
+      "source_location": "L24",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_broadcaster_rationale_16",
+      "source": "src_broadcaster_rationale_24",
       "target": "src_broadcaster_post_to_bluesky"
     },
     {
@@ -6829,10 +6786,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/broadcaster.py",
-      "source_location": "L103",
+      "source_location": "L114",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_broadcaster_rationale_103",
+      "source": "src_broadcaster_rationale_114",
       "target": "src_broadcaster_post_to_mastodon"
     },
     {
@@ -6861,10 +6818,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/broadcaster.py",
-      "source_location": "L150",
+      "source_location": "L165",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_broadcaster_rationale_150",
+      "source": "src_broadcaster_rationale_165",
       "target": "src_broadcaster_post_to_threads"
     },
     {
@@ -6882,10 +6839,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/broadcaster.py",
-      "source_location": "L212",
+      "source_location": "L234",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_broadcaster_rationale_212",
+      "source": "src_broadcaster_rationale_234",
       "target": "src_broadcaster_fetch_bluesky_mentions"
     },
     {
@@ -6903,10 +6860,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/broadcaster.py",
-      "source_location": "L272",
+      "source_location": "L294",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_broadcaster_rationale_272",
+      "source": "src_broadcaster_rationale_294",
       "target": "src_broadcaster_fetch_mastodon_mentions"
     },
     {
@@ -6924,20 +6881,20 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/broadcaster.py",
-      "source_location": "L323",
+      "source_location": "L345",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_broadcaster_rationale_323",
+      "source": "src_broadcaster_rationale_345",
       "target": "src_broadcaster_fetch_threads_replies"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/broadcaster.py",
-      "source_location": "L403",
+      "source_location": "L425",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_broadcaster_rationale_403",
+      "source": "src_broadcaster_rationale_425",
       "target": "src_broadcaster_update_social_profiles"
     },
     {
@@ -7084,11 +7041,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/config.py",
-      "source_location": "L220",
+      "source_location": "L221",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_config_rationale_220",
-      "target": "src_config_validate_config"
+      "source": "src_config_rationale_221",
+      "target": "src_config_validate_config",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7127,11 +7084,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/config.py",
-      "source_location": "L225",
+      "source_location": "L226",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_config_rationale_225",
-      "target": "src_config_validate_gemini_model_priority"
+      "source": "src_config_rationale_226",
+      "target": "src_config_validate_gemini_model_priority",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7195,6 +7152,16 @@
       "confidence_score": 1.0,
       "source": "src_curator",
       "target": "src_curator_fetch_single_feed"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/curator.py",
+      "source_location": "L361",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_curator",
+      "target": "src_curator_generate_image_alt_text"
     },
     {
       "relation": "contains",
@@ -7602,30 +7569,40 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/curator.py",
-      "source_location": "L315",
+      "source_location": "L322",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_curator_rationale_315",
+      "source": "src_curator_rationale_322",
       "target": "src_curator_get_temporal_context"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/curator.py",
-      "source_location": "L356",
+      "source_location": "L362",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_curator_rationale_356",
+      "source": "src_curator_rationale_362",
+      "target": "src_curator_generate_image_alt_text"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/curator.py",
+      "source_location": "L386",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_curator_rationale_386",
       "target": "src_curator_generate_nvidia_image"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/curator.py",
-      "source_location": "L410",
+      "source_location": "L440",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_curator_rationale_410",
+      "source": "src_curator_rationale_440",
       "target": "src_curator_generate_interactive_reply"
     },
     {
@@ -8489,6 +8466,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
+      "target": "src_models"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_models.py",
       "source_location": "L3",
       "weight": 1.0,
@@ -8504,6 +8492,17 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_models_rationale_7",
+      "target": "src_models_article"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
       "target": "src_models_article"
     },
     {
@@ -8553,6 +8552,28 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
+      "target": "src_models_curationresult"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "tests_test_dry_run_test_dry_run_persistence_does_not_save",
+      "target": "src_models_curationresult"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_models.py",
       "source_location": "L3",
       "weight": 1.0,
@@ -8585,6 +8606,39 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
+      "target": "src_models_synthesisresult"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "tests_test_dry_run_test_dry_run_broadcaster_bypasses_real_posts",
+      "target": "src_models_synthesisresult"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "tests_test_dry_run_test_dry_run_persistence_does_not_save",
+      "target": "src_models_synthesisresult"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_models.py",
       "source_location": "L3",
       "weight": 1.0,
@@ -8596,10 +8650,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/models.py",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_models_rationale_41",
+      "source": "src_models_rationale_42",
       "target": "src_models_broadcastresult"
     },
     {
@@ -8617,10 +8671,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/models.py",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_models_rationale_49",
+      "source": "src_models_rationale_50",
       "target": "src_models_interactionnote"
     },
     {
@@ -8649,10 +8703,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/models.py",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_models_rationale_62",
+      "source": "src_models_rationale_63",
       "target": "src_models_interactionresult"
     },
     {
@@ -8691,11 +8745,33 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_telegram_gateway",
+      "target": "src_settings"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/utils.py",
       "source_location": "L25",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_utils",
+      "target": "src_settings"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
       "target": "src_settings"
     },
     {
@@ -8758,6 +8834,61 @@
       "confidence_score": 1.0,
       "source": "src_settings_settings",
       "target": "src_settings_settings_validate"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_curator.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_curator",
+      "target": "src_settings_settings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_curator.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "tests_test_curator_test_prune_gemini_model_priority_async",
+      "target": "src_settings_settings"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
+      "target": "src_settings_settings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "tests_test_dry_run_test_dry_run_broadcaster_bypasses_real_posts",
+      "target": "src_settings_settings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "tests_test_dry_run_test_dry_run_persistence_does_not_save",
+      "target": "src_settings_settings"
     },
     {
       "relation": "imports",
@@ -8829,31 +8960,82 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/settings.py",
-      "source_location": "L103",
+      "source_location": "L128",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_settings_rationale_103",
+      "source": "src_settings_rationale_128",
       "target": "src_settings_settings_is_manual_run"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/settings.py",
-      "source_location": "L108",
+      "source_location": "L133",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_settings_rationale_108",
+      "source": "src_settings_rationale_133",
       "target": "src_settings_settings_should_bypass_rest"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/settings.py",
-      "source_location": "L113",
+      "source_location": "L138",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_settings_rationale_113",
+      "source": "src_settings_rationale_138",
       "target": "src_settings_settings_validate"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_telegram_gateway",
+      "target": "src_telegram_gateway_check_for_telegram_topic"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_telegram_gateway",
+      "target": "src_telegram_gateway_send_draft_for_approval"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_telegram_gateway",
+      "target": "src_utils"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_telegram_gateway_rationale_9",
+      "target": "src_telegram_gateway_send_draft_for_approval"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/telegram_gateway.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_telegram_gateway_rationale_109",
+      "target": "src_telegram_gateway_check_for_telegram_topic"
     },
     {
       "relation": "contains",
@@ -9119,11 +9301,51 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/tests/test_curator.py",
-      "source_location": "L114",
+      "source_location": "L116",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tests_test_curator_rationale_114",
+      "source": "tests_test_curator_rationale_116",
       "target": "tests_test_curator_test_summarize_news_with_thinking_budget"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
+      "target": "tests_test_dry_run_test_dry_run_broadcaster_bypasses_real_posts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run",
+      "target": "tests_test_dry_run_test_dry_run_persistence_does_not_save"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run_rationale_10",
+      "target": "tests_test_dry_run_test_dry_run_broadcaster_bypasses_real_posts"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_dry_run.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_dry_run_rationale_32",
+      "target": "tests_test_dry_run_test_dry_run_persistence_does_not_save"
     },
     {
       "relation": "contains",
@@ -9346,6 +9568,16 @@
       "target": "tests_test_settings_test_settings_validation_success"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_settings.py",
+      "source_location": "L66",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_settings",
+      "target": "tests_test_settings_test_telegram_settings_defaults"
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/tests/test_settings.py",
@@ -9404,6 +9636,16 @@
       "confidence_score": 1.0,
       "source": "tests_test_settings_rationale_53",
       "target": "tests_test_settings_test_settings_should_bypass_rest"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/tests/test_settings.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_settings_rationale_67",
+      "target": "tests_test_settings_test_telegram_settings_defaults"
     },
     {
       "relation": "imports_from",
@@ -10663,11 +10905,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L101",
+      "source_location": "L108",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_blubot_elite_ai_news_curator",
-      "target": "readme_resilience_architecture_v3_8_0"
+      "target": "readme_resilience_architecture"
     },
     {
       "relation": "contains",
@@ -10847,7 +11089,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_10_the_natural_vibe_engine_v3_7_0"
+      "target": "docs_wiki_manual_page_10_the_natural_vibe_engine"
     },
     {
       "relation": "contains",
@@ -10877,7 +11119,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_13_feed_vanguard_automation_v3_8_2"
+      "target": "docs_wiki_manual_page_13_feed_vanguard_automation"
     },
     {
       "relation": "contains",
@@ -10887,7 +11129,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0"
+      "target": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments"
     },
     {
       "relation": "contains",
@@ -10908,6 +11150,16 @@
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
       "target": "docs_wiki_manual_page_16_automated_config_updates_friday_release_focus"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L412",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
+      "target": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_0"
     },
     {
       "relation": "contains",
@@ -10937,7 +11189,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_3_reliability_the_fortress_v3_9_0"
+      "target": "docs_wiki_manual_page_3_reliability_the_fortress"
     },
     {
       "relation": "contains",
@@ -10947,7 +11199,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_4_nvidia_nim_image_generation_v3_6"
+      "target": "docs_wiki_manual_page_4_nvidia_nim_image_generation"
     },
     {
       "relation": "contains",
@@ -10967,7 +11219,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_6_technical_configuration_v3_11_0"
+      "target": "docs_wiki_manual_page_6_technical_configuration"
     },
     {
       "relation": "contains",
@@ -10987,7 +11239,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_8_3_tier_state_resilience_v3_8_0"
+      "target": "docs_wiki_manual_page_8_3_tier_state_resilience"
     },
     {
       "relation": "contains",
@@ -10997,7 +11249,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_9_automated_quality_control_v3_6_5"
+      "target": "docs_wiki_manual_page_9_automated_quality_control"
     },
     {
       "relation": "contains",
@@ -11076,7 +11328,7 @@
       "source_location": "L63",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_3_reliability_the_fortress_v3_9_0",
+      "source": "docs_wiki_manual_page_3_reliability_the_fortress",
       "target": "docs_wiki_manual_hardening_features"
     },
     {
@@ -11086,7 +11338,7 @@
       "source_location": "L78",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_4_nvidia_nim_image_generation_v3_6",
+      "source": "docs_wiki_manual_page_4_nvidia_nim_image_generation",
       "target": "docs_wiki_manual_the_designer_image_pipeline"
     },
     {
@@ -11096,7 +11348,7 @@
       "source_location": "L128",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_6_technical_configuration_v3_11_0",
+      "source": "docs_wiki_manual_page_6_technical_configuration",
       "target": "docs_wiki_manual_environment_secrets"
     },
     {
@@ -11106,7 +11358,7 @@
       "source_location": "L144",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_6_technical_configuration_v3_11_0",
+      "source": "docs_wiki_manual_page_6_technical_configuration",
       "target": "docs_wiki_manual_hardening_event_loop_optimization"
     },
     {
@@ -11136,7 +11388,7 @@
       "source_location": "L183",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_8_3_tier_state_resilience_v3_8_0",
+      "source": "docs_wiki_manual_page_8_3_tier_state_resilience",
       "target": "docs_wiki_manual_the_recovery_sequence"
     },
     {
@@ -11146,7 +11398,7 @@
       "source_location": "L199",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_9_automated_quality_control_v3_6_5",
+      "source": "docs_wiki_manual_page_9_automated_quality_control",
       "target": "docs_wiki_manual_running_automated_tests"
     },
     {
@@ -11156,7 +11408,7 @@
       "source_location": "L193",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_9_automated_quality_control_v3_6_5",
+      "source": "docs_wiki_manual_page_9_automated_quality_control",
       "target": "docs_wiki_manual_the_test_layers"
     },
     {
@@ -11166,7 +11418,7 @@
       "source_location": "L210",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_10_the_natural_vibe_engine_v3_7_0",
+      "source": "docs_wiki_manual_page_10_the_natural_vibe_engine",
       "target": "docs_wiki_manual_1_the_editorial_pulse_stylistic_memory"
     },
     {
@@ -11176,7 +11428,7 @@
       "source_location": "L221",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_10_the_natural_vibe_engine_v3_7_0",
+      "source": "docs_wiki_manual_page_10_the_natural_vibe_engine",
       "target": "docs_wiki_manual_2_high_resolution_temporal_intelligence"
     },
     {
@@ -11186,7 +11438,7 @@
       "source_location": "L229",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_10_the_natural_vibe_engine_v3_7_0",
+      "source": "docs_wiki_manual_page_10_the_natural_vibe_engine",
       "target": "docs_wiki_manual_3_manual_intercept_mode"
     },
     {
@@ -11236,7 +11488,7 @@
       "source_location": "L291",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_13_feed_vanguard_automation_v3_8_2",
+      "source": "docs_wiki_manual_page_13_feed_vanguard_automation",
       "target": "docs_wiki_manual_curation_feed_network_32_validated_feeds"
     },
     {
@@ -11246,7 +11498,7 @@
       "source_location": "L273",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_13_feed_vanguard_automation_v3_8_2",
+      "source": "docs_wiki_manual_page_13_feed_vanguard_automation",
       "target": "docs_wiki_manual_the_auditing_logic"
     },
     {
@@ -11256,7 +11508,7 @@
       "source_location": "L279",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_13_feed_vanguard_automation_v3_8_2",
+      "source": "docs_wiki_manual_page_13_feed_vanguard_automation",
       "target": "docs_wiki_manual_the_soft_disable_strategy"
     },
     {
@@ -11306,7 +11558,7 @@
       "source_location": "L368",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0",
+      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments",
       "target": "docs_wiki_manual_configuration"
     },
     {
@@ -11316,7 +11568,7 @@
       "source_location": "L353",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0",
+      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments",
       "target": "docs_wiki_manual_conversational_persona_prompts"
     },
     {
@@ -11326,7 +11578,7 @@
       "source_location": "L339",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0",
+      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments",
       "target": "docs_wiki_manual_core_architecture"
     },
     {
@@ -11336,7 +11588,7 @@
       "source_location": "L377",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0",
+      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments",
       "target": "docs_wiki_manual_managing_feeds"
     },
     {
@@ -11346,7 +11598,7 @@
       "source_location": "L363",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0",
+      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments",
       "target": "docs_wiki_manual_security_anti_spam"
     },
     {
@@ -11356,7 +11608,7 @@
       "source_location": "L348",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments_v3_11_0",
+      "source": "docs_wiki_manual_page_14_interaction_engine_mention_replies_comments",
       "target": "docs_wiki_manual_token_cost_optimization"
     },
     {
@@ -11402,12 +11654,52 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L416",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_0",
+      "target": "docs_wiki_manual_1_interactive_telegram_gateway_approval_queue"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L424",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_0",
+      "target": "docs_wiki_manual_2_screen_reader_multimodal_alt_text"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L430",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_0",
+      "target": "docs_wiki_manual_3_cultural_hashtag_alignment"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "pr_description.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pr_description",
-      "target": "pr_description_pr_description_refactored_state_persistence_hardened_humanization_prompts_v3_11_1",
-      "confidence_score": 1.0
+      "target": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pr_description.md",
+      "source_location": "L22",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management",
+      "target": "pr_description_compliance_with_agents_md_rules"
     },
     {
       "relation": "contains",
@@ -11415,19 +11707,9 @@
       "source_file": "pr_description.md",
       "source_location": "L5",
       "weight": 1.0,
-      "source": "pr_description_pr_description_refactored_state_persistence_hardened_humanization_prompts_v3_11_1",
-      "target": "pr_description_key_updates",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "pr_description.md",
-      "source_location": "L28",
-      "weight": 1.0,
-      "source": "pr_description_pr_description_refactored_state_persistence_hardened_humanization_prompts_v3_11_1",
-      "target": "pr_description_verification_testing",
-      "confidence_score": 1.0
+      "confidence_score": 1.0,
+      "source": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management",
+      "target": "pr_description_proposed_upgrades"
     },
     {
       "relation": "contains",
@@ -11435,289 +11717,69 @@
       "source_file": "pr_description.md",
       "source_location": "L7",
       "weight": 1.0,
-      "source": "pr_description_key_updates",
-      "target": "pr_description_1_refactored_json_state_persistence",
-      "confidence_score": 1.0
+      "confidence_score": 1.0,
+      "source": "pr_description_proposed_upgrades",
+      "target": "pr_description_1_telegram_control_approval_queue"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "pr_description.md",
-      "source_location": "L13",
-      "weight": 1.0,
-      "source": "pr_description_key_updates",
-      "target": "pr_description_2_precompiled_regular_expressions",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "pr_description.md",
-      "source_location": "L16",
-      "weight": 1.0,
-      "source": "pr_description_key_updates",
-      "target": "pr_description_3_hardened_humanization_short_form_prompts",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "pr_description.md",
-      "source_location": "L25",
-      "weight": 1.0,
-      "source": "pr_description_key_updates",
-      "target": "pr_description_4_repository_cleanup",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L1",
+      "source_location": "L11",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "scratch_issue1_body",
-      "target": "scratch_issue1_body_description"
+      "source": "pr_description_proposed_upgrades",
+      "target": "pr_description_2_screen_reader_multimodal_alt_text"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body.md",
+      "source_file": "pr_description.md",
       "source_location": "L14",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "scratch_issue1_body",
-      "target": "scratch_issue1_body_proposed_fix"
+      "source": "pr_description_proposed_upgrades",
+      "target": "pr_description_3_per_platform_hashtags"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L11",
+      "source_file": "pr_description.md",
+      "source_location": "L17",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "scratch_issue1_body",
-      "target": "scratch_issue1_body_root_cause"
+      "source": "pr_description_proposed_upgrades",
+      "target": "pr_description_4_side_effect_free_dry_run"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue1_body",
-      "target": "scratch_issue1_body_traceback"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue1_body_v2",
-      "target": "scratch_issue1_body_v2_description"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L14",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue1_body_v2",
-      "target": "scratch_issue1_body_v2_proposed_fix"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue1_body_v2",
-      "target": "scratch_issue1_body_v2_root_cause"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue1_body_v2.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue1_body_v2",
-      "target": "scratch_issue1_body_v2_traceback"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue2_body.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue2_body",
-      "target": "scratch_issue2_body_actions_affected"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue2_body.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue2_body",
-      "target": "scratch_issue2_body_description"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue2_body.md",
-      "source_location": "L10",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue2_body",
-      "target": "scratch_issue2_body_proposed_fix"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue7_body.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue7_body",
-      "target": "scratch_issue7_body_description"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue7_body.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue7_body",
-      "target": "scratch_issue7_body_goal"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue8_body.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue8_body",
-      "target": "scratch_issue8_body_description"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue8_body.md",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue8_body",
-      "target": "scratch_issue8_body_goal"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L18",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_actual_behavior"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_expected_behavior"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L36",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_impact"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L40",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_labels_suggested"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L31",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_reproduction_operational"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L27",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_suggested_fix_no_code_changes_in_this_issue"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L3",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_summary"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_where"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch/issue_flux_nvidia_fallback_model_id.md",
+      "source_file": "pr_description.md",
       "source_location": "L24",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "scratch_issue_flux_nvidia_fallback_model_id_bug_nvidia_openai_compatible_fallback_rejects_shortened_flux_model_id",
-      "target": "scratch_issue_flux_nvidia_fallback_model_id_why_the_fallback_still_fails"
+      "source": "pr_description_compliance_with_agents_md_rules",
+      "target": "pr_description_1_what_was_deleted_or_simplified"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pr_description.md",
+      "source_location": "L28",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pr_description_compliance_with_agents_md_rules",
+      "target": "pr_description_2_why_the_simpler_version_is_safe"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pr_description.md",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pr_description_compliance_with_agents_md_rules",
+      "target": "pr_description_3_verification_tests_run"
     },
     {
       "relation": "semantically_similar_to",
@@ -11755,5 +11817,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "197d8ee858716a501575c075f99c5194334762cf"
+  "built_at_commit": "619fe53c420653076ececab57fec95345594a4e4"
 }
