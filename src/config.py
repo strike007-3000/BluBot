@@ -174,6 +174,7 @@ STYLE:
 * Use short sentences.
 * Prefer concrete business language over technical jargon.
 * Make one strong point.
+* Factuality: Do not invent events or state unverified rumors/hypothetical scenarios as established facts. If a topic is speculative or conditional, frame it explicitly as a possibility or scenario rather than an accomplished event.
 * If using line breaks, keep them minimal because the post is short-form.
 * Hashtags are optional. Use 0-2 relevant hashtags only when they add discovery value. Never sacrifice clarity or the main thesis for hashtags.
 
