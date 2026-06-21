@@ -11,7 +11,7 @@ BluBot is designed to run in a self-hosted or automated environment (such as Git
 * **Personal Data:** We do not collect, store, or harvest any personal data, profiles, or contact details of end users.
 * **Credentials & Tokens:** Any access tokens, handles, or user IDs required to run the Bot (e.g., `BSKY_APP_PASSWORD`, `MASTODON_ACCESS_TOKEN`, `THREADS_ACCESS_TOKEN`, `TELEGRAM_BOT_TOKEN`) are stored securely as encrypted secrets in your own hosting platform (e.g., GitHub Secrets). The Bot never transmits these credentials to any party other than the official, respective platform API endpoints.
 * **Interaction Metadata:** If the Interaction Engine is enabled, the Bot reads notification and reply metadata (post IDs, author handles, and post text) from Bluesky, Mastodon, and Threads APIs solely to generate replies. Processed notification IDs are stored locally in `seen_interactions.json` (in your private repository) to prevent double-replies; no personal text is persisted.
-* **Telegram Messages:** If the Telegram gateway is enabled, the Bot reads the most recent messages in your private Telegram bot conversation (up to the last 50 updates) to check for `/topic` or `/curate` commands and to receive approval decisions. All message processing is scoped to the single authorized `TELEGRAM_USER_ID` and occurs entirely within your own Telegram Bot account. No message content is persisted or transmitted externally.
+* **Telegram Messages:** If the Telegram gateway is enabled, the Bot reads the most recent messages in your private Telegram bot conversation (up to the last 50 updates) to check for `/topic` or `/curate` commands and to receive approval decisions. All message processing is scoped to the single authorized `TELEGRAM_USER_ID`. Note: `/topic <keyword>` commands and text-regeneration feedback you send are forwarded to the Google Gemini API as part of the synthesis or editing prompt. No Telegram message content is stored locally or transmitted to any other party.
 
 ## 2. How We Use Data
 
@@ -30,7 +30,13 @@ The Bot accesses platform APIs solely to:
   - Mastodon API in accordance with your instance's terms of service.
   - Meta Threads API in accordance with [Meta Developer Policies](https://developers.facebook.com/policy/).
   - Telegram Bot API in accordance with Telegram's [Privacy Policy](https://telegram.org/privacy).
-* **Google Gemini / NVIDIA NIM:** Article summaries and image generation prompts are sent to the Google Gemini API and (optionally) the NVIDIA NIM API for AI inference. These requests contain only curated news text and no personal user data. Refer to [Google's Privacy Policy](https://policies.google.com/privacy) and [NVIDIA's Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/) for details on how they handle API request data.
+* **Google Gemini / NVIDIA NIM:** The following content is sent to the Google Gemini API as part of normal operation:
+  - Curated news article titles and summaries (for synthesis).
+  - Generated image prompts (for alt-text generation via Gemini Vision).
+  - `/topic` keywords and text-regeneration feedback from Telegram (when those features are used).
+  - When the Interaction Engine is enabled (`ENABLE_INTERACTIONS=true`, default), social mention and reply text — including the author's handle and post content — is sent to Gemini to generate a contextual reply.
+  
+  Image generation prompts are additionally sent to the NVIDIA NIM API (when `IMAGE_PROVIDER=nvidia`, the default). Refer to [Google's Privacy Policy](https://policies.google.com/privacy) and [NVIDIA's Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/) for details on how they handle API request data.
 
 ## 4. Data Retention
 
