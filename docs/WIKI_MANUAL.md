@@ -447,3 +447,11 @@ Hashtags are now toggleable per platform to fit their social norms:
 BluBot v3.13.1 introduces a safety fix for Threads media propagation:
 * **Threads Stale Media Prevention**: When a user regenerates or changes the post image via the Telegram approval gateway, the bot now automatically clears the stale crawled `image_url` property in the synthesis model. Since Threads uploads images by pulling from the provided URL, this prevents Threads from publishing the original crawled image after a user has approved a regenerated or edited image.
 
+---
+
+## 🚀 Page 19: Telegram Approval Queue Timeout Calibration (v3.13.2)
+
+BluBot v3.13.2 calibrates the Telegram approval queue timeout:
+* **Wall-Clock Time Polling**: The Telegram polling loop now uses real wall-clock time (`time.time()`) rather than iteration counts to track elapsed duration. This ensures that the polling timeout runs exactly for the configured timeframe (e.g. 5 minutes) regardless of network call durations or API request polling latency.
+
+

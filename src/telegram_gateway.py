@@ -114,13 +114,13 @@ async def send_draft_for_approval(
         # Start waiting/polling loop
         timeout_seconds = settings.telegram_timeout_minutes * 60
         poll_interval = 2
-        elapsed = 0
+        start_time = time.time()
 
         waiting_for_feedback = False
         feedback_prompt_id = None
 
         SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval or edits...")
-        while elapsed < timeout_seconds:
+        while (time.time() - start_time) < timeout_seconds:
             try:
                 updates = await bot.get_updates(offset=offset, timeout=1)
                 for update in updates:
@@ -348,7 +348,6 @@ async def send_draft_for_approval(
                 SafeLogger.warn(f"Telegram: Error checking updates: {e}")
 
             await asyncio.sleep(poll_interval)
-            elapsed += poll_interval
 
         # Timeout occurred: auto-post
         SafeLogger.info("Telegram: Approval timeout expired. Automatically publishing draft.")

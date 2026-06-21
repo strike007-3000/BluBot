@@ -36,7 +36,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "bot_update_status_dashboard_sync",
-      "community": 29,
+      "community": 1,
       "norm_label": "_update_status_dashboard_sync()"
     },
     {
@@ -196,7 +196,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "bot_rationale_49",
-      "community": 29,
+      "community": 1,
       "norm_label": "synchronous implementation of status.md update to be offloaded to thread."
     },
     {
@@ -276,7 +276,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_diagnostic",
-      "community": 27,
+      "community": 4,
       "norm_label": "diagnostic.py"
     },
     {
@@ -286,7 +286,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_diagnostic_test_scoring",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_scoring()"
     },
     {
@@ -296,7 +296,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "scripts_diagnostic_test_full_dry_run",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_full_dry_run()"
     },
     {
@@ -306,7 +306,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "scripts_diagnostic_main",
-      "community": 27,
+      "community": 4,
       "norm_label": "main()"
     },
     {
@@ -366,7 +366,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_update_config_keywords",
-      "community": 27,
+      "community": 3,
       "norm_label": "update_config_keywords.py"
     },
     {
@@ -376,7 +376,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_fetch_feed_headlines",
-      "community": 27,
+      "community": 3,
       "norm_label": "fetch_feed_headlines()"
     },
     {
@@ -386,7 +386,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_main",
-      "community": 27,
+      "community": 3,
       "norm_label": "main()"
     },
     {
@@ -396,7 +396,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_rationale_19",
-      "community": 27,
+      "community": 3,
       "norm_label": "fetches first 5 headlines from a single rss feed."
     },
     {
@@ -426,7 +426,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_broadcaster",
-      "community": 1,
+      "community": 11,
       "norm_label": "broadcaster.py"
     },
     {
@@ -436,7 +436,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_broadcaster_clean_hashtags_if_needed",
-      "community": 1,
+      "community": 11,
       "norm_label": "clean_hashtags_if_needed()"
     },
     {
@@ -446,7 +446,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_bluesky",
-      "community": 1,
+      "community": 11,
       "norm_label": "post_to_bluesky()"
     },
     {
@@ -456,7 +456,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_mastodon",
-      "community": 1,
+      "community": 11,
       "norm_label": "post_to_mastodon()"
     },
     {
@@ -466,7 +466,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_threads",
-      "community": 1,
+      "community": 11,
       "norm_label": "post_to_threads()"
     },
     {
@@ -516,7 +516,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_14",
-      "community": 1,
+      "community": 11,
       "norm_label": "helper to strip or format hashtags based on platform settings."
     },
     {
@@ -526,7 +526,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_24",
-      "community": 1,
+      "community": 11,
       "norm_label": "posts to bluesky with conditional multi-post threading (the weaver)."
     },
     {
@@ -536,7 +536,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_114",
-      "community": 1,
+      "community": 11,
       "norm_label": "posts to mastodon with conditional multi-post threading (the weaver)."
     },
     {
@@ -546,7 +546,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_165",
-      "community": 1,
+      "community": 11,
       "norm_label": "posts to threads with conditional multi-post threading (the weaver)."
     },
     {
@@ -596,7 +596,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_config",
-      "community": 27,
+      "community": 4,
       "norm_label": "config.py"
     },
     {
@@ -606,7 +606,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_config_get_version",
-      "community": 27,
+      "community": 4,
       "norm_label": "get_version()"
     },
     {
@@ -616,7 +616,7 @@
       "source_location": "L220",
       "_origin": "ast",
       "id": "src_config_validate_config",
-      "community": 27,
+      "community": 4,
       "norm_label": "validate_config()"
     },
     {
@@ -626,7 +626,7 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "src_config_validate_gemini_model_priority",
-      "community": 27,
+      "community": 4,
       "norm_label": "validate_gemini_model_priority()"
     },
     {
@@ -636,7 +636,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "src_config_rationale_221",
-      "community": 27,
+      "community": 4,
       "norm_label": "legacy wrapper for the new settings validation logic."
     },
     {
@@ -646,7 +646,7 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "src_config_rationale_226",
-      "community": 27,
+      "community": 4,
       "norm_label": "legacy wrapper for gemini model self-discovery."
     },
     {
@@ -786,7 +786,7 @@
       "source_location": "L441",
       "_origin": "ast",
       "id": "src_curator_generate_interactive_reply",
-      "community": 4,
+      "community": 1,
       "norm_label": "generate_interactive_reply()"
     },
     {
@@ -886,7 +886,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "src_curator_rationale_442",
-      "community": 4,
+      "community": 1,
       "norm_label": "generates an ai reply for a social mention, maintaining the sage persona."
     },
     {
@@ -906,7 +906,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager",
-      "community": 5,
+      "community": 1,
       "norm_label": "vanguardmanager"
     },
     {
@@ -916,7 +916,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_init",
-      "community": 5,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -926,7 +926,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_load_state",
-      "community": 5,
+      "community": 1,
       "norm_label": "._load_state()"
     },
     {
@@ -936,7 +936,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_save_state",
-      "community": 5,
+      "community": 1,
       "norm_label": "._save_state()"
     },
     {
@@ -1006,7 +1006,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_feed_vanguard_rationale_11",
-      "community": 5,
+      "community": 1,
       "norm_label": "manages rss feed health and identifies problematic sources for soft-disable."
     },
     {
@@ -1583,7 +1583,7 @@
       "label": "check_for_telegram_topic()",
       "file_type": "code",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L362",
+      "source_location": "L361",
       "_origin": "ast",
       "id": "src_telegram_gateway_check_for_telegram_topic",
       "community": 1,
@@ -1613,9 +1613,9 @@
       "label": "Checks if there's a recent /topic or /curate command sent by the authorized user",
       "file_type": "rationale",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L363",
+      "source_location": "L362",
       "_origin": "ast",
-      "id": "src_telegram_gateway_rationale_363",
+      "id": "src_telegram_gateway_rationale_362",
       "community": 1,
       "norm_label": "checks if there's a recent /topic or /curate command sent by the authorized user"
     },
@@ -1726,7 +1726,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_config",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_config.py"
     },
     {
@@ -1736,7 +1736,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "tests_test_config_test_validate_config_dry_run_injection",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_validate_config_dry_run_injection()"
     },
     {
@@ -1746,7 +1746,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "tests_test_config_test_validate_config_failure_in_production",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_validate_config_failure_in_production()"
     },
     {
@@ -1756,7 +1756,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "tests_test_config_test_gemini_priority_validation_ci_mode",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_gemini_priority_validation_ci_mode()"
     },
     {
@@ -1766,7 +1766,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "tests_test_config_test_validate_gemini_model_priority_pruning",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_validate_gemini_model_priority_pruning()"
     },
     {
@@ -1776,7 +1776,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "tests_test_config_test_get_version",
-      "community": 27,
+      "community": 4,
       "norm_label": "test_get_version()"
     },
     {
@@ -1786,7 +1786,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_config_rationale_6",
-      "community": 27,
+      "community": 4,
       "norm_label": "verify that missing config variables are injected with mocks in dry_run mode."
     },
     {
@@ -1796,7 +1796,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "tests_test_config_rationale_25",
-      "community": 27,
+      "community": 4,
       "norm_label": "verify that missing mandatory config causes failure in non-dry_run mode."
     },
     {
@@ -1806,7 +1806,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "tests_test_config_rationale_36",
-      "community": 27,
+      "community": 4,
       "norm_label": "verify that validation passes in ci mode without real api keys."
     },
     {
@@ -1816,7 +1816,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_config_rationale_41",
-      "community": 27,
+      "community": 4,
       "norm_label": "verify that validate_gemini_model_priority prunes model priority based on api li"
     },
     {
@@ -2486,7 +2486,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_utils_test_is_public_ip_validation",
-      "community": 11,
+      "community": 10,
       "norm_label": "test_is_public_ip_validation()"
     },
     {
@@ -2496,7 +2496,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "tests_test_utils_test_truncate_bytes_unicode",
-      "community": 13,
+      "community": 14,
       "norm_label": "test_truncate_bytes_unicode()"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "tests_test_utils_test_smart_split_edge_cases",
-      "community": 14,
+      "community": 11,
       "norm_label": "test_smart_split_edge_cases()"
     },
     {
@@ -2576,7 +2576,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_7",
-      "community": 11,
+      "community": 10,
       "norm_label": "verify that private and reserved ip addresses are correctly identified as non-pu"
     },
     {
@@ -2586,7 +2586,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_28",
-      "community": 13,
+      "community": 14,
       "norm_label": "verify that truncation doesn't break multi-byte unicode characters."
     },
     {
@@ -2646,7 +2646,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_utils_human_delay",
-      "community": 1,
+      "community": 11,
       "norm_label": "human_delay()"
     },
     {
@@ -2656,7 +2656,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_utils_retry_with_backoff",
-      "community": 4,
+      "community": 7,
       "norm_label": "retry_with_backoff()"
     },
     {
@@ -2816,7 +2816,7 @@
       "source_location": "L301",
       "_origin": "ast",
       "id": "src_utils_is_public_ip",
-      "community": 11,
+      "community": 10,
       "norm_label": "_is_public_ip()"
     },
     {
@@ -2826,7 +2826,7 @@
       "source_location": "L316",
       "_origin": "ast",
       "id": "src_utils_resolve_public_ip_candidates",
-      "community": 11,
+      "community": 10,
       "norm_label": "_resolve_public_ip_candidates()"
     },
     {
@@ -2856,7 +2856,7 @@
       "source_location": "L402",
       "_origin": "ast",
       "id": "src_utils_get_link_metadata",
-      "community": 1,
+      "community": 16,
       "norm_label": "get_link_metadata()"
     },
     {
@@ -2886,7 +2886,7 @@
       "source_location": "L481",
       "_origin": "ast",
       "id": "src_utils_truncate_bytes",
-      "community": 13,
+      "community": 14,
       "norm_label": "truncate_bytes()"
     },
     {
@@ -2906,7 +2906,7 @@
       "source_location": "L504",
       "_origin": "ast",
       "id": "src_utils_smart_split",
-      "community": 14,
+      "community": 11,
       "norm_label": "smart_split()"
     },
     {
@@ -2916,7 +2916,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_utils_rationale_33",
-      "community": 1,
+      "community": 11,
       "norm_label": "wait for a random duration to simulate human activity."
     },
     {
@@ -2926,7 +2926,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_utils_rationale_44",
-      "community": 4,
+      "community": 7,
       "norm_label": "decorator to retry an async function with exponential backoff and jitter."
     },
     {
@@ -3056,7 +3056,7 @@
       "source_location": "L302",
       "_origin": "ast",
       "id": "src_utils_rationale_302",
-      "community": 11,
+      "community": 10,
       "norm_label": "checks if an ip address is a routable public address."
     },
     {
@@ -3066,7 +3066,7 @@
       "source_location": "L317",
       "_origin": "ast",
       "id": "src_utils_rationale_317",
-      "community": 11,
+      "community": 10,
       "norm_label": "resolves a hostname and returns only public ip candidates."
     },
     {
@@ -3096,7 +3096,7 @@
       "source_location": "L403",
       "_origin": "ast",
       "id": "src_utils_rationale_403",
-      "community": 1,
+      "community": 16,
       "norm_label": "fetches high-fidelity metadata (og:image, description) from a url with ssrf prot"
     },
     {
@@ -3126,7 +3126,7 @@
       "source_location": "L482",
       "_origin": "ast",
       "id": "src_utils_rationale_482",
-      "community": 13,
+      "community": 14,
       "norm_label": "unicode-aware byte-level truncation to prevent bluesky index errors."
     },
     {
@@ -3146,7 +3146,7 @@
       "source_location": "L505",
       "_origin": "ast",
       "id": "src_utils_rationale_505",
-      "community": 14,
+      "community": 11,
       "norm_label": "splits text into chunks within the limit, prioritizing paragraph and sentence bo"
     },
     {
@@ -3726,7 +3726,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "docs_wiki_manual_page_4_nvidia_nim_image_generation",
-      "community": 25,
+      "community": 13,
       "norm_label": "\ud83c\udfa8 page 4: nvidia nim image generation"
     },
     {
@@ -3736,7 +3736,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "docs_wiki_manual_the_designer_image_pipeline",
-      "community": 25,
+      "community": 13,
       "norm_label": "the designer & image pipeline"
     },
     {
@@ -3946,7 +3946,7 @@
       "source_location": "L256",
       "_origin": "ast",
       "id": "docs_wiki_manual_page_12_system_telemetry_dashboards",
-      "community": 15,
+      "community": 25,
       "norm_label": "\ud83d\udcca page 12: system telemetry dashboards"
     },
     {
@@ -3956,7 +3956,7 @@
       "source_location": "L260",
       "_origin": "ast",
       "id": "docs_wiki_manual_the_status_md_advantage",
-      "community": 15,
+      "community": 25,
       "norm_label": "the status.md advantage"
     },
     {
@@ -4220,6 +4220,16 @@
       "norm_label": "\ud83d\ude80 page 18: threads media propagation hardening (v3.13.1)"
     },
     {
+      "label": "\ud83d\ude80 Page 19: Telegram Approval Queue Timeout Calibration (v3.13.2)",
+      "file_type": "document",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L452",
+      "_origin": "ast",
+      "id": "docs_wiki_manual_page_19_telegram_approval_queue_timeout_calibration_v3_13_2",
+      "community": 25,
+      "norm_label": "\ud83d\ude80 page 19: telegram approval queue timeout calibration (v3.13.2)"
+    },
+    {
       "label": "pr_description.md",
       "file_type": "document",
       "source_file": "pr_description.md",
@@ -4230,14 +4240,14 @@
       "norm_label": "pr_description.md"
     },
     {
-      "label": "\ud83d\ude80 PR v3.13.1: Threads Media Propagation and Stale Image Prevention",
+      "label": "\ud83d\ude80 PR v3.13.2: Telegram Approval Queue Timeout Calibration",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention",
+      "id": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
       "community": 12,
-      "norm_label": "\ud83d\ude80 pr v3.13.1: threads media propagation and stale image prevention"
+      "norm_label": "\ud83d\ude80 pr v3.13.2: telegram approval queue timeout calibration"
     },
     {
       "label": "Proposed Upgrades",
@@ -4250,14 +4260,14 @@
       "norm_label": "proposed upgrades"
     },
     {
-      "label": "\ud83d\udd04 1. Stale Image URL Clearing",
+      "label": "\ud83d\udd04 1. Wall-Clock Timeout Tracking",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L7",
       "_origin": "ast",
-      "id": "pr_description_1_stale_image_url_clearing",
+      "id": "pr_description_1_wall_clock_timeout_tracking",
       "community": 12,
-      "norm_label": "\ud83d\udd04 1. stale image url clearing"
+      "norm_label": "\ud83d\udd04 1. wall-clock timeout tracking"
     },
     {
       "label": "\ud83d\udee0\ufe0f Compliance with `AGENTS.md` Rules",
@@ -4478,7 +4488,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Multi-model failover and self-healing AI loop",
-      "community": 1,
+      "community": 11,
       "norm_label": "sage intelligence v3",
       "id": "sage_intelligence"
     },
@@ -4492,7 +4502,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Chains high-res news analysis into platform-native threads",
-      "community": 1,
+      "community": 11,
       "norm_label": "the weaver (conditional threading)",
       "id": "the_weaver"
     },
@@ -4548,7 +4558,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Replies to comments/mentions with persona-aligned logic",
-      "community": 1,
+      "community": 11,
       "norm_label": "interaction engine",
       "id": "interaction_engine"
     },
@@ -9790,9 +9800,9 @@
       "source_file": "src/telegram_gateway.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_telegram_gateway_rationale_10",
-      "target": "src_telegram_gateway_validate_text_limits",
-      "confidence_score": 1.0
+      "target": "src_telegram_gateway_validate_text_limits"
     },
     {
       "relation": "calls",
@@ -9833,9 +9843,9 @@
       "source_file": "src/telegram_gateway.py",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_telegram_gateway_rationale_57",
-      "target": "src_telegram_gateway_send_draft_for_approval",
-      "confidence_score": 1.0
+      "target": "src_telegram_gateway_send_draft_for_approval"
     },
     {
       "relation": "references",
@@ -9929,9 +9939,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L363",
+      "source_location": "L362",
       "weight": 1.0,
-      "source": "src_telegram_gateway_rationale_363",
+      "source": "src_telegram_gateway_rationale_362",
       "target": "src_telegram_gateway_check_for_telegram_topic",
       "confidence_score": 1.0
     },
@@ -12213,6 +12223,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L452",
+      "weight": 1.0,
+      "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
+      "target": "docs_wiki_manual_page_19_telegram_approval_queue_timeout_calibration_v3_13_2",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L7",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -12735,9 +12755,9 @@
       "source_file": "pr_description.md",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "pr_description",
-      "target": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention"
+      "target": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12745,9 +12765,9 @@
       "source_file": "pr_description.md",
       "source_location": "L13",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention",
-      "target": "pr_description_compliance_with_agents_md_rules"
+      "source": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
+      "target": "pr_description_compliance_with_agents_md_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12755,9 +12775,9 @@
       "source_file": "pr_description.md",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention",
-      "target": "pr_description_proposed_upgrades"
+      "source": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
+      "target": "pr_description_proposed_upgrades",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12765,9 +12785,9 @@
       "source_file": "pr_description.md",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "pr_description_proposed_upgrades",
-      "target": "pr_description_1_stale_image_url_clearing"
+      "target": "pr_description_1_wall_clock_timeout_tracking",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12835,5 +12855,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "543e2633d83e86c500fdad076056bee7ed9d81ec"
+  "built_at_commit": "b210ea80d603d6f7d016c2ce48ebaba95663bdce"
 }
