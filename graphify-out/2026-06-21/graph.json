@@ -366,7 +366,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_update_config_keywords",
-      "community": 3,
+      "community": 4,
       "norm_label": "update_config_keywords.py"
     },
     {
@@ -376,7 +376,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_fetch_feed_headlines",
-      "community": 3,
+      "community": 4,
       "norm_label": "fetch_feed_headlines()"
     },
     {
@@ -386,7 +386,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_main",
-      "community": 3,
+      "community": 4,
       "norm_label": "main()"
     },
     {
@@ -396,7 +396,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_rationale_19",
-      "community": 3,
+      "community": 4,
       "norm_label": "fetches first 5 headlines from a single rss feed."
     },
     {
@@ -906,7 +906,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager",
-      "community": 1,
+      "community": 5,
       "norm_label": "vanguardmanager"
     },
     {
@@ -916,7 +916,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_init",
-      "community": 1,
+      "community": 5,
       "norm_label": ".__init__()"
     },
     {
@@ -926,7 +926,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_load_state",
-      "community": 1,
+      "community": 5,
       "norm_label": "._load_state()"
     },
     {
@@ -936,7 +936,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_save_state",
-      "community": 1,
+      "community": 5,
       "norm_label": "._save_state()"
     },
     {
@@ -1006,7 +1006,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_feed_vanguard_rationale_11",
-      "community": 1,
+      "community": 5,
       "norm_label": "manages rss feed health and identifies problematic sources for soft-disable."
     },
     {
@@ -3946,7 +3946,7 @@
       "source_location": "L256",
       "_origin": "ast",
       "id": "docs_wiki_manual_page_12_system_telemetry_dashboards",
-      "community": 25,
+      "community": 15,
       "norm_label": "\ud83d\udcca page 12: system telemetry dashboards"
     },
     {
@@ -3956,7 +3956,7 @@
       "source_location": "L260",
       "_origin": "ast",
       "id": "docs_wiki_manual_the_status_md_advantage",
-      "community": 25,
+      "community": 15,
       "norm_label": "the status.md advantage"
     },
     {
@@ -4230,6 +4230,16 @@
       "norm_label": "\ud83d\ude80 page 19: telegram approval queue timeout calibration (v3.13.2)"
     },
     {
+      "label": "\ud83d\ude80 Page 20: Monotonic Time Tracking for Telegram Approval Timeout (v3.13.3)",
+      "file_type": "document",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L459",
+      "_origin": "ast",
+      "id": "docs_wiki_manual_page_20_monotonic_time_tracking_for_telegram_approval_timeout_v3_13_3",
+      "community": 25,
+      "norm_label": "\ud83d\ude80 page 20: monotonic time tracking for telegram approval timeout (v3.13.3)"
+    },
+    {
       "label": "pr_description.md",
       "file_type": "document",
       "source_file": "pr_description.md",
@@ -4240,14 +4250,14 @@
       "norm_label": "pr_description.md"
     },
     {
-      "label": "\ud83d\ude80 PR v3.13.2: Telegram Approval Queue Timeout Calibration",
+      "label": "\ud83d\ude80 PR v3.13.3: Monotonic Time Tracking for Telegram Approval Timeout",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
+      "id": "pr_description_pr_v3_13_3_monotonic_time_tracking_for_telegram_approval_timeout",
       "community": 12,
-      "norm_label": "\ud83d\ude80 pr v3.13.2: telegram approval queue timeout calibration"
+      "norm_label": "\ud83d\ude80 pr v3.13.3: monotonic time tracking for telegram approval timeout"
     },
     {
       "label": "Proposed Upgrades",
@@ -4260,14 +4270,14 @@
       "norm_label": "proposed upgrades"
     },
     {
-      "label": "\ud83d\udd04 1. Wall-Clock Timeout Tracking",
+      "label": "\ud83d\udd04 1. Monotonic Time Tracking",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L7",
       "_origin": "ast",
-      "id": "pr_description_1_wall_clock_timeout_tracking",
+      "id": "pr_description_1_monotonic_time_tracking",
       "community": 12,
-      "norm_label": "\ud83d\udd04 1. wall-clock timeout tracking"
+      "norm_label": "\ud83d\udd04 1. monotonic time tracking"
     },
     {
       "label": "\ud83d\udee0\ufe0f Compliance with `AGENTS.md` Rules",
@@ -9941,9 +9951,9 @@
       "source_file": "src/telegram_gateway.py",
       "source_location": "L362",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_telegram_gateway_rationale_362",
-      "target": "src_telegram_gateway_check_for_telegram_topic",
-      "confidence_score": 1.0
+      "target": "src_telegram_gateway_check_for_telegram_topic"
     },
     {
       "relation": "contains",
@@ -12225,9 +12235,9 @@
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L452",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_19_telegram_approval_queue_timeout_calibration_v3_13_2",
-      "confidence_score": 1.0
+      "target": "docs_wiki_manual_page_19_telegram_approval_queue_timeout_calibration_v3_13_2"
     },
     {
       "relation": "contains",
@@ -12238,6 +12248,16 @@
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
       "target": "docs_wiki_manual_page_1_the_sage_philosophy"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/WIKI_MANUAL.md",
+      "source_location": "L459",
+      "weight": 1.0,
+      "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
+      "target": "docs_wiki_manual_page_20_monotonic_time_tracking_for_telegram_approval_timeout_v3_13_3",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12756,7 +12776,7 @@
       "source_location": "L1",
       "weight": 1.0,
       "source": "pr_description",
-      "target": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
+      "target": "pr_description_pr_v3_13_3_monotonic_time_tracking_for_telegram_approval_timeout",
       "confidence_score": 1.0
     },
     {
@@ -12765,7 +12785,7 @@
       "source_file": "pr_description.md",
       "source_location": "L13",
       "weight": 1.0,
-      "source": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
+      "source": "pr_description_pr_v3_13_3_monotonic_time_tracking_for_telegram_approval_timeout",
       "target": "pr_description_compliance_with_agents_md_rules",
       "confidence_score": 1.0
     },
@@ -12775,7 +12795,7 @@
       "source_file": "pr_description.md",
       "source_location": "L5",
       "weight": 1.0,
-      "source": "pr_description_pr_v3_13_2_telegram_approval_queue_timeout_calibration",
+      "source": "pr_description_pr_v3_13_3_monotonic_time_tracking_for_telegram_approval_timeout",
       "target": "pr_description_proposed_upgrades",
       "confidence_score": 1.0
     },
@@ -12786,7 +12806,7 @@
       "source_location": "L7",
       "weight": 1.0,
       "source": "pr_description_proposed_upgrades",
-      "target": "pr_description_1_wall_clock_timeout_tracking",
+      "target": "pr_description_1_monotonic_time_tracking",
       "confidence_score": 1.0
     },
     {
@@ -12855,5 +12875,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "b210ea80d603d6f7d016c2ce48ebaba95663bdce"
+  "built_at_commit": "72bcc34977c1993c3ee80f6be6b00a86d930fce8"
 }
