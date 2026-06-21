@@ -782,9 +782,9 @@ On Friday mornings, the curation prompt automatically shifts. The bot appends a 
 
 ---
 
-## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.1)
+## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.2)
 
-BluBot v3.12.1 introduces three massive upgrades for manual intervention, accessibility, and platform culture alignment:
+BluBot v3.12.2 introduces three massive upgrades for manual intervention, accessibility, and platform culture alignment:
 
 ### 1. Interactive Telegram Gateway & Approval Queue
 You can control the bot directly from Telegram. The integration supports two key workflows:
@@ -792,6 +792,7 @@ You can control the bot directly from Telegram. The integration supports two key
   - **Wait-and-Poll**: The GitHub Action waits up to `TELEGRAM_TIMEOUT_MINUTES` (default: 5) for your choice.
   - **Auto-Post Fallback**: If you do not respond in time, the bot automatically posts the draft to avoid scheduling delays.
   - **Security Gate**: The bot only processes updates matching `TELEGRAM_USER_ID`.
+  - **Interactive Editing (v3.12.2)**: You can edit the draft inline by replying directly to the draft message with your new text, or sending a `/edit <new text>` command. The bot will validate the text length and warn you if it exceeds platform limits (Bluesky 300 chars, Mastodon/Threads 500 chars). Once you approve the updated preview, the edited text is broadcasted.
 * **On-Demand Topic Curation**: Send `/topic <your_keyword>` or `/curate <your_keyword>` to your Telegram bot. When the GHA runner starts, it performs a real-time keyword search against all active RSS feeds:
   - **RSS Grounding**: If matching articles are found (e.g. searching "Cursor" matches the SpaceX-Cursor deal), the bot curates and synthesizes directly from the actual news articles (preserving original links/facts) rather than relying on stale parametric knowledge.
   - **Raw Curation Fallback**: If no matching articles are found in your RSS feeds, the bot gracefully falls back to raw synthesis from scratch.

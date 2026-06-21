@@ -5,20 +5,61 @@ from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from src.settings import settings
 from src.utils import SafeLogger
 
-async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None) -> bool:
+def validate_text_limits(text: str) -> Optional[str]:
+    """
+    Validates text length against platform limits and returns a warning or info string if limits are exceeded.
+    """
+    bsky_single = settings.bluesky_limit
+    mastodon_single = settings.mastodon_limit
+    threads_single = settings.threads_limit
+
+    bsky_max = (settings.bluesky_limit - 10) * settings.max_thread_parts
+    mastodon_max = (settings.mastodon_limit - 15) * settings.max_thread_parts
+    threads_max = (settings.threads_limit - 10) * settings.max_thread_parts
+
+    length = len(text)
+    warnings = []
+
+    # Check truncation limits
+    if length > bsky_max:
+        warnings.append(f"Bluesky max limit is {bsky_max} chars (with {settings.max_thread_parts} parts). Your draft is {length} chars and will be truncated.")
+    if length > mastodon_max:
+        warnings.append(f"Mastodon max limit is {mastodon_max} chars (with {settings.max_thread_parts} parts). Your draft is {length} chars and will be truncated.")
+    if length > threads_max:
+        warnings.append(f"Threads max limit is {threads_max} chars (with {settings.max_thread_parts} parts). Your draft is {length} chars and will be truncated.")
+
+    if warnings:
+        return "⚠️ **Warning**:\n" + "\n".join([f"- {w}" for w in warnings])
+
+    # Check thread splitting
+    thread_infos = []
+    if length > bsky_single:
+        thread_infos.append(f"Bluesky (limit {bsky_single})")
+    if length > mastodon_single:
+        thread_infos.append(f"Mastodon (limit {mastodon_single})")
+    if length > threads_single:
+        thread_infos.append(f"Threads (limit {threads_single})")
+
+    if thread_infos:
+        return f"ℹ️ *Note: This text is long ({length} chars) and will be split into a thread for: " + ", ".join(thread_infos) + ".*"
+
+    return None
+
+async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None) -> Optional[str]:
     """
     Sends the generated post draft and image to Telegram for approval.
-    Waits up to settings.telegram_timeout_minutes (default 5) for user callback.
-    If the timeout expires, defaults to True (approve) and posts.
+    Waits up to settings.telegram_timeout_minutes (default 5) for user callback or text reply.
+    If the timeout expires, defaults to the current text and posts.
+    Returns the approved/edited text, or None if rejected.
     """
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
-        return True
+        return text
 
     # Do not request approval in dry-run mode
     if settings.is_dry_run:
         SafeLogger.info("Telegram: DRY_RUN enabled. Skipping approval message dispatch.")
-        return True
+        return text
 
     try:
         bot = Bot(token=settings.telegram_bot_token)
@@ -62,12 +103,14 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
         poll_interval = 2
         elapsed = 0
 
-        SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval...")
+        SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval or edits...")
         while elapsed < timeout_seconds:
             try:
                 updates = await bot.get_updates(offset=offset, timeout=1)
                 for update in updates:
                     offset = update.update_id + 1
+                    
+                    # Handle callback query (Approve/Reject buttons)
                     if update.callback_query:
                         query = update.callback_query
                         
@@ -83,12 +126,70 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
                                 SafeLogger.info("Telegram: User approved draft.")
                                 await query.answer("Draft approved! Publishing...")
                                 await bot.send_message(chat_id=chat_id, text="🚀 Approved. Posting to platforms...")
-                                return True
+                                return text
                             elif action == "reject":
                                 SafeLogger.info("Telegram: User rejected draft.")
                                 await query.answer("Draft rejected.")
                                 await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
-                                return False
+                                return None
+
+                    # Handle incoming text messages (direct edits or replies)
+                    elif update.message and update.message.text:
+                        msg = update.message
+                        
+                        # Validate sender matches settings.telegram_user_id
+                        if str(msg.from_user.id) != str(chat_id):
+                            continue
+
+                        new_text = None
+                        is_edit = False
+
+                        # Check for /edit command or reply to the draft message
+                        if msg.text.startswith("/edit "):
+                            new_text = msg.text[6:].strip()
+                            is_edit = True
+                        elif msg.reply_to_message and msg.reply_to_message.message_id == sent_message.message_id:
+                            new_text = msg.text.strip()
+                            is_edit = True
+
+                        if is_edit and new_text:
+                            text = new_text
+                            SafeLogger.info(f"Telegram: Draft updated by user to: {text}")
+
+                            # Update the sent message with new draft text
+                            if image_bytes:
+                                await bot.edit_message_caption(
+                                    chat_id=chat_id,
+                                    message_id=sent_message.message_id,
+                                    caption=f"📝 **DRAFT POST**:\n\n{text}",
+                                    reply_markup=reply_markup,
+                                    parse_mode="Markdown"
+                                )
+                            else:
+                                await bot.edit_message_text(
+                                    chat_id=chat_id,
+                                    message_id=sent_message.message_id,
+                                    text=f"📝 **DRAFT POST**:\n\n{text}",
+                                    reply_markup=reply_markup,
+                                    parse_mode="Markdown"
+                                )
+
+                            # Validate limits and generate feedback message
+                            warning_msg = validate_text_limits(text)
+                            if warning_msg:
+                                await bot.send_message(
+                                    chat_id=chat_id,
+                                    text=warning_msg,
+                                    parse_mode="Markdown",
+                                    reply_to_message_id=msg.message_id
+                                )
+                            else:
+                                await bot.send_message(
+                                    chat_id=chat_id,
+                                    text="📝 Draft updated!",
+                                    reply_to_message_id=msg.message_id
+                                )
+
             except Exception as e:
                 # Silently catch network hiccups, but log warnings
                 SafeLogger.warn(f"Telegram: Error checking updates: {e}")
@@ -99,7 +200,7 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
         # Timeout occurred: auto-post
         SafeLogger.info("Telegram: Approval timeout expired. Automatically publishing draft.")
         await bot.send_message(chat_id=chat_id, text="🕒 Timeout expired. Automatically publishing draft.")
-        return True
+        return text
 
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
