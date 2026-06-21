@@ -1,35 +1,26 @@
-# 🚀 PR v3.12.2: Telegram Draft Editing via Reply and Character Limit Warnings
+# 🚀 PR v3.13.1: Threads Media Propagation and Stale Image Prevention
 
-This PR introduces interactive draft editing via Telegram replies or command intercept, accompanied by real-time character limit validation and platform-specific warnings.
+This PR fixes a bug where the stale crawled `synthesis.image_url` was preserved even after regenerating or editing the image via the Telegram approval gateway. This led to Threads broadcasting the original crawled image rather than the approved/regenerated media.
 
 ## Proposed Upgrades
 
-### 🎮 1. Interactive Telegram Draft Editing
-- **Reply Intercept**: Intercepts user replies to the sent draft message in Telegram. It updates the draft preview dynamically so that you can see the latest text version with active `[✅ Approve]` and `[❌ Reject]` buttons.
-- **`/edit` Command**: Allows sending `/edit <new text>` directly to modify the active draft.
-- **Zero-State Regression**: Returning `Optional[str]` from `send_draft_for_approval` cleanly integrates with the main execution pipeline, replacing the synthesized content with the approved edit.
-
-### ⚠️ 2. Character Limit Validation & Warnings
-- **Dynamic Limit Calculation**: Checks the updated draft length against the single-post and multi-post limits of Bluesky, Mastodon, and Threads.
-- **Split Warning**: Warns the user if the text is long and will be split into a multi-part thread.
-- **Truncation Warning**: Alerts the user if the text length exceeds the thread limit (e.g. 580 characters for Bluesky) to prevent silent truncation.
+### 🔄 1. Stale Image URL Clearing
+- When the final approved image bytes (`final_image`) differ from the original synthesis image bytes (`synthesis.image_data`), the bot now automatically clears `synthesis.image_url` (setting it to `None`).
+- This ensures the broadcaster (`post_to_threads`) does not attempt to post the stale original image to Threads.
 
 ---
 
 ## 🛠️ Compliance with `AGENTS.md` Rules
 
 ### 1. What was Deleted or Simplified
-- Removed boolean return constraints from `send_draft_for_approval`. Returning the final string directly simplifies the execution logic and avoids having to maintain external mutable state for drafts.
+- Simplified the state management of the synthesis dataclass replacement inside `bot.py` during approval. Rather than needing a complex image-upload pipeline, we clear the stale image URL to prevent publishing incorrect or old media.
 
 ### 2. Why the Simpler Version is Safe
-- Inline updates polling with the official `python-telegram-bot` wrapper remains completely stateless and runs without persistent listener threads or open ports.
-- Fallback logic remains robust: if the runner times out or encounters network glitches, it automatically posts the latest approved/edited draft.
+- It is completely side-effect free. If the image is not regenerated, the original URL is preserved. If the image is changed, the URL is cleared, which is the correct and safe behavior to prevent posting stale content.
 
 ### 3. Verification & Tests Run
-- Added comprehensive unit tests in `src/tests/test_telegram_gateway.py` to cover:
-  - `test_validate_text_limits`: Verifies correct warning/note logic for short, medium, and long texts.
-  - `test_send_draft_for_approval_approve`: Verifies approvals return the correct text.
-  - `test_send_draft_for_approval_reject`: Verifies rejections return `None`.
-  - `test_send_draft_for_approval_edit_by_reply`: Verifies replies update the draft message and return the updated text.
-- Ran **44 tests successfully** using `pytest`.
-- Ran `python bot.py --dry-run` to verify end-to-end pipeline compatibility.
+- Added comprehensive unit tests in [test_telegram_propagation.py](file:///d:/Code/BlueSky/src/tests/test_telegram_propagation.py):
+  - `test_telegram_approval_image_url_propagation_changed`: Verifies that `image_url` is set to `None` if the approved image differs from the original.
+  - `test_telegram_approval_image_url_propagation_unchanged`: Verifies that `image_url` is preserved if the approved image remains unchanged.
+- Ran **48 tests successfully** using `pytest`.
+- Ran `python bot.py --dry-run` to verify end-to-end integration and dry-run safety.
