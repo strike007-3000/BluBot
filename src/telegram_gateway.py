@@ -9,13 +9,13 @@ def validate_text_limits(text: str) -> Optional[str]:
     """
     Validates text length against platform limits and returns a warning or info string if limits are exceeded.
     """
-    bsky_single = settings.bluesky_limit
-    mastodon_single = settings.mastodon_limit
-    threads_single = settings.threads_limit
+    bsky_single = settings.bluesky_limit - 10
+    mastodon_single = settings.mastodon_limit - 15
+    threads_single = settings.threads_limit - 10
 
-    bsky_max = (settings.bluesky_limit - 10) * settings.max_thread_parts
-    mastodon_max = (settings.mastodon_limit - 15) * settings.max_thread_parts
-    threads_max = (settings.threads_limit - 10) * settings.max_thread_parts
+    bsky_max = bsky_single * settings.max_thread_parts
+    mastodon_max = mastodon_single * settings.max_thread_parts
+    threads_max = threads_single * settings.max_thread_parts
 
     length = len(text)
     warnings = []
@@ -153,15 +153,12 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
                             is_edit = True
 
                         if is_edit and new_text:
-                            text = new_text
-                            SafeLogger.info(f"Telegram: Draft updated by user to: {text}")
-
-                            # Update the sent message with new draft text
+                            # Update the sent message with new draft text first (before committing)
                             if image_bytes:
                                 await bot.edit_message_caption(
                                     chat_id=chat_id,
                                     message_id=sent_message.message_id,
-                                    caption=f"📝 **DRAFT POST**:\n\n{text}",
+                                    caption=f"📝 **DRAFT POST**:\n\n{new_text}",
                                     reply_markup=reply_markup,
                                     parse_mode="Markdown"
                                 )
@@ -169,10 +166,14 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
                                 await bot.edit_message_text(
                                     chat_id=chat_id,
                                     message_id=sent_message.message_id,
-                                    text=f"📝 **DRAFT POST**:\n\n{text}",
+                                    text=f"📝 **DRAFT POST**:\n\n{new_text}",
                                     reply_markup=reply_markup,
                                     parse_mode="Markdown"
                                 )
+
+                            # Only update the stored text if the Telegram API update succeeded
+                            text = new_text
+                            SafeLogger.info(f"Telegram: Draft updated by user to: {text}")
 
                             # Validate limits and generate feedback message
                             warning_msg = validate_text_limits(text)
@@ -204,7 +205,7 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
 
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
-        return True  # Fallback to True to maintain automated scheduling robustness
+        return text  # Fallback to current text to maintain automated scheduling robustness
 
 async def check_for_telegram_topic() -> Optional[str]:
     """
