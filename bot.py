@@ -511,14 +511,21 @@ async def main():
 
         # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
         if settings.enable_telegram_approval and not settings.is_dry_run:
-            final_content = await send_draft_for_approval(synthesis.content, synthesis.image_data)
+            final_content, final_image, final_alt = await send_draft_for_approval(
+                text=synthesis.content,
+                image_bytes=synthesis.image_data,
+                image_alt_text=synthesis.image_alt_text,
+                client=client,
+                genai_client=genai_client,
+                topic=synthesis.topic
+            )
             if final_content is None:
                 SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
                 return
             
-            # Update synthesis with approved/edited text
+            # Update synthesis with approved/edited text and media
             from dataclasses import replace
-            synthesis = replace(synthesis, content=final_content)
+            synthesis = replace(synthesis, content=final_content, image_data=final_image, image_alt_text=final_alt)
 
         # 3. Broadcast
         SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")

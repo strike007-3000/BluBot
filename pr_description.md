@@ -1,35 +1,32 @@
-# 🚀 PR v3.12.2: Telegram Draft Editing via Reply and Character Limit Warnings
+# 🚀 PR v3.13.0: Interactive Text & Image Regeneration from Telegram
 
-This PR introduces interactive draft editing via Telegram replies or command intercept, accompanied by real-time character limit validation and platform-specific warnings.
+This PR introduces real-time text and image regeneration capabilities directly inside the Telegram draft approval queue, allowing for rapid loop feedback and draft updates before broadcasting.
 
 ## Proposed Upgrades
 
-### 🎮 1. Interactive Telegram Draft Editing
-- **Reply Intercept**: Intercepts user replies to the sent draft message in Telegram. It updates the draft preview dynamically so that you can see the latest text version with active `[✅ Approve]` and `[❌ Reject]` buttons.
-- **`/edit` Command**: Allows sending `/edit <new text>` directly to modify the active draft.
-- **Zero-State Regression**: Returning `Optional[str]` from `send_draft_for_approval` cleanly integrates with the main execution pipeline, replacing the synthesized content with the approved edit.
+### 🔄 1. Interactive Text Curation Regeneration
+- **Feedback Loops**: User can click `[🔄 Regenerate Text]` and reply to the bot with custom editing instructions (e.g. "shorter", "make it more practical") or send `/skip` to trigger default regeneration.
+- **Dynamic Rewrite Engine**: Gemini rewrites the current draft inline based on the feedback hint, validating the new length constraints and updating the active inline buttons preview.
 
-### ⚠️ 2. Character Limit Validation & Warnings
-- **Dynamic Limit Calculation**: Checks the updated draft length against the single-post and multi-post limits of Bluesky, Mastodon, and Threads.
-- **Split Warning**: Warns the user if the text is long and will be split into a multi-part thread.
-- **Truncation Warning**: Alerts the user if the text length exceeds the thread limit (e.g. 580 characters for Bluesky) to prevent silent truncation.
+### 🎨 2. Nvidia Image & Alt-Text Regeneration
+- **Visual Regeneration**: User can click `[🎨 Regenerate Image]` to automatically generate a new visual prompt based on the latest draft text.
+- **Nvidia SD3 NIM integration**: Fetches and downscales a new isometric image card under the 900KB Cap.
+- **Gemini Vision Alt-Text Sync**: Generates a new 100-character description for the updated card, which is then updated dynamically in the chat preview using Telegram's `edit_message_media` API.
 
 ---
 
 ## 🛠️ Compliance with `AGENTS.md` Rules
 
 ### 1. What was Deleted or Simplified
-- Removed boolean return constraints from `send_draft_for_approval`. Returning the final string directly simplifies the execution logic and avoids having to maintain external mutable state for drafts.
+- Unified `send_draft_for_approval` to return a `Tuple[Optional[str], Optional[bytes], Optional[str]]` containing the final text, image, and alt text. This simplifies the bot lifecycle by keeping all media assets stateless and mutable during the review loop.
 
 ### 2. Why the Simpler Version is Safe
-- Inline updates polling with the official `python-telegram-bot` wrapper remains completely stateless and runs without persistent listener threads or open ports.
-- Fallback logic remains robust: if the runner times out or encounters network glitches, it automatically posts the latest approved/edited draft.
+- Uses Telegram's standard `edit_message_media` and `edit_message_caption` APIs to modify existing preview messages, preserving active inline button sessions and avoiding infinite message spam.
+- In case of transient API errors, the outer catch block safely falls back to auto-posting the current draft instead of aborting.
 
 ### 3. Verification & Tests Run
-- Added comprehensive unit tests in `src/tests/test_telegram_gateway.py` to cover:
-  - `test_validate_text_limits`: Verifies correct warning/note logic for short, medium, and long texts.
-  - `test_send_draft_for_approval_approve`: Verifies approvals return the correct text.
-  - `test_send_draft_for_approval_reject`: Verifies rejections return `None`.
-  - `test_send_draft_for_approval_edit_by_reply`: Verifies replies update the draft message and return the updated text.
-- Ran **44 tests successfully** using `pytest`.
-- Ran `python bot.py --dry-run` to verify end-to-end pipeline compatibility.
+- Added comprehensive unit tests in [test_telegram_gateway.py](file:///d:/Code/BlueSky/src/tests/test_telegram_gateway.py):
+  - `test_send_draft_for_approval_regenerate_text`: Verifies text regeneration callback, feedback prompt reply matching, Gemini call integration, and limits warnings.
+  - `test_send_draft_for_approval_regenerate_image`: Verifies image regeneration callback, prompt calculation, image generation, alt-text generation, and media editing.
+- Ran **46 tests successfully** using `pytest`.
+- Ran `python bot.py --dry-run` to verify end-to-end integration and dry-run safety.
