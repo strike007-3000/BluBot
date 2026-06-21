@@ -1,6 +1,7 @@
 import asyncio
 import time
-from typing import Optional
+import httpx
+from typing import Optional, Tuple, Any
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from src.settings import settings
 from src.utils import SafeLogger
