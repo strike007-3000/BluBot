@@ -117,7 +117,7 @@ The Sage uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference 
 
 ## 🛰️ Page 5: Source Intelligence
 
-Scanning over **30 premium feeds**.
+Scanning exactly **32 premium feeds** across 4 tiers.
 - **Tier 1**: OpenAI, DeepMind, Anthropic, HuggingFace, Mistral.
 - **Hidden Gems**: ArXiv (CS.AI/LG), BAIR (Berkeley), SAIL (Stanford), NVIDIA Research.
 
@@ -130,16 +130,27 @@ Scanning over **30 premium feeds**.
 | :--- | :--- |
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
 | `NVIDIA_KEY` | NVIDIA Build API Key (for SD3) |
-| `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024) |
+| `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma models) |
 | `GEMINI_MODEL` | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
 | `BSKY_HANDLE` | Your Bluesky handle |
-| `BSKY_APP_PASSWORD` | BlueSky App Password |
+| `BSKY_APP_PASSWORD` | Bluesky App Password |
+| `MASTODON_ACCESS_TOKEN` | Your Mastodon Access Token |
+| `MASTODON_BASE_URL` | Your Mastodon Instance URL |
+| `THREADS_ACCESS_TOKEN` | Your Threads Long-Lived Access Token |
+| `THREADS_USER_ID` | Your Threads User ID |
 | `GIST_ID` | Private GitHub Gist ID |
 | `GIST_TOKEN` | GitHub Token with `gist` scope |
 | `IMAGE_PROVIDER` | `nvidia` (default) or `imagen` |
+| `TELEGRAM_BOT_TOKEN` | (Optional) Your Telegram Bot API Token |
+| `TELEGRAM_USER_ID` | (Optional) Your numeric Telegram User ID (for authentication) |
+| `TELEGRAM_TIMEOUT_MINUTES` | (Optional) Telegram polling timeout in minutes (default: `5`) |
+| `ENABLE_TELEGRAM_APPROVAL` | (Optional) Toggle Telegram draft approval (default: `true` if bot token set) |
 | `ENABLE_BSKY_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
+| `ENABLE_HASHTAGS_BSKY` | (Optional) Enable/disable hashtags on Bluesky (default: `false`) |
+| `ENABLE_HASHTAGS_MASTODON` | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
+| `ENABLE_HASHTAGS_THREADS` | (Optional) Enable/disable hashtags on Threads (default: `true`) |
 
 ### Hardening & Event-Loop Optimization
 - **Non-Blocking I/O**: File persistence (`load_seen_articles`/`save_seen_articles`, `load_seen_interactions`/`save_seen_interactions`, `load_session_string`/`save_session_string`), social media profile bio updates, status dashboard telemetry, and feed vanguard state tracking are completely offloaded to background worker threads via `asyncio.to_thread`. This guarantees that the core async event loop is never blocked during high-concurrency periods.
@@ -172,11 +183,6 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 
 ## 💾 Page 8: 3-Tier State Resilience
 
-- [Page 8: 3-Tier State Resilience](#-page-8-3-tier-state-resilience)
-- [Page 3: Reliability & The Fortress](#-page-3-reliability--the-fortress)
-- [Page 4: NVIDIA NIM Image Generation](#-page-4-nvidia-nim-image-generation)
-- [Page 14: Interaction Engine (Mention Replies & Comments)](#page-14-interaction-engine-mention-replies--comments)
-- [Page 15: Precision Threading (The Weaver Cap)](#-page-15-precision-threading-the-weaver-cap)
 
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
