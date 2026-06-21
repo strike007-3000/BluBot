@@ -1,36 +1,35 @@
-# 🚀 PR v3.12.0: Interactive Telegram Control, Alt Text, and Hashtag Management
+# 🚀 PR v3.12.2: Telegram Draft Editing via Reply and Character Limit Warnings
 
-This PR introduces interactive Telegram bot control (remote curating and approval queue), screen-reader multimodal alt-text generation, per-platform hashtag alignment, and a side-effect-free dry-run execution mode.
+This PR introduces interactive draft editing via Telegram replies or command intercept, accompanied by real-time character limit validation and platform-specific warnings.
 
 ## Proposed Upgrades
 
-### 🎮 1. Telegram Control & Approval Queue
-- **Wait-and-Poll Approval**: Intercepts the post pipeline to request manual review (`[✅ Approve]`, `[❌ Reject]`) via a Telegram message. Automatically posts on timeout (default 5 minutes) to avoid runner hang-ups.
-- **On-Demand Topic Curation**: Intercepts curation to fetch, score, and summarize a custom topic if a `/topic <keyword>` command is received from the authorized `TELEGRAM_USER_ID` within the last 15 minutes.
+### 🎮 1. Interactive Telegram Draft Editing
+- **Reply Intercept**: Intercepts user replies to the sent draft message in Telegram. It updates the draft preview dynamically so that you can see the latest text version with active `[✅ Approve]` and `[❌ Reject]` buttons.
+- **`/edit` Command**: Allows sending `/edit <new text>` directly to modify the active draft.
+- **Zero-State Regression**: Returning `Optional[str]` from `send_draft_for_approval` cleanly integrates with the main execution pipeline, replacing the synthesized content with the approved edit.
 
-### ♿ 2. Screen Reader Multimodal Alt-Text
-- Implemented `generate_image_alt_text` using Gemini Vision (`models/gemini-2.5-flash-lite`) to generate 100-character descriptions for all visual assets. Alt-text is attached to Mastodon and Threads uploads.
-
-### 🏷️ 3. Per-Platform Hashtags
-- Toggles hashtags per platform via settings (`ENABLE_HASHTAGS_BSKY=false` by default). Safely strips standalone hashtags and preserves inline keywords by stripping formatting characters.
-
-### 🛡️ 4. Side-Effect-Free Dry Run
-- The `--dry-run` flag bypasses all external broadcasts, state file persistence, and live AI API calls (substituting mock summaries and alt-text) to enable offline local diagnostics.
+### ⚠️ 2. Character Limit Validation & Warnings
+- **Dynamic Limit Calculation**: Checks the updated draft length against the single-post and multi-post limits of Bluesky, Mastodon, and Threads.
+- **Split Warning**: Warns the user if the text is long and will be split into a multi-part thread.
+- **Truncation Warning**: Alerts the user if the text length exceeds the thread limit (e.g. 580 characters for Bluesky) to prevent silent truncation.
 
 ---
 
 ## 🛠️ Compliance with `AGENTS.md` Rules
 
 ### 1. What was Deleted or Simplified
-- **Simplified Scopes in `src/curator.py`**: Removed local import statements for configuration parameters (`from .config import GEMINI_MODEL_PRIORITY`) that caused `UnboundLocalError` when accessed inside fallback functions.
-- **Bypassed Action Complexity**: Implemented inline Telegram updates polling instead of persistent webhook listeners, keeping the architecture extremely simple and fit for ephemeral CI runners.
+- Removed boolean return constraints from `send_draft_for_approval`. Returning the final string directly simplifies the execution logic and avoids having to maintain external mutable state for drafts.
 
 ### 2. Why the Simpler Version is Safe
-- Inline polling using the official `python-telegram-bot` wrapper avoids running persistent threads or opening network ports in GitHub Actions.
-- Local dry-run checks in `summarize_news`, `broadcast_stage`, and `persistence_stage` guarantee that runs executed with `--dry-run` are 100% side-effect-free, even with invalid API keys.
+- Inline updates polling with the official `python-telegram-bot` wrapper remains completely stateless and runs without persistent listener threads or open ports.
+- Fallback logic remains robust: if the runner times out or encounters network glitches, it automatically posts the latest approved/edited draft.
 
 ### 3. Verification & Tests Run
-- Added `test_dry_run_broadcaster_bypasses_real_posts` and `test_dry_run_persistence_does_not_save` to verify the new diagnostic flag.
-- Added `test_telegram_settings_defaults` to verify environment mapping.
-- Ran **37 tests successfully** using `pytest src/tests/`.
-- Ran `python bot.py --dry-run` to verify end-to-end telemetry and dry-run safety.
+- Added comprehensive unit tests in `src/tests/test_telegram_gateway.py` to cover:
+  - `test_validate_text_limits`: Verifies correct warning/note logic for short, medium, and long texts.
+  - `test_send_draft_for_approval_approve`: Verifies approvals return the correct text.
+  - `test_send_draft_for_approval_reject`: Verifies rejections return `None`.
+  - `test_send_draft_for_approval_edit_by_reply`: Verifies replies update the draft message and return the updated text.
+- Ran **44 tests successfully** using `pytest`.
+- Ran `python bot.py --dry-run` to verify end-to-end pipeline compatibility.
