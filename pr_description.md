@@ -1,23 +1,22 @@
-# 🚀 PR v3.13.2: Telegram Approval Queue Timeout Calibration
+# 🚀 PR v3.13.3: Monotonic Time Tracking for Telegram Approval Timeout
 
-This PR fixes a polling timeout drift issue in the Telegram approval gateway where network call latencies and long polling cause the actual wall-clock elapsed time to exceed the configured timeout (e.g. waiting 7.5 minutes instead of 5 minutes).
+This PR updates the Telegram approval queue polling loop to use monotonic time (`time.monotonic()`) instead of system time (`time.time()`). This protects the timeout duration from being affected by VMs resuming from sleep, NTP sync steps, or manual clock corrections.
 
 ## Proposed Upgrades
 
-### 🔄 1. Wall-Clock Timeout Tracking
-- Uses `time.time()` to measure exact wall-clock elapsed time instead of relying on loop iteration counts (`elapsed += poll_interval`).
-- Ensures the bot auto-posts exactly when the configured duration expires, preventing execution from being delayed.
+### 🔄 1. Monotonic Time Tracking
+- Replaced `time.time()` with `time.monotonic()` for elapsed timeout duration calculations in [telegram_gateway.py](file:///d:/Code/BlueSky/src/telegram_gateway.py).
+- Ensures exact timeout execution across all VM, container, and step-adjusted host environments.
 
 ---
 
 ## 🛠️ Compliance with `AGENTS.md` Rules
 
 ### 1. What was Deleted or Simplified
-- Removed the manual iteration-counting variable (`elapsed`) and its increments from the polling loop, simplifying timeout tracking by relying directly on standard library wall-clock calls.
+- Substituted the system-time dependency in the loop condition with a monotonic reference, maintaining the exact same logic structure but increasing time-tracking stability.
 
 ### 2. Why the Simpler Version is Safe
-- It uses standard epoch timestamp comparison, which is robust, resilient to network jitter, and has zero dependency changes.
+- `time.monotonic()` is Python's standard library feature specifically designed for elapsed duration tracking. It is unaffected by system clock adjustments.
 
 ### 3. Verification & Tests Run
 - Verified that all unit tests continue to pass (48/48 tests successful).
-- Ran a local simulated loop check to confirm exact exit time matching.

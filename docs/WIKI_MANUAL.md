@@ -454,4 +454,12 @@ BluBot v3.13.1 introduces a safety fix for Threads media propagation:
 BluBot v3.13.2 calibrates the Telegram approval queue timeout:
 * **Wall-Clock Time Polling**: The Telegram polling loop now uses real wall-clock time (`time.time()`) rather than iteration counts to track elapsed duration. This ensures that the polling timeout runs exactly for the configured timeframe (e.g. 5 minutes) regardless of network call durations or API request polling latency.
 
+---
+
+## 🚀 Page 20: Monotonic Time Tracking for Telegram Approval Timeout (v3.13.3)
+
+BluBot v3.13.3 introduces monotonic time tracking for the Telegram approval queue timeout:
+* **Monotonic Time Polling**: Replaced `time.time()` with `time.monotonic()` to track elapsed timeout duration. This makes the polling loop immune to system clock step changes (e.g. VM/container sleep resumes or NTP sync corrections) and ensures the configured timeout remains accurate under all environments.
+
+
 

@@ -149,7 +149,16 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.12.1 (Current)**: **RSS-Grounded Custom Topics**.
+- **v3.13.3 (Current)**: **Monotonic Time Approval Timeout**.
+    - 🕒 **Monotonic Polling**: Replaced standard system time checks with `time.monotonic()` in the Telegram polling loop to make the approval queue timeout robust against NTP updates and VM sleep resumes.
+- **v3.13.2**: **Telegram Timeout Calibration**.
+    - 🕒 **Wall-Clock Timeout**: Changed elapsed duration calculation from loop iteration counts to actual wall-clock elapsed time tracking to fix network long-polling delays that bloated the timeout.
+- **v3.13.1**: **Threads Media Propagation Fix**.
+    - 🖼️ **Stale URL Prevention**: Automatically clears the stale crawled `image_url` property from synthesis when the user regenerates or changes the post image via Telegram, preventing Threads from publishing outdated media.
+- **v3.13.0**: **Interactive Curation & Image Regeneration Loops**.
+    - 🔄 **Text Curation Feedback**: Allows users to request text regeneration (`[🔄 Regenerate Text]`) and supply custom editing instructions/feedback hints to Gemini.
+    - 🎨 **Image & Alt-Text Curation**: Allows users to regenerate cards (`[🎨 Regenerate Image]`) with NVIDIA NIM SD3, automatically syncing visual prompts, downscaling card bytes under 900KB, generating new alt-text via Gemini Vision, and updating the preview media.
+- **v3.12.1**: **RSS-Grounded Custom Topics**.
     - 🔍 **Real-Time Fact Grounding**: User-submitted Telegram topics are now run against the live RSS curation feeds. If keyword matches (e.g. "Cursor acquisition") are found, the bot curates and synthesizes directly from the actual news articles (preserving source links/facts) rather than relying on stale/hallucinated parametric knowledge. Bypasses to raw generation only if no matches exist.
 - **v3.12.0**: **Telegram Control, Alt-Text, and Hashtag Management**.
     - 🎮 **Telegram Control & Approval Queue**: Intercepts the post pipeline to request manual review (`[✅ Approve]`, `[❌ Reject]`) via a Telegram message. Automatically posts on timeout (default 5 minutes) to avoid runner hang-ups.
