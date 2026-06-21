@@ -8,7 +8,9 @@ from src.models import CurationResult, SynthesisResult, Article
 @pytest.mark.asyncio
 async def test_dry_run_broadcaster_bypasses_real_posts(monkeypatch):
     """Verify that broadcast_stage returns mock successes and does not post to APIs in dry-run."""
-    monkeypatch.setattr("src.settings.settings", Settings(gemini_key="mock", is_dry_run=True))
+    mock_settings = Settings(gemini_key="mock", is_dry_run=True)
+    monkeypatch.setattr("src.settings.settings", mock_settings)
+    monkeypatch.setattr("bot.settings", mock_settings)
     
     synthesis = SynthesisResult(
         content="Test content",
@@ -30,7 +32,9 @@ async def test_dry_run_broadcaster_bypasses_real_posts(monkeypatch):
 @pytest.mark.asyncio
 async def test_dry_run_persistence_does_not_save(monkeypatch, mocker):
     """Verify that persistence_stage skips saving files in dry-run mode."""
-    monkeypatch.setattr("src.settings.settings", Settings(gemini_key="mock", is_dry_run=True))
+    mock_settings = Settings(gemini_key="mock", is_dry_run=True)
+    monkeypatch.setattr("src.settings.settings", mock_settings)
+    monkeypatch.setattr("bot.settings", mock_settings)
     
     mock_save = mocker.patch("bot.save_seen_articles")
     mock_dashboard = mocker.patch("bot.update_status_dashboard")
