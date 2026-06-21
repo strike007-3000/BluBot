@@ -114,13 +114,13 @@ async def send_draft_for_approval(
         # Start waiting/polling loop
         timeout_seconds = settings.telegram_timeout_minutes * 60
         poll_interval = 2
-        start_time = time.time()
+        start_time = time.monotonic()
 
         waiting_for_feedback = False
         feedback_prompt_id = None
 
         SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval or edits...")
-        while (time.time() - start_time) < timeout_seconds:
+        while (time.monotonic() - start_time) < timeout_seconds:
             try:
                 updates = await bot.get_updates(offset=offset, timeout=1)
                 for update in updates:
