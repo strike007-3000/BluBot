@@ -9,7 +9,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 ## 🚀 Key Features
 
 - **Sage Intelligence v3 (Self-Healing AI)**: 
-    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`Gemini 3.1 Flash Lite`**, **`Gemma 4 31B/26B`**, **`Gemma 3 27B-IT`**) if the primary provider is saturated or fails validation.
+    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.1-flash-lite-preview`** → **`gemma-4-31b-it`** → **`gemma-4-26b-a4b-it`** → **`gemma-3-27b-it`** → **`gemini-2.5-flash-lite`**) if the primary provider is saturated or fails validation.
     - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
@@ -101,7 +101,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `TELEGRAM_USER_ID` | No | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | No | (Optional) Telegram polling timeout in minutes (default: `5`) |
 | `ENABLE_TELEGRAM_APPROVAL` | No | (Optional) Toggle Telegram draft approval (default: `true` if bot token set) |
-| `ENABLE_HASHTAGS_BSKY` | No | (Optional) Enable/disable hashtags on Bluesky (default: `false`) |
+| `ENABLE_HASHTAGS_BSKY` | No | (Optional) Enable/disable hashtags on Bluesky (default: `false` — hashtags stripped to keep Bluesky posts clean) |
 | `ENABLE_HASHTAGS_MASTODON` | No | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
 | `ENABLE_HASHTAGS_THREADS` | No | (Optional) Enable/disable hashtags on Threads (default: `true`) |
 
@@ -149,7 +149,12 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.13.3 (Current)**: **Monotonic Time Approval Timeout**.
+- **v3.13.4 (Current)**: **Documentation Sync Patch**.
+    - 📄 **SECURITY.md Overhaul**: Updated supported versions table to the current `3.13.x` line, bumped security baseline reference to `v3.13.3`, and expanded the hardening section with 4 new entries: Decompression Bomb DoS protection, Telegram impersonation gating, Zero-Duplicate Threads logic, and Resilient RSS parsing.
+    - 🔒 **PRIVACY.md Expansion**: Broadened privacy policy scope from Threads-only to all 4 platforms (Bluesky, Mastodon, Threads, Telegram). Added sections covering Interaction Engine metadata, Telegram message processing, Google Gemini/NVIDIA NIM data handling, and a full enumeration of all persisted state files.
+    - 📖 **WIKI_MANUAL.md Corrections**: Added 11 missing environment variables to the Page 6 secrets table (Mastodon, Threads, Telegram, Hashtag controls), corrected feed count from "over 30" to "exactly 32", removed stale broken anchor links from Page 8, and clarified the `THINKING_BUDGET` Gemma bypass note.
+    - 📋 **README.md Corrections**: Updated the model failover list to the exact model IDs from `config.py`, clarified the `ENABLE_HASHTAGS_BSKY` default description, and updated the testing section version reference to `v3.13.3`.
+- **v3.13.3**: **Monotonic Time Approval Timeout**.
     - 🕒 **Monotonic Polling**: Replaced standard system time checks with `time.monotonic()` in the Telegram polling loop to make the approval queue timeout robust against NTP updates and VM sleep resumes.
 - **v3.13.2**: **Telegram Timeout Calibration**.
     - 🕒 **Wall-Clock Timeout**: Changed elapsed duration calculation from loop iteration counts to actual wall-clock elapsed time tracking to fix network long-polling delays that bloated the timeout.
@@ -239,7 +244,7 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.6.5 features a dual-layer testing strategy:
+BluBot v3.13.3 features a dual-layer testing strategy:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:

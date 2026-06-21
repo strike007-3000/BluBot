@@ -4,11 +4,13 @@ We take the security of the BluBot ecosystem and the privacy of our automated po
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 3.2.x   | ✅ Active (v3.2)   |
-| 3.1.x   | ❌ Deprecated       |
-| < 3.0   | ❌ End of Life      |
+| Version | Supported |
+| ------- | --------- |
+| 3.13.x  | ✅ Active (Current) |
+| 3.12.x  | ✅ Security patches only |
+| 3.11.x  | ❌ Deprecated |
+| 3.10.x  | ❌ Deprecated |
+| < 3.10  | ❌ End of Life |
 
 ## Reporting a Vulnerability
 
@@ -21,11 +23,17 @@ Instead, please use the **GitHub "Private Vulnerability Reporting"** feature:
 
 Our team will respond within 48 hours to acknowledge your report and provide a timeline for resolution.
 
-## Current Security Baseline (v3.6.7)
+## Current Security Baseline (v3.13.3)
+
 The project is currently hardened against:
-- **SSRF Attacks**: metadata fetching is protected by DNS pinning and IP scoping (RFC 1918 blocking), with **automated regression tests** in the CI suite.
-- **Secret Leaks**: `SafeLogger` dynamically redacts API tokens and high-entropy strings from logs. Typed `Settings` ensure no raw environment variables are leaked into business logic.
-- **Dependency Exploits**: Core packages are locked to safe versions (resolving CWE-1100, etc.).
-- **Data Corruption**: Atomic state persistence via cross-platform **Advisory File Locking** (`fcntl`/`msvcrt`) and `.tmp` swap logic.
+
+- **SSRF Attacks**: Metadata fetching is protected by **DNS Pinning** and **IP Scoping** (RFC 1918 blocking), with automated regression tests in the CI suite (`src/tests/`).
+- **Secret Leaks**: `SafeLogger` dynamically redacts API tokens and high-entropy strings from all log outputs. The typed `Settings` singleton ensures no raw environment variables are leaked into business logic layers.
+- **Dependency Exploits**: Core packages are locked to safe versions via `pip-tools` with cryptographic hashes in `requirements.txt` (resolving CWE-1100 and supply chain risks). Dependabot is configured with version constraints to prevent unresolvable upgrade loops.
+- **Data Corruption**: Atomic state persistence via cross-platform **Advisory File Locking** and `.tmp` swap logic prevents race conditions during concurrent CI and local runs.
+- **Decompression Bomb DoS**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to prevent memory exhaustion attacks when fetching remote media.
+- **Telegram Impersonation**: The Telegram approval gateway validates all incoming callback queries and message updates against the configured `TELEGRAM_USER_ID`, silently discarding interactions from unauthorized senders.
+- **Zero-Duplicate Threads Logic**: A "Catch & Log" delivery model persists successfully broadcast post identifiers immediately on partial failure, preventing duplicate re-posts on subsequent runner restarts.
+- **Resilient RSS Parsing**: Parses raw bytes (`response.content`) with safe attribute lookups (`getattr(entry, 'link', None)`) to survive malformed XML without exposing the pipeline to injection risks.
 
 *Thank you for helping keep the Sage secure!*
