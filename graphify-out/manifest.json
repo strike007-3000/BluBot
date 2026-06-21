@@ -1,6 +1,6 @@
 {
   "bot.py": {
-    "mtime": 1782063117.2182188,
+    "mtime": 1782064524.4706912,
     "ast_hash": "4a4dc36351c1e60a26dfbd5bf25ba376",
     "semantic_hash": ""
   },
@@ -185,13 +185,13 @@
     "semantic_hash": ""
   },
   "docs/WIKI_MANUAL.md": {
-    "mtime": 1782063444.7057943,
-    "ast_hash": "e7d39656e8b74da8bcd9174e52b4a392",
+    "mtime": 1782071755.9860637,
+    "ast_hash": "180cabf1fd729ea9413057b302fb5e20",
     "semantic_hash": ""
   },
   "pr_description.md": {
-    "mtime": 1782063450.2553523,
-    "ast_hash": "36fd76153dc244d59c7b73e94bddac7a",
+    "mtime": 1782071764.872045,
+    "ast_hash": "192d50674fd1a6751d67bfc37d467515",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1782060875.785541,
-    "ast_hash": "adb6b79231b0f82e9612fd1008d93411",
+    "mtime": 1782064524.4676852,
+    "ast_hash": "d3be6a470cd191d3134ed2a7e962545c",
     "semantic_hash": ""
   },
   "scripts/test_telegram_setup.py": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/telegram_gateway.py": {
-    "mtime": 1782064171.6449566,
-    "ast_hash": "ae9c47c51bcb106ce2372467c824ddc9",
+    "mtime": 1782071715.0357873,
+    "ast_hash": "d610e47b6c1c1a8468b95331ce9864c0",
     "semantic_hash": ""
   },
   "src/tests/test_dry_run.py": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "src/tests/test_telegram_gateway.py": {
-    "mtime": 1782061144.634891,
-    "ast_hash": "af6c6a82bfd36f67802591b3e0d9dc59",
+    "mtime": 1782064524.5188785,
+    "ast_hash": "9f33ffa2a488685dfdf78d6cd0e0565b",
     "semantic_hash": ""
   },
   "src/tests/test_topic_grounding.py": {
@@ -230,13 +230,13 @@
     "semantic_hash": ""
   },
   "seen_interactions.json": {
-    "mtime": 1782064200.0380414,
+    "mtime": 1782071744.982587,
     "ast_hash": "d751713988987e9331980363e24189ce",
     "semantic_hash": ""
   },
   "src/tests/test_telegram_propagation.py": {
-    "mtime": 1782063334.1855454,
-    "ast_hash": "96fa8435fcd98881c57133d4578d906e",
+    "mtime": 1782064524.5198898,
+    "ast_hash": "b918b7210d46bf9709178f44391e961b",
     "semantic_hash": ""
   }
 }
