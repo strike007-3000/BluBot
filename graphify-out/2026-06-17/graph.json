@@ -26,7 +26,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "bot",
-      "community": 1,
+      "community": 3,
       "norm_label": "bot.py"
     },
     {
@@ -36,7 +36,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "bot_update_status_dashboard_sync",
-      "community": 29,
+      "community": 3,
       "norm_label": "_update_status_dashboard_sync()"
     },
     {
@@ -63,7 +63,7 @@
       "label": "curation_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L132",
+      "source_location": "L121",
       "_origin": "ast",
       "id": "bot_curation_stage",
       "community": 1,
@@ -73,7 +73,7 @@
       "label": "AsyncClient",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L132",
+      "source_location": "L121",
       "_origin": "ast",
       "id": "bot_py_asyncclient",
       "community": 1,
@@ -83,7 +83,7 @@
       "label": "CurationResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L132",
+      "source_location": "L121",
       "_origin": "ast",
       "id": "curationresult",
       "community": 1,
@@ -93,7 +93,7 @@
       "label": "synthesis_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L187",
+      "source_location": "L176",
       "_origin": "ast",
       "id": "bot_synthesis_stage",
       "community": 1,
@@ -103,7 +103,7 @@
       "label": "Client",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L187",
+      "source_location": "L176",
       "_origin": "ast",
       "id": "client",
       "community": 1,
@@ -113,7 +113,7 @@
       "label": "SynthesisResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L187",
+      "source_location": "L176",
       "_origin": "ast",
       "id": "synthesisresult",
       "community": 1,
@@ -123,7 +123,7 @@
       "label": "broadcast_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L283",
+      "source_location": "L272",
       "_origin": "ast",
       "id": "bot_broadcast_stage",
       "community": 1,
@@ -133,7 +133,7 @@
       "label": "BroadcastResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L283",
+      "source_location": "L272",
       "_origin": "ast",
       "id": "broadcastresult",
       "community": 1,
@@ -143,7 +143,7 @@
       "label": "Any",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L283",
+      "source_location": "L272",
       "_origin": "ast",
       "id": "bot_py_any",
       "community": 1,
@@ -153,7 +153,7 @@
       "label": "persistence_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L329",
+      "source_location": "L318",
       "_origin": "ast",
       "id": "bot_persistence_stage",
       "community": 1,
@@ -163,17 +163,17 @@
       "label": "interaction_stage()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L377",
+      "source_location": "L366",
       "_origin": "ast",
       "id": "bot_interaction_stage",
-      "community": 1,
+      "community": 3,
       "norm_label": "interaction_stage()"
     },
     {
       "label": "InteractionResult",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L377",
+      "source_location": "L366",
       "_origin": "ast",
       "id": "interactionresult",
       "community": 1,
@@ -183,7 +183,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "bot.py",
-      "source_location": "L480",
+      "source_location": "L469",
       "_origin": "ast",
       "id": "bot_main",
       "community": 1,
@@ -196,7 +196,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "bot_rationale_49",
-      "community": 29,
+      "community": 3,
       "norm_label": "synchronous implementation of status.md update to be offloaded to thread."
     },
     {
@@ -210,22 +210,22 @@
       "norm_label": "automatically update the status.md dashboard without blocking the event loop."
     },
     {
-      "label": "Returns True if all significant keywords from topic match (with inflections on w",
+      "label": "Returns True if all significant keywords from topic match (as prefix stems) the",
       "file_type": "rationale",
       "source_file": "bot.py",
       "source_location": "L90",
       "_origin": "ast",
       "id": "bot_rationale_90",
       "community": 1,
-      "norm_label": "returns true if all significant keywords from topic match (with inflections on w"
+      "norm_label": "returns true if all significant keywords from topic match (as prefix stems) the"
     },
     {
       "label": "Stage 1: Fetch and Score Raw News.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L133",
+      "source_location": "L122",
       "_origin": "ast",
-      "id": "bot_rationale_133",
+      "id": "bot_rationale_122",
       "community": 1,
       "norm_label": "stage 1: fetch and score raw news."
     },
@@ -233,9 +233,9 @@
       "label": "Stage 2: AI Summarization and Persona Application.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L188",
+      "source_location": "L177",
       "_origin": "ast",
-      "id": "bot_rationale_188",
+      "id": "bot_rationale_177",
       "community": 1,
       "norm_label": "stage 2: ai summarization and persona application."
     },
@@ -243,9 +243,9 @@
       "label": "Stage 3: Multi-platform delivery.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L284",
+      "source_location": "L273",
       "_origin": "ast",
-      "id": "bot_rationale_284",
+      "id": "bot_rationale_273",
       "community": 1,
       "norm_label": "stage 3: multi-platform delivery."
     },
@@ -253,9 +253,9 @@
       "label": "Stage 4: State Synchronization.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L330",
+      "source_location": "L319",
       "_origin": "ast",
-      "id": "bot_rationale_330",
+      "id": "bot_rationale_319",
       "community": 1,
       "norm_label": "stage 4: state synchronization."
     },
@@ -263,10 +263,10 @@
       "label": "Handles social interactions (mentions/replies) with humanized engagement.",
       "file_type": "rationale",
       "source_file": "bot.py",
-      "source_location": "L378",
+      "source_location": "L367",
       "_origin": "ast",
-      "id": "bot_rationale_378",
-      "community": 1,
+      "id": "bot_rationale_367",
+      "community": 3,
       "norm_label": "handles social interactions (mentions/replies) with humanized engagement."
     },
     {
@@ -276,7 +276,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_diagnostic",
-      "community": 27,
+      "community": 13,
       "norm_label": "diagnostic.py"
     },
     {
@@ -286,7 +286,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_diagnostic_test_scoring",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_scoring()"
     },
     {
@@ -296,7 +296,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "scripts_diagnostic_test_full_dry_run",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_full_dry_run()"
     },
     {
@@ -306,7 +306,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "scripts_diagnostic_main",
-      "community": 27,
+      "community": 13,
       "norm_label": "main()"
     },
     {
@@ -366,7 +366,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_update_config_keywords",
-      "community": 27,
+      "community": 13,
       "norm_label": "update_config_keywords.py"
     },
     {
@@ -376,7 +376,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_fetch_feed_headlines",
-      "community": 27,
+      "community": 13,
       "norm_label": "fetch_feed_headlines()"
     },
     {
@@ -386,7 +386,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_main",
-      "community": 27,
+      "community": 13,
       "norm_label": "main()"
     },
     {
@@ -396,7 +396,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_rationale_19",
-      "community": 27,
+      "community": 13,
       "norm_label": "fetches first 5 headlines from a single rss feed."
     },
     {
@@ -426,7 +426,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_broadcaster",
-      "community": 1,
+      "community": 15,
       "norm_label": "broadcaster.py"
     },
     {
@@ -436,7 +436,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_broadcaster_clean_hashtags_if_needed",
-      "community": 1,
+      "community": 15,
       "norm_label": "clean_hashtags_if_needed()"
     },
     {
@@ -446,7 +446,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_bluesky",
-      "community": 1,
+      "community": 15,
       "norm_label": "post_to_bluesky()"
     },
     {
@@ -456,7 +456,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_mastodon",
-      "community": 1,
+      "community": 15,
       "norm_label": "post_to_mastodon()"
     },
     {
@@ -466,7 +466,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_threads",
-      "community": 1,
+      "community": 15,
       "norm_label": "post_to_threads()"
     },
     {
@@ -476,7 +476,7 @@
       "source_location": "L233",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_bluesky_mentions",
-      "community": 1,
+      "community": 3,
       "norm_label": "fetch_bluesky_mentions()"
     },
     {
@@ -486,7 +486,7 @@
       "source_location": "L293",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_mastodon_mentions",
-      "community": 1,
+      "community": 3,
       "norm_label": "fetch_mastodon_mentions()"
     },
     {
@@ -496,7 +496,7 @@
       "source_location": "L344",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_threads_replies",
-      "community": 1,
+      "community": 3,
       "norm_label": "fetch_threads_replies()"
     },
     {
@@ -506,7 +506,7 @@
       "source_location": "L424",
       "_origin": "ast",
       "id": "src_broadcaster_update_social_profiles",
-      "community": 1,
+      "community": 15,
       "norm_label": "update_social_profiles()"
     },
     {
@@ -516,7 +516,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_14",
-      "community": 1,
+      "community": 15,
       "norm_label": "helper to strip or format hashtags based on platform settings."
     },
     {
@@ -526,7 +526,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_24",
-      "community": 1,
+      "community": 15,
       "norm_label": "posts to bluesky with conditional multi-post threading (the weaver)."
     },
     {
@@ -536,7 +536,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_114",
-      "community": 1,
+      "community": 15,
       "norm_label": "posts to mastodon with conditional multi-post threading (the weaver)."
     },
     {
@@ -546,7 +546,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_165",
-      "community": 1,
+      "community": 15,
       "norm_label": "posts to threads with conditional multi-post threading (the weaver)."
     },
     {
@@ -556,7 +556,7 @@
       "source_location": "L234",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_234",
-      "community": 1,
+      "community": 3,
       "norm_label": "fetches recent mentions and replies from bluesky within 24 hours."
     },
     {
@@ -566,7 +566,7 @@
       "source_location": "L294",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_294",
-      "community": 1,
+      "community": 3,
       "norm_label": "fetches recent mentions and replies from mastodon within 24 hours."
     },
     {
@@ -576,7 +576,7 @@
       "source_location": "L345",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_345",
-      "community": 1,
+      "community": 3,
       "norm_label": "fetches recent replies to threads posts within 24 hours."
     },
     {
@@ -586,7 +586,7 @@
       "source_location": "L425",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_425",
-      "community": 1,
+      "community": 15,
       "norm_label": "dynamically update social media bios with exciting telemetry."
     },
     {
@@ -596,7 +596,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_config",
-      "community": 27,
+      "community": 13,
       "norm_label": "config.py"
     },
     {
@@ -606,7 +606,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_config_get_version",
-      "community": 27,
+      "community": 13,
       "norm_label": "get_version()"
     },
     {
@@ -616,7 +616,7 @@
       "source_location": "L220",
       "_origin": "ast",
       "id": "src_config_validate_config",
-      "community": 27,
+      "community": 13,
       "norm_label": "validate_config()"
     },
     {
@@ -626,7 +626,7 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "src_config_validate_gemini_model_priority",
-      "community": 27,
+      "community": 13,
       "norm_label": "validate_gemini_model_priority()"
     },
     {
@@ -636,7 +636,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "src_config_rationale_221",
-      "community": 27,
+      "community": 13,
       "norm_label": "legacy wrapper for the new settings validation logic."
     },
     {
@@ -646,7 +646,7 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "src_config_rationale_226",
-      "community": 27,
+      "community": 13,
       "norm_label": "legacy wrapper for gemini model self-discovery."
     },
     {
@@ -686,7 +686,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "src_curator_fetch_news",
-      "community": 4,
+      "community": 13,
       "norm_label": "fetch_news()"
     },
     {
@@ -756,7 +756,7 @@
       "source_location": "L353",
       "_origin": "ast",
       "id": "src_curator_generate_visual_prompt",
-      "community": 3,
+      "community": 4,
       "norm_label": "generate_visual_prompt()"
     },
     {
@@ -766,7 +766,7 @@
       "source_location": "L363",
       "_origin": "ast",
       "id": "src_curator_generate_image_alt_text",
-      "community": 3,
+      "community": 4,
       "norm_label": "generate_image_alt_text()"
     },
     {
@@ -776,7 +776,7 @@
       "source_location": "L387",
       "_origin": "ast",
       "id": "src_curator_generate_nvidia_image",
-      "community": 3,
+      "community": 4,
       "norm_label": "generate_nvidia_image()"
     },
     {
@@ -786,7 +786,7 @@
       "source_location": "L441",
       "_origin": "ast",
       "id": "src_curator_generate_interactive_reply",
-      "community": 4,
+      "community": 3,
       "norm_label": "generate_interactive_reply()"
     },
     {
@@ -816,7 +816,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "src_curator_rationale_126",
-      "community": 4,
+      "community": 13,
       "norm_label": "orchestrates parallel fetching with consensus synergy and greedy diversity."
     },
     {
@@ -866,7 +866,7 @@
       "source_location": "L364",
       "_origin": "ast",
       "id": "src_curator_rationale_364",
-      "community": 3,
+      "community": 4,
       "norm_label": "generates screen-reader-friendly alt text for the generated image using gemini v"
     },
     {
@@ -876,7 +876,7 @@
       "source_location": "L388",
       "_origin": "ast",
       "id": "src_curator_rationale_388",
-      "community": 3,
+      "community": 4,
       "norm_label": "calls nvidia nim for sd3-medium image generation with robust response parsing."
     },
     {
@@ -886,7 +886,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "src_curator_rationale_442",
-      "community": 4,
+      "community": 3,
       "norm_label": "generates an ai reply for a social mention, maintaining the sage persona."
     },
     {
@@ -1446,7 +1446,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_settings_settings",
-      "community": 3,
+      "community": 4,
       "norm_label": "settings"
     },
     {
@@ -1456,7 +1456,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_settings_settings_from_env",
-      "community": 3,
+      "community": 4,
       "norm_label": ".from_env()"
     },
     {
@@ -1466,7 +1466,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_settings_settings_is_manual_run",
-      "community": 3,
+      "community": 4,
       "norm_label": ".is_manual_run()"
     },
     {
@@ -1476,7 +1476,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "src_settings_settings_should_bypass_rest",
-      "community": 3,
+      "community": 4,
       "norm_label": ".should_bypass_rest()"
     },
     {
@@ -1486,7 +1486,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "src_settings_settings_validate",
-      "community": 3,
+      "community": 4,
       "norm_label": ".validate()"
     },
     {
@@ -1496,7 +1496,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_settings_rationale_9",
-      "community": 3,
+      "community": 4,
       "norm_label": "centralized, typed configuration for blubot."
     },
     {
@@ -1506,7 +1506,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "src_settings_rationale_128",
-      "community": 3,
+      "community": 4,
       "norm_label": "determines if the current execution was manually triggered (persona logic)."
     },
     {
@@ -1516,7 +1516,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "src_settings_rationale_133",
-      "community": 3,
+      "community": 4,
       "norm_label": "determines if scheduling rest locks should be ignored (infrastructure logic)."
     },
     {
@@ -1526,7 +1526,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_settings_rationale_138",
-      "community": 3,
+      "community": 4,
       "norm_label": "validates critical settings and returns true if valid."
     },
     {
@@ -1540,72 +1540,32 @@
       "norm_label": "telegram_gateway.py"
     },
     {
-      "label": "validate_text_limits()",
-      "file_type": "code",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L9",
-      "_origin": "ast",
-      "id": "src_telegram_gateway_validate_text_limits",
-      "community": 3,
-      "norm_label": "validate_text_limits()"
-    },
-    {
       "label": "send_draft_for_approval()",
       "file_type": "code",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L49",
+      "source_location": "L8",
       "_origin": "ast",
       "id": "src_telegram_gateway_send_draft_for_approval",
       "community": 3,
       "norm_label": "send_draft_for_approval()"
     },
     {
-      "label": "AsyncClient",
-      "file_type": "code",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L49",
-      "_origin": "ast",
-      "id": "src_telegram_gateway_py_asyncclient",
-      "community": 3,
-      "norm_label": "asyncclient"
-    },
-    {
-      "label": "Any",
-      "file_type": "code",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L49",
-      "_origin": "ast",
-      "id": "src_telegram_gateway_py_any",
-      "community": 3,
-      "norm_label": "any"
-    },
-    {
       "label": "check_for_telegram_topic()",
       "file_type": "code",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L362",
+      "source_location": "L108",
       "_origin": "ast",
       "id": "src_telegram_gateway_check_for_telegram_topic",
-      "community": 1,
-      "norm_label": "check_for_telegram_topic()"
-    },
-    {
-      "label": "Validates text length against platform limits and returns a warning or info stri",
-      "file_type": "rationale",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L10",
-      "_origin": "ast",
-      "id": "src_telegram_gateway_rationale_10",
       "community": 3,
-      "norm_label": "validates text length against platform limits and returns a warning or info stri"
+      "norm_label": "check_for_telegram_topic()"
     },
     {
       "label": "Sends the generated post draft and image to Telegram for approval.     Waits up",
       "file_type": "rationale",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L57",
+      "source_location": "L9",
       "_origin": "ast",
-      "id": "src_telegram_gateway_rationale_57",
+      "id": "src_telegram_gateway_rationale_9",
       "community": 3,
       "norm_label": "sends the generated post draft and image to telegram for approval.     waits up"
     },
@@ -1613,10 +1573,10 @@
       "label": "Checks if there's a recent /topic or /curate command sent by the authorized user",
       "file_type": "rationale",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L363",
+      "source_location": "L109",
       "_origin": "ast",
-      "id": "src_telegram_gateway_rationale_363",
-      "community": 1,
+      "id": "src_telegram_gateway_rationale_109",
+      "community": 3,
       "norm_label": "checks if there's a recent /topic or /curate command sent by the authorized user"
     },
     {
@@ -1726,7 +1686,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_config",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_config.py"
     },
     {
@@ -1736,7 +1696,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "tests_test_config_test_validate_config_dry_run_injection",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_validate_config_dry_run_injection()"
     },
     {
@@ -1746,7 +1706,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "tests_test_config_test_validate_config_failure_in_production",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_validate_config_failure_in_production()"
     },
     {
@@ -1756,7 +1716,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "tests_test_config_test_gemini_priority_validation_ci_mode",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_gemini_priority_validation_ci_mode()"
     },
     {
@@ -1766,7 +1726,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "tests_test_config_test_validate_gemini_model_priority_pruning",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_validate_gemini_model_priority_pruning()"
     },
     {
@@ -1776,7 +1736,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "tests_test_config_test_get_version",
-      "community": 27,
+      "community": 13,
       "norm_label": "test_get_version()"
     },
     {
@@ -1786,7 +1746,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_config_rationale_6",
-      "community": 27,
+      "community": 13,
       "norm_label": "verify that missing config variables are injected with mocks in dry_run mode."
     },
     {
@@ -1796,7 +1756,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "tests_test_config_rationale_25",
-      "community": 27,
+      "community": 13,
       "norm_label": "verify that missing mandatory config causes failure in non-dry_run mode."
     },
     {
@@ -1806,7 +1766,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "tests_test_config_rationale_36",
-      "community": 27,
+      "community": 13,
       "norm_label": "verify that validation passes in ci mode without real api keys."
     },
     {
@@ -1816,7 +1776,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_config_rationale_41",
-      "community": 27,
+      "community": 13,
       "norm_label": "verify that validate_gemini_model_priority prunes model priority based on api li"
     },
     {
@@ -1856,7 +1816,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "tests_test_curator_test_fetch_news_synergy_and_deduplication",
-      "community": 4,
+      "community": 13,
       "norm_label": "test_fetch_news_synergy_and_deduplication()"
     },
     {
@@ -1916,7 +1876,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "tests_test_curator_rationale_46",
-      "community": 4,
+      "community": 13,
       "norm_label": "verify that duplicate stories get a synergy bonus and are ranked correctly."
     },
     {
@@ -1953,7 +1913,7 @@
       "label": "test_dry_run_persistence_does_not_save()",
       "file_type": "code",
       "source_file": "src/tests/test_dry_run.py",
-      "source_location": "L33",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "tests_test_dry_run_test_dry_run_persistence_does_not_save",
       "community": 1,
@@ -1973,9 +1933,9 @@
       "label": "Verify that persistence_stage skips saving files in dry-run mode.",
       "file_type": "rationale",
       "source_file": "src/tests/test_dry_run.py",
-      "source_location": "L34",
+      "source_location": "L32",
       "_origin": "ast",
-      "id": "tests_test_dry_run_rationale_34",
+      "id": "tests_test_dry_run_rationale_32",
       "community": 1,
       "norm_label": "verify that persistence_stage skips saving files in dry-run mode."
     },
@@ -2166,7 +2126,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_settings",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_settings.py"
     },
     {
@@ -2176,7 +2136,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_from_env_default",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_settings_from_env_default()"
     },
     {
@@ -2186,7 +2146,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_validation_dry_run",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_settings_validation_dry_run()"
     },
     {
@@ -2196,7 +2156,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_validation_missing_keys",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_settings_validation_missing_keys()"
     },
     {
@@ -2206,7 +2166,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_validation_success",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_settings_validation_success()"
     },
     {
@@ -2216,7 +2176,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_is_manual_run",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_settings_is_manual_run()"
     },
     {
@@ -2226,7 +2186,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_should_bypass_rest",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_settings_should_bypass_rest()"
     },
     {
@@ -2236,7 +2196,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_settings_test_telegram_settings_defaults",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_telegram_settings_defaults()"
     },
     {
@@ -2246,7 +2206,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_6",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify that settings.from_env() reads correct defaults."
     },
     {
@@ -2256,7 +2216,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_21",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify that validate() always returns true in dry run."
     },
     {
@@ -2266,7 +2226,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_26",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify validate() fails when required production keys are missing."
     },
     {
@@ -2276,7 +2236,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_40",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify validate() succeeds with valid parameters."
     },
     {
@@ -2286,7 +2246,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_45",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify is_manual_run checks correct github event."
     },
     {
@@ -2296,7 +2256,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_53",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify should_bypass_rest determines when rest is bypassed."
     },
     {
@@ -2306,128 +2266,8 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_67",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify that settings correctly capture telegram environment variables."
-    },
-    {
-      "label": "test_telegram_gateway.py",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "tests_test_telegram_gateway",
-      "community": 3,
-      "norm_label": "test_telegram_gateway.py"
-    },
-    {
-      "label": "test_validate_text_limits()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L6",
-      "_origin": "ast",
-      "id": "tests_test_telegram_gateway_test_validate_text_limits",
-      "community": 3,
-      "norm_label": "test_validate_text_limits()"
-    },
-    {
-      "label": "test_send_draft_for_approval_approve()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L37",
-      "_origin": "ast",
-      "id": "tests_test_telegram_gateway_test_send_draft_for_approval_approve",
-      "community": 3,
-      "norm_label": "test_send_draft_for_approval_approve()"
-    },
-    {
-      "label": "test_send_draft_for_approval_reject()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L87",
-      "_origin": "ast",
-      "id": "tests_test_telegram_gateway_test_send_draft_for_approval_reject",
-      "community": 3,
-      "norm_label": "test_send_draft_for_approval_reject()"
-    },
-    {
-      "label": "test_send_draft_for_approval_edit_by_reply()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L131",
-      "_origin": "ast",
-      "id": "tests_test_telegram_gateway_test_send_draft_for_approval_edit_by_reply",
-      "community": 3,
-      "norm_label": "test_send_draft_for_approval_edit_by_reply()"
-    },
-    {
-      "label": "test_send_draft_for_approval_regenerate_text()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L197",
-      "_origin": "ast",
-      "id": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_text",
-      "community": 3,
-      "norm_label": "test_send_draft_for_approval_regenerate_text()"
-    },
-    {
-      "label": "test_send_draft_for_approval_regenerate_image()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L288",
-      "_origin": "ast",
-      "id": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_image",
-      "community": 3,
-      "norm_label": "test_send_draft_for_approval_regenerate_image()"
-    },
-    {
-      "label": "test_telegram_propagation.py",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "tests_test_telegram_propagation",
-      "community": 1,
-      "norm_label": "test_telegram_propagation.py"
-    },
-    {
-      "label": "test_telegram_approval_image_url_propagation_changed()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L9",
-      "_origin": "ast",
-      "id": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed",
-      "community": 1,
-      "norm_label": "test_telegram_approval_image_url_propagation_changed()"
-    },
-    {
-      "label": "test_telegram_approval_image_url_propagation_unchanged()",
-      "file_type": "code",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L67",
-      "_origin": "ast",
-      "id": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged",
-      "community": 1,
-      "norm_label": "test_telegram_approval_image_url_propagation_unchanged()"
-    },
-    {
-      "label": "Test that image_url is set to None if image bytes are changed/regenerated.",
-      "file_type": "rationale",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L10",
-      "_origin": "ast",
-      "id": "tests_test_telegram_propagation_rationale_10",
-      "community": 1,
-      "norm_label": "test that image_url is set to none if image bytes are changed/regenerated."
-    },
-    {
-      "label": "Test that image_url is preserved if image bytes remain the same.",
-      "file_type": "rationale",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L68",
-      "_origin": "ast",
-      "id": "tests_test_telegram_propagation_rationale_68",
-      "community": 1,
-      "norm_label": "test that image_url is preserved if image bytes remain the same."
     },
     {
       "label": "test_topic_grounding.py",
@@ -2453,7 +2293,7 @@
       "label": "test_curation_stage_with_matching_telegram_topic()",
       "file_type": "code",
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L51",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "tests_test_topic_grounding_test_curation_stage_with_matching_telegram_topic",
       "community": 1,
@@ -2463,7 +2303,7 @@
       "label": "test_curation_stage_fallback_when_no_match()",
       "file_type": "code",
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L93",
+      "source_location": "L80",
       "_origin": "ast",
       "id": "tests_test_topic_grounding_test_curation_stage_fallback_when_no_match",
       "community": 1,
@@ -2486,7 +2326,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_utils_test_is_public_ip_validation",
-      "community": 11,
+      "community": 14,
       "norm_label": "test_is_public_ip_validation()"
     },
     {
@@ -2496,7 +2336,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "tests_test_utils_test_truncate_bytes_unicode",
-      "community": 13,
+      "community": 14,
       "norm_label": "test_truncate_bytes_unicode()"
     },
     {
@@ -2516,7 +2356,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "tests_test_utils_test_compress_image_reduction",
-      "community": 14,
+      "community": 6,
       "norm_label": "test_compress_image_reduction()"
     },
     {
@@ -2526,7 +2366,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "tests_test_utils_test_ssrf_blocking_in_redirects",
-      "community": 10,
+      "community": 14,
       "norm_label": "test_ssrf_blocking_in_redirects()"
     },
     {
@@ -2576,7 +2416,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_7",
-      "community": 11,
+      "community": 14,
       "norm_label": "verify that private and reserved ip addresses are correctly identified as non-pu"
     },
     {
@@ -2586,7 +2426,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_28",
-      "community": 13,
+      "community": 14,
       "norm_label": "verify that truncation doesn't break multi-byte unicode characters."
     },
     {
@@ -2606,7 +2446,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_62",
-      "community": 14,
+      "community": 6,
       "norm_label": "verify that compress_image actually reduces size if needed."
     },
     {
@@ -2616,7 +2456,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_79",
-      "community": 10,
+      "community": 14,
       "norm_label": "verify that get_with_safe_redirects blocks redirects to private ips."
     },
     {
@@ -2646,7 +2486,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_utils_human_delay",
-      "community": 1,
+      "community": 15,
       "norm_label": "human_delay()"
     },
     {
@@ -2656,7 +2496,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_utils_retry_with_backoff",
-      "community": 4,
+      "community": 15,
       "norm_label": "retry_with_backoff()"
     },
     {
@@ -2686,7 +2526,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_utils_filelock",
-      "community": 6,
+      "community": 2,
       "norm_label": "filelock"
     },
     {
@@ -2696,7 +2536,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "src_utils_filelock_init",
-      "community": 6,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -2706,7 +2546,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "src_utils_filelock_enter",
-      "community": 6,
+      "community": 2,
       "norm_label": ".__enter__()"
     },
     {
@@ -2716,7 +2556,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "src_utils_filelock_exit",
-      "community": 6,
+      "community": 2,
       "norm_label": ".__exit__()"
     },
     {
@@ -2726,7 +2566,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "src_utils_load_gist_state",
-      "community": 6,
+      "community": 8,
       "norm_label": "_load_gist_state()"
     },
     {
@@ -2786,7 +2626,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "src_utils_load_seen_articles",
-      "community": 6,
+      "community": 8,
       "norm_label": "load_seen_articles()"
     },
     {
@@ -2816,7 +2656,7 @@
       "source_location": "L301",
       "_origin": "ast",
       "id": "src_utils_is_public_ip",
-      "community": 11,
+      "community": 14,
       "norm_label": "_is_public_ip()"
     },
     {
@@ -2826,7 +2666,7 @@
       "source_location": "L316",
       "_origin": "ast",
       "id": "src_utils_resolve_public_ip_candidates",
-      "community": 11,
+      "community": 7,
       "norm_label": "_resolve_public_ip_candidates()"
     },
     {
@@ -2836,7 +2676,7 @@
       "source_location": "L329",
       "_origin": "ast",
       "id": "src_utils_resolver_pinned_to_ips",
-      "community": 10,
+      "community": 7,
       "norm_label": "_resolver_pinned_to_ips()"
     },
     {
@@ -2846,7 +2686,7 @@
       "source_location": "L356",
       "_origin": "ast",
       "id": "src_utils_get_with_safe_redirects",
-      "community": 10,
+      "community": 7,
       "norm_label": "get_with_safe_redirects()"
     },
     {
@@ -2856,7 +2696,7 @@
       "source_location": "L402",
       "_origin": "ast",
       "id": "src_utils_get_link_metadata",
-      "community": 1,
+      "community": 15,
       "norm_label": "get_link_metadata()"
     },
     {
@@ -2866,7 +2706,7 @@
       "source_location": "L449",
       "_origin": "ast",
       "id": "src_utils_compress_image",
-      "community": 14,
+      "community": 6,
       "norm_label": "compress_image()"
     },
     {
@@ -2886,7 +2726,7 @@
       "source_location": "L481",
       "_origin": "ast",
       "id": "src_utils_truncate_bytes",
-      "community": 13,
+      "community": 14,
       "norm_label": "truncate_bytes()"
     },
     {
@@ -2916,7 +2756,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_utils_rationale_33",
-      "community": 1,
+      "community": 15,
       "norm_label": "wait for a random duration to simulate human activity."
     },
     {
@@ -2926,7 +2766,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_utils_rationale_44",
-      "community": 4,
+      "community": 15,
       "norm_label": "decorator to retry an async function with exponential backoff and jitter."
     },
     {
@@ -2956,7 +2796,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_utils_rationale_102",
-      "community": 6,
+      "community": 2,
       "norm_label": "cross-platform advisory file lock context manager."
     },
     {
@@ -2966,7 +2806,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_utils_rationale_127",
-      "community": 6,
+      "community": 8,
       "norm_label": "helper to pull state from a private github gist."
     },
     {
@@ -3026,7 +2866,7 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "src_utils_rationale_199",
-      "community": 6,
+      "community": 8,
       "norm_label": "3-tier resilience: local -> backup -> gist -> default."
     },
     {
@@ -3056,7 +2896,7 @@
       "source_location": "L302",
       "_origin": "ast",
       "id": "src_utils_rationale_302",
-      "community": 11,
+      "community": 14,
       "norm_label": "checks if an ip address is a routable public address."
     },
     {
@@ -3066,7 +2906,7 @@
       "source_location": "L317",
       "_origin": "ast",
       "id": "src_utils_rationale_317",
-      "community": 11,
+      "community": 7,
       "norm_label": "resolves a hostname and returns only public ip candidates."
     },
     {
@@ -3076,7 +2916,7 @@
       "source_location": "L330",
       "_origin": "ast",
       "id": "src_utils_rationale_330",
-      "community": 10,
+      "community": 7,
       "norm_label": "temporarily constrains dns resolution for one hostname to a prevalidated set."
     },
     {
@@ -3086,7 +2926,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "src_utils_rationale_357",
-      "community": 10,
+      "community": 7,
       "norm_label": "fetches a url while validating every hop in the redirect chain."
     },
     {
@@ -3096,7 +2936,7 @@
       "source_location": "L403",
       "_origin": "ast",
       "id": "src_utils_rationale_403",
-      "community": 1,
+      "community": 15,
       "norm_label": "fetches high-fidelity metadata (og:image, description) from a url with ssrf prot"
     },
     {
@@ -3106,7 +2946,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "src_utils_rationale_450",
-      "community": 14,
+      "community": 6,
       "norm_label": "losslessly then lossily compresses image to stay within platform limits (e.g., b"
     },
     {
@@ -3126,7 +2966,7 @@
       "source_location": "L482",
       "_origin": "ast",
       "id": "src_utils_rationale_482",
-      "community": 13,
+      "community": 14,
       "norm_label": "unicode-aware byte-level truncation to prevent bluesky index errors."
     },
     {
@@ -3198,16 +3038,6 @@
       "id": "agents",
       "community": 58,
       "norm_label": "agents.md"
-    },
-    {
-      "label": "Ponytail-style development rules",
-      "file_type": "document",
-      "source_file": "AGENTS.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "agents_ponytail_style_development_rules",
-      "community": 58,
-      "norm_label": "ponytail-style development rules"
     },
     {
       "label": "CONTRIBUTING.md",
@@ -3946,7 +3776,7 @@
       "source_location": "L256",
       "_origin": "ast",
       "id": "docs_wiki_manual_page_12_system_telemetry_dashboards",
-      "community": 15,
+      "community": 25,
       "norm_label": "\ud83d\udcca page 12: system telemetry dashboards"
     },
     {
@@ -3956,7 +3786,7 @@
       "source_location": "L260",
       "_origin": "ast",
       "id": "docs_wiki_manual_the_status_md_advantage",
-      "community": 15,
+      "community": 25,
       "norm_label": "the status.md advantage"
     },
     {
@@ -4170,14 +4000,14 @@
       "norm_label": "2. friday release curation focus"
     },
     {
-      "label": "\ud83d\ude80 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.13.0)",
+      "label": "\ud83d\ude80 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.1)",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
       "source_location": "L412",
       "_origin": "ast",
-      "id": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_13_0",
+      "id": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_1",
       "community": 28,
-      "norm_label": "\ud83d\ude80 page 17: interactive telegram control, alt text, and hashtag management (v3.13.0)"
+      "norm_label": "\ud83d\ude80 page 17: interactive telegram control, alt text, and hashtag management (v3.12.1)"
     },
     {
       "label": "1. Interactive Telegram Gateway & Approval Queue",
@@ -4193,7 +4023,7 @@
       "label": "2. Screen Reader Multimodal Alt-Text",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
-      "source_location": "L430",
+      "source_location": "L426",
       "_origin": "ast",
       "id": "docs_wiki_manual_2_screen_reader_multimodal_alt_text",
       "community": 28,
@@ -4203,21 +4033,11 @@
       "label": "3. Cultural Hashtag Alignment",
       "file_type": "document",
       "source_file": "docs/WIKI_MANUAL.md",
-      "source_location": "L436",
+      "source_location": "L432",
       "_origin": "ast",
       "id": "docs_wiki_manual_3_cultural_hashtag_alignment",
       "community": 28,
       "norm_label": "3. cultural hashtag alignment"
-    },
-    {
-      "label": "\ud83d\ude80 Page 18: Threads Media Propagation Hardening (v3.13.1)",
-      "file_type": "document",
-      "source_file": "docs/WIKI_MANUAL.md",
-      "source_location": "L445",
-      "_origin": "ast",
-      "id": "docs_wiki_manual_page_18_threads_media_propagation_hardening_v3_13_1",
-      "community": 25,
-      "norm_label": "\ud83d\ude80 page 18: threads media propagation hardening (v3.13.1)"
     },
     {
       "label": "pr_description.md",
@@ -4230,14 +4050,14 @@
       "norm_label": "pr_description.md"
     },
     {
-      "label": "\ud83d\ude80 PR v3.13.1: Threads Media Propagation and Stale Image Prevention",
+      "label": "\ud83d\ude80 PR v3.12.0: Interactive Telegram Control, Alt Text, and Hashtag Management",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention",
+      "id": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management",
       "community": 12,
-      "norm_label": "\ud83d\ude80 pr v3.13.1: threads media propagation and stale image prevention"
+      "norm_label": "\ud83d\ude80 pr v3.12.0: interactive telegram control, alt text, and hashtag management"
     },
     {
       "label": "Proposed Upgrades",
@@ -4250,20 +4070,50 @@
       "norm_label": "proposed upgrades"
     },
     {
-      "label": "\ud83d\udd04 1. Stale Image URL Clearing",
+      "label": "\ud83c\udfae 1. Telegram Control & Approval Queue",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L7",
       "_origin": "ast",
-      "id": "pr_description_1_stale_image_url_clearing",
+      "id": "pr_description_1_telegram_control_approval_queue",
       "community": 12,
-      "norm_label": "\ud83d\udd04 1. stale image url clearing"
+      "norm_label": "\ud83c\udfae 1. telegram control & approval queue"
+    },
+    {
+      "label": "\u267f 2. Screen Reader Multimodal Alt-Text",
+      "file_type": "document",
+      "source_file": "pr_description.md",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "pr_description_2_screen_reader_multimodal_alt_text",
+      "community": 12,
+      "norm_label": "\u267f 2. screen reader multimodal alt-text"
+    },
+    {
+      "label": "\ud83c\udff7\ufe0f 3. Per-Platform Hashtags",
+      "file_type": "document",
+      "source_file": "pr_description.md",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "pr_description_3_per_platform_hashtags",
+      "community": 12,
+      "norm_label": "\ud83c\udff7\ufe0f 3. per-platform hashtags"
+    },
+    {
+      "label": "\ud83d\udee1\ufe0f 4. Side-Effect-Free Dry Run",
+      "file_type": "document",
+      "source_file": "pr_description.md",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "pr_description_4_side_effect_free_dry_run",
+      "community": 12,
+      "norm_label": "\ud83d\udee1\ufe0f 4. side-effect-free dry run"
     },
     {
       "label": "\ud83d\udee0\ufe0f Compliance with `AGENTS.md` Rules",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L13",
+      "source_location": "L22",
       "_origin": "ast",
       "id": "pr_description_compliance_with_agents_md_rules",
       "community": 12,
@@ -4273,7 +4123,7 @@
       "label": "1. What was Deleted or Simplified",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L15",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "pr_description_1_what_was_deleted_or_simplified",
       "community": 12,
@@ -4283,7 +4133,7 @@
       "label": "2. Why the Simpler Version is Safe",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L18",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "pr_description_2_why_the_simpler_version_is_safe",
       "community": 12,
@@ -4293,7 +4143,7 @@
       "label": "3. Verification & Tests Run",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L21",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "pr_description_3_verification_tests_run",
       "community": 12,
@@ -4478,7 +4328,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Multi-model failover and self-healing AI loop",
-      "community": 1,
+      "community": 15,
       "norm_label": "sage intelligence v3",
       "id": "sage_intelligence"
     },
@@ -4492,7 +4342,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Chains high-res news analysis into platform-native threads",
-      "community": 1,
+      "community": 15,
       "norm_label": "the weaver (conditional threading)",
       "id": "the_weaver"
     },
@@ -4548,7 +4398,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Replies to comments/mentions with persona-aligned logic",
-      "community": 1,
+      "community": 15,
       "norm_label": "interaction engine",
       "id": "interaction_engine"
     },
@@ -5158,17 +5008,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "bot"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_topic_grounding.py",
       "source_location": "L2",
       "weight": 1.0,
@@ -5212,7 +5051,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L159",
+      "source_location": "L132",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "bot_curation_stage",
@@ -5342,11 +5181,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L133",
+      "source_location": "L122",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "bot_rationale_133",
-      "target": "bot_curation_stage"
+      "source": "bot_rationale_122",
+      "target": "bot_curation_stage",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -5386,7 +5225,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L116",
+      "source_location": "L103",
       "weight": 1.0,
       "source": "tests_test_topic_grounding_test_curation_stage_fallback_when_no_match",
       "target": "bot_curation_stage"
@@ -5397,7 +5236,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L85",
+      "source_location": "L72",
       "weight": 1.0,
       "source": "tests_test_topic_grounding_test_curation_stage_with_matching_telegram_topic",
       "target": "bot_curation_stage"
@@ -5612,11 +5451,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L188",
+      "source_location": "L177",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "bot_rationale_188",
-      "target": "bot_synthesis_stage"
+      "source": "bot_rationale_177",
+      "target": "bot_synthesis_stage",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -6026,11 +5865,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L284",
+      "source_location": "L273",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "bot_rationale_284",
-      "target": "bot_broadcast_stage"
+      "source": "bot_rationale_273",
+      "target": "bot_broadcast_stage",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6231,11 +6070,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L330",
+      "source_location": "L319",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "bot_rationale_330",
-      "target": "bot_persistence_stage"
+      "source": "bot_rationale_319",
+      "target": "bot_persistence_stage",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -6351,11 +6190,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "bot.py",
-      "source_location": "L378",
+      "source_location": "L367",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "bot_rationale_378",
-      "target": "bot_interaction_stage"
+      "source": "bot_rationale_367",
+      "target": "bot_interaction_stage",
+      "confidence_score": 1.0
     },
     {
       "relation": "uses",
@@ -6470,39 +6309,6 @@
       "confidence_score": 1.0,
       "source": "bot_main",
       "target": "src_telegram_gateway_send_draft_for_approval"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "bot_main"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L56",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed",
-      "target": "bot_main"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L111",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged",
-      "target": "bot_main"
     },
     {
       "relation": "contains",
@@ -7801,28 +7607,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L240",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway",
-      "target": "src_curator_strip_markdown"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L257",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "src_curator_strip_markdown"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_curator.py",
       "source_location": "L3",
       "weight": 1.0,
@@ -7858,9 +7642,9 @@
       "source_file": "src/curator.py",
       "source_location": "L153",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_curator_rationale_153",
-      "target": "src_curator_supports_thinking"
+      "target": "src_curator_supports_thinking",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -7901,9 +7685,9 @@
       "source_file": "src/curator.py",
       "source_location": "L167",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_curator_rationale_167",
-      "target": "src_curator_prune_gemini_model_priority_async"
+      "target": "src_curator_prune_gemini_model_priority_async",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7933,9 +7717,9 @@
       "source_file": "src/curator.py",
       "source_location": "L192",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_curator_rationale_192",
-      "target": "src_curator_summarize_news"
+      "target": "src_curator_summarize_news",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -7965,31 +7749,9 @@
       "source_file": "src/curator.py",
       "source_location": "L324",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_curator_rationale_324",
-      "target": "src_curator_get_temporal_context"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L171",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway",
-      "target": "src_curator_generate_visual_prompt"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L174",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "src_curator_generate_visual_prompt"
+      "target": "src_curator_get_temporal_context",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -7997,31 +7759,9 @@
       "source_file": "src/curator.py",
       "source_location": "L364",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_curator_rationale_364",
-      "target": "src_curator_generate_image_alt_text"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L171",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway",
-      "target": "src_curator_generate_image_alt_text"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L182",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "src_curator_generate_image_alt_text"
+      "target": "src_curator_generate_image_alt_text",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -8029,31 +7769,9 @@
       "source_file": "src/curator.py",
       "source_location": "L388",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_curator_rationale_388",
-      "target": "src_curator_generate_nvidia_image"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L171",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway",
-      "target": "src_curator_generate_nvidia_image"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L177",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "src_curator_generate_nvidia_image"
+      "target": "src_curator_generate_nvidia_image",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -8061,9 +7779,9 @@
       "source_file": "src/curator.py",
       "source_location": "L442",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_curator_rationale_442",
-      "target": "src_curator_generate_interactive_reply"
+      "target": "src_curator_generate_interactive_reply",
+      "confidence_score": 1.0
     },
     {
       "relation": "implements",
@@ -8948,17 +8666,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "src_models"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_topic_grounding.py",
       "source_location": "L3",
       "weight": 1.0,
@@ -9089,39 +8796,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "src_models_curationresult"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L29",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed",
-      "target": "src_models_curationresult"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L86",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged",
-      "target": "src_models_curationresult"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_topic_grounding.py",
       "source_location": "L3",
       "weight": 1.0,
@@ -9181,39 +8855,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_models",
-      "target": "src_models_synthesisresult"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "src_models_synthesisresult"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L32",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed",
-      "target": "src_models_synthesisresult"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L89",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged",
       "target": "src_models_synthesisresult"
     },
     {
@@ -9353,28 +8994,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_settings",
-      "target": "src_settings"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L3",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "src_settings"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
       "target": "src_settings"
     },
     {
@@ -9563,116 +9182,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L3",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L38",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_approve",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L132",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_edit_by_reply",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L289",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_image",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L198",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_text",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L88",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_reject",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L7",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway_test_validate_text_limits",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L11",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L69",
-      "weight": 1.0,
-      "source": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged",
-      "target": "src_settings_settings"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_topic_grounding.py",
       "source_location": "L4",
       "weight": 1.0,
@@ -9686,7 +9195,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L94",
+      "source_location": "L81",
       "weight": 1.0,
       "source": "tests_test_topic_grounding_test_curation_stage_fallback_when_no_match",
       "target": "src_settings_settings"
@@ -9697,7 +9206,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L53",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "tests_test_topic_grounding_test_curation_stage_with_matching_telegram_topic",
       "target": "src_settings_settings"
@@ -9753,16 +9262,6 @@
       "target": "src_telegram_gateway_send_draft_for_approval"
     },
     {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L8",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway",
-      "target": "src_telegram_gateway_validate_text_limits"
-    },
-    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -9774,166 +9273,24 @@
       "target": "src_utils"
     },
     {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "src_telegram_gateway"
-    },
-    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L10",
-      "weight": 1.0,
-      "source": "src_telegram_gateway_rationale_10",
-      "target": "src_telegram_gateway_validate_text_limits",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L282",
+      "source_location": "L9",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "src_telegram_gateway_validate_text_limits"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "src_telegram_gateway_validate_text_limits"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L17",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway_test_validate_text_limits",
-      "target": "src_telegram_gateway_validate_text_limits"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L57",
-      "weight": 1.0,
-      "source": "src_telegram_gateway_rationale_57",
-      "target": "src_telegram_gateway_send_draft_for_approval",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "generic_arg",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L48",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "src_telegram_gateway_py_any"
-    },
-    {
-      "relation": "references",
-      "context": "generic_arg",
-      "confidence": "EXTRACTED",
-      "source_file": "src/telegram_gateway.py",
-      "source_location": "L48",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "src_telegram_gateway_py_asyncclient"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "src_telegram_gateway_send_draft_for_approval"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L80",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_approve",
-      "target": "src_telegram_gateway_send_draft_for_approval"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L184",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_edit_by_reply",
-      "target": "src_telegram_gateway_send_draft_for_approval"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L351",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_image",
-      "target": "src_telegram_gateway_send_draft_for_approval"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L277",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_text",
-      "target": "src_telegram_gateway_send_draft_for_approval"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L125",
-      "weight": 1.0,
-      "source": "tests_test_telegram_gateway_test_send_draft_for_approval_reject",
+      "source": "src_telegram_gateway_rationale_9",
       "target": "src_telegram_gateway_send_draft_for_approval"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L363",
+      "source_location": "L109",
       "weight": 1.0,
-      "source": "src_telegram_gateway_rationale_363",
-      "target": "src_telegram_gateway_check_for_telegram_topic",
-      "confidence_score": 1.0
+      "confidence_score": 1.0,
+      "source": "src_telegram_gateway_rationale_109",
+      "target": "src_telegram_gateway_check_for_telegram_topic"
     },
     {
       "relation": "contains",
@@ -10239,10 +9596,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/tests/test_dry_run.py",
-      "source_location": "L34",
+      "source_location": "L32",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tests_test_dry_run_rationale_34",
+      "source": "tests_test_dry_run_rationale_32",
       "target": "tests_test_dry_run_test_dry_run_persistence_does_not_save"
     },
     {
@@ -10548,106 +9905,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L37",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "tests_test_telegram_gateway_test_send_draft_for_approval_approve"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L131",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "tests_test_telegram_gateway_test_send_draft_for_approval_edit_by_reply"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L288",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_image"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L197",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "tests_test_telegram_gateway_test_send_draft_for_approval_regenerate_text"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L87",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "tests_test_telegram_gateway_test_send_draft_for_approval_reject"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_gateway.py",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_gateway",
-      "target": "tests_test_telegram_gateway_test_validate_text_limits"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L67",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation",
-      "target": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L10",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation_rationale_10",
-      "target": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "src/tests/test_telegram_propagation.py",
-      "source_location": "L68",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tests_test_telegram_propagation_rationale_68",
-      "target": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "src/tests/test_topic_grounding.py",
       "source_location": "L8",
       "weight": 1.0,
@@ -10659,7 +9916,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L93",
+      "source_location": "L80",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_topic_grounding",
@@ -10669,7 +9926,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/tests/test_topic_grounding.py",
-      "source_location": "L51",
+      "source_location": "L38",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_test_topic_grounding",
@@ -11772,16 +11029,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "AGENTS.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "agents",
-      "target": "agents_ponytail_style_development_rules"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "CONTRIBUTING.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -12197,17 +11444,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_13_0"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/WIKI_MANUAL.md",
-      "source_location": "L445",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_wiki_manual_blubot_elite_sage_the_complete_manual",
-      "target": "docs_wiki_manual_page_18_threads_media_propagation_hardening_v3_13_1"
+      "target": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_1"
     },
     {
       "relation": "contains",
@@ -12706,27 +11943,27 @@
       "source_location": "L416",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_13_0",
+      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_1",
       "target": "docs_wiki_manual_1_interactive_telegram_gateway_approval_queue"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/WIKI_MANUAL.md",
-      "source_location": "L430",
+      "source_location": "L426",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_13_0",
+      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_1",
       "target": "docs_wiki_manual_2_screen_reader_multimodal_alt_text"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/WIKI_MANUAL.md",
-      "source_location": "L436",
+      "source_location": "L432",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_13_0",
+      "source": "docs_wiki_manual_page_17_interactive_telegram_control_alt_text_and_hashtag_management_v3_12_1",
       "target": "docs_wiki_manual_3_cultural_hashtag_alignment"
     },
     {
@@ -12737,16 +11974,16 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "pr_description",
-      "target": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention"
+      "target": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management"
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "pr_description.md",
-      "source_location": "L13",
+      "source_location": "L22",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention",
+      "source": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management",
       "target": "pr_description_compliance_with_agents_md_rules"
     },
     {
@@ -12756,7 +11993,7 @@
       "source_location": "L5",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "pr_description_pr_v3_13_1_threads_media_propagation_and_stale_image_prevention",
+      "source": "pr_description_pr_v3_12_0_interactive_telegram_control_alt_text_and_hashtag_management",
       "target": "pr_description_proposed_upgrades"
     },
     {
@@ -12767,7 +12004,37 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "pr_description_proposed_upgrades",
-      "target": "pr_description_1_stale_image_url_clearing"
+      "target": "pr_description_1_telegram_control_approval_queue"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pr_description.md",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pr_description_proposed_upgrades",
+      "target": "pr_description_2_screen_reader_multimodal_alt_text"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pr_description.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pr_description_proposed_upgrades",
+      "target": "pr_description_3_per_platform_hashtags"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pr_description.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pr_description_proposed_upgrades",
+      "target": "pr_description_4_side_effect_free_dry_run"
     },
     {
       "relation": "contains",
@@ -12835,5 +12102,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "543e2633d83e86c500fdad076056bee7ed9d81ec"
+  "built_at_commit": "5aabcaebb26ce4aa60e2354496a5f66af28dcfb5"
 }

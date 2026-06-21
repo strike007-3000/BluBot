@@ -1,16 +1,16 @@
-# Graph Report - BlueSky  (2026-06-21)
+# Graph Report - BlueSky  (2026-06-17)
 
 ## Corpus Check
-- 40 files · ~27,324 words
+- 37 files · ~24,786 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 449 nodes · 789 edges · 54 communities (35 shown, 19 thin omitted)
+- 434 nodes · 735 edges · 50 communities (34 shown, 16 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 61 edges (avg confidence: 0.57)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `543e2633`
+- Built from commit: `5aabcaeb`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -25,8 +25,6 @@
 - [[_COMMUNITY_Seen interactions & smart text truncation|Seen interactions & smart text truncation]]
 - [[_COMMUNITY_Utils & SSRF prevention architecture|Utils & SSRF prevention architecture]]
 - [[_COMMUNITY_Test mocks and conftest configurations|Test mocks and conftest configurations]]
-- [[_COMMUNITY_SSRF redirect prevention & DNS validation|SSRF redirect prevention & DNS validation]]
-- [[_COMMUNITY_Community 11|Community 11]]
 - [[_COMMUNITY_Mastodon post logic & smart text splitter|Mastodon post logic & smart text splitter]]
 - [[_COMMUNITY_Dashboard telemetry status migration|Dashboard telemetry status migration]]
 - [[_COMMUNITY_Image Compression utilities|Image Compression utilities]]
@@ -42,9 +40,7 @@
 - [[_COMMUNITY_Bot Telemetry status documentation|Bot Telemetry status documentation]]
 - [[_COMMUNITY_Wiki manual blueprint|Wiki manual blueprint]]
 - [[_COMMUNITY_Graphify rules configuration|Graphify rules configuration]]
-- [[_COMMUNITY_Community 27|Community 27]]
 - [[_COMMUNITY_Issue 1 version 2 documentation|Issue 1 version 2 documentation]]
-- [[_COMMUNITY_Community 29|Community 29]]
 - [[_COMMUNITY_CodeQL workflow pipeline|CodeQL workflow pipeline]]
 - [[_COMMUNITY_Daily curation workflow pipeline|Daily curation workflow pipeline]]
 - [[_COMMUNITY_Graphify pipeline workflow|Graphify pipeline workflow]]
@@ -65,19 +61,18 @@
 - [[_COMMUNITY_Community 54|Community 54]]
 - [[_COMMUNITY_Community 55|Community 55]]
 - [[_COMMUNITY_Community 57|Community 57]]
-- [[_COMMUNITY_Community 58|Community 58]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `Settings` - 32 edges
+1. `Settings` - 22 edges
 2. `VanguardManager` - 21 edges
-3. `CurationResult` - 20 edges
-4. `📖 BluBot Elite Sage: The Complete Manual` - 20 edges
-5. `synthesis_stage()` - 19 edges
-6. `SynthesisResult` - 18 edges
-7. `send_draft_for_approval()` - 17 edges
-8. `curation_stage()` - 16 edges
-9. `Article` - 16 edges
-10. `InteractionNote` - 16 edges
+3. `synthesis_stage()` - 19 edges
+4. `📖 BluBot Elite Sage: The Complete Manual` - 19 edges
+5. `CurationResult` - 17 edges
+6. `curation_stage()` - 16 edges
+7. `Article` - 16 edges
+8. `InteractionNote` - 16 edges
+9. `SafeLogger` - 15 edges
+10. `SynthesisResult` - 15 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `AsyncClient` --uses--> `VanguardManager`  [INFERRED]
@@ -97,83 +92,75 @@
 ## Hyperedges (group relationships)
 - **Social Media Platform Targets** — sage_intelligence, the_weaver, interaction_engine [INFERRED 0.85]
 
-## Communities (54 total, 19 thin omitted)
+## Communities (50 total, 16 thin omitted)
 
 ### Community 0 - "Core Curation & Broadcaster Logic"
 Cohesion: 0.12
 Nodes (16): 1. Automated Regression (CI-Ready), ⚙️1. Platform Credentials, 🤫2. Configure GitHub Secrets, 2. Interactive Diagnostic (Developer Tool), 👨‍🔧 BluBot: Elite AI News Curator, Bluesky & Mastodon, 🤝 Community & Security, Google Gemini (+8 more)
 
 ### Community 1 - "Data Models & Pipeline Staging"
-Cohesion: 0.06
-Nodes (80): article_matches_topic(), broadcast_stage(), curation_stage(), interaction_stage(), main(), persistence_stage(), Any, AsyncClient (+72 more)
+Cohesion: 0.10
+Nodes (49): article_matches_topic(), broadcast_stage(), curation_stage(), main(), persistence_stage(), Any, AsyncClient, Stage 1: Fetch and Score Raw News. (+41 more)
 
 ### Community 2 - "Logger & Secret Redaction Engine"
-Cohesion: 0.09
-Nodes (18): LogRecord, _HumanFormatter, _JsonFormatter, Any, Redacts secrets from all log content.     Uses both keyword-based patterns and, Formats log records as clean, colorized text for terminal readability., Structured, security-hardened logger with secret redaction and JSON output., Formats log records as single-line JSON strings. (+10 more)
+Cohesion: 0.08
+Nodes (20): LogRecord, _HumanFormatter, _JsonFormatter, Any, Redacts secrets from all log content.     Uses both keyword-based patterns and, Formats log records as clean, colorized text for terminal readability., Structured, security-hardened logger with secret redaction and JSON output., Formats log records as single-line JSON strings. (+12 more)
 
 ### Community 3 - "Global settings & config generation"
-Cohesion: 0.07
-Nodes (36): generate_image_alt_text(), generate_nvidia_image(), generate_visual_prompt(), Generates screen-reader-friendly alt text for the generated image using Gemini V, Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing., Determines if the current execution was manually triggered (Persona logic)., Determines if scheduling rest locks should be ignored (Infrastructure logic)., Validates critical settings and returns True if valid. (+28 more)
+Cohesion: 0.15
+Nodes (16): interaction_stage(), Handles social interactions (mentions/replies) with humanized engagement., Synchronous implementation of STATUS.md update to be offloaded to thread., _update_status_dashboard_sync(), fetch_bluesky_mentions(), fetch_mastodon_mentions(), fetch_threads_replies(), Fetches recent mentions and replies from Bluesky within 24 hours. (+8 more)
 
 ### Community 4 - "Feed configuration and dry-run diagnostics"
-Cohesion: 0.10
-Nodes (29): calculate_relevance_score(), fetch_news(), fetch_single_feed(), generate_interactive_reply(), generate_mentor_insight(), prune_gemini_model_priority_async(), Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity., Determines if a model supports the thinking_budget parameter.     Currently sup (+21 more)
+Cohesion: 0.05
+Nodes (45): calculate_relevance_score(), fetch_single_feed(), generate_image_alt_text(), generate_mentor_insight(), generate_nvidia_image(), generate_visual_prompt(), prune_gemini_model_priority_async(), Determines if a model supports the thinking_budget parameter.     Currently sup (+37 more)
 
 ### Community 5 - "Feed Vanguard RSS audit resilience"
 Cohesion: 0.15
 Nodes (11): Feed Vanguard, Three-Tier State Persistence, Performs a comprehensive feed audit and displays a health report., run_standalone_audit(), diagnostic(), AsyncClient, Manages RSS feed health and identifies problematic sources for soft-disable., Helper to check a single feed's health. (+3 more)
 
 ### Community 6 - "Atomic file locking & state persistence"
-Cohesion: 0.22
-Nodes (6): FileLock, _load_gist_state(), load_seen_articles(), Cross-platform advisory file lock context manager., Helper to pull state from a private GitHub Gist., 3-Tier Resilience: Local -> Backup -> Gist -> Default.
+Cohesion: 0.50
+Nodes (4): compress_image(), Losslessly then lossily compresses image to stay within platform limits (e.g., B, Verify that compress_image actually reduces size if needed., test_compress_image_reduction()
 
 ### Community 7 - "Seen interactions & smart text truncation"
-Cohesion: 0.15
-Nodes (12): Image Compression & RGB Defense, load_session_string(), Helper to push state to a private GitHub Gist., Helper to save state to a JSON file., 3-Tier Persistence: Atomic Write -> Backup Commit -> Remote Sync., Saves the BlueSky session string to a private file., Loads the cached BlueSky session string if it exists., _save_gist_state() (+4 more)
+Cohesion: 0.11
+Nodes (18): Image Compression & RGB Defense, get_with_safe_redirects(), load_session_string(), Helper to push state to a private GitHub Gist., Helper to save state to a JSON file., 3-Tier Persistence: Atomic Write -> Backup Commit -> Remote Sync., Resolves a hostname and returns only public IP candidates., Temporarily constrains DNS resolution for one hostname to a prevalidated set. (+10 more)
 
 ### Community 8 - "Utils & SSRF prevention architecture"
-Cohesion: 0.38
-Nodes (7): load_json_state(), load_seen_interactions(), Helper to load JSON data from a file path., Loads the list of social interaction IDs we've already responded to., Saves the list of social interaction IDs to persistent store., save_seen_interactions(), test_seen_interactions_persistence()
+Cohesion: 0.22
+Nodes (11): _load_gist_state(), load_json_state(), load_seen_articles(), load_seen_interactions(), Helper to pull state from a private GitHub Gist., Helper to load JSON data from a file path., Loads the list of social interaction IDs we've already responded to., Saves the list of social interaction IDs to persistent store. (+3 more)
 
 ### Community 9 - "Test mocks and conftest configurations"
 Cohesion: 0.22
 Nodes (8): mock_bsky_client(), mock_genai_client(), mock_httpx_client(), Mock for httpx.AsyncClient., Mock for atproto.AsyncClient., Mock for google.genai.Client., Silence the SafeLogger during tests to keep output clean, unless we're testing t, silent_logger()
 
-### Community 10 - "SSRF redirect prevention & DNS validation"
-Cohesion: 0.33
-Nodes (6): get_with_safe_redirects(), Temporarily constrains DNS resolution for one hostname to a prevalidated set., Fetches a URL while validating every hop in the redirect chain., _resolver_pinned_to_ips(), Verify that get_with_safe_redirects blocks redirects to private IPs., test_ssrf_blocking_in_redirects()
-
-### Community 11 - "Community 11"
-Cohesion: 0.33
-Nodes (6): _is_public_ip(), Checks if an IP address is a routable public address., Resolves a hostname and returns only public IP candidates., _resolve_public_ip_candidates(), Verify that private and reserved IP addresses are correctly identified as non-pu, test_is_public_ip_validation()
-
 ### Community 12 - "Mastodon post logic & smart text splitter"
-Cohesion: 0.25
-Nodes (7): 🔄 1. Stale Image URL Clearing, 1. What was Deleted or Simplified, 2. Why the Simpler Version is Safe, 3. Verification & Tests Run, 🛠️ Compliance with `AGENTS.md` Rules, 🚀 PR v3.13.1: Threads Media Propagation and Stale Image Prevention, Proposed Upgrades
+Cohesion: 0.18
+Nodes (10): 🎮 1. Telegram Control & Approval Queue, 1. What was Deleted or Simplified, ♿ 2. Screen Reader Multimodal Alt-Text, 2. Why the Simpler Version is Safe, 🏷️ 3. Per-Platform Hashtags, 3. Verification & Tests Run, 🛡️ 4. Side-Effect-Free Dry Run, 🛠️ Compliance with `AGENTS.md` Rules (+2 more)
 
 ### Community 13 - "Dashboard telemetry status migration"
-Cohesion: 0.50
-Nodes (4): Unicode-aware byte-level truncation to prevent Bluesky index errors., truncate_bytes(), Verify that truncation doesn't break multi-byte unicode characters., test_truncate_bytes_unicode()
+Cohesion: 0.11
+Nodes (24): main(), test_full_dry_run(), test_scoring(), fetch_feed_headlines(), main(), Fetches first 5 headlines from a single RSS feed., get_version(), Legacy wrapper for the new Settings validation logic. (+16 more)
 
 ### Community 14 - "Image Compression utilities"
-Cohesion: 0.17
-Nodes (14): compress_image(), get_image_mime(), Losslessly then lossily compresses image to stay within platform limits (e.g., B, Detects MIME type from image bytes for broadcaster fidelity., Truncates text at word boundaries within the limit, appending a suffix., Splits text into chunks within the limit, prioritizing paragraph and sentence bo, smart_split(), smart_truncate() (+6 more)
+Cohesion: 0.12
+Nodes (20): get_image_mime(), _is_public_ip(), Checks if an IP address is a routable public address., Detects MIME type from image bytes for broadcaster fidelity., Unicode-aware byte-level truncation to prevent Bluesky index errors., Truncates text at word boundaries within the limit, appending a suffix., Splits text into chunks within the limit, prioritizing paragraph and sentence bo, smart_split() (+12 more)
+
+### Community 15 - "Mime-type helpers"
+Cohesion: 0.13
+Nodes (19): Interaction Engine, Sage Intelligence v3, clean_hashtags_if_needed(), post_to_bluesky(), post_to_mastodon(), post_to_threads(), Posts to Mastodon with Conditional Multi-Post Threading (The Weaver)., Helper to strip or format hashtags based on platform settings. (+11 more)
 
 ### Community 16 - "URL normalization logic"
 Cohesion: 0.50
 Nodes (4): normalize_url(), Normalizes a URL by resolving protocol-relative links, stripping fragments,, Verify that normalize_url handles various edge cases correctly., test_normalize_url_scenarios()
 
 ### Community 25 - "Wiki manual blueprint"
-Cohesion: 0.14
-Nodes (13): 📖 BluBot Elite Sage: The Complete Manual, Hardening Features, 🚀 Page 18: Threads Media Propagation Hardening (v3.13.1), 🏠 Page 1: The Sage Philosophy, 🧠 Page 2: Breakthrough Scoring Engine v3, 🛡️ Page 3: Reliability & The Fortress, 🎨 Page 4: NVIDIA NIM Image Generation, 🛰️ Page 5: Source Intelligence (+5 more)
-
-### Community 27 - "Community 27"
 Cohesion: 0.13
-Nodes (20): main(), test_full_dry_run(), test_scoring(), fetch_feed_headlines(), main(), Fetches first 5 headlines from a single RSS feed., get_version(), Legacy wrapper for the new Settings validation logic. (+12 more)
+Nodes (14): 📖 BluBot Elite Sage: The Complete Manual, Hardening Features, 📊 Page 12: System Telemetry Dashboards, 🏠 Page 1: The Sage Philosophy, 🧠 Page 2: Breakthrough Scoring Engine v3, 🛡️ Page 3: Reliability & The Fortress, 🎨 Page 4: NVIDIA NIM Image Generation, 🛰️ Page 5: Source Intelligence (+6 more)
 
 ### Community 28 - "Issue 1 version 2 documentation"
 Cohesion: 0.50
-Nodes (4): 1. Interactive Telegram Gateway & Approval Queue, 2. Screen Reader Multimodal Alt-Text, 3. Cultural Hashtag Alignment, 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.13.0)
+Nodes (4): 1. Interactive Telegram Gateway & Approval Queue, 2. Screen Reader Multimodal Alt-Text, 3. Cultural Hashtag Alignment, 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.1)
 
 ### Community 42 - "Community 42"
 Cohesion: 0.25
@@ -228,24 +215,24 @@ Cohesion: 0.67
 Nodes (3): 🧪 Page 9: Automated Quality Control, Running Automated Tests, The Test Layers
 
 ## Knowledge Gaps
-- **96 isolated node(s):** `Any`, `AsyncClient`, `Any`, `graphify`, `Workflow: graphify` (+91 more)
+- **95 isolated node(s):** `Any`, `graphify`, `Workflow: graphify`, `🧠 The Sage Philosophy`, `🧱 Architectural Guardrails` (+90 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Settings` connect `Global settings & config generation` to `Data Models & Pipeline Staging`, `Logger & Secret Redaction Engine`, `Community 27`, `Feed configuration and dry-run diagnostics`?**
-  _High betweenness centrality (0.077) - this node is a cross-community bridge._
-- **Why does `VanguardManager` connect `Feed Vanguard RSS audit resilience` to `Data Models & Pipeline Staging`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
-- **Why does `SafeLogger` connect `Logger & Secret Redaction Engine` to `Global settings & config generation`, `Community 27`, `Atomic file locking & state persistence`, `Seen interactions & smart text truncation`?**
-  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+- **Why does `Settings` connect `Feed configuration and dry-run diagnostics` to `Data Models & Pipeline Staging`, `Logger & Secret Redaction Engine`, `Global settings & config generation`, `Dashboard telemetry status migration`?**
+  _High betweenness centrality (0.062) - this node is a cross-community bridge._
+- **Why does `VanguardManager` connect `Feed Vanguard RSS audit resilience` to `Data Models & Pipeline Staging`, `Global settings & config generation`?**
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `SafeLogger` connect `Logger & Secret Redaction Engine` to `Global settings & config generation`, `Feed configuration and dry-run diagnostics`, `Dashboard telemetry status migration`, `Seen interactions & smart text truncation`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `VanguardManager` (e.g. with `Any` and `AsyncClient`) actually correct?**
   _`VanguardManager` has 7 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 7 inferred relationships involving `CurationResult` (e.g. with `Any` and `AsyncClient`) actually correct?**
   _`CurationResult` has 7 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Synchronous implementation of STATUS.md update to be offloaded to thread.`, `Automatically update the STATUS.md dashboard without blocking the event loop.`, `Stage 1: Fetch and Score Raw News.` to the rest of the system?**
-  _205 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _201 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Core Curation & Broadcaster Logic` be split into smaller, more focused modules?**
   _Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected._
