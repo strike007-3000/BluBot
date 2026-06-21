@@ -1,7 +1,7 @@
 import asyncio
 import time
 from typing import Optional
-from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from src.settings import settings
 from src.utils import SafeLogger
 
@@ -45,31 +45,43 @@ def validate_text_limits(text: str) -> Optional[str]:
 
     return None
 
-async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None) -> Optional[str]:
+async def send_draft_for_approval(
+    text: str,
+    image_bytes: Optional[bytes] = None,
+    image_alt_text: Optional[str] = None,
+    client: Optional[httpx.AsyncClient] = None,
+    genai_client: Optional[Any] = None,
+    topic: str = "General"
+) -> Tuple[Optional[str], Optional[bytes], Optional[str]]:
     """
     Sends the generated post draft and image to Telegram for approval.
     Waits up to settings.telegram_timeout_minutes (default 5) for user callback or text reply.
-    If the timeout expires, defaults to the current text and posts.
-    Returns the approved/edited text, or None if rejected.
+    If the timeout expires, defaults to the current text, image, and alt text, and posts.
+    Returns a Tuple: (approved_text, approved_image_bytes, approved_image_alt_text).
+    Returns (None, None, None) if rejected.
     """
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
-        return text
+        return text, image_bytes, image_alt_text
 
     # Do not request approval in dry-run mode
     if settings.is_dry_run:
         SafeLogger.info("Telegram: DRY_RUN enabled. Skipping approval message dispatch.")
-        return text
+        return text, image_bytes, image_alt_text
 
     try:
         bot = Bot(token=settings.telegram_bot_token)
         chat_id = settings.telegram_user_id
 
-        # Create the inline keyboard buttons
+        # Create the inline keyboard buttons (with Option A options)
         keyboard = [
             [
                 InlineKeyboardButton("✅ Approve", callback_data="approve"),
                 InlineKeyboardButton("❌ Reject", callback_data="reject")
+            ],
+            [
+                InlineKeyboardButton("🔄 Regenerate Text", callback_data="regenerate_text"),
+                InlineKeyboardButton("🎨 Regenerate Image", callback_data="regenerate_image")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -103,6 +115,9 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
         poll_interval = 2
         elapsed = 0
 
+        waiting_for_feedback = False
+        feedback_prompt_id = None
+
         SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval or edits...")
         while elapsed < timeout_seconds:
             try:
@@ -110,7 +125,7 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
                 for update in updates:
                     offset = update.update_id + 1
                     
-                    # Handle callback query (Approve/Reject buttons)
+                    # Handle callback query (Approve/Reject/Regen buttons)
                     if update.callback_query:
                         query = update.callback_query
                         
@@ -126,14 +141,83 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
                                 SafeLogger.info("Telegram: User approved draft.")
                                 await query.answer("Draft approved! Publishing...")
                                 await bot.send_message(chat_id=chat_id, text="🚀 Approved. Posting to platforms...")
-                                return text
+                                return text, image_bytes, image_alt_text
                             elif action == "reject":
                                 SafeLogger.info("Telegram: User rejected draft.")
                                 await query.answer("Draft rejected.")
                                 await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
-                                return None
+                                return None, None, None
+                            elif action == "regenerate_text":
+                                SafeLogger.info("Telegram: User requested text regeneration.")
+                                prompt_msg = await bot.send_message(
+                                    chat_id=chat_id,
+                                    text="📥 Reply to this message with a feedback hint for text regeneration (or reply `/skip` to regenerate with default settings):",
+                                    reply_to_message_id=sent_message.message_id
+                                )
+                                feedback_prompt_id = prompt_msg.message_id
+                                waiting_for_feedback = True
+                                await query.answer("Provide feedback for text regeneration...")
+                            elif action == "regenerate_image":
+                                SafeLogger.info("Telegram: User requested image regeneration.")
+                                if not genai_client or not client:
+                                    await bot.send_message(chat_id=chat_id, text="⚠️ API clients are missing; image regeneration not possible.")
+                                    await query.answer()
+                                    continue
+                                
+                                status_msg = await bot.send_message(chat_id=chat_id, text="🎨 Regenerating image card using NVIDIA SD3 NIM...")
+                                await query.answer("Regenerating image...")
+                                
+                                try:
+                                    from src.curator import generate_visual_prompt, generate_nvidia_image, generate_image_alt_text
+                                    
+                                    # 1. Generate new visual prompt
+                                    visual_prompt = await generate_visual_prompt(genai_client, text, topic)
+                                    
+                                    # 2. Generate nvidia image
+                                    new_image_data = await generate_nvidia_image(client, visual_prompt)
+                                    
+                                    if new_image_data:
+                                        # 3. Generate image alt text
+                                        alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
+                                        new_alt_text = await generate_image_alt_text(new_image_data, alt_prompt)
+                                        
+                                        # 4. Update preview message media
+                                        if sent_message and (image_bytes or (hasattr(sent_message, 'photo') and sent_message.photo)):
+                                            await bot.edit_message_media(
+                                                chat_id=chat_id,
+                                                message_id=sent_message.message_id,
+                                                media=InputMediaPhoto(
+                                                    media=new_image_data,
+                                                    caption=f"📝 **DRAFT POST**:\n\n{text}",
+                                                    parse_mode="Markdown"
+                                                ),
+                                                reply_markup=reply_markup
+                                            )
+                                            image_bytes = new_image_data
+                                            image_alt_text = new_alt_text
+                                            SafeLogger.info("Telegram: Image regenerated successfully.")
+                                            await bot.send_message(chat_id=chat_id, text="🎨 Image card regenerated successfully!", reply_to_message_id=status_msg.message_id)
+                                        else:
+                                            # If original was text-only, we can't edit media, so send new photo instead
+                                            sent_photo = await bot.send_photo(
+                                                chat_id=chat_id,
+                                                photo=new_image_data,
+                                                caption=f"📝 **DRAFT POST**:\n\n{text}",
+                                                reply_markup=reply_markup,
+                                                parse_mode="Markdown"
+                                            )
+                                            sent_message = sent_photo
+                                            image_bytes = new_image_data
+                                            image_alt_text = new_alt_text
+                                            SafeLogger.info("Telegram: Image generated and attached successfully.")
+                                            await bot.send_message(chat_id=chat_id, text="🎨 Image card generated and attached successfully!", reply_to_message_id=status_msg.message_id)
+                                    else:
+                                        await bot.send_message(chat_id=chat_id, text="❌ Image generation returned no data.")
+                                except Exception as e:
+                                    SafeLogger.error(f"Telegram: Image regeneration failed: {e}")
+                                    await bot.send_message(chat_id=chat_id, text=f"❌ Image regeneration failed: {e}", reply_to_message_id=status_msg.message_id)
 
-                    # Handle incoming text messages (direct edits or replies)
+                    # Handle incoming text messages (direct edits, replies, or feedback)
                     elif update.message and update.message.text:
                         msg = update.message
                         
@@ -141,55 +225,122 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
                         if str(msg.from_user.id) != str(chat_id):
                             continue
 
-                        new_text = None
-                        is_edit = False
+                        # Scenario A: User is replying to the text feedback prompt
+                        if waiting_for_feedback and msg.reply_to_message and msg.reply_to_message.message_id == feedback_prompt_id:
+                            waiting_for_feedback = False
+                            feedback = msg.text.strip()
+                            if feedback.lower() == '/skip':
+                                feedback = "Refine the wording and present the insight from a slightly different perspective."
 
-                        # Check for /edit command or reply to the draft message
-                        if msg.text.startswith("/edit "):
-                            new_text = msg.text[6:].strip()
-                            is_edit = True
-                        elif msg.reply_to_message and msg.reply_to_message.message_id == sent_message.message_id:
-                            new_text = msg.text.strip()
-                            is_edit = True
+                            status_msg = await bot.send_message(chat_id=chat_id, text="🔄 Regenerating text draft...", reply_to_message_id=msg.message_id)
+                            
+                            try:
+                                from src.config import CURATOR_SYSTEM_INSTRUCTION
+                                from google.genai import types
+                                from src.curator import strip_markdown
+                                
+                                rewrite_prompt = (
+                                    f"You are a professional editor. Please rewrite the following technical post draft based on the user's feedback.\n\n"
+                                    f"Current Draft:\n\"\"\"\n{text}\n\"\"\"\n\n"
+                                    f"User Feedback: {feedback}\n\n"
+                                    f"Follow all system instructions for style, tone, and length constraints."
+                                )
+                                
+                                response = await genai_client.aio.models.generate_content(
+                                    model=settings.gemini_model,
+                                    contents=rewrite_prompt,
+                                    config=types.GenerateContentConfig(
+                                        system_instruction=CURATOR_SYSTEM_INSTRUCTION,
+                                        temperature=0.7
+                                    )
+                                )
+                                new_text = strip_markdown(response.text.strip())
 
-                        if is_edit and new_text:
-                            # Update the sent message with new draft text first (before committing)
-                            if image_bytes:
-                                await bot.edit_message_caption(
-                                    chat_id=chat_id,
-                                    message_id=sent_message.message_id,
-                                    caption=f"📝 **DRAFT POST**:\n\n{new_text}",
-                                    reply_markup=reply_markup,
-                                    parse_mode="Markdown"
-                                )
-                            else:
-                                await bot.edit_message_text(
-                                    chat_id=chat_id,
-                                    message_id=sent_message.message_id,
-                                    text=f"📝 **DRAFT POST**:\n\n{new_text}",
-                                    reply_markup=reply_markup,
-                                    parse_mode="Markdown"
-                                )
+                                # Update the sent message preview
+                                if image_bytes:
+                                    await bot.edit_message_caption(
+                                        chat_id=chat_id,
+                                        message_id=sent_message.message_id,
+                                        caption=f"📝 **DRAFT POST**:\n\n{new_text}",
+                                        reply_markup=reply_markup,
+                                        parse_mode="Markdown"
+                                    )
+                                else:
+                                    await bot.edit_message_text(
+                                        chat_id=chat_id,
+                                        message_id=sent_message.message_id,
+                                        text=f"📝 **DRAFT POST**:\n\n{new_text}",
+                                        reply_markup=reply_markup,
+                                        parse_mode="Markdown"
+                                    )
+                                
+                                text = new_text
+                                SafeLogger.info(f"Telegram: Text regenerated to: {text}")
+                                await bot.send_message(chat_id=chat_id, text="📝 Draft text updated successfully!", reply_to_message_id=msg.message_id)
 
-                            # Only update the stored text if the Telegram API update succeeded
-                            text = new_text
-                            SafeLogger.info(f"Telegram: Draft updated by user to: {text}")
+                                # Validate limits and generate feedback message
+                                warning_msg = validate_text_limits(text)
+                                if warning_msg:
+                                    await bot.send_message(
+                                        chat_id=chat_id,
+                                        text=warning_msg,
+                                        parse_mode="Markdown"
+                                    )
+                            except Exception as e:
+                                SafeLogger.error(f"Telegram: Text regeneration failed: {e}")
+                                await bot.send_message(chat_id=chat_id, text=f"❌ Text regeneration failed: {e}", reply_to_message_id=msg.message_id)
 
-                            # Validate limits and generate feedback message
-                            warning_msg = validate_text_limits(text)
-                            if warning_msg:
-                                await bot.send_message(
-                                    chat_id=chat_id,
-                                    text=warning_msg,
-                                    parse_mode="Markdown",
-                                    reply_to_message_id=msg.message_id
+                        # Scenario B: Manual editing via direct reply or command
+                        else:
+                            new_text = None
+                            is_edit = False
+
+                            # Check for /edit command or reply to the draft message
+                            if msg.text.startswith("/edit "):
+                                new_text = msg.text[6:].strip()
+                                is_edit = True
+                            elif msg.reply_to_message and msg.reply_to_message.message_id == sent_message.message_id:
+                                new_text = msg.text.strip()
+                                is_edit = True
+
+                            if is_edit and new_text:
+                                # Update the sent message with new draft text first (before committing)
+                                if image_bytes:
+                                    await bot.edit_message_caption(
+                                        chat_id=chat_id,
+                                        message_id=sent_message.message_id,
+                                        caption=f"📝 **DRAFT POST**:\n\n{new_text}",
+                                        reply_markup=reply_markup,
+                                        parse_mode="Markdown"
+                                    )
+                                else:
+                                    await bot.edit_message_text(
+                                        chat_id=chat_id,
+                                        message_id=sent_message.message_id,
+                                        text=f"📝 **DRAFT POST**:\n\n{new_text}",
+                                        reply_markup=reply_markup,
+                                        parse_mode="Markdown"
+                                    )
+
+                                # Only update the stored text if the Telegram API update succeeded
+                                text = new_text
+                                SafeLogger.info(f"Telegram: Draft updated by user to: {text}")
+
+                                # Validate limits and generate feedback message
+                                warning_msg = validate_text_limits(text)
+                                if warning_msg:
+                                    await bot.send_message(
+                                        chat_id=chat_id,
+                                        text=warning_msg,
+                                        parse_mode="Markdown",
+                                        reply_to_message_id=msg.message_id
                                 )
-                            else:
-                                await bot.send_message(
-                                    chat_id=chat_id,
-                                    text="📝 Draft updated!",
-                                    reply_to_message_id=msg.message_id
-                                )
+                                else:
+                                    await bot.send_message(
+                                        chat_id=chat_id,
+                                        text="📝 Draft updated!",
+                                        reply_to_message_id=msg.message_id
+                                    )
 
             except Exception as e:
                 # Silently catch network hiccups, but log warnings
@@ -201,11 +352,11 @@ async def send_draft_for_approval(text: str, image_bytes: Optional[bytes] = None
         # Timeout occurred: auto-post
         SafeLogger.info("Telegram: Approval timeout expired. Automatically publishing draft.")
         await bot.send_message(chat_id=chat_id, text="🕒 Timeout expired. Automatically publishing draft.")
-        return text
+        return text, image_bytes, image_alt_text
 
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
-        return text  # Fallback to current text to maintain automated scheduling robustness
+        return text, image_bytes, image_alt_text  # Fallback to current text and images to maintain robustness
 
 async def check_for_telegram_topic() -> Optional[str]:
     """

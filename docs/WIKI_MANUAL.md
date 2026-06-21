@@ -782,17 +782,20 @@ On Friday mornings, the curation prompt automatically shifts. The bot appends a 
 
 ---
 
-## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.2)
+## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.13.0)
 
-BluBot v3.12.2 introduces three massive upgrades for manual intervention, accessibility, and platform culture alignment:
+BluBot v3.13.0 introduces three massive upgrades for manual intervention, accessibility, and platform culture alignment:
 
 ### 1. Interactive Telegram Gateway & Approval Queue
 You can control the bot directly from Telegram. The integration supports two key workflows:
-* **The Approval Queue**: Before publishing, the bot posts the text draft + generated image card directly to your Telegram chat using Inline Buttons (`[✅ Approve]`, `[❌ Reject]`).
+* **The Approval Queue**: Before publishing, the bot posts the text draft + generated image card directly to your Telegram chat using Inline Buttons (`[✅ Approve]`, `[❌ Reject]`, `[🔄 Regenerate Text]`, `[🎨 Regenerate Image]`).
   - **Wait-and-Poll**: The GitHub Action waits up to `TELEGRAM_TIMEOUT_MINUTES` (default: 5) for your choice.
   - **Auto-Post Fallback**: If you do not respond in time, the bot automatically posts the draft to avoid scheduling delays.
   - **Security Gate**: The bot only processes updates matching `TELEGRAM_USER_ID`.
-  - **Interactive Editing (v3.12.2)**: You can edit the draft inline by replying directly to the draft message with your new text, or sending a `/edit <new text>` command. The bot will validate the text length and warn you if it exceeds platform limits (Bluesky 300 chars, Mastodon/Threads 500 chars). Once you approve the updated preview, the edited text is broadcasted.
+  - **Interactive Editing**: You can edit the draft inline by replying directly to the draft message with your new text, or sending a `/edit <new text>` command. The bot will validate the text length against safety-buffered limits (Bluesky 290, Mastodon 485, Threads 490) and warn you if it will split into a thread or truncate.
+  - **Interactive Curation & Image Regeneration (v3.13.0)**:
+    - **`[🔄 Regenerate Text]`**: Prompts the user to supply an optional feedback hint. You can reply with formatting instructions (e.g. "shorter", "make it more technical") or write `/skip` to regenerate using default options. Gemini rewrites the draft inline.
+    - **`[🎨 Regenerate Image]`**: Automatically regenerates the isometric card prompt using the latest draft text, requests a fresh image using NVIDIA NIM SD3, regenerates the screen-reader alt-text using Gemini Vision, and updates the preview media dynamically.
 * **On-Demand Topic Curation**: Send `/topic <your_keyword>` or `/curate <your_keyword>` to your Telegram bot. When the GHA runner starts, it performs a real-time keyword search against all active RSS feeds:
   - **RSS Grounding**: If matching articles are found (e.g. searching "Cursor" matches the SpaceX-Cursor deal), the bot curates and synthesizes directly from the actual news articles (preserving original links/facts) rather than relying on stale parametric knowledge.
   - **Raw Curation Fallback**: If no matching articles are found in your RSS feeds, the bot gracefully falls back to raw synthesis from scratch.
