@@ -525,7 +525,14 @@ async def main():
             
             # Update synthesis with approved/edited text and media
             from dataclasses import replace
-            synthesis = replace(synthesis, content=final_content, image_data=final_image, image_alt_text=final_alt)
+            new_image_url = synthesis.image_url if final_image == synthesis.image_data else None
+            synthesis = replace(
+                synthesis,
+                content=final_content,
+                image_data=final_image,
+                image_url=new_image_url,
+                image_alt_text=final_alt
+            )
 
         # 3. Broadcast
         SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")

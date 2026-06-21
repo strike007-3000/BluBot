@@ -1,7 +1,7 @@
 {
   "bot.py": {
-    "mtime": 1782063117.2182188,
-    "ast_hash": "4a4dc36351c1e60a26dfbd5bf25ba376",
+    "mtime": 1782061030.661844,
+    "ast_hash": "0abcd8f0934bb0db5f435ddce0099afd",
     "semantic_hash": ""
   },
   "broken_feeds.json": {
@@ -185,13 +185,13 @@
     "semantic_hash": ""
   },
   "docs/WIKI_MANUAL.md": {
-    "mtime": 1782063444.7057943,
-    "ast_hash": "e7d39656e8b74da8bcd9174e52b4a392",
+    "mtime": 1782061199.0685484,
+    "ast_hash": "a00d54a71bcc7fa4e582216fe5a0bf46",
     "semantic_hash": ""
   },
   "pr_description.md": {
-    "mtime": 1782063450.2553523,
-    "ast_hash": "36fd76153dc244d59c7b73e94bddac7a",
+    "mtime": 1782061204.4620676,
+    "ast_hash": "993a2b4a0dfd9016621766ecd6d2ff91",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -227,16 +227,6 @@
   "src/tests/test_topic_grounding.py": {
     "mtime": 1782060671.8883576,
     "ast_hash": "dbcf871af1d22055d03ee72ee91c31b4",
-    "semantic_hash": ""
-  },
-  "seen_interactions.json": {
-    "mtime": 1782063353.3561726,
-    "ast_hash": "d751713988987e9331980363e24189ce",
-    "semantic_hash": ""
-  },
-  "src/tests/test_telegram_propagation.py": {
-    "mtime": 1782063334.1855454,
-    "ast_hash": "96fa8435fcd98881c57133d4578d906e",
     "semantic_hash": ""
   }
 }

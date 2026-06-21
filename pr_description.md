@@ -1,32 +1,26 @@
-# 🚀 PR v3.13.0: Interactive Text & Image Regeneration from Telegram
+# 🚀 PR v3.13.1: Threads Media Propagation and Stale Image Prevention
 
-This PR introduces real-time text and image regeneration capabilities directly inside the Telegram draft approval queue, allowing for rapid loop feedback and draft updates before broadcasting.
+This PR fixes a bug where the stale crawled `synthesis.image_url` was preserved even after regenerating or editing the image via the Telegram approval gateway. This led to Threads broadcasting the original crawled image rather than the approved/regenerated media.
 
 ## Proposed Upgrades
 
-### 🔄 1. Interactive Text Curation Regeneration
-- **Feedback Loops**: User can click `[🔄 Regenerate Text]` and reply to the bot with custom editing instructions (e.g. "shorter", "make it more practical") or send `/skip` to trigger default regeneration.
-- **Dynamic Rewrite Engine**: Gemini rewrites the current draft inline based on the feedback hint, validating the new length constraints and updating the active inline buttons preview.
-
-### 🎨 2. Nvidia Image & Alt-Text Regeneration
-- **Visual Regeneration**: User can click `[🎨 Regenerate Image]` to automatically generate a new visual prompt based on the latest draft text.
-- **Nvidia SD3 NIM integration**: Fetches and downscales a new isometric image card under the 900KB Cap.
-- **Gemini Vision Alt-Text Sync**: Generates a new 100-character description for the updated card, which is then updated dynamically in the chat preview using Telegram's `edit_message_media` API.
+### 🔄 1. Stale Image URL Clearing
+- When the final approved image bytes (`final_image`) differ from the original synthesis image bytes (`synthesis.image_data`), the bot now automatically clears `synthesis.image_url` (setting it to `None`).
+- This ensures the broadcaster (`post_to_threads`) does not attempt to post the stale original image to Threads.
 
 ---
 
 ## 🛠️ Compliance with `AGENTS.md` Rules
 
 ### 1. What was Deleted or Simplified
-- Unified `send_draft_for_approval` to return a `Tuple[Optional[str], Optional[bytes], Optional[str]]` containing the final text, image, and alt text. This simplifies the bot lifecycle by keeping all media assets stateless and mutable during the review loop.
+- Simplified the state management of the synthesis dataclass replacement inside `bot.py` during approval. Rather than needing a complex image-upload pipeline, we clear the stale image URL to prevent publishing incorrect or old media.
 
 ### 2. Why the Simpler Version is Safe
-- Uses Telegram's standard `edit_message_media` and `edit_message_caption` APIs to modify existing preview messages, preserving active inline button sessions and avoiding infinite message spam.
-- In case of transient API errors, the outer catch block safely falls back to auto-posting the current draft instead of aborting.
+- It is completely side-effect free. If the image is not regenerated, the original URL is preserved. If the image is changed, the URL is cleared, which is the correct and safe behavior to prevent posting stale content.
 
 ### 3. Verification & Tests Run
-- Added comprehensive unit tests in [test_telegram_gateway.py](file:///d:/Code/BlueSky/src/tests/test_telegram_gateway.py):
-  - `test_send_draft_for_approval_regenerate_text`: Verifies text regeneration callback, feedback prompt reply matching, Gemini call integration, and limits warnings.
-  - `test_send_draft_for_approval_regenerate_image`: Verifies image regeneration callback, prompt calculation, image generation, alt-text generation, and media editing.
-- Ran **46 tests successfully** using `pytest`.
+- Added comprehensive unit tests in [test_telegram_propagation.py](file:///d:/Code/BlueSky/src/tests/test_telegram_propagation.py):
+  - `test_telegram_approval_image_url_propagation_changed`: Verifies that `image_url` is set to `None` if the approved image differs from the original.
+  - `test_telegram_approval_image_url_propagation_unchanged`: Verifies that `image_url` is preserved if the approved image remains unchanged.
+- Ran **48 tests successfully** using `pytest`.
 - Ran `python bot.py --dry-run` to verify end-to-end integration and dry-run safety.

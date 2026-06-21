@@ -10,7 +10,6 @@
   "8": "Utils & SSRF prevention architecture",
   "9": "Test mocks and conftest configurations",
   "10": "SSRF redirect prevention & DNS validation",
-  "11": "Community 11",
   "12": "Mastodon post logic & smart text splitter",
   "13": "Dashboard telemetry status migration",
   "14": "Image Compression utilities",
