@@ -82,39 +82,19 @@ jobs:
           path: bluesky_session.txt
           key: bsky-session-${{ github.run_id }}
 
-      - name: Commit and push STATUS.md to main
+      - name: Commit and push state to automated/state
         if: success()
-        env:
-          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "actions@github.com"
 
-          # Authenticate as repo owner (admin) to satisfy the Ruleset bypass
-          git remote set-url origin https://x-access-token:${REPO_TOKEN}@github.com/${{ github.repository }}.git
-
-          # STATUS.md must be pushed back to main — it lives there and is
-          # displayed in the repository. The state branch (automated/state)
-          # is ephemeral and not visible to readers.
-          git add STATUS.md
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: update STATUS.md dashboard [skip ci]"
-            git pull --rebase --autostash origin main
-            git push origin HEAD:main
-          else
-            echo "No STATUS.md changes to push."
-          fi
-
-      - name: Commit and push state to automated/state
-        if: success()
-        run: |
-          # Stage only the article state file for the isolated state branch
-          git add seen_articles.json
+          # Stage state files for the isolated state branch
+          git add seen_articles.json STATUS.md
           if git diff --cached --quiet; then
-            echo "No seen_articles.json changes to push."
+            echo "No state changes to push."
             exit 0
           fi
-          git commit -m "chore: update seen articles state [skip ci]"
+          git commit -m "chore: update bot state and STATUS.md dashboard [skip ci]"
 
           # Bootstrap automated/state branch if it doesn't exist
           if ! git ls-remote --exit-code --heads origin automated/state; then
