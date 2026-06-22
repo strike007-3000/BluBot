@@ -84,9 +84,14 @@ jobs:
 
       - name: Commit and push STATUS.md to main
         if: success()
+        env:
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "actions@github.com"
+
+          # Authenticate as repo owner (admin) to satisfy the Ruleset bypass
+          git remote set-url origin https://x-access-token:${REPO_TOKEN}@github.com/${{ github.repository }}.git
 
           # STATUS.md must be pushed back to main — it lives there and is
           # displayed in the repository. The state branch (automated/state)
