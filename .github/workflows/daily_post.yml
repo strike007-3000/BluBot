@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      workflows: write
     steps:
       - name: Mask Session Metadata
         run: |
@@ -25,7 +24,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # Full history needed for rebase
+          fetch-depth: 1
 
       - name: Restore persistence state
         run: |
@@ -86,25 +85,34 @@ jobs:
       - name: Commit and push state to automated/state
         if: success()
         run: |
-          git config --global user.name "GitHub Action Bot"
-          git config --global user.email "actions@github.com"
+          # Save current state files
+          mkdir -p /tmp/state
+          cp seen_articles.json STATUS.md /tmp/state/
 
-          # Stage state files for the isolated state branch
+          # Clone automated/state branch (or create if it doesn't exist)
+          git clone --depth 1 --branch automated/state https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git state-branch || {
+            mkdir state-branch
+            cd state-branch
+            git init
+            git checkout -b automated/state
+            git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            cd ..
+          }
+
+          cd state-branch
+          git config user.name "GitHub Action Bot"
+          git config user.email "actions@github.com"
+
+          # Copy state files in
+          cp /tmp/state/seen_articles.json /tmp/state/STATUS.md .
+
+          # Track only these files
           git add seen_articles.json STATUS.md
+
           if git diff --cached --quiet; then
             echo "No state changes to push."
             exit 0
           fi
-          git commit -m "chore: update bot state and STATUS.md dashboard [skip ci]"
 
-          # Bootstrap automated/state branch if it doesn't exist
-          if ! git ls-remote --exit-code --heads origin automated/state; then
-            echo "automated/state branch not found. Bootstrapping new state branch..."
-            git push origin HEAD:automated/state
-            exit 0
-          fi
-
-          # Safe rebase strategy: use --autostash and favor latest state (-Xtheirs)
-          git fetch origin automated/state
-          git pull origin automated/state --rebase=merges --autostash -Xtheirs
-          git push origin HEAD:automated/state
+          git commit -m "chore: update bot state [skip ci]"
+          git push origin automated/state
