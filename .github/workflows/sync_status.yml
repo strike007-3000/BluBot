@@ -1,0 +1,47 @@
+name: Sync STATUS.md to main
+
+on:
+  workflow_run:
+    workflows: ["Daily AI News Post"]
+    types: [completed]
+
+jobs:
+  sync-status:
+    runs-on: ubuntu-latest
+    # Only run if the bot completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout automated/state
+        uses: actions/checkout@v7
+        with:
+          ref: automated/state
+          fetch-depth: 1
+
+      - name: Push STATUS.md to main via GitHub Contents API
+        env:
+          GH_TOKEN: ${{ secrets.REPO_TOKEN }}
+        run: |
+          # Base64-encode the file content (no line wrapping)
+          CONTENT=$(base64 -w 0 STATUS.md)
+
+          # Get the current SHA of STATUS.md on main (required for updates)
+          SHA=$(gh api repos/${{ github.repository }}/contents/STATUS.md \
+            --jq '.sha' 2>/dev/null || echo "")
+
+          if [ -n "$SHA" ]; then
+            # File exists on main — update it
+            gh api --method PUT repos/${{ github.repository }}/contents/STATUS.md \
+              -f message="chore: sync STATUS.md to main [skip ci]" \
+              -f content="$CONTENT" \
+              -f sha="$SHA"
+          else
+            # File does not exist on main yet — create it
+            gh api --method PUT repos/${{ github.repository }}/contents/STATUS.md \
+              -f message="chore: sync STATUS.md to main [skip ci]" \
+              -f content="$CONTENT"
+          fi
+
+          echo "STATUS.md synced to main."
