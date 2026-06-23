@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.20885",
-    "https://arxiv.org/abs/2605.20922",
-    "https://arxiv.org/abs/2605.21491",
-    "https://arxiv.org/abs/2605.21496",
-    "https://arxiv.org/abs/2605.21543",
-    "https://arxiv.org/abs/2605.21600",
-    "https://arxiv.org/abs/2605.21606",
-    "https://arxiv.org/abs/2605.21648",
     "https://arxiv.org/abs/2605.21731",
     "https://arxiv.org/abs/2605.21751",
     "https://arxiv.org/abs/2605.21770",
@@ -499,13 +491,21 @@
     "https://openai.com/index/daybreak-securing-the-world",
     "https://www.latent.space/p/ainews-spacex-is-already-a-28byr",
     "https://openai.com/index/codex-maxxing-long-running-work",
-    "https://huggingface.co/blog/local-models-pr-triage"
+    "https://huggingface.co/blog/local-models-pr-triage",
+    "https://huggingface.co/blog/ibm-research/cuga-apps",
+    "https://the-decoder.com/openai-says-new-gpt-5-5-cyber-outperforms-anthropics-mythos-on-cybersecurity-benchmark/",
+    "https://machinelearningmastery.com/clustering-unstructured-text-with-llm-embeddings-and-hdbscan/",
+    "https://openai.com/index/samsung-electronics-chatgpt-codex-deployment",
+    "https://the-decoder.com/sakana-ais-fugu-orchestrates-multiple-llms-to-match-anthropics-fable-and-mythos-benchmarks/",
+    "https://www.latent.space/p/gray-swan",
+    "https://techcrunch.com/2026/06/22/openai-launches-new-initiative-to-help-find-and-patch-open-source-bugs/",
+    "https://techcrunch.com/2026/06/22/the-ai-world-is-getting-loopy/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 715,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 716,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
