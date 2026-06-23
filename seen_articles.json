@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.20678",
-    "https://arxiv.org/abs/2605.20722",
-    "https://machinelearningmastery.com/how-to-build-a-multi-agent-research-assistant-in-python/",
-    "https://arxiv.org/abs/2605.20744",
-    "https://arxiv.org/abs/2605.20745",
-    "https://arxiv.org/abs/2605.20763",
-    "https://arxiv.org/abs/2605.20824",
-    "https://arxiv.org/abs/2605.20865",
     "https://arxiv.org/abs/2605.20885",
     "https://arxiv.org/abs/2605.20922",
     "https://arxiv.org/abs/2605.21491",
@@ -499,13 +491,21 @@
     "https://the-decoder.com/the-eu-doesnt-really-know-what-a-deepfake-is-and-thats-becoming-a-problem-for-retail/",
     "https://techcrunch.com/2026/06/20/nobel-laureate-john-jumper-is-leaving-deepmind-for-rival-anthropic/",
     "https://the-decoder.com/openais-codex-can-now-watch-you-work-once-and-repeat-the-task-forever/",
-    "https://telegram.org"
+    "https://telegram.org",
+    "https://openai.com/index/patch-the-planet",
+    "https://openai.com/index/omio",
+    "https://huggingface.co/blog/huggingface-hub-release-ci",
+    "https://huggingface.co/blog/PaddlePaddle/pp-ocrv6",
+    "https://openai.com/index/daybreak-securing-the-world",
+    "https://www.latent.space/p/ainews-spacex-is-already-a-28byr",
+    "https://openai.com/index/codex-maxxing-long-running-work",
+    "https://huggingface.co/blog/local-models-pr-triage"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 714,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 715,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31"
 }
