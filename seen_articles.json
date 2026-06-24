@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.21856",
-    "https://arxiv.org/abs/2605.21963",
-    "https://huggingface.co/blog/nvidia/nemotron-labs-diffusion",
-    "https://www.microsoft.com/en-us/research/blog/magenticlite-magenticbrain-fara1-5-an-agentic-experience-optimized-for-small-models/",
-    "https://huggingface.co/blog/Dharma-AI/specialization-beats-scale",
-    "https://machinelearningmastery.com/building-context-aware-search-in-python-with-llm-embeddings-metadata/",
-    "https://openai.com/index/gartner-2026-agentic-coding-leader",
-    "https://openai.com/index/virgin-atlantic",
     "https://www.latent.space/p/ainews-all-model-labs-are-now-agent",
     "https://deepmind.google/blog/were-launching-the-google-deepmind-accelerator-program-in-asia-pacific-to-tackle-environmental-risks/",
     "https://the-decoder.com/deepseek-makes-its-75-percent-discount-permanent-pricing-output-tokens-at-least-34x-below-gpt-5-5/",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.23961",
     "https://arxiv.org/abs/2606.24020",
     "https://arxiv.org/abs/2606.24062",
-    "https://arxiv.org/abs/2606.24084"
+    "https://arxiv.org/abs/2606.24084",
+    "https://www.microsoft.com/en-us/research/blog/talos-scaling-rare-disease-diagnosis-with-automated-iterative-genomic-reanalysis/",
+    "https://openai.com/index/openai-broadcom-jalapeno-inference-chip",
+    "https://arxiv.org/abs/2606.24143",
+    "https://arxiv.org/abs/2606.24173",
+    "https://arxiv.org/abs/2606.24543",
+    "https://arxiv.org/abs/2606.24679",
+    "https://arxiv.org/abs/2606.23937",
+    "https://arxiv.org/abs/2606.23959"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 717,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 718,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31"
 }
