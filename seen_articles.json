@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.21731",
-    "https://arxiv.org/abs/2605.21751",
-    "https://arxiv.org/abs/2605.21770",
-    "https://arxiv.org/abs/2605.21800",
-    "https://arxiv.org/abs/2605.21801",
-    "https://arxiv.org/abs/2605.21803",
-    "https://arxiv.org/abs/2605.21820",
-    "https://arxiv.org/abs/2605.21851",
     "https://arxiv.org/abs/2605.21856",
     "https://arxiv.org/abs/2605.21963",
     "https://huggingface.co/blog/nvidia/nemotron-labs-diffusion",
@@ -499,13 +491,21 @@
     "https://the-decoder.com/sakana-ais-fugu-orchestrates-multiple-llms-to-match-anthropics-fable-and-mythos-benchmarks/",
     "https://www.latent.space/p/gray-swan",
     "https://techcrunch.com/2026/06/22/openai-launches-new-initiative-to-help-find-and-patch-open-source-bugs/",
-    "https://techcrunch.com/2026/06/22/the-ai-world-is-getting-loopy/"
+    "https://techcrunch.com/2026/06/22/the-ai-world-is-getting-loopy/",
+    "https://openai.com/index/gpt-5-immunology-mystery",
+    "https://arxiv.org/abs/2606.23739",
+    "https://arxiv.org/abs/2606.23740",
+    "https://arxiv.org/abs/2606.23741",
+    "https://arxiv.org/abs/2606.23961",
+    "https://arxiv.org/abs/2606.24020",
+    "https://arxiv.org/abs/2606.24062",
+    "https://arxiv.org/abs/2606.24084"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 716,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 717,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
