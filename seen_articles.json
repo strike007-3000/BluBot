@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.latent.space/p/ainews-all-model-labs-are-now-agent",
-    "https://deepmind.google/blog/were-launching-the-google-deepmind-accelerator-program-in-asia-pacific-to-tackle-environmental-risks/",
-    "https://the-decoder.com/deepseek-makes-its-75-percent-discount-permanent-pricing-output-tokens-at-least-34x-below-gpt-5-5/",
-    "https://the-decoder.com/researchers-let-claude-code-discover-ai-scaling-algorithms-that-humans-probably-wouldnt-have-designed/",
-    "https://the-decoder.com/alibabas-latest-ai-model-ran-autonomously-for-35-hours-to-optimize-code-for-its-own-custom-chip/",
-    "https://the-decoder.com/anthropic-may-keep-supplying-claude-to-the-nsa-despite-being-flagged-as-a-supply-chain-risk-by-the-pentagon/",
-    "https://www.microsoft.com/en-us/research/blog/vega-zero-knowledge-proofs-for-digital-identity-in-the-age-of-ai/",
-    "https://openai.com/index/adventhealth",
     "https://techcrunch.com/2026/05/22/we-tried-googles-ai-glasses-and-theyre-almost-there/",
     "https://techcrunch.com/2026/05/23/ferrari-is-using-ai-to-create-f1-superfans/",
     "https://arxiv.org/abs/2605.22868",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.24543",
     "https://arxiv.org/abs/2606.24679",
     "https://arxiv.org/abs/2606.23937",
-    "https://arxiv.org/abs/2606.23959"
+    "https://arxiv.org/abs/2606.23959",
+    "https://deepmind.google/blog/introducing-computer-use-in-gemini-3-5-flash/",
+    "https://the-decoder.com/google-bakes-computer-control-directly-into-gemini-3-5-flash-letting-the-model-see-and-operate-your-screen/",
+    "https://openai.com/index/how-agents-are-transforming-work",
+    "https://huggingface.co/blog/ffasr-leaderboard",
+    "https://arxiv.org/abs/2606.24901",
+    "https://arxiv.org/abs/2606.24945",
+    "https://arxiv.org/abs/2606.24946",
+    "https://arxiv.org/abs/2606.24948"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 718,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 719,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
