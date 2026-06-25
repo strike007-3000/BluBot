@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://techcrunch.com/2026/05/22/we-tried-googles-ai-glasses-and-theyre-almost-there/",
-    "https://techcrunch.com/2026/05/23/ferrari-is-using-ai-to-create-f1-superfans/",
-    "https://arxiv.org/abs/2605.22868",
-    "https://arxiv.org/abs/2605.22873",
-    "https://arxiv.org/abs/2605.22902",
-    "https://arxiv.org/abs/2605.22964",
-    "https://arxiv.org/abs/2605.22984",
-    "https://arxiv.org/abs/2605.23025",
     "https://arxiv.org/abs/2605.23037",
     "https://arxiv.org/abs/2605.23055",
     "https://arxiv.org/abs/2605.23078",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.24901",
     "https://arxiv.org/abs/2606.24945",
     "https://arxiv.org/abs/2606.24946",
-    "https://arxiv.org/abs/2606.24948"
+    "https://arxiv.org/abs/2606.24948",
+    "https://machinelearningmastery.com/agentic-workflow-vs-autonomous-agent-whats-the-difference/",
+    "https://arxiv.org/abs/2606.24950",
+    "https://arxiv.org/abs/2606.24994",
+    "https://arxiv.org/abs/2606.24995",
+    "https://arxiv.org/abs/2606.24998",
+    "https://arxiv.org/abs/2606.25000",
+    "https://arxiv.org/abs/2606.25007",
+    "https://arxiv.org/abs/2606.25008"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 719,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 720,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
