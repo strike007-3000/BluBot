@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.23037",
-    "https://arxiv.org/abs/2605.23055",
-    "https://arxiv.org/abs/2605.23078",
-    "https://arxiv.org/abs/2605.23089",
-    "https://arxiv.org/abs/2605.23171",
-    "https://arxiv.org/abs/2605.23200",
-    "https://arxiv.org/abs/2605.23215",
-    "https://arxiv.org/abs/2605.23220",
     "https://arxiv.org/abs/2605.23395",
     "https://arxiv.org/abs/2605.23491",
     "https://machinelearningmastery.com/building-a-multi-tool-gemma-4-agent-with-error-recovery/",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.24998",
     "https://arxiv.org/abs/2606.25000",
     "https://arxiv.org/abs/2606.25007",
-    "https://arxiv.org/abs/2606.25008"
+    "https://arxiv.org/abs/2606.25008",
+    "https://huggingface.co/blog/vllm-jobs",
+    "https://arxiv.org/abs/2606.26217",
+    "https://arxiv.org/abs/2606.26294",
+    "https://arxiv.org/abs/2606.26327",
+    "https://arxiv.org/abs/2606.26424",
+    "https://arxiv.org/abs/2606.26429",
+    "https://arxiv.org/abs/2606.26472",
+    "https://arxiv.org/abs/2606.26474"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 720,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 721,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
