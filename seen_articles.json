@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.24305",
-    "https://arxiv.org/abs/2605.24316",
-    "https://arxiv.org/abs/2605.26172",
-    "https://arxiv.org/abs/2605.26248",
-    "https://arxiv.org/abs/2605.26282",
-    "https://arxiv.org/abs/2605.26324",
-    "https://arxiv.org/abs/2605.26418",
-    "https://arxiv.org/abs/2605.26496",
     "https://arxiv.org/abs/2605.26562",
     "https://arxiv.org/abs/2605.26684",
     "https://arxiv.org/abs/2605.26718",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.26541",
     "https://arxiv.org/abs/2606.26574",
     "https://arxiv.org/abs/2606.26617",
-    "https://arxiv.org/abs/2606.26797"
+    "https://arxiv.org/abs/2606.26797",
+    "https://openai.com/index/previewing-gpt-5-6-sol",
+    "https://www.latent.space/p/ainews-openai-gpt-56-sol-terra-luna",
+    "https://www.marktechpost.com/2026/06/26/openai-previews-gpt-5-6-with-sol-terra-and-luna-tiered-models-new-reasoning-modes-limited-access/",
+    "https://the-decoder.com/openais-claude-mythos-competitor-gpt-5-6-sol-launches-under-government-controlled-access-it-calls-unsustainable/",
+    "https://techcrunch.com/2026/06/26/openai-limits-gpt-5-6-rollout-after-government-request-says-restrictions-shouldnt-be-the-norm/",
+    "https://huggingface.co/blog/allenai/hybrid-token-prediction",
+    "https://www.microsoft.com/en-us/research/blog/understanding-the-brain-with-ai-driven-explanations-and-experiments/",
+    "https://www.marktechpost.com/2026/06/26/building-supervised-fine-tuning-data-from-nvidia-open-swe-traces-trajectory-parsing-patch-analysis-token-budgets-and-tool-use-metrics/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 722,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 723,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
