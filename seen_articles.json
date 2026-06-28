@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.26562",
-    "https://arxiv.org/abs/2605.26684",
-    "https://arxiv.org/abs/2605.26718",
-    "https://arxiv.org/abs/2605.26733",
-    "https://arxiv.org/abs/2605.26872",
-    "https://arxiv.org/abs/2605.26919",
-    "https://arxiv.org/abs/2605.27081",
-    "https://arxiv.org/abs/2605.27293",
     "https://arxiv.org/abs/2605.27358",
     "https://arxiv.org/abs/2605.26132",
     "https://openai.com/index/warp",
@@ -499,13 +491,21 @@
     "https://techcrunch.com/2026/06/26/openai-limits-gpt-5-6-rollout-after-government-request-says-restrictions-shouldnt-be-the-norm/",
     "https://huggingface.co/blog/allenai/hybrid-token-prediction",
     "https://www.microsoft.com/en-us/research/blog/understanding-the-brain-with-ai-driven-explanations-and-experiments/",
-    "https://www.marktechpost.com/2026/06/26/building-supervised-fine-tuning-data-from-nvidia-open-swe-traces-trajectory-parsing-patch-analysis-token-budgets-and-tool-use-metrics/"
+    "https://www.marktechpost.com/2026/06/26/building-supervised-fine-tuning-data-from-nvidia-open-swe-traces-trajectory-parsing-patch-analysis-token-budgets-and-tool-use-metrics/",
+    "https://the-decoder.com/sinas-open-model-vibethinker-3b-aims-to-show-reasoning-compresses-well-but-factual-knowledge-doesnt/",
+    "https://the-decoder.com/gpt-5-6-sol-cheats-on-software-tests-more-than-any-model-before-it/",
+    "https://magazine.sebastianraschka.com/p/using-local-coding-agents",
+    "https://the-decoder.com/chinese-cybersecurity-firm-builds-ai-tools-to-rival-mythos-and-frames-the-race-as-cyber-nuclear-deterrence/",
+    "https://www.marktechpost.com/2026/06/28/building-a-stable-fable-5-traces-workflow-in-colab-parsing-tool-calls-auditing-data-and-training-baselines/",
+    "https://www.marktechpost.com/2026/06/27/liquid-ai-ships-lfm2-5-230m-with-llama-cpp-mlx-vllm-sglang-and-onnx-support-for-on-device-inference/",
+    "https://www.marktechpost.com/2026/06/26/cursor-study-finds-reward-hacking-inflates-coding-agent-benchmark-scores-on-swe-bench-pro/",
+    "https://techcrunch.com/2026/06/27/softbanks-ceo-isnt-the-only-one-with-questions-about-elon-musks-orbital-data-center-hype/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 723,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 724,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
