@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.27358",
-    "https://arxiv.org/abs/2605.26132",
-    "https://openai.com/index/warp",
-    "https://arxiv.org/abs/2605.27431",
-    "https://arxiv.org/abs/2605.27467",
-    "https://arxiv.org/abs/2605.27470",
-    "https://arxiv.org/abs/2605.27486",
-    "https://arxiv.org/abs/2605.27599",
     "https://arxiv.org/abs/2605.27618",
     "https://arxiv.org/abs/2605.27651",
     "https://arxiv.org/abs/2605.27659",
@@ -499,13 +491,21 @@
     "https://www.marktechpost.com/2026/06/28/building-a-stable-fable-5-traces-workflow-in-colab-parsing-tool-calls-auditing-data-and-training-baselines/",
     "https://www.marktechpost.com/2026/06/27/liquid-ai-ships-lfm2-5-230m-with-llama-cpp-mlx-vllm-sglang-and-onnx-support-for-on-device-inference/",
     "https://www.marktechpost.com/2026/06/26/cursor-study-finds-reward-hacking-inflates-coding-agent-benchmark-scores-on-swe-bench-pro/",
-    "https://techcrunch.com/2026/06/27/softbanks-ceo-isnt-the-only-one-with-questions-about-elon-musks-orbital-data-center-hype/"
+    "https://techcrunch.com/2026/06/27/softbanks-ceo-isnt-the-only-one-with-questions-about-elon-musks-orbital-data-center-hype/",
+    "https://openai.com/index/mapping-ai-jobs-transition-eu",
+    "https://arxiv.org/abs/2606.27448",
+    "https://arxiv.org/abs/2606.27609",
+    "https://arxiv.org/abs/2606.27681",
+    "https://arxiv.org/abs/2606.27721",
+    "https://arxiv.org/abs/2606.27739",
+    "https://arxiv.org/abs/2606.27866",
+    "https://arxiv.org/abs/2606.27997"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 724,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 725,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
