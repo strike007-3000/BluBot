@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-06-28 | 🚀 Morning Intelligence (General) |
+| **Broadcaster** | Operational | 2026-06-29 | 🔍 Midday Briefing (General) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
