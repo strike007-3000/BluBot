@@ -42,7 +42,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Restore BlueSky session
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: bluesky_session.txt
           key: bsky-session-${{ github.run_id }}
@@ -77,7 +77,7 @@ jobs:
 
       - name: Save BlueSky session
         if: always()
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: bluesky_session.txt
           key: bsky-session-${{ github.run_id }}
