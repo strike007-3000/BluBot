@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.27618",
-    "https://arxiv.org/abs/2605.27651",
-    "https://arxiv.org/abs/2605.27659",
-    "https://arxiv.org/abs/2605.27720",
-    "https://arxiv.org/abs/2605.27722",
-    "https://arxiv.org/abs/2605.27765",
-    "https://arxiv.org/abs/2605.27835",
-    "https://arxiv.org/abs/2605.27861",
     "https://arxiv.org/abs/2605.27954",
     "https://arxiv.org/abs/2605.27989",
     "https://arxiv.org/abs/2605.28862",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.27721",
     "https://arxiv.org/abs/2606.27739",
     "https://arxiv.org/abs/2606.27866",
-    "https://arxiv.org/abs/2606.27997"
+    "https://arxiv.org/abs/2606.27997",
+    "https://arxiv.org/abs/2606.28179",
+    "https://arxiv.org/abs/2606.28194",
+    "https://arxiv.org/abs/2606.28242",
+    "https://arxiv.org/abs/2606.28294",
+    "https://arxiv.org/abs/2606.27378",
+    "https://arxiv.org/abs/2606.27401",
+    "https://arxiv.org/abs/2606.27539",
+    "https://arxiv.org/abs/2606.27550"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 725,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 726,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
