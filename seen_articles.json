@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.28920",
-    "https://arxiv.org/abs/2605.29001",
-    "https://arxiv.org/abs/2605.29032",
-    "https://arxiv.org/abs/2605.29089",
-    "https://arxiv.org/abs/2605.29126",
-    "https://arxiv.org/abs/2605.29190",
-    "https://arxiv.org/abs/2605.29283",
-    "https://arxiv.org/abs/2605.29387",
     "https://arxiv.org/abs/2605.29448",
     "https://arxiv.org/abs/2605.29454",
     "https://openai.com/index/boston-childrens-hospital",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.28751",
     "https://arxiv.org/abs/2606.28925",
     "https://arxiv.org/abs/2606.29158",
-    "https://arxiv.org/abs/2606.29164"
+    "https://arxiv.org/abs/2606.29164",
+    "https://huggingface.co/blog/Dharma-AI/why-specialization-is-inevitable",
+    "https://huggingface.co/blog/eee-community-evals",
+    "https://arxiv.org/abs/2606.29196",
+    "https://arxiv.org/abs/2606.29243",
+    "https://arxiv.org/abs/2606.29459",
+    "https://arxiv.org/abs/2606.29465",
+    "https://arxiv.org/abs/2606.29476",
+    "https://arxiv.org/abs/2606.29522"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 727,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 728,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31"
 }
