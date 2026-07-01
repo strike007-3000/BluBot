@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.29523",
-    "https://arxiv.org/abs/2605.29782",
-    "https://the-decoder.com/anthropic-ships-claude-opus-4-8-as-a-modest-but-tangible-improvement-that-tops-gpt-5-5-in-most-benchmarks/",
-    "https://the-decoder.com/metas-leaked-memo-reveals-ai-pendant-supersensing-glasses-and-enterprise-wearables-strategy/",
-    "https://www.latent.space/p/ainews-founders-and-forward-deployed",
-    "https://the-decoder.com/openai-gives-gpt-5-5-instant-a-readability-upgrade-while-phasing-out-two-older-models/",
-    "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-omni-3-5-videos/",
-    "https://huggingface.co/blog/ibm-research/itbench-aa",
     "https://www.microsoft.com/en-us/research/blog/data-formulator-0-7-ai-powered-data-analytics-for-enterprise-data/",
     "https://www.marktechpost.com/2026/05/29/how-to-use-agenttrove-streaming-1-7m-agentic-traces-and-building-a-clean-sharegpt-sft-dataset-in-python/",
     "https://the-decoder.com/ai-search-agents-often-confirm-what-they-already-know-instead-of-actually-researching-the-web/",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.30789",
     "https://arxiv.org/abs/2606.30842",
     "https://arxiv.org/abs/2606.31048",
-    "https://arxiv.org/abs/2606.31154"
+    "https://arxiv.org/abs/2606.31154",
+    "https://huggingface.co/blog/cerebras-gemma4-voice-ai",
+    "https://arxiv.org/abs/2606.31191",
+    "https://arxiv.org/abs/2606.31484",
+    "https://arxiv.org/abs/2606.31650",
+    "https://arxiv.org/abs/2606.31748",
+    "https://arxiv.org/abs/2606.31779",
+    "https://arxiv.org/abs/2606.32017",
+    "https://arxiv.org/abs/2606.32026"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 729,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 730,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
