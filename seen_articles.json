@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.29448",
-    "https://arxiv.org/abs/2605.29454",
-    "https://openai.com/index/boston-childrens-hospital",
-    "https://openai.com/index/braintrust",
-    "https://openai.com/index/endava",
-    "https://openai.com/index/strengthening-societal-resilience-with-rosalind-biodefense",
-    "https://openai.com/index/trustworthy-third-party-evaluations-foundations",
-    "https://huggingface.co/blog/torch-profiler",
     "https://arxiv.org/abs/2605.29523",
     "https://arxiv.org/abs/2605.29782",
     "https://the-decoder.com/anthropic-ships-claude-opus-4-8-as-a-modest-but-tangible-improvement-that-tops-gpt-5-5-in-most-benchmarks/",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.29459",
     "https://arxiv.org/abs/2606.29465",
     "https://arxiv.org/abs/2606.29476",
-    "https://arxiv.org/abs/2606.29522"
+    "https://arxiv.org/abs/2606.29522",
+    "https://huggingface.co/blog/ibm-research/scarfbench",
+    "https://the-decoder.com/openai-paper-reveals-three-gpt-5-6-pro-models-breaking-with-single-top-tier-strategy/",
+    "https://openai.com/index/introducing-genebench-pro",
+    "https://arxiv.org/abs/2606.30702",
+    "https://arxiv.org/abs/2606.30789",
+    "https://arxiv.org/abs/2606.30842",
+    "https://arxiv.org/abs/2606.31048",
+    "https://arxiv.org/abs/2606.31154"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 728,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 729,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
