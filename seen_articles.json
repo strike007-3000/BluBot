@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.apple.com/newsroom/2026/05/apple-tv-to-air-first-major-live-pro-sports-event-shot-on-iphone-17-pro/",
-    "https://www.apple.com/newsroom/2026/05/the-app-store-stopped-over-2-point-2-billion-usd-in-fraudulent-transactions-in-2025/",
-    "https://huggingface.co/blog/nvidia/cosmos-3-for-physical-ai",
-    "https://arxiv.org/abs/2605.30374",
-    "https://arxiv.org/abs/2605.30393",
-    "https://arxiv.org/abs/2605.30434",
-    "https://arxiv.org/abs/2605.30451",
-    "https://arxiv.org/abs/2605.30486",
     "https://arxiv.org/abs/2605.30514",
     "https://arxiv.org/abs/2605.30538",
     "https://huggingface.co/blog/JetBrains/mellum2-launch",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.00477",
     "https://arxiv.org/abs/2607.00531",
     "https://arxiv.org/abs/2607.00908",
-    "https://arxiv.org/abs/2607.00917"
+    "https://arxiv.org/abs/2607.00917",
+    "https://machinelearningmastery.com/context-vs-memory-engineering-in-agentic-ai-systems/",
+    "https://arxiv.org/abs/2607.01022",
+    "https://arxiv.org/abs/2607.01083",
+    "https://arxiv.org/abs/2607.01181",
+    "https://arxiv.org/abs/2607.01225",
+    "https://arxiv.org/abs/2607.00027",
+    "https://arxiv.org/abs/2607.00191",
+    "https://arxiv.org/abs/2607.00293"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 731,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 732,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
