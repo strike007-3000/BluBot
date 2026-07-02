@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.microsoft.com/en-us/research/blog/data-formulator-0-7-ai-powered-data-analytics-for-enterprise-data/",
-    "https://www.marktechpost.com/2026/05/29/how-to-use-agenttrove-streaming-1-7m-agentic-traces-and-building-a-clean-sharegpt-sft-dataset-in-python/",
-    "https://the-decoder.com/ai-search-agents-often-confirm-what-they-already-know-instead-of-actually-researching-the-web/",
-    "https://www.marktechpost.com/2026/05/30/best-text-to-speech-tts-models-in-2026-a-benchmark-based-comparison/",
-    "https://the-decoder.com/openais-codex-can-now-operate-your-windows-pc-autonomously-hunting-bugs-and-testing-apps-on-its-own/",
-    "https://www.apple.com/newsroom/2026/05/detroits-rising-developers-are-supported-by-the-apple-developer-academy/",
-    "https://www.apple.com/newsroom/2026/05/cherokee-language-learners-bridge-generations-with-ipad-and-mac/",
-    "https://www.apple.com/newsroom/2026/05/after-the-whistle-with-brendan-hunt-and-rebecca-lowe-returns/",
     "https://www.apple.com/newsroom/2026/05/apple-tv-to-air-first-major-live-pro-sports-event-shot-on-iphone-17-pro/",
     "https://www.apple.com/newsroom/2026/05/the-app-store-stopped-over-2-point-2-billion-usd-in-fraudulent-transactions-in-2025/",
     "https://huggingface.co/blog/nvidia/cosmos-3-for-physical-ai",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2606.31748",
     "https://arxiv.org/abs/2606.31779",
     "https://arxiv.org/abs/2606.32017",
-    "https://arxiv.org/abs/2606.32026"
+    "https://arxiv.org/abs/2606.32026",
+    "https://arxiv.org/abs/2607.00267",
+    "https://arxiv.org/abs/2607.00276",
+    "https://arxiv.org/abs/2607.00431",
+    "https://arxiv.org/abs/2607.00464",
+    "https://arxiv.org/abs/2607.00477",
+    "https://arxiv.org/abs/2607.00531",
+    "https://arxiv.org/abs/2607.00908",
+    "https://arxiv.org/abs/2607.00917"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 730,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 731,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31"
 }
