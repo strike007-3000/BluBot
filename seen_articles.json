@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.30651",
-    "https://arxiv.org/abs/2605.30652",
-    "https://arxiv.org/abs/2606.00738",
-    "https://openai.com/index/codex-for-knowledge-work",
-    "https://arxiv.org/abs/2606.00079",
-    "https://arxiv.org/abs/2606.00083",
-    "https://arxiv.org/abs/2606.00133",
-    "https://arxiv.org/abs/2606.00135",
     "https://arxiv.org/abs/2606.00147",
     "https://arxiv.org/abs/2606.00183",
     "https://huggingface.co/blog/Hcompany/holo31",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.01487",
     "https://arxiv.org/abs/2607.01490",
     "https://arxiv.org/abs/2607.01537",
-    "https://arxiv.org/abs/2607.01571"
+    "https://arxiv.org/abs/2607.01571",
+    "https://deepmind.google/blog/google-deepmind-and-a24-announce-first-of-its-kind-research-partnership/",
+    "https://arxiv.org/abs/2607.01736",
+    "https://arxiv.org/abs/2607.01789",
+    "https://arxiv.org/abs/2607.01986",
+    "https://arxiv.org/abs/2607.02088",
+    "https://arxiv.org/abs/2607.02182",
+    "https://arxiv.org/abs/2607.02203",
+    "https://arxiv.org/abs/2607.02390"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 733,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 734,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
