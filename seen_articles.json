@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2605.30514",
-    "https://arxiv.org/abs/2605.30538",
-    "https://huggingface.co/blog/JetBrains/mellum2-launch",
-    "https://huggingface.co/blog/ibm-research/agent-logic-and-scalable-ai-adoption",
-    "https://www.latent.space/p/video-agents",
-    "https://jack-clark.net/2026/06/01/import-ai-459-ai-oversight-is-difficult-scaling-laws-for-protein-folding-models-and-pricing-the-extinction-risk-of-ai-systems/",
-    "https://arxiv.org/abs/2605.30585",
-    "https://arxiv.org/abs/2605.30599",
     "https://arxiv.org/abs/2605.30651",
     "https://arxiv.org/abs/2605.30652",
     "https://arxiv.org/abs/2606.00738",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.01225",
     "https://arxiv.org/abs/2607.00027",
     "https://arxiv.org/abs/2607.00191",
-    "https://arxiv.org/abs/2607.00293"
+    "https://arxiv.org/abs/2607.00293",
+    "https://arxiv.org/abs/2607.01283",
+    "https://arxiv.org/abs/2607.01311",
+    "https://arxiv.org/abs/2607.01417",
+    "https://arxiv.org/abs/2607.01444",
+    "https://arxiv.org/abs/2607.01487",
+    "https://arxiv.org/abs/2607.01490",
+    "https://arxiv.org/abs/2607.01537",
+    "https://arxiv.org/abs/2607.01571"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 732,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 733,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
