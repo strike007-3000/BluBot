@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.00147",
-    "https://arxiv.org/abs/2606.00183",
-    "https://huggingface.co/blog/Hcompany/holo31",
-    "https://openai.com/index/travelers",
-    "https://www.latent.space/p/github",
-    "https://openai.com/index/codex-for-every-role-tool-workflow",
-    "https://openai.com/index/advancing-youth-safety-and-opportunity-through-global-leadership",
-    "https://arxiv.org/abs/2606.00189",
     "https://arxiv.org/abs/2606.00206",
     "https://arxiv.org/abs/2606.00328",
     "https://arxiv.org/abs/2606.02607",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.02088",
     "https://arxiv.org/abs/2607.02182",
     "https://arxiv.org/abs/2607.02203",
-    "https://arxiv.org/abs/2607.02390"
+    "https://arxiv.org/abs/2607.02390",
+    "https://the-decoder.com/mistrals-open-source-leanstral-1-5-aces-formal-math-benchmarks-and-catches-real-bugs-in-code/",
+    "https://www.latent.space/p/the-website-of-the-future",
+    "https://www.marktechpost.com/2026/07/03/mistral-ai-releases-leanstral-1-5-an-apache-2-0-lean-4-code-agent-model-solving-587-of-672-putnambench-problems/",
+    "https://the-decoder.com/uks-ai-security-institute-finds-standard-benchmarks-systematically-underestimate-what-ai-agents-can-actually-do/",
+    "https://www.aiacceleratorinstitute.com/how-to-control-ai-agents-before-they-control-you-2/",
+    "https://www.latent.space/p/aiewf-daily-dispatch-locomotives",
+    "https://www.apple.com/newsroom/2026/06/apple-creator-studio-gets-smarter-faster-and-more-connected/",
+    "https://www.apple.com/newsroom/2026/05/detroits-rising-developers-are-supported-by-the-apple-developer-academy/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 734,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 735,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31"
 }
