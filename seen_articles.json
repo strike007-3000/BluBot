@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.00206",
-    "https://arxiv.org/abs/2606.00328",
-    "https://arxiv.org/abs/2606.02607",
-    "https://arxiv.org/abs/2606.02628",
-    "https://arxiv.org/abs/2606.02670",
-    "https://arxiv.org/abs/2606.02754",
-    "https://arxiv.org/abs/2606.02842",
-    "https://arxiv.org/abs/2606.02959",
     "https://arxiv.org/abs/2606.02963",
     "https://arxiv.org/abs/2606.03003",
     "https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-gemma-4-12b",
@@ -499,13 +491,21 @@
     "https://www.aiacceleratorinstitute.com/how-to-control-ai-agents-before-they-control-you-2/",
     "https://www.latent.space/p/aiewf-daily-dispatch-locomotives",
     "https://www.apple.com/newsroom/2026/06/apple-creator-studio-gets-smarter-faster-and-more-connected/",
-    "https://www.apple.com/newsroom/2026/05/detroits-rising-developers-are-supported-by-the-apple-developer-academy/"
+    "https://www.apple.com/newsroom/2026/05/detroits-rising-developers-are-supported-by-the-apple-developer-academy/",
+    "https://the-decoder.com/ai-search-agents-dont-fail-at-searching-they-fail-at-asking-the-right-questions-when-queries-get-ambiguous/",
+    "https://www.marktechpost.com/2026/07/05/llamaindex-legal-kb-agentic-retrieval-over-index-v2-with-retrieve-find-read-and-grep-tools/",
+    "https://www.marktechpost.com/2026/07/04/qwens-former-lead-on-what-hybrid-thinking-got-wrong-and-why-he-now-backs-agents/",
+    "https://www.marktechpost.com/2026/07/04/nvidia-horizon-a-hands-free-agent-that-evolves-git-worktrees-and-hits-100-rtl-benchmark-completion/",
+    "https://techcrunch.com/2026/07/04/what-is-mistral-ai-everything-to-know-about-the-openai-competitor/",
+    "https://www.apple.com/newsroom/2026/05/cherokee-language-learners-bridge-generations-with-ipad-and-mac/",
+    "https://www.apple.com/newsroom/2026/05/after-the-whistle-with-brendan-hunt-and-rebecca-lowe-returns/",
+    "https://www.apple.com/newsroom/2026/05/apple-tv-to-air-first-major-live-pro-sports-event-shot-on-iphone-17-pro/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 735,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 736,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
