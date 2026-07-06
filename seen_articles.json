@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.03057",
-    "https://arxiv.org/abs/2606.03077",
-    "https://openai.com/index/introducing-new-capabilities-to-gpt-rosalind",
-    "https://openai.com/index/endava-frontiers",
-    "https://arxiv.org/abs/2606.04051",
-    "https://arxiv.org/abs/2606.04058",
-    "https://arxiv.org/abs/2606.04191",
-    "https://arxiv.org/abs/2606.04326",
     "https://arxiv.org/abs/2606.04381",
     "https://arxiv.org/abs/2606.04438",
     "https://huggingface.co/blog/nvidia/fine-tuning-nemotron-35-asr",
@@ -499,13 +491,21 @@
     "https://www.marktechpost.com/2026/07/05/training-gemma-3-for-structured-mathematical-reasoning-with-tunix-grpo-lora-adapters-and-gsm8k-rewards/",
     "https://www.marktechpost.com/2026/07/05/meituan-releases-longcat-2-0-a-1-6t-parameter-open-moe-model-with-native-1m-context-and-longcat-sparse-attention/",
     "https://the-decoder.com/baidus-unlimited-ocr-processes-dozens-of-document-pages-in-one-pass-by-treating-memory-like-human-forgetting/",
-    "https://www.apple.com/newsroom/2026/05/the-app-store-stopped-over-2-point-2-billion-usd-in-fraudulent-transactions-in-2025/"
+    "https://www.apple.com/newsroom/2026/05/the-app-store-stopped-over-2-point-2-billion-usd-in-fraudulent-transactions-in-2025/",
+    "https://huggingface.co/blog/Photoroom/prx-part4-data",
+    "https://jack-clark.net/2026/07/06/import-ai-464-fables-writes-gpu-kernels-ai-automation-and-analog-computation/",
+    "https://machinelearningmastery.com/the-complete-guide-to-tool-selection-in-ai-agents/",
+    "https://spectrum.ieee.org/small-language-models-ai-pharmaceuticals",
+    "https://techcrunch.com/2026/07/06/microsoft-lays-off-nearly-5000-employees-across-xbox-commercial-sales/",
+    "https://www.aiacceleratorinstitute.com/shifting-your-integration-architecture/",
+    "https://www.aiacceleratorinstitute.com/thanks-for-registering-3/",
+    "https://techcrunch.com/2026/07/06/station-f-ramps-up-as-a-launchpad-for-europes-hottest-ai-startups/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 737,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 738,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31"
 }
