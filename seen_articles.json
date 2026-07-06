@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.02963",
-    "https://arxiv.org/abs/2606.03003",
-    "https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-gemma-4-12b",
-    "https://huggingface.co/blog/Dharma-AI/direct-preference-optimization-beyond-chatbots",
-    "https://openai.com/index/public-policy-agenda",
-    "https://openai.com/index/frontier-safety-blueprint",
-    "https://huggingface.co/blog/adding-mcp-tools-to-reachy-mini",
-    "https://arxiv.org/abs/2606.03014",
     "https://arxiv.org/abs/2606.03057",
     "https://arxiv.org/abs/2606.03077",
     "https://openai.com/index/introducing-new-capabilities-to-gpt-rosalind",
@@ -499,13 +491,21 @@
     "https://techcrunch.com/2026/07/04/what-is-mistral-ai-everything-to-know-about-the-openai-competitor/",
     "https://www.apple.com/newsroom/2026/05/cherokee-language-learners-bridge-generations-with-ipad-and-mac/",
     "https://www.apple.com/newsroom/2026/05/after-the-whistle-with-brendan-hunt-and-rebecca-lowe-returns/",
-    "https://www.apple.com/newsroom/2026/05/apple-tv-to-air-first-major-live-pro-sports-event-shot-on-iphone-17-pro/"
+    "https://www.apple.com/newsroom/2026/05/apple-tv-to-air-first-major-live-pro-sports-event-shot-on-iphone-17-pro/",
+    "https://huggingface.co/blog/lerobot-release-v060",
+    "https://huggingface.co/blog/revamped-kernels",
+    "https://the-decoder.com/jadepuffer-is-the-first-agentic-ransomware-operation-and-it-exposes-old-security-sins-at-machine-speed/",
+    "https://www.marktechpost.com/2026/07/05/sakana-ai-launches-sakana-translate/",
+    "https://www.marktechpost.com/2026/07/05/training-gemma-3-for-structured-mathematical-reasoning-with-tunix-grpo-lora-adapters-and-gsm8k-rewards/",
+    "https://www.marktechpost.com/2026/07/05/meituan-releases-longcat-2-0-a-1-6t-parameter-open-moe-model-with-native-1m-context-and-longcat-sparse-attention/",
+    "https://the-decoder.com/baidus-unlimited-ocr-processes-dozens-of-document-pages-in-one-pass-by-treating-memory-like-human-forgetting/",
+    "https://www.apple.com/newsroom/2026/05/the-app-store-stopped-over-2-point-2-billion-usd-in-fraudulent-transactions-in-2025/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 736,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 737,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
