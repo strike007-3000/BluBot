@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.04560",
-    "https://arxiv.org/abs/2606.04678",
-    "https://arxiv.org/abs/2606.05169",
-    "https://arxiv.org/abs/2606.05170",
-    "https://arxiv.org/abs/2606.05201",
-    "https://arxiv.org/abs/2606.05254",
-    "https://arxiv.org/abs/2606.05257",
-    "https://arxiv.org/abs/2606.05263",
     "https://arxiv.org/abs/2606.05296",
     "https://arxiv.org/abs/2606.05434",
     "https://arxiv.org/abs/2606.05497",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.03065",
     "https://arxiv.org/abs/2607.03126",
     "https://arxiv.org/abs/2607.03198",
-    "https://arxiv.org/abs/2607.03426"
+    "https://arxiv.org/abs/2607.03426",
+    "https://huggingface.co/blog/microsoft/foundry-managed-compute",
+    "https://arxiv.org/abs/2607.03441",
+    "https://arxiv.org/abs/2607.03487",
+    "https://arxiv.org/abs/2607.03651",
+    "https://arxiv.org/abs/2607.03680",
+    "https://arxiv.org/abs/2607.03801",
+    "https://arxiv.org/abs/2607.03847",
+    "https://arxiv.org/abs/2607.04033"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 739,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 740,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
