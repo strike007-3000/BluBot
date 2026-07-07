@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.04381",
-    "https://arxiv.org/abs/2606.04438",
-    "https://huggingface.co/blog/nvidia/fine-tuning-nemotron-35-asr",
-    "https://huggingface.co/blog/ServiceNow-AI/eva-bench-data",
-    "https://openai.com/index/chatgpt-memory-dreaming",
-    "https://huggingface.co/blog/hf-cli-for-agents",
-    "https://arxiv.org/abs/2606.04503",
-    "https://arxiv.org/abs/2606.04516",
     "https://arxiv.org/abs/2606.04560",
     "https://arxiv.org/abs/2606.04678",
     "https://arxiv.org/abs/2606.05169",
@@ -499,13 +491,21 @@
     "https://techcrunch.com/2026/07/06/microsoft-lays-off-nearly-5000-employees-across-xbox-commercial-sales/",
     "https://www.aiacceleratorinstitute.com/shifting-your-integration-architecture/",
     "https://www.aiacceleratorinstitute.com/thanks-for-registering-3/",
-    "https://techcrunch.com/2026/07/06/station-f-ramps-up-as-a-launchpad-for-europes-hottest-ai-startups/"
+    "https://techcrunch.com/2026/07/06/station-f-ramps-up-as-a-launchpad-for-europes-hottest-ai-startups/",
+    "https://arxiv.org/abs/2607.02586",
+    "https://arxiv.org/abs/2607.02623",
+    "https://arxiv.org/abs/2607.02869",
+    "https://arxiv.org/abs/2607.02944",
+    "https://arxiv.org/abs/2607.03065",
+    "https://arxiv.org/abs/2607.03126",
+    "https://arxiv.org/abs/2607.03198",
+    "https://arxiv.org/abs/2607.03426"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 738,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 739,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
