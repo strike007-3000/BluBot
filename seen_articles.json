@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.05296",
-    "https://arxiv.org/abs/2606.05434",
-    "https://arxiv.org/abs/2606.05497",
-    "https://arxiv.org/abs/2606.05533",
-    "https://arxiv.org/abs/2606.05538",
-    "https://arxiv.org/abs/2606.05558",
-    "https://arxiv.org/abs/2606.05639",
-    "https://arxiv.org/abs/2606.05692",
     "https://arxiv.org/abs/2606.05860",
     "https://arxiv.org/abs/2606.05988",
     "https://www.latent.space/p/ainews-not-much-happened-today-6b8",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.03680",
     "https://arxiv.org/abs/2607.03801",
     "https://arxiv.org/abs/2607.03847",
-    "https://arxiv.org/abs/2607.04033"
+    "https://arxiv.org/abs/2607.04033",
+    "https://the-decoder.com/openais-gpt-5-6-launches-thursday-after-a-delay-forced-by-the-u-s-government/",
+    "https://arxiv.org/abs/2607.05436",
+    "https://arxiv.org/abs/2607.05483",
+    "https://arxiv.org/abs/2607.05541",
+    "https://arxiv.org/abs/2607.05683",
+    "https://arxiv.org/abs/2607.06079",
+    "https://arxiv.org/abs/2607.05649",
+    "https://arxiv.org/abs/2607.05663"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 740,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 741,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
