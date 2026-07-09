@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.aiacceleratorinstitute.com/demystifying-ai-agents-going-beyond-the-buzzwords/",
-    "https://www.latent.space/p/ainews-not-much-happened-today-7a8",
-    "https://huggingface.co/blog/build-small-hackathon/thousand-token-wood-sim-v2",
-    "https://magazine.sebastianraschka.com/p/llm-research-papers-2026-part1",
-    "https://www.apple.com/newsroom/2026/06/apple-and-major-league-baseball-announce-july-friday-night-baseball-schedule/",
-    "https://www.apple.com/newsroom/2026/06/mini-football-legends-family-feud-pocket-and-seven-more-hits-join-apple-arcade/",
-    "https://www.apple.com/newsroom/2026/06/app-store-ecosystem-reaches-1-point-4-trillion-usd-as-developers-thrive-globally/",
-    "https://www.apple.com/newsroom/2026/06/apple-reveals-winners-of-the-2026-apple-design-awards/",
     "https://www.apple.com/newsroom/2026/05/apple-sports-expands-to-more-than-90-new-countries-and-regions/",
     "https://www.apple.com/newsroom/2026/05/apple-unveils-new-accessibility-features-and-updates-with-apple-intelligence/",
     "https://www.marktechpost.com/2026/06/06/meet-harness-1-a-20b-retrieval-subagent-trained-with-reinforcement-learning-inside-a-stateful-search-harness-on-gpt-oss-20b/",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.06484",
     "https://arxiv.org/abs/2311.07461",
     "https://arxiv.org/abs/2502.15631",
-    "https://arxiv.org/abs/2510.16165"
+    "https://arxiv.org/abs/2510.16165",
+    "https://blogs.nvidia.com/blog/nemotron-langchain-agents-open-stack/",
+    "https://openai.com/index/separating-signal-from-noise-coding-evaluations",
+    "https://www.latent.space/p/ainews-spacexai-launches-grok-45",
+    "https://the-decoder.com/grok-4-5-is-so-cheap-compared-to-fable-5-and-gpt-5-5-that-benchmark-gaps-may-not-matter-much/",
+    "https://www.marktechpost.com/2026/07/08/spacexai-releases-grok-4-5/",
+    "https://arxiv.org/abs/2607.06601",
+    "https://arxiv.org/abs/2607.06625",
+    "https://arxiv.org/abs/2607.06640"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 742,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 743,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
