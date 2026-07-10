@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://huggingface.co/blog/nvidia/nemotron-3-5-content-safety",
-    "https://www.marktechpost.com/2026/06/06/nvidia-garak-tutorial-build-a-complete-defensive-llm-red-teaming-workflow-with-custom-probes-and-detectors/",
-    "https://huggingface.co/blog/build-small-hackathon/her-blog",
-    "https://techcrunch.com/2026/06/06/openai-unveils-lockdown-mode-to-protect-sensitive-data-from-prompt-injection-attacks/",
-    "https://techcrunch.com/2026/06/06/what-to-expect-from-wwdc-2026-siris-highly-anticipated-revamp-and-apple-intelligence-updates/",
-    "https://techcrunch.com/2026/06/06/sriram-krishnan-is-leaving-his-role-as-white-house-ai-advisor/",
-    "https://techcrunch.com/2026/06/06/the-trump-administration-might-take-an-equity-stake-in-openai/",
-    "https://the-decoder.com/sakana-ai-bets-ai-that-improves-itself-can-break-the-compute-arms-race-of-frontier-labs/",
     "https://www.404media.co/scientists-discover-hidden-symmetry-on-earth-that-nobody-can-explain/",
     "https://spectrum.ieee.org/nvidia-rtx-spark-windows-pc",
     "https://huggingface.co/blog/build-small-hackathon/building-pakistan-notice-helper",
@@ -499,13 +491,21 @@
     "https://huggingface.co/blog/torch-attention-profile",
     "https://arxiv.org/abs/2607.07740",
     "https://arxiv.org/abs/2607.07748",
-    "https://arxiv.org/abs/2607.07763"
+    "https://arxiv.org/abs/2607.07763",
+    "https://arxiv.org/abs/2607.07907",
+    "https://arxiv.org/abs/2607.07951",
+    "https://arxiv.org/abs/2607.08056",
+    "https://arxiv.org/abs/2607.08059",
+    "https://arxiv.org/abs/2607.08312",
+    "https://arxiv.org/abs/2607.08331",
+    "https://arxiv.org/abs/2607.08373",
+    "https://arxiv.org/abs/2607.08522"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 745,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 746,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31"
 }
