@@ -114,14 +114,31 @@ RSS_FEEDS = [
 
 # --- Breakthrough Scoring Engine Constants ---
 HIGH_SIGNAL_KEYWORDS = [
-    "sota", "benchmark", "breakthrough", "agentic", "autonomous", 
-    "world model", "test-time compute", "moe", "reasoning", 
-    "open weights", "open source", "scaling law"
+    "agentic",
+    "open weights",
+    "benchmark",
+    "scaling law",
+    "world model",
+    "frontier models",
+    "ai infrastructure",
+    "foundation models",
+    "llm architectures",
+    "post-training",
+    "multimodal",
+    "reasoning"
 ]
 
 MOMENTUM_PRODUCTS = [
-    "gpt-5", "claude 4", "llama 4", "gemini 3", "gemma 4", 
-    "sora", "devin", "grok 4", "mistral 4", "strawberry"
+    "gpt-5.6",
+    "claude fable 5",
+    "llama 4",
+    "gemini omni flash",
+    "gemma 4",
+    "alphaevolve",
+    "nvidia nemotron",
+    "muse spark 1.1",
+    "lingbot-world-infinity",
+    "gpt-5.5"
 ]
 
 # Weighting Matrix
