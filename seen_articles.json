@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.apple.com/newsroom/2026/05/apple-manufacturing-academy-accelerates-ai-use-in-us-supply-chains/",
-    "https://www.apple.com/newsroom/2026/05/apple-introduces-a-new-pride-collection/",
-    "https://www.apple.com/newsroom/2026/04/apple-reports-second-quarter-results/",
-    "https://www.apple.com/newsroom/2026/04/formula-1-returns-to-the-us-this-weekend-streaming-live-on-apple-tv/",
-    "https://the-decoder.com/chatgpts-new-lockdown-mode-lets-you-disable-web-access-and-more-to-protect-sensitive-data-from-prompt-injection/",
-    "https://www.marktechpost.com/2026/06/07/best-21-low-code-and-no-code-ai-tools-in-2026/",
-    "https://the-decoder.com/anthropic-poaches-openais-second-ever-chip-engineer-as-both-companies-race-toward-ipos/",
-    "https://the-decoder.com/researchers-pinpoint-why-larger-language-models-pick-up-skills-that-small-ones-miss/",
     "https://huggingface.co/blog/nvidia/nemotron-3-5-content-safety",
     "https://www.marktechpost.com/2026/06/06/nvidia-garak-tutorial-build-a-complete-defensive-llm-red-teaming-workflow-with-custom-probes-and-detectors/",
     "https://huggingface.co/blog/build-small-hackathon/her-blog",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.06987",
     "https://arxiv.org/abs/2607.07066",
     "https://arxiv.org/abs/2607.07103",
-    "https://arxiv.org/abs/2607.07178"
+    "https://arxiv.org/abs/2607.07178",
+    "https://openai.com/index/gpt-5-6-preferred-model-microsoft-365-copilot",
+    "https://openai.com/index/gpt-5-6",
+    "https://openai.com/index/bio-bug-bounty",
+    "https://openai.com/index/deutsche-telekom",
+    "https://huggingface.co/blog/torch-attention-profile",
+    "https://arxiv.org/abs/2607.07740",
+    "https://arxiv.org/abs/2607.07748",
+    "https://arxiv.org/abs/2607.07763"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 744,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 745,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
