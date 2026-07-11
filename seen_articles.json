@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.404media.co/scientists-discover-hidden-symmetry-on-earth-that-nobody-can-explain/",
-    "https://spectrum.ieee.org/nvidia-rtx-spark-windows-pc",
-    "https://huggingface.co/blog/build-small-hackathon/building-pakistan-notice-helper",
-    "https://arxiv.org/abs/2606.06546",
-    "https://arxiv.org/abs/2606.06560",
-    "https://arxiv.org/abs/2606.06698",
-    "https://arxiv.org/abs/2606.06717",
-    "https://arxiv.org/abs/2606.06742",
     "https://arxiv.org/abs/2606.06820",
     "https://arxiv.org/abs/2606.06823",
     "https://huggingface.co/blog/openenv-agentic-rl",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.08312",
     "https://arxiv.org/abs/2607.08331",
     "https://arxiv.org/abs/2607.08373",
-    "https://arxiv.org/abs/2607.08522"
+    "https://arxiv.org/abs/2607.08522",
+    "https://the-decoder.com/openais-gpt-5-6-sol-autonomously-post-trained-the-smaller-luna-model-with-a-fairly-underspecified-prompt/",
+    "https://the-decoder.com/openai-staffer-maps-out-which-of-gpt-5-6-sols-five-reasoning-levels-fits-which-task-complexity/",
+    "https://www.latent.space/p/ainews-not-much-happened-today-f5c",
+    "https://the-decoder.com/gpt-5-6-sol-nearly-matches-fable-5-on-aggregated-benchmarks-at-one-third-the-cost/",
+    "https://www.microsoft.com/en-us/research/blog/aurora-1-5-extending-open-foundation-models-for-weather-and-earth-system-applications/",
+    "https://machinelearningmastery.com/choosing-the-right-ai-agent-memory-strategy-a-decision-tree-approach/",
+    "https://openai.com/index/chatgpt-for-your-most-ambitious-work",
+    "https://techcrunch.com/podcast/open-source-ai-matters-more-than-ever-according-to-hugging-faces-clem-delangue/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 746,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 747,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
