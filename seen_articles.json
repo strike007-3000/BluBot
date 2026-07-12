@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.06820",
-    "https://arxiv.org/abs/2606.06823",
-    "https://huggingface.co/blog/openenv-agentic-rl",
-    "https://huggingface.co/blog/build-small-hackathon/thousand-token-wood-sim-v3",
-    "https://machinelearningmastery.com/the-practitioners-guide-to-agentops/",
-    "https://arxiv.org/abs/2606.06827",
-    "https://arxiv.org/abs/2606.06871",
-    "https://arxiv.org/abs/2606.06881",
     "https://arxiv.org/abs/2606.06888",
     "https://arxiv.org/abs/2606.06902",
     "https://openai.com/index/economic-research-exchange",
@@ -499,13 +491,21 @@
     "https://www.microsoft.com/en-us/research/blog/aurora-1-5-extending-open-foundation-models-for-weather-and-earth-system-applications/",
     "https://machinelearningmastery.com/choosing-the-right-ai-agent-memory-strategy-a-decision-tree-approach/",
     "https://openai.com/index/chatgpt-for-your-most-ambitious-work",
-    "https://techcrunch.com/podcast/open-source-ai-matters-more-than-ever-according-to-hugging-faces-clem-delangue/"
+    "https://techcrunch.com/podcast/open-source-ai-matters-more-than-ever-according-to-hugging-faces-clem-delangue/",
+    "https://the-decoder.com/ai-agents-win-at-slay-the-spire-2-after-researchers-replace-growing-chat-logs-with-structured-memory/",
+    "https://the-decoder.com/openais-gpt-5-6-sol-ultra-reportedly-solves-a-50-year-old-math-problem-in-under-an-hour/",
+    "https://the-decoder.com/chinas-orca-world-model-matches-specialized-robotics-systems-without-ever-seeing-a-single-action-label/",
+    "https://www.apple.com/newsroom/2026/07/apple-and-major-league-baseball-announce-august-friday-night-baseball-schedule/",
+    "https://www.apple.com/newsroom/2026/07/apple-scores-record-89-emmy-award-nominations/",
+    "https://www.apple.com/newsroom/2026/07/apple-to-increase-spend-with-broadcom-to-produce-billions-more-us-chips/",
+    "https://www.apple.com/newsroom/2026/06/apple-and-major-league-baseball-announce-july-friday-night-baseball-schedule/",
+    "https://www.apple.com/newsroom/2026/06/mini-football-legends-family-feud-pocket-and-seven-more-hits-join-apple-arcade/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 747,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 748,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31"
 }
