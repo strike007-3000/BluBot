@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.07141",
-    "https://arxiv.org/abs/2606.07146",
-    "https://arxiv.org/abs/2504.18451",
-    "https://huggingface.co/blog/build-small-hackathon/neurobait-adhd",
-    "https://www.latent.space/p/ainews-frontiercode-benchmarking",
-    "https://arxiv.org/abs/2606.07550",
-    "https://arxiv.org/abs/2606.07576",
-    "https://arxiv.org/abs/2606.07581",
     "https://arxiv.org/abs/2606.07587",
     "https://arxiv.org/abs/2606.07591",
     "https://deepmind.google/blog/fluid-natural-voice-translation-with-gemini-35-live-translate/",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.08940",
     "https://arxiv.org/abs/2607.08960",
     "https://arxiv.org/abs/2607.09084",
-    "https://arxiv.org/abs/2607.09232"
+    "https://arxiv.org/abs/2607.09232",
+    "https://arxiv.org/abs/2607.09236",
+    "https://arxiv.org/abs/2607.09375",
+    "https://arxiv.org/abs/2607.09404",
+    "https://arxiv.org/abs/2607.09456",
+    "https://arxiv.org/abs/2607.09528",
+    "https://arxiv.org/abs/2607.08681",
+    "https://arxiv.org/abs/2607.08775",
+    "https://arxiv.org/abs/2607.08894"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 749,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 750,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31"
 }
