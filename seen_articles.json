@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.06888",
-    "https://arxiv.org/abs/2606.06902",
-    "https://openai.com/index/economic-research-exchange",
-    "https://arxiv.org/abs/2606.06920",
-    "https://arxiv.org/abs/2606.06990",
-    "https://arxiv.org/abs/2606.07006",
-    "https://arxiv.org/abs/2606.07074",
-    "https://arxiv.org/abs/2606.07082",
     "https://arxiv.org/abs/2606.07141",
     "https://arxiv.org/abs/2606.07146",
     "https://arxiv.org/abs/2504.18451",
@@ -499,13 +491,21 @@
     "https://www.apple.com/newsroom/2026/07/apple-scores-record-89-emmy-award-nominations/",
     "https://www.apple.com/newsroom/2026/07/apple-to-increase-spend-with-broadcom-to-produce-billions-more-us-chips/",
     "https://www.apple.com/newsroom/2026/06/apple-and-major-league-baseball-announce-july-friday-night-baseball-schedule/",
-    "https://www.apple.com/newsroom/2026/06/mini-football-legends-family-feud-pocket-and-seven-more-hits-join-apple-arcade/"
+    "https://www.apple.com/newsroom/2026/06/mini-football-legends-family-feud-pocket-and-seven-more-hits-join-apple-arcade/",
+    "https://arxiv.org/abs/2607.08778",
+    "https://arxiv.org/abs/2607.08780",
+    "https://arxiv.org/abs/2607.08782",
+    "https://arxiv.org/abs/2607.08784",
+    "https://arxiv.org/abs/2607.08940",
+    "https://arxiv.org/abs/2607.08960",
+    "https://arxiv.org/abs/2607.09084",
+    "https://arxiv.org/abs/2607.09232"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 748,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 749,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31"
 }
