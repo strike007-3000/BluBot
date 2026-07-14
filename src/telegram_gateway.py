@@ -229,6 +229,7 @@ async def send_draft_for_approval(
                         text_val = msg.text.strip()
                         if text_val.startswith("/topic ") or text_val.startswith("/curate "):
                             from src.config import PENDING_TOPIC_FILE_PATH
+                            import json
                             topic_cmd = "/topic " if text_val.startswith("/topic ") else "/curate "
                             topic_str = text_val.replace(topic_cmd, "", 1).strip()
                             if topic_str:
@@ -390,9 +391,7 @@ async def check_for_telegram_topic() -> Optional[str]:
         try:
             with open(PENDING_TOPIC_FILE_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            # Validate age (under 15 minutes = 900 seconds)
-            if (time.time() - data.get("timestamp", 0)) < 900:
-                topic_to_use = data.get("topic")
+            topic_to_use = data.get("topic")
         except Exception as e:
             SafeLogger.warn(f"Telegram: Error reading pending topic file: {e}")
         finally:
