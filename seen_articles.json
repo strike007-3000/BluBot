@@ -1,6 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.07726",
     "https://arxiv.org/abs/2606.07789",
     "https://openai.com/index/lseg",
     "https://arxiv.org/abs/2606.09863",
@@ -499,20 +498,24 @@
     "https://arxiv.org/abs/2607.10203",
     "https://arxiv.org/abs/2607.10362",
     "https://arxiv.org/abs/2607.10481",
-    "https://arxiv.org/abs/2607.10582"
+    "https://arxiv.org/abs/2607.10582",
+    "https://huggingface.co/blog/kv-cache-quantization"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash",
-    "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM"
+    "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
+    "k and v cache quantization"
   ],
-  "total_posts_curated": 753,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 754,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "unknown"
+    "unknown",
+    "research_lab"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "QUESTION_FIRST"
   ]
 }
