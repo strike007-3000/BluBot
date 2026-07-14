@@ -29,21 +29,31 @@ async def test_telegram_approval_image_url_propagation_changed(monkeypatch, mock
     curation_mock = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
     mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation_mock)
 
+    from src.models import MediaAsset, MediaSource
+
     original_synthesis = SynthesisResult(
         content="Original Content",
         lead_link="https://example.com",
         topic="General",
-        image_data=b"original_image_bytes",
-        image_url="https://example.com/image.png",
-        image_alt_text="Original Alt"
+        media=MediaAsset(
+            source=MediaSource.OPENGRAPH,
+            image_bytes=b"original_image_bytes",
+            public_url="https://example.com/image.png",
+            alt_text="Original Alt"
+        )
     )
     mocker.patch("bot.synthesis_stage", new_callable=AsyncMock, return_value=(original_synthesis, curation_mock))
     
-    # Mock send_draft_for_approval to return DIFFERENT image bytes
+    # Mock send_draft_for_approval to return DIFFERENT media asset
     mocker.patch(
         "bot.send_draft_for_approval",
         new_callable=AsyncMock,
-        return_value=("Approved Content", b"regenerated_image_bytes", "New Alt")
+        return_value=("Approved Content", MediaAsset(
+            source=MediaSource.GENERATED,
+            image_bytes=b"regenerated_image_bytes",
+            public_url=None,
+            alt_text="New Alt"
+        ))
     )
 
     # Mock stage after approval to capture the synthesis passed to it
@@ -55,13 +65,13 @@ async def test_telegram_approval_image_url_propagation_changed(monkeypatch, mock
 
     await main()
 
-    # Verify that the synthesis object passed to broadcast_stage has image_url cleared (None)
+    # Verify that the synthesis object passed to broadcast_stage has public_url cleared (None)
     assert broadcast_mock.called
     called_synthesis = broadcast_mock.call_args[0][1]
-    assert called_synthesis.image_url is None
-    assert called_synthesis.image_data == b"regenerated_image_bytes"
+    assert called_synthesis.media.public_url is None
+    assert called_synthesis.media.image_bytes == b"regenerated_image_bytes"
     assert called_synthesis.content == "Approved Content"
-    assert called_synthesis.image_alt_text == "New Alt"
+    assert called_synthesis.media.alt_text == "New Alt"
 
 @pytest.mark.asyncio
 async def test_telegram_approval_image_url_propagation_unchanged(monkeypatch, mocker):
@@ -86,21 +96,31 @@ async def test_telegram_approval_image_url_propagation_unchanged(monkeypatch, mo
     curation_mock = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
     mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation_mock)
 
+    from src.models import MediaAsset, MediaSource
+
     original_synthesis = SynthesisResult(
         content="Original Content",
         lead_link="https://example.com",
         topic="General",
-        image_data=b"original_image_bytes",
-        image_url="https://example.com/image.png",
-        image_alt_text="Original Alt"
+        media=MediaAsset(
+            source=MediaSource.OPENGRAPH,
+            image_bytes=b"original_image_bytes",
+            public_url="https://example.com/image.png",
+            alt_text="Original Alt"
+        )
     )
     mocker.patch("bot.synthesis_stage", new_callable=AsyncMock, return_value=(original_synthesis, curation_mock))
     
-    # Mock send_draft_for_approval to return the SAME image bytes
+    # Mock send_draft_for_approval to return the SAME media asset
     mocker.patch(
         "bot.send_draft_for_approval",
         new_callable=AsyncMock,
-        return_value=("Approved Content", b"original_image_bytes", "Original Alt")
+        return_value=("Approved Content", MediaAsset(
+            source=MediaSource.OPENGRAPH,
+            image_bytes=b"original_image_bytes",
+            public_url="https://example.com/image.png",
+            alt_text="Original Alt"
+        ))
     )
 
     broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([], None))
@@ -113,7 +133,7 @@ async def test_telegram_approval_image_url_propagation_unchanged(monkeypatch, mo
     # Verify that the synthesis object passed to broadcast_stage preserves image_url
     assert broadcast_mock.called
     called_synthesis = broadcast_mock.call_args[0][1]
-    assert called_synthesis.image_url == "https://example.com/image.png"
-    assert called_synthesis.image_data == b"original_image_bytes"
+    assert called_synthesis.media.public_url == "https://example.com/image.png"
+    assert called_synthesis.media.image_bytes == b"original_image_bytes"
     assert called_synthesis.content == "Approved Content"
-    assert called_synthesis.image_alt_text == "Original Alt"
+    assert called_synthesis.media.alt_text == "Original Alt"

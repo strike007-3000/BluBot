@@ -382,15 +382,82 @@ def get_temporal_context():
         "is_intercept": settings.is_manual_run
     }
 
-async def generate_visual_prompt(client, summary, topic):
+def get_category_prompt_keywords(category: str, topic: str, summary: str) -> str:
+    # Check for specific subjects in text first to be precise
+    text_lower = f"{topic} {summary}".lower()
+    if any(k in text_lower for k in ("security", "encryption", "identity", "secure", "auth")):
+        return "Theme: security, identity, encryption, secure agents. Avoid generic AI robot imagery."
+    if any(k in text_lower for k in ("agent", "orchestration", "collaboration", "autonomous workflow")):
+        return "Theme: agents, orchestration, collaboration, autonomous workflows. Avoid generic AI robot imagery."
+    
+    # Otherwise fall back to feed category
+    cat_lower = category.lower()
+    if cat_lower in ("research_lab", "academic"):
+        return "Theme: Research - neural networks, transformers, inference. Avoid generic AI robot imagery."
+    elif cat_lower in ("enterprise", "business"):
+        return "Theme: Enterprise - workflows, automation, business systems. Avoid generic AI robot imagery."
+    elif cat_lower in ("infrastructure",):
+        return "Theme: Infrastructure - chips, GPUs, networking, datacenters. Avoid generic AI robot imagery."
+    
+    # Generic fallback
+    return "Theme: modern technology illustration, enterprise AI. Avoid generic AI robot imagery."
+
+async def generate_visual_prompt(client, summary, topic, category="unknown"):
+    theme_guide = get_category_prompt_keywords(category, topic, summary)
+    prompt_content = f"Topic: {topic}\nSummary: {summary}\n{theme_guide}"
     try:
         response = await client.aio.models.generate_content(
             model=GEMINI_MODEL_PRIORITY[0],
-            contents=f"Topic: {topic}\nSummary: {summary}",
+            contents=prompt_content,
             config=types.GenerateContentConfig(system_instruction=SAGE_DESIGNER_INSTRUCTION, temperature=0.8)
         )
         return response.text.strip()
-    except Exception: return f"Minimalist tech illustration of {topic}"
+    except Exception:
+        return f"Minimalist tech illustration of {topic}"
+
+def validate_opengraph_image(image_bytes: bytes, image_url: str) -> "ImageValidationResult":
+    """Validates the OpenGraph image and returns structured ImageValidationResult."""
+    from src.models import ImageValidationResult
+    from PIL import Image
+    import io
+    from src.utils import get_image_mime, SafeLogger
+    
+    mime_type = get_image_mime(image_bytes)
+    if not mime_type:
+        return ImageValidationResult(valid=False, reason="unsupported_mime", final_url=image_url)
+        
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        img.verify()
+        img = Image.open(io.BytesIO(image_bytes))
+        width, height = img.size
+    except Exception as e:
+        return ImageValidationResult(valid=False, reason=f"decode_failed: {e}", mime_type=mime_type, final_url=image_url)
+        
+    byte_size = len(image_bytes)
+    if byte_size > 10 * 1024 * 1024:
+        return ImageValidationResult(valid=False, reason="file_too_large", mime_type=mime_type, width=width, height=height, final_url=image_url)
+        
+    if width < 200 or height < 200:
+        return ImageValidationResult(valid=False, reason="dimensions_too_small", mime_type=mime_type, width=width, height=height, final_url=image_url)
+        
+    aspect_ratio = width / height
+    if aspect_ratio < 0.4 or aspect_ratio > 2.5:
+        return ImageValidationResult(valid=False, reason="extreme_aspect_ratio", mime_type=mime_type, width=width, height=height, final_url=image_url)
+        
+    from src.config import GENERIC_IMAGE_PATTERNS
+    is_generic = any(p in image_url.lower() for p in GENERIC_IMAGE_PATTERNS)
+    if is_generic:
+        return ImageValidationResult(valid=False, reason="placeholder_pattern", mime_type=mime_type, width=width, height=height, final_url=image_url)
+        
+    try:
+        colors = img.getcolors(maxcolors=2)
+        if colors is not None and len(colors) == 1:
+            SafeLogger.warn("OpenGraph validation soft warning: low_entropy image (solid color)")
+    except Exception:
+        pass
+        
+    return ImageValidationResult(valid=True, mime_type=mime_type, width=width, height=height, final_url=image_url)
 
 async def generate_image_alt_text(image_bytes: bytes, prompt: str) -> str:
     """Generates screen-reader-friendly alt text for the generated image using Gemini Vision."""
@@ -414,6 +481,33 @@ async def generate_image_alt_text(image_bytes: bytes, prompt: str) -> str:
     except Exception as e:
         SafeLogger.warn(f"Failed to generate alt text via Gemini Vision: {e}. Falling back to default.")
         return f"Tech illustration of: {prompt}"
+
+async def generate_imagen_image(genai_client, prompt: str):
+    """Calls Google Imagen 4 for image generation."""
+    try:
+        from src.config import IMAGEN_MODEL
+        from google.genai import types
+        SafeLogger.info("Sage Designer: Generating Imagen 4 thumbnail...")
+        response = await genai_client.aio.models.generate_images(
+            model=IMAGEN_MODEL,
+            prompt=prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio='1:1'
+            )
+        )
+        if response.generated_images:
+            return response.generated_images[0].image._image_bytes
+    except Exception as e:
+        SafeLogger.warn(f"Imagen generation failed: {e}")
+    return None
+
+async def generate_ai_image(client, genai_client, prompt: str):
+    """Generates an image using the configured provider (nvidia or imagen)."""
+    if settings.image_provider == "imagen":
+        return await generate_imagen_image(genai_client, prompt)
+    else:
+        return await generate_nvidia_image(client, prompt)
 
 @retry_with_backoff
 async def generate_nvidia_image(client, prompt):

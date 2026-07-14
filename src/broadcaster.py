@@ -20,7 +20,7 @@ def clean_hashtags_if_needed(text: str, enabled: bool) -> str:
     return text.strip()
 
 @retry_with_backoff
-async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_image=None, image_alt_text=None):
+async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None):
     """Posts to Bluesky with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.bsky_handle or not bsky_client:
         return
@@ -39,11 +39,10 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
     if link:
         meta = await get_link_metadata(client_shared, link)
         if meta:
-            image_data = override_image if override_image else meta.get('image')
             thumb_blob = None
-            if image_data:
+            if media and media.image_bytes:
                 try:
-                    compressed = await asyncio.to_thread(compress_image, image_data)
+                    compressed = await asyncio.to_thread(compress_image, media.image_bytes)
                     if compressed:
                         upload = await bsky_client.upload_blob(compressed)
                         thumb_blob = upload.blob
@@ -56,6 +55,21 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
                     uri=meta['url'], thumb=thumb_blob
                 )
             )
+    elif media and media.image_bytes:
+        try:
+            compressed = await asyncio.to_thread(compress_image, media.image_bytes)
+            if compressed:
+                upload = await bsky_client.upload_blob(compressed)
+                embed = models.AppBskyEmbedImages.Main(
+                    images=[
+                        models.AppBskyEmbedImages.Image(
+                            alt=media.alt_text or "",
+                            image=upload.blob
+                        )
+                    ]
+                )
+        except Exception as e:
+            SafeLogger.warn(f"Bluesky image embed failed: {e}")
 
     for i, chunk in enumerate(chunks):
         # Add pagination markers for threads (1/N)
@@ -110,7 +124,7 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, override_
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Bluesky!")
 
 @retry_with_backoff
-async def post_to_mastodon(text, image_data=None, image_alt_text=None):
+async def post_to_mastodon(text, media=None):
     """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return
@@ -127,12 +141,12 @@ async def post_to_mastodon(text, image_data=None, image_alt_text=None):
     def _post_thread():
         m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
         media_ids = []
-        if image_data:
+        if media and media.image_bytes:
             try:
-                mime = get_image_mime(image_data)
+                mime = media.mime_type or get_image_mime(media.image_bytes)
                 if mime:
-                    media = m.media_post(image_data, mime_type=mime, description=image_alt_text)
-                    media_ids.append(media['id'])
+                    uploaded = m.media_post(media.image_bytes, mime_type=mime, description=media.alt_text)
+                    media_ids.append(uploaded['id'])
             except Exception as e:
                 SafeLogger.warn(f"Mastodon media failed: {e}")
 
@@ -161,7 +175,7 @@ async def post_to_mastodon(text, image_data=None, image_alt_text=None):
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Mastodon!")
 
 @retry_with_backoff
-async def post_to_threads(client, text, image_url=None, image_alt_text=None):
+async def post_to_threads(client, text, media=None):
     """Posts to Threads with Conditional Multi-Post Threading (The Weaver)."""
     # Clean hashtags if disabled for Threads
     text = clean_hashtags_if_needed(text, settings.enable_hashtags_threads)
@@ -175,6 +189,9 @@ async def post_to_threads(client, text, image_url=None, image_alt_text=None):
     
     root_post_id = None
     
+    image_url = media.public_url if media else None
+    image_alt_text = media.alt_text if media else None
+
     for i, chunk in enumerate(chunks):
         current_text = chunk
         if len(chunks) > 1:

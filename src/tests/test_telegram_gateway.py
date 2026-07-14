@@ -77,10 +77,9 @@ async def test_send_draft_for_approval_approve(monkeypatch, mocker):
         return []
     mock_bot_instance.get_updates = AsyncMock(side_effect=mock_get_updates)
     
-    text, image, alt = await send_draft_for_approval("Original draft text")
+    text, media = await send_draft_for_approval("Original draft text")
     assert text == "Original draft text"
-    assert image is None
-    assert alt is None
+    assert media is None
     mock_bot_instance.send_message.assert_called()
 
 @pytest.mark.asyncio
@@ -122,10 +121,9 @@ async def test_send_draft_for_approval_reject(monkeypatch, mocker):
         return []
     mock_bot_instance.get_updates = AsyncMock(side_effect=mock_get_updates)
     
-    text, image, alt = await send_draft_for_approval("Original draft text")
+    text, media = await send_draft_for_approval("Original draft text")
     assert text is None
-    assert image is None
-    assert alt is None
+    assert media is None
 
 @pytest.mark.asyncio
 async def test_send_draft_for_approval_edit_by_reply(monkeypatch, mocker):
@@ -181,10 +179,9 @@ async def test_send_draft_for_approval_edit_by_reply(monkeypatch, mocker):
         return []
     mock_bot_instance.get_updates = AsyncMock(side_effect=mock_get_updates)
     
-    text, image, alt = await send_draft_for_approval("Original draft text")
+    text, media = await send_draft_for_approval("Original draft text")
     assert text == "Edited draft text"
-    assert image is None
-    assert alt is None
+    assert media is None
     mock_bot_instance.edit_message_text.assert_called_with(
         chat_id="98765",
         message_id=999,
@@ -274,14 +271,13 @@ async def test_send_draft_for_approval_regenerate_text(monkeypatch, mocker):
     mock_response.text = "Mocked regenerated short text draft"
     mock_genai.aio.models.generate_content = AsyncMock(return_value=mock_response)
     
-    text, image, alt = await send_draft_for_approval(
+    text, media = await send_draft_for_approval(
         text="Original draft text",
         genai_client=mock_genai
     )
     
     assert text == "Mocked regenerated short text draft"
-    assert image is None
-    assert alt is None
+    assert media is None
     mock_genai.aio.models.generate_content.assert_called()
 
 @pytest.mark.asyncio
@@ -348,14 +344,21 @@ async def test_send_draft_for_approval_regenerate_image(monkeypatch, mocker):
     mock_client = MagicMock()
     mock_genai = MagicMock()
     
-    text, image, alt = await send_draft_for_approval(
-        text="Original draft text",
+    from src.models import MediaAsset, MediaSource
+    media_asset = MediaAsset(
+        source=MediaSource.GENERATED,
         image_bytes=b"OldImageBytes",
+        alt_text="Old Alt"
+    )
+    
+    text, media = await send_draft_for_approval(
+        text="Original draft text",
+        media=media_asset,
         client=mock_client,
         genai_client=mock_genai
     )
     
     assert text == "Original draft text"
-    assert image == b"NewImageBytes"
-    assert alt == "New Alt Text"
+    assert media.image_bytes == b"NewImageBytes"
+    assert media.alt_text == "New Alt Text"
     mock_bot_instance.edit_message_media.assert_called()

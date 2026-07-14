@@ -5,6 +5,7 @@ from typing import Optional, Tuple, Any
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from src.settings import settings
 from src.utils import SafeLogger
+from src.models import MediaAsset, MediaSource
 
 def validate_text_limits(text: str) -> Optional[str]:
     """
@@ -48,27 +49,26 @@ def validate_text_limits(text: str) -> Optional[str]:
 
 async def send_draft_for_approval(
     text: str,
-    image_bytes: Optional[bytes] = None,
-    image_alt_text: Optional[str] = None,
+    media: Optional[MediaAsset] = None,
     client: Optional[httpx.AsyncClient] = None,
     genai_client: Optional[Any] = None,
     topic: str = "General"
-) -> Tuple[Optional[str], Optional[bytes], Optional[str]]:
+) -> Tuple[Optional[str], Optional[MediaAsset]]:
     """
     Sends the generated post draft and image to Telegram for approval.
     Waits up to settings.telegram_timeout_minutes (default 5) for user callback or text reply.
-    If the timeout expires, defaults to the current text, image, and alt text, and posts.
-    Returns a Tuple: (approved_text, approved_image_bytes, approved_image_alt_text).
-    Returns (None, None, None) if rejected.
+    If the timeout expires, defaults to the current text and media asset, and posts.
+    Returns a Tuple: (approved_text, approved_media).
+    Returns (None, None) if rejected.
     """
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
-        return text, image_bytes, image_alt_text
+        return text, media
 
     # Do not request approval in dry-run mode
     if settings.is_dry_run:
         SafeLogger.info("Telegram: DRY_RUN enabled. Skipping approval message dispatch.")
-        return text, image_bytes, image_alt_text
+        return text, media
 
     try:
         bot = Bot(token=settings.telegram_bot_token)
@@ -89,6 +89,7 @@ async def send_draft_for_approval(
 
         # Send text + image or just text
         sent_message = None
+        image_bytes = media.image_bytes if media else None
         if image_bytes:
             SafeLogger.info("Telegram: Sending draft and image for approval...")
             sent_message = await bot.send_photo(
@@ -142,12 +143,12 @@ async def send_draft_for_approval(
                                 SafeLogger.info("Telegram: User approved draft.")
                                 await query.answer("Draft approved! Publishing...")
                                 await bot.send_message(chat_id=chat_id, text="🚀 Approved. Posting to platforms...")
-                                return text, image_bytes, image_alt_text
+                                return text, media
                             elif action == "reject":
                                 SafeLogger.info("Telegram: User rejected draft.")
                                 await query.answer("Draft rejected.")
                                 await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
-                                return None, None, None
+                                return None, None
                             elif action == "regenerate_text":
                                 SafeLogger.info("Telegram: User requested text regeneration.")
                                 prompt_msg = await bot.send_message(
@@ -165,25 +166,50 @@ async def send_draft_for_approval(
                                     await query.answer()
                                     continue
                                 
-                                status_msg = await bot.send_message(chat_id=chat_id, text="🎨 Regenerating image card using NVIDIA SD3 NIM...")
+                                status_msg = await bot.send_message(chat_id=chat_id, text=f"🎨 Regenerating image card using {settings.image_provider.upper()}...")
                                 await query.answer("Regenerating image...")
                                 
                                 try:
-                                    from src.curator import generate_visual_prompt, generate_nvidia_image, generate_image_alt_text
+                                    from src.curator import generate_visual_prompt, generate_ai_image, generate_image_alt_text
+                                    from PIL import Image
+                                    import io
+                                    from src.utils import get_image_mime
                                     
                                     # 1. Generate new visual prompt
                                     visual_prompt = await generate_visual_prompt(genai_client, text, topic)
                                     
-                                    # 2. Generate nvidia image
-                                    new_image_data = await generate_nvidia_image(client, visual_prompt)
+                                    # 2. Generate AI image
+                                    new_image_data = await generate_ai_image(client, genai_client, visual_prompt)
                                     
                                     if new_image_data:
                                         # 3. Generate image alt text
                                         alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
                                         new_alt_text = await generate_image_alt_text(new_image_data, alt_prompt)
                                         
+                                        # Get dimensions and mime
+                                        mime_type = get_image_mime(new_image_data)
+                                        width, height = None, None
+                                        try:
+                                            img = Image.open(io.BytesIO(new_image_data))
+                                            width, height = img.size
+                                        except Exception:
+                                            pass
+                                            
+                                        # Construct new MediaAsset
+                                        new_media = MediaAsset(
+                                            source=MediaSource.GENERATED,
+                                            image_bytes=new_image_data,
+                                            public_url=None,
+                                            mime_type=mime_type,
+                                            width=width,
+                                            height=height,
+                                            alt_text=new_alt_text,
+                                            attribution_url=media.attribution_url if media else None
+                                        )
+                                        
                                         # 4. Update preview message media
-                                        if sent_message and (image_bytes or (hasattr(sent_message, 'photo') and sent_message.photo)):
+                                        original_has_media = media is not None and media.image_bytes is not None
+                                        if sent_message and original_has_media:
                                             await bot.edit_message_media(
                                                 chat_id=chat_id,
                                                 message_id=sent_message.message_id,
@@ -194,8 +220,7 @@ async def send_draft_for_approval(
                                                 ),
                                                 reply_markup=reply_markup
                                             )
-                                            image_bytes = new_image_data
-                                            image_alt_text = new_alt_text
+                                            media = new_media
                                             SafeLogger.info("Telegram: Image regenerated successfully.")
                                             await bot.send_message(chat_id=chat_id, text="🎨 Image card regenerated successfully!", reply_to_message_id=status_msg.message_id)
                                         else:
@@ -208,8 +233,7 @@ async def send_draft_for_approval(
                                                 parse_mode="Markdown"
                                             )
                                             sent_message = sent_photo
-                                            image_bytes = new_image_data
-                                            image_alt_text = new_alt_text
+                                            media = new_media
                                             SafeLogger.info("Telegram: Image generated and attached successfully.")
                                             await bot.send_message(chat_id=chat_id, text="🎨 Image card generated and attached successfully!", reply_to_message_id=status_msg.message_id)
                                     else:
@@ -274,7 +298,8 @@ async def send_draft_for_approval(
                                 new_text = strip_markdown(response.text.strip())
 
                                 # Update the sent message preview
-                                if image_bytes:
+                                original_has_media = media is not None and media.image_bytes is not None
+                                if original_has_media:
                                     await bot.edit_message_caption(
                                         chat_id=chat_id,
                                         message_id=sent_message.message_id,
@@ -322,7 +347,8 @@ async def send_draft_for_approval(
 
                             if is_edit and new_text:
                                 # Update the sent message with new draft text first (before committing)
-                                if image_bytes:
+                                original_has_media = media is not None and media.image_bytes is not None
+                                if original_has_media:
                                     await bot.edit_message_caption(
                                         chat_id=chat_id,
                                         message_id=sent_message.message_id,
@@ -351,7 +377,7 @@ async def send_draft_for_approval(
                                         text=warning_msg,
                                         parse_mode="Markdown",
                                         reply_to_message_id=msg.message_id
-                                )
+                                    )
                                 else:
                                     await bot.send_message(
                                         chat_id=chat_id,
@@ -368,11 +394,11 @@ async def send_draft_for_approval(
         # Timeout occurred: auto-post
         SafeLogger.info("Telegram: Approval timeout expired. Automatically publishing draft.")
         await bot.send_message(chat_id=chat_id, text="🕒 Timeout expired. Automatically publishing draft.")
-        return text, image_bytes, image_alt_text
+        return text, media
 
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
-        return text, image_bytes, image_alt_text  # Fallback to current text and images to maintain robustness
+        return text, media  # Fallback to current text and media to maintain robustness_bytes, image_alt_text  # Fallback to current text and images to maintain robustness
 
 async def check_for_telegram_topic() -> Optional[str]:
     """
