@@ -226,6 +226,22 @@ async def send_draft_for_approval(
                         if str(msg.from_user.id) != str(chat_id):
                             continue
 
+                        text_val = msg.text.strip()
+                        if text_val.startswith("/topic ") or text_val.startswith("/curate "):
+                            from src.config import PENDING_TOPIC_FILE_PATH
+                            import json
+                            topic_cmd = "/topic " if text_val.startswith("/topic ") else "/curate "
+                            topic_str = text_val.replace(topic_cmd, "", 1).strip()
+                            if topic_str:
+                                try:
+                                    with open(PENDING_TOPIC_FILE_PATH, "w", encoding="utf-8") as f:
+                                        json.dump({"topic": topic_str, "timestamp": time.time()}, f)
+                                    SafeLogger.info(f"Telegram Loop: Persisted topic '{topic_str}' to pending_topic.json")
+                                    await bot.send_message(chat_id=chat_id, text=f"📥 Topic request recorded for next run: *{topic_str}*.", reply_to_message_id=msg.message_id)
+                                except Exception as persist_err:
+                                    SafeLogger.error(f"Telegram Loop: Failed to persist topic: {persist_err}")
+                            continue
+
                         # Scenario A: User is replying to the text feedback prompt
                         if waiting_for_feedback and msg.reply_to_message and msg.reply_to_message.message_id == feedback_prompt_id:
                             waiting_for_feedback = False
@@ -360,9 +376,43 @@ async def send_draft_for_approval(
 
 async def check_for_telegram_topic() -> Optional[str]:
     """
-    Checks if there's a recent /topic or /curate command sent by the authorized user.
-    Returns the topic string if found, else None.
+    Checks if there's a recent /topic or /curate command sent by the authorized user,
+    either from pending_topic.json or directly from Telegram updates.
+    Returns the topic string if found and valid (under 15 minutes old), else None.
     """
+    from src.config import PENDING_TOPIC_FILE_PATH
+    import os
+    import json
+    import time
+    
+    # 1. Check pending_topic.json first
+    topic_to_use = None
+    if os.path.exists(PENDING_TOPIC_FILE_PATH):
+        try:
+            with open(PENDING_TOPIC_FILE_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            topic_to_use = data.get("topic")
+        except Exception as e:
+            SafeLogger.warn(f"Telegram: Error reading pending topic file: {e}")
+        finally:
+            try:
+                os.remove(PENDING_TOPIC_FILE_PATH)
+            except Exception:
+                pass
+
+    if topic_to_use:
+        SafeLogger.info(f'Received topic: "{topic_to_use}"')
+        SafeLogger.info("Using topic override...")
+        SafeLogger.info("Topic override cleared.")
+        # Notify user on Telegram
+        if settings.telegram_bot_token and settings.telegram_user_id:
+            try:
+                bot = Bot(token=settings.telegram_bot_token)
+                await bot.send_message(chat_id=settings.telegram_user_id, text=f"📥 Using pending topic override: *{topic_to_use}*.")
+            except Exception:
+                pass
+        return topic_to_use
+
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         return None
 
@@ -382,18 +432,25 @@ async def check_for_telegram_topic() -> Optional[str]:
                 # Verify it was sent in the last 15 minutes
                 if msg.date and (now - msg.date.timestamp()) < 900:
                     text = msg.text or ""
+                    topic = None
                     if text.startswith("/topic "):
                         topic = text.replace("/topic ", "", 1).strip()
-                        if topic:
-                            SafeLogger.info(f"Telegram: Received on-demand topic intercept: '{topic}'")
-                            await bot.send_message(chat_id=chat_id, text=f"📥 Received topic request: *{topic}*. Curating now...")
-                            return topic
                     elif text.startswith("/curate "):
                         topic = text.replace("/curate ", "", 1).strip()
-                        if topic:
-                            SafeLogger.info(f"Telegram: Received on-demand topic intercept: '{topic}'")
-                            await bot.send_message(chat_id=chat_id, text=f"📥 Received topic request: *{topic}*. Curating now...")
-                            return topic
+                    
+                    if topic:
+                        SafeLogger.info(f'Received topic: "{topic}"')
+                        SafeLogger.info("Using topic override...")
+                        SafeLogger.info("Topic override cleared.")
+                        
+                        # Acknowledge this update and all previous ones to consume it
+                        try:
+                            await bot.get_updates(offset=update.update_id + 1, limit=1)
+                        except Exception as e:
+                            SafeLogger.warn(f"Telegram: Failed to acknowledge updates: {e}")
+                        
+                        await bot.send_message(chat_id=chat_id, text=f"📥 Received topic request: *{topic}*. Curating now...")
+                        return topic
         return None
     except Exception as e:
         SafeLogger.warn(f"Telegram: Error checking for topic intercept: {e}")

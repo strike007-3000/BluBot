@@ -14,6 +14,7 @@ SESSION_FILE_PATH = os.path.join(BASE_DIR, "bluesky_session.txt")
 STATUS_FILE_PATH = os.path.join(BASE_DIR, "STATUS.md")
 VANGUARD_STATE_PATH = os.path.join(BASE_DIR, "broken_feeds.json")
 INTERACTIONS_STATE_PATH = os.path.join(BASE_DIR, "seen_interactions.json")
+PENDING_TOPIC_FILE_PATH = os.path.join(BASE_DIR, "pending_topic.json")
 
 # Interaction Engine Constants
 INTERACTION_LIMIT = 5
@@ -70,47 +71,95 @@ MAX_API_RETRIES = 3
 BACKOFF_FACTOR = 3.0
 JITTER_RANGE = 2.0
 
-RSS_FEEDS = [
-    # === Tier 1: AI Lab Official Blogs ===
-    "https://blog.google/rss/",
-    "https://www.apple.com/newsroom/rss-feed.rss",
-    "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
-    "https://openai.com/news/rss.xml",
-    "https://huggingface.co/blog/feed.xml",
-    "https://deepmind.google/blog/rss.xml",
-    "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
-    "https://www.microsoft.com/en-us/research/blog/feed/",
+# --- SOURCE REGISTRY WITH STABLE IDs (Refined v3.8.0) ---
+SOURCE_REGISTRY = [
+    # Category list: research_lab, enterprise, practitioner, open_source, infrastructure, business, journalism, academic, critical
+    # Quality list: official, community, academic, journalism, opinion
     
-    # === Tier 2: Elite Newsletters & Analysts ===
-    "https://www.interconnects.ai/feed",
-    "https://magazine.sebastianraschka.com/feed",
-    "https://www.latent.space/feed",
-    "https://jack-clark.net/feed/",
-    "https://www.oneusefulthing.org/feed",
-    "https://newsletter.maartengrootendorst.com/feed",
-    "https://alphasignalai.beehiiv.com/feed",
-    "https://thesequence.substack.com/feed",
-    "https://tldr.tech/ai/rss",
-    
-    # === Tier 3: Research & Academic ===
-    "https://arxiv.org/rss/cs.LG",
-    "https://thegradient.pub/rss/",
-    "https://vkrakovna.wordpress.com/feed/",
-    "https://bair.berkeley.edu/blog/feed.xml",
-    "https://machinelearningmastery.com/feed/",
-    
-    # === Tier 4: Industry & Journalism ===
-    "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
-    "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
-    "https://www.the-decoder.com/feed/",
-    "https://404media.co/rss/",
-    "https://www.wired.com/feed/tag/ai/latest/rss",
-    "https://siliconangle.com/category/ai/feed/",
-    "https://aiacceleratorinstitute.com/rss/",
-    "https://www.marktechpost.com/feed/",
-    "https://techcrunch.com/category/artificial-intelligence/feed/",
-    "https://venturebeat.com/category/ai/feed/",
+    # === Tier 1: AI Research Labs (base 30) ===
+    {"id": "openai_news",         "name": "OpenAI News",         "url": "https://openai.com/news/rss.xml",                                    "category": "research_lab",   "quality": "official",   "base_score": 30},
+    {"id": "anthropic_news",      "name": "Anthropic News",      "url": "https://www.anthropic.com/news/rss",                                  "category": "research_lab",   "quality": "official",   "base_score": 30},
+    {"id": "deepmind_blog",       "name": "DeepMind Blog",       "url": "https://deepmind.google/blog/rss.xml",                               "category": "research_lab",   "quality": "official",   "base_score": 30},
+    {"id": "meta_ai_blog",        "name": "Meta AI Blog",        "url": "https://ai.meta.com/blog/rss/",                                      "category": "research_lab",   "quality": "official",   "base_score": 30},
+    {"id": "huggingface_blog",    "name": "HuggingFace Blog",    "url": "https://huggingface.co/blog/feed.xml",                               "category": "research_lab",   "quality": "official",   "base_score": 30},
+
+    # === Tier 2: Enterprise AI Blogs (base 25-27) ===
+    {"id": "microsoft_ai_blog",   "name": "Microsoft AI Blog",   "url": "https://blogs.microsoft.com/ai/feed/",                               "category": "enterprise",     "quality": "official",   "base_score": 25},
+    {"id": "microsoft_research",  "name": "Microsoft Research",  "url": "https://www.microsoft.com/en-us/research/blog/feed/",                "category": "enterprise",     "quality": "official",   "base_score": 25},
+    {"id": "google_cloud_ai",     "name": "Google Cloud AI",     "url": "https://cloud.google.com/blog/products/ai-machine-learning/rss",     "category": "enterprise",     "quality": "official",   "base_score": 25},
+    {"id": "aws_ml_blog",         "name": "AWS ML Blog",         "url": "https://aws.amazon.com/blogs/machine-learning/feed/",                "category": "enterprise",     "quality": "official",   "base_score": 25},
+    {"id": "nvidia_dl_blog",      "name": "NVIDIA Deep Learning","url": "https://blogs.nvidia.com/blog/category/deep-learning/feed/",         "category": "enterprise",     "quality": "official",   "base_score": 27},
+    {"id": "cohere_blog",         "name": "Cohere Blog",         "url": "https://txt.cohere.com/rss/",                                        "category": "enterprise",     "quality": "official",   "base_score": 25},
+    {"id": "mistral_blog",        "name": "Mistral Blog",        "url": "https://mistral.ai/news/rss",                                        "category": "enterprise",     "quality": "official",   "base_score": 25},
+
+    # === Tier 3: Practitioner / Developer Ecosystem (base 20) ===
+    {"id": "simon_willison",      "name": "Simon Willison",      "url": "https://simonwillison.net/atom/everything/",                         "category": "practitioner",   "quality": "opinion",    "base_score": 20},
+    {"id": "weights_biases",      "name": "Weights & Biases",    "url": "https://wandb.ai/fully-connected/rss.xml",                          "category": "practitioner",   "quality": "community",  "base_score": 20},
+    {"id": "langchain_blog",      "name": "LangChain Blog",      "url": "https://blog.langchain.dev/rss/",                                    "category": "practitioner",   "quality": "community",  "base_score": 20},
+    {"id": "interconnects_ai",    "name": "Interconnects.ai",    "url": "https://www.interconnects.ai/feed",                                  "category": "practitioner",   "quality": "opinion",    "base_score": 20},
+    {"id": "latent_space",        "name": "Latent Space",        "url": "https://www.latent.space/feed",                                      "category": "practitioner",   "quality": "community",  "base_score": 20},
+    {"id": "one_useful_thing",    "name": "One Useful Thing",    "url": "https://www.oneusefulthing.org/feed",                                 "category": "practitioner",   "quality": "opinion",    "base_score": 20},
+    {"id": "maarten_grootendorst","name": "Maarten Grootendorst","url": "https://newsletter.maartengrootendorst.com/feed",                    "category": "practitioner",   "quality": "opinion",    "base_score": 20},
+    {"id": "sebastian_raschka",   "name": "Sebastian Raschka",   "url": "https://magazine.sebastianraschka.com/feed",                         "category": "practitioner",   "quality": "opinion",    "base_score": 20},
+    {"id": "jack_clark",          "name": "Jack Clark",          "url": "https://jack-clark.net/feed/",                                       "category": "practitioner",   "quality": "opinion",    "base_score": 20},
+
+    # === Tier 4: Open-Source Ecosystem (base 18) ===
+    {"id": "vllm_blog",           "name": "vLLM Blog",           "url": "https://blog.vllm.ai/feed.xml",                                      "category": "open_source",    "quality": "community",  "base_score": 18},
+    {"id": "ollama_blog",         "name": "Ollama Blog",         "url": "https://ollama.com/blog/rss",                                        "category": "open_source",    "quality": "community",  "base_score": 18},
+    {"id": "lm_studio_blog",      "name": "LM Studio Blog",      "url": "https://lmstudio.ai/blog/rss",                                       "category": "open_source",    "quality": "community",  "base_score": 18},
+
+    # === Tier 5: Infrastructure / Business Analysis (base 15) ===
+    {"id": "semianalysis",        "name": "SemiAnalysis",        "url": "https://semianalysis.com/feed/",                                     "category": "infrastructure", "quality": "opinion",    "base_score": 15},
+    {"id": "together_ai",         "name": "Together AI Blog",    "url": "https://www.together.ai/blog/rss.xml",                               "category": "infrastructure", "quality": "official",   "base_score": 15},
+    {"id": "a16z_ai",             "name": "a16z AI",             "url": "https://a16z.com/feed/",                                             "category": "business",       "quality": "opinion",    "base_score": 15},
+    {"id": "sequoia_cap",         "name": "Sequoia Capital",     "url": "https://www.sequoiacap.com/feed/",                                   "category": "business",       "quality": "opinion",    "base_score": 15},
+    {"id": "cb_insights_ai",      "name": "CB Insights AI",      "url": "https://www.cbinsights.com/research/feed/",                          "category": "business",       "quality": "journalism", "base_score": 15},
+
+    # === Tier 6: Journalism / Industry / General (base 12) ===
+    {"id": "the_verge_ai",        "name": "The Verge AI",        "url": "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml", "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "mit_tech_review",     "name": "MIT Tech Review AI",  "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed/","category": "journalism",   "quality": "journalism", "base_score": 12},
+    {"id": "ieee_spectrum",       "name": "IEEE Spectrum AI",    "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",  "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "the_decoder",         "name": "The Decoder",         "url": "https://www.the-decoder.com/feed/",                                  "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "wired_ai",            "name": "Wired AI",            "url": "https://www.wired.com/feed/tag/ai/latest/rss",                       "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "venturebeat_ai",      "name": "VentureBeat AI",      "url": "https://venturebeat.com/category/ai/feed/",                          "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "techcrunch_ai",       "name": "TechCrunch AI",       "url": "https://techcrunch.com/category/artificial-intelligence/feed/",      "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "four_hundred_four",   "name": "404 Media",           "url": "https://404media.co/rss/",                                           "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "silicon_angle",       "name": "Silicon Angle AI",    "url": "https://siliconangle.com/category/ai/feed/",                         "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "alphasignal_ai",      "name": "AlphaSignal AI",      "url": "https://alphasignalai.beehiiv.com/feed",                             "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "the_sequence",        "name": "The Sequence",        "url": "https://thesequence.substack.com/feed",                              "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "tldr_ai",             "name": "TLDR AI",             "url": "https://tldr.tech/ai/rss",                                           "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "marktechpost",        "name": "MarktechPost",        "url": "https://www.marktechpost.com/feed/",                                  "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "ai_accelerator_inst", "name": "AI Accelerator Inst", "url": "https://aiacceleratorinstitute.com/rss/",                            "category": "journalism",     "quality": "journalism", "base_score": 12},
+
+    # === Tier 7: Academic (base 10) ===
+    {"id": "arxiv_cslg",          "name": "arXiv CS.LG",         "url": "https://arxiv.org/rss/cs.LG",                                        "category": "academic",       "quality": "academic",   "base_score": 10},
+    {"id": "the_gradient",        "name": "The Gradient",        "url": "https://thegradient.pub/rss/",                                       "category": "academic",       "quality": "academic",   "base_score": 10},
+    {"id": "bair_blog",           "name": "BAIR Blog",           "url": "https://bair.berkeley.edu/blog/feed.xml",                             "category": "academic",       "quality": "academic",   "base_score": 10},
+    {"id": "ml_mastery",          "name": "ML Mastery",          "url": "https://machinelearningmastery.com/feed/",                            "category": "academic",       "quality": "academic",   "base_score": 10},
+
+    # === Tier 8: Critical / Balancing Voices (base 5 — supporting context only) ===
+    {"id": "ai_snake_oil",        "name": "AI Snake Oil",        "url": "https://www.aisnakeoil.com/feed",                                     "category": "critical",       "quality": "opinion",    "base_score": 5},
+    {"id": "gary_marcus",         "name": "Gary Marcus",         "url": "https://garymarcus.substack.com/feed",                               "category": "critical",       "quality": "opinion",    "base_score": 5},
+    {"id": "algorithmic_bridge",  "name": "Algorithmic Bridge",  "url": "https://thealgorithmicbridge.substack.com/feed",                      "category": "critical",       "quality": "opinion",    "base_score": 5},
+    {"id": "vkrakovna",           "name": "Victoria Krakovna",   "url": "https://vkrakovna.wordpress.com/feed/",                              "category": "critical",       "quality": "opinion",    "base_score": 5},
 ]
+
+# Derive flat RSS_FEEDS for backward compatibility
+RSS_FEEDS = [s["url"] for s in SOURCE_REGISTRY]
+
+# Lookups mapped by Source ID
+FEED_SCORE_MAP = {s["id"]: s["base_score"] for s in SOURCE_REGISTRY}
+FEED_CATEGORY_MAP = {s["id"]: s["category"] for s in SOURCE_REGISTRY}
+URL_TO_ID = {s["url"]: s["id"] for s in SOURCE_REGISTRY}
+ID_TO_NAME = {s["id"]: s["name"] for s in SOURCE_REGISTRY}
+
+# --- Category Recurrence Penalty Constants ---
+CATEGORY_RECURRENCE_PENALTY_STEP = 5
+
+# --- Deprecated scoring constants retained for one release to simplify rollback ---
+BASE_TIER_1 = 30
+BASE_HIDDEN_GEM = 15
+BASE_TIER_2 = 15
 
 # --- Breakthrough Scoring Engine Constants ---
 HIGH_SIGNAL_KEYWORDS = [
@@ -124,10 +173,7 @@ MOMENTUM_PRODUCTS = [
     "sora", "devin", "grok 4", "mistral 4", "strawberry"
 ]
 
-# Weighting Matrix
-BASE_TIER_1 = 30
-BASE_HIDDEN_GEM = 15
-BASE_TIER_2 = 15
+# Weighting Matrix (retained/updated)
 SIGNAL_BOOST = 12
 MOMENTUM_BOOST = 18
 SYNERGY_BONUS = 15
@@ -254,3 +300,26 @@ def validate_gemini_model_priority():
     except Exception as e:
         SafeLogger.warn(f"Gemini Validation: Discovery failed ({e}). Falling back to configured defaults.")
         return True  # Return True to avoid blocking execution due to API network glitches
+
+# --- Writing-Style Rotation Constants ---
+ALL_STYLES = ["STRATEGIC_CONTRAST", "PRACTICAL_WORKFLOW", "RISK_VERIFICATION", "ENTERPRISE_ROI", "QUESTION_FIRST"]
+
+WRITING_STYLES = {
+    "STRATEGIC_CONTRAST": "STRATEGIC CONTRAST: Contrast the old assumptions / paradigm with the new reality of this story. Highlight the shift clearly.",
+    "PRACTICAL_WORKFLOW": "PRACTICAL WORKFLOW: Focus heavily on what changes immediately for developer setup, engineering workflows, or day-to-day operations.",
+    "RISK_VERIFICATION": "RISK VERIFICATION: Focus on the risk, failure modes, safety questions, compliance, or verification challenges of this news.",
+    "ENTERPRISE_ROI": "ENTERPRISE ROI: Focus on commercial viability, business cost, ROI trade-offs, and what changes for enterprise vendors or deployment.",
+    "QUESTION_FIRST": "QUESTION FIRST: Start the post with a direct, provocative question about the core topic, then spend the rest of the post answering it with elite tech insights."
+}
+
+STYLE_COMPATIBILITY = {
+    "research_lab": ["STRATEGIC_CONTRAST", "QUESTION_FIRST", "RISK_VERIFICATION"],
+    "enterprise": ["ENTERPRISE_ROI", "STRATEGIC_CONTRAST", "PRACTICAL_WORKFLOW"],
+    "practitioner": ["PRACTICAL_WORKFLOW", "QUESTION_FIRST"],
+    "open_source": ["PRACTICAL_WORKFLOW", "STRATEGIC_CONTRAST"],
+    "infrastructure": ["ENTERPRISE_ROI", "STRATEGIC_CONTRAST"],
+    "business": ["ENTERPRISE_ROI", "STRATEGIC_CONTRAST"],
+    "journalism": ["STRATEGIC_CONTRAST", "QUESTION_FIRST", "RISK_VERIFICATION"],
+    "academic": ["STRATEGIC_CONTRAST", "RISK_VERIFICATION", "QUESTION_FIRST"],
+    "critical": ["RISK_VERIFICATION", "STRATEGIC_CONTRAST"]
+}

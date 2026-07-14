@@ -7,20 +7,22 @@ def test_calculate_relevance_score_factors():
     """Verify that different scoring factors are correctly applied."""
     now_utc = datetime.now(timezone.utc)
     
-    # 1. Tier 1 Source
+    # 1. Tier 1 Research Lab
     item_tier1 = {
         "title": "New Model Release",
         "summary": "This is a summary",
-        "link": "https://openai.com/news/1"
+        "link": "https://openai.com/news/1",
+        "source_id": "openai_news"
     }
     score_tier1 = calculate_relevance_score(item_tier1, now_utc, now_utc)
-    assert score_tier1 >= BASE_TIER_1
+    assert score_tier1 >= 30
     
     # 2. Keyword Boost
     item_signal = {
         "title": "Autonomous Agent SOTA",
         "summary": "New breakthrough in agentic reasoning",
-        "link": "https://example.com/1"
+        "link": "https://example.com/1",
+        "source_id": "unknown"
     }
     score_signal = calculate_relevance_score(item_signal, now_utc, now_utc)
     assert score_signal >= SIGNAL_BOOST
@@ -29,7 +31,8 @@ def test_calculate_relevance_score_factors():
     item_momentum = {
         "title": "GPT-5 First Look",
         "summary": "Testing the new model",
-        "link": "https://example.com/2"
+        "link": "https://example.com/2",
+        "source_id": "unknown"
     }
     score_momentum = calculate_relevance_score(item_momentum, now_utc, now_utc)
     assert score_momentum >= MOMENTUM_BOOST
@@ -149,3 +152,46 @@ async def test_summarize_news_with_thinking_budget(monkeypatch):
     # Restore
     GEMINI_MODEL_PRIORITY.clear()
     GEMINI_MODEL_PRIORITY.extend(original_priority)
+
+def test_registry_validation():
+    from src.config import SOURCE_REGISTRY
+    
+    allowed_categories = {
+        "research_lab", "enterprise", "practitioner", "open_source",
+        "infrastructure", "business", "journalism", "academic", "critical"
+    }
+    allowed_qualities = {"official", "community", "academic", "journalism", "opinion"}
+    
+    ids = set()
+    urls = set()
+    
+    for source in SOURCE_REGISTRY:
+        # Check required fields
+        assert "id" in source
+        assert "name" in source
+        assert "url" in source
+        assert "category" in source
+        assert "quality" in source
+        assert "base_score" in source
+        
+        # Check duplicate IDs and URLs
+        assert source["id"] not in ids, f"Duplicate ID: {source['id']}"
+        assert source["url"] not in urls, f"Duplicate URL: {source['url']}"
+        ids.add(source["id"])
+        urls.add(source["url"])
+        
+        # Check allowed category and quality values
+        assert source["category"] in allowed_categories, f"Invalid category: {source['category']}"
+        assert source["quality"] in allowed_qualities, f"Invalid quality: {source['quality']}"
+
+def test_fallback_behavior_unknown_source():
+    now_utc = datetime.now(timezone.utc)
+    item_unknown = {
+        "title": "Title",
+        "summary": "Summary",
+        "link": "https://unknown.com/news",
+        "source_id": "unknown"
+    }
+    score = calculate_relevance_score(item_unknown, now_utc, now_utc)
+    assert score <= 0
+

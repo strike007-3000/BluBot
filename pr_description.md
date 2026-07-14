@@ -1,68 +1,46 @@
-# 📄 PR v3.13.4: Comprehensive Documentation Sync
+# 📄 PR v3.13.5: Curation Engine v4 (Stable ID Registry, Category Rotation, and Telegram Overrides)
 
-This patch release synchronizes all documentation to accurately reflect the current state of BluBot v3.13.3 and bumps the version to **v3.13.4**.
+This minor release introduces Curation Engine v4, resolving on-demand Telegram topic queue intercepts and enhancing curation diversity through stable source IDs, progressive category recurrence penalties, and writing style rotations.
 
 ---
 
 ## Changes
 
-### 📄 SECURITY.md
-- Updated **supported versions table**: `3.13.x` (Active), `3.12.x` (security patches only), `3.11.x`/`3.10.x` (deprecated), `< 3.10` (EOL)
-- Bumped **security baseline** reference from `v3.6.7` → `v3.13.3`
-- Expanded hardening section with **4 previously undocumented protections**:
-  - Decompression Bomb DoS (`Image.MAX_IMAGE_PIXELS = 10,000,000`)
-  - Telegram impersonation gating (`TELEGRAM_USER_ID` validation on all callbacks)
-  - Zero-Duplicate Threads logic (Catch & Log delivery model)
-  - Resilient RSS parsing (raw bytes + safe attribute lookups)
+### 📡 Curation Engine & Registry Refinement
+- **Stable ID Registry**: Transitioned `RSS_FEEDS` in `src/config.py` to a structured `SOURCE_REGISTRY` mapping each feed to a stable ID, category, quality assessment, and base score.
+- **Enterprise & Labs Rebalance**: Set Tier 1 Research Labs to base score `30`, and Enterprise AI Blogs to `25`–`27` to prevent product announcements from dominating research releases.
+- **Open-source additions**: Integrated `vLLM`, `Ollama`, and `LM Studio` at base `18`.
+- **Academic score reduction**: Reclassified `arxiv.org` under the `academic` category with base score `10` (down from `15`).
+- **Critical voices constraint**: Reduced base scores of critical voices (e.g. AI Snake Oil, Gary Marcus) to `5` and added strict post-filtering in `fetch_news` ensuring critical voices are treated as supporting context only (never defining the lead story when non-critical alternatives exist).
 
-### 🔒 PRIVACY.md
-- Updated **Last Updated** date to June 21, 2026
-- **Broadened scope** from Threads-only to all 4 platforms: Bluesky, Mastodon, Threads, Telegram
-- Added disclosures for:
-  - Interaction Engine metadata handling (`seen_interactions.json`)
-  - Telegram message processing scope (scoped to `TELEGRAM_USER_ID`, nothing persisted)
-  - Google Gemini / NVIDIA NIM API data handling with links to their privacy policies
-- **Enumerated all 4 persisted state files** in Section 4 with contents and caps
-- **Expanded revocation steps** to cover all platforms (including Telegram BotFather `/revoke`)
+### 🛠️ Telegram Topic Persistence
+- **Queue Intercept Cache**: Implemented [pending_topic.json](file:///d:/Code/BlueSky/pending_topic.json) to persist topics captured during the draft approval polling loop, resolving race conditions where previous polling cycles consumed the Telegram update queue.
+- **One-Shot Telemetry**: Ensures the topic override clears immediately upon use and logs the exact sequence of 3 logs for debug visibility.
 
-### 📖 docs/WIKI_MANUAL.md
-- **Page 5**: Corrected feed count from "over 30" → "exactly 32 premium feeds across 4 tiers"
-- **Page 6**: Added **11 missing environment variables** to the secrets table:
-  `MASTODON_ACCESS_TOKEN`, `MASTODON_BASE_URL`, `THREADS_ACCESS_TOKEN`, `THREADS_USER_ID`,
-  `TELEGRAM_BOT_TOKEN`, `TELEGRAM_USER_ID`, `TELEGRAM_TIMEOUT_MINUTES`, `ENABLE_TELEGRAM_APPROVAL`,
-  `ENABLE_HASHTAGS_BSKY`, `ENABLE_HASHTAGS_MASTODON`, `ENABLE_HASHTAGS_THREADS`
-- Clarified `THINKING_BUDGET` note: bypassed for Gemma models
-- **Page 8**: Removed stale broken anchor links
-
-### 📋 README.md
-- Fixed **model failover list** to exact IDs from `config.py`:
-  `gemini-3.1-flash-lite-preview → gemma-4-31b-it → gemma-4-26b-a4b-it → gemma-3-27b-it → gemini-2.5-flash-lite`
-- Clarified `ENABLE_HASHTAGS_BSKY` default=`false` description
-- Updated testing section version reference from `v3.6.5` → `v3.13.3`
-- Added `v3.13.4` changelog entry
-
-### 📊 STATUS.md
-- Updated last run date from `2026-06-16` → `2026-06-21`
-
-### 🔢 VERSION
-- `3.13.3` → `3.13.4`
+### 🧠 Curation Diversity & Writing-Style Rotation
+- **Progressive Recency Penalty**: Added a recency-weighted decay penalty for category recurrence to push feed variety dynamically.
+- **Style Rotation**: Implemented LRU style selection across 5 distinct writing structures (`STRATEGIC_CONTRAST`, `PRACTICAL_WORKFLOW`, `RISK_VERIFICATION`, `ENTERPRISE_ROI`, `QUESTION_FIRST`) based on feed category compatibility.
 
 ---
 
 ## 🛠️ Compliance with `AGENTS.md` Rules
 
 ### 1. What was Deleted or Simplified
-- Removed 5 stale broken anchor links from WIKI_MANUAL.md Page 8.
-- Removed the inaccurate version `3.2.x`/`3.1.x`/`<3.0` table from SECURITY.md.
+- Deleted cascading domain string matches in `curator.py` in favor of O(1) dictionary lookups (`FEED_SCORE_MAP` and `FEED_CATEGORY_MAP`).
+- Simplified double-negative conditionals in `bot.py`'s `synthesis_stage` to clear boolean flags.
+- Removed broad, noise-introducing feeds (`Apple Newsroom` and `Google Blog`).
 
 ### 2. Why the Simpler Version is Safe
-- All changes are documentation-only. No logic or code was modified.
+- Dictionary lookups on registry IDs prevent mismatches when feed URLs change.
+- Simplification of the synthesis routing prevents silent fallthroughs and ensures overrides are consistently processed.
 
 ### 3. Verification & Tests Run
-- All documentation cross-verified against live source files:
-  `src/config.py`, `src/settings.py`, `src/telegram_gateway.py`, `bot.py`
-- No automated tests required (no code changes).
-
-## Type of Change
-- [x] Documentation update
-- [x] Version bump (patch)
+- Added `test_registry_validation` and `test_fallback_behavior_unknown_source` to `src/tests/test_curator.py`.
+- Ran the full test suite with 50 passing tests:
+  ```bash
+  python -m pytest src/tests/ -v
+  ```
+- Tested bot dry-run execution:
+  ```bash
+  python bot.py --dry-run
+  ```
