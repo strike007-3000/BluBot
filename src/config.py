@@ -192,35 +192,36 @@ SECONDARY_TOPICS = [
     "The Evolving Role of Junior Engineers"
 ]
 
-CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a compact, human, business-relevant short-form post.
+CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into an elite, human-authored social media post or short thread.
 
-Do not write an academic summary. Extract the real-world implication and express one clear point of view.
+CRITICAL FORMAT REQUIREMENT:
+* Determine if the story can be effectively communicated in a single high-signal post (1 paragraph), or if it genuinely requires a second post (exactly 2 paragraphs separated by a double newline '\\n\\n') to introduce a distinct perspective.
+* PREFER A SINGLE POST BY DEFAULT. Generate a second paragraph ONLY when it introduces a distinct operational, strategic, technical, governance, or business perspective that would otherwise overcrowd the first post. Never split content simply to maintain a fixed format.
+* Keep the length of each paragraph strictly under 280 characters to fit platform limits.
+* Do NOT include any structural prefixes, labels, or templates (such as "Strategic Contrast:", "Practical Enterprise Implication:", "BODY:", "TOPIC:", "1/", "Part 1:", etc.) in the text of the posts. Start the text directly and naturally.
+
+POST STRUCTURE:
+1. First Paragraph (Always Present):
+   - Start immediately with a distinctive, sharp observation about the news (no boilerplate openings).
+   - Explain why it matters.
+   - Include exactly one concrete technical fact (e.g. parameter count, RAM gigabytes, benchmark metrics, latency milliseconds, or specific hardware constraints) to anchor the authority of the post.
+2. Second Paragraph (Optional - Thread Post):
+   - Only output if a second post is genuinely needed to prevent overcrowding.
+   - Introduce a net-new perspective (operational logistics, security/jailbreaks, scaling economics, governance, or product integration).
+   - Do NOT restate or summarize the first post.
 
 ANTI-PATTERNS (DO NOT USE):
 * Generic openings like "AI is transforming...", "The future of...", or "In today's rapidly evolving...".
+* Structural template prefixes like "Practical Enterprise Implication:" or "Strategic Contrast:".
 * Hype words like "game-changing", "revolutionary", "frontier", or "systemic intelligence".
-* Dense academic jargon or dry article abstracts.
 * Repeating the exact same "not X, but Y" structure in every post.
-* Stuffing too many ideas into one post.
-
-REUSABLE STRUCTURES (choose one based on the story):
-1. Strategic Contrast: contrast the old assumption with the new reality.
-2. Practical Enterprise Implication: explain what changes for business, product, vendors, ROI, or operations.
-3. Risk/Accountability Lens: explain what must be trusted, verified, secured, or governed.
 
 STYLE:
-* Write like a thoughtful human, not a press release.
-* Use short sentences.
-* Prefer concrete business language over technical jargon.
-* Make one strong point.
-* Factuality: Do not invent events or state unverified rumors/hypothetical scenarios as established facts. If a topic is speculative or conditional, frame it explicitly as a possibility or scenario rather than an accomplished event.
-* If using line breaks, keep them minimal because the post is short-form.
-* Always append 1-2 relevant technical hashtags at the very end of the post (e.g. #AI, #ML, #LLMs) to ensure discoverability across platforms.
-
-LENGTH:
-* Target 260-290 characters for normal posts.
-* Stay within the platform-safe short-form limit without relying on truncation.
-* If space is tight, keep the thesis and remove supporting detail."""
+* Write like a thoughtful human engineer/architect, not a corporate press release.
+* Use short, punchy sentences.
+* Factuality: Do not invent events or state unverified rumors as established facts. If speculative, frame it hypothetically.
+* Always append 1-2 relevant technical hashtags at the very end of the final paragraph of your response (e.g. #LLMs #EdgeAI) for discoverability.
+"""
 
 MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
 STRICTLY limit your output to a single post under 280 characters, presenting the core lesson with zero fluff."""
@@ -292,11 +293,11 @@ def validate_gemini_model_priority():
 ALL_STYLES = ["STRATEGIC_CONTRAST", "PRACTICAL_WORKFLOW", "RISK_VERIFICATION", "ENTERPRISE_ROI", "QUESTION_FIRST"]
 
 WRITING_STYLES = {
-    "STRATEGIC_CONTRAST": "STRATEGIC CONTRAST: Contrast the old assumptions / paradigm with the new reality of this story. Highlight the shift clearly.",
-    "PRACTICAL_WORKFLOW": "PRACTICAL WORKFLOW: Focus heavily on what changes immediately for developer setup, engineering workflows, or day-to-day operations.",
-    "RISK_VERIFICATION": "RISK VERIFICATION: Focus on the risk, failure modes, safety questions, compliance, or verification challenges of this news.",
-    "ENTERPRISE_ROI": "ENTERPRISE ROI: Focus on commercial viability, business cost, ROI trade-offs, and what changes for enterprise vendors or deployment.",
-    "QUESTION_FIRST": "QUESTION FIRST: Start the post with a direct, provocative question about the core topic, then spend the rest of the post answering it with elite tech insights."
+    "STRATEGIC_CONTRAST": "Theme: Contrast the old assumptions / paradigm with the new reality of this story. Do NOT output 'STRATEGIC CONTRAST:' as a prefix.",
+    "PRACTICAL_WORKFLOW": "Theme: Focus heavily on what changes immediately for developer setup, engineering workflows, or day-to-day operations. Do NOT output 'PRACTICAL WORKFLOW:' as a prefix.",
+    "RISK_VERIFICATION": "Theme: Focus on the risk, failure modes, safety questions, compliance, or verification challenges of this news. Do NOT output 'RISK VERIFICATION:' as a prefix.",
+    "ENTERPRISE_ROI": "Theme: Focus on commercial viability, business cost, ROI trade-offs, and what changes for enterprise vendors or deployment. Do NOT output 'ENTERPRISE ROI:' as a prefix.",
+    "QUESTION_FIRST": "Theme: Start the first paragraph with a direct, provocative question about the core topic, then spend the rest of the paragraph answering it. Do NOT output 'QUESTION FIRST:' as a prefix."
 }
 
 STYLE_COMPATIBILITY = {

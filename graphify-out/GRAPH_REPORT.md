@@ -1,7 +1,7 @@
 # Graph Report - BlueSky  (2026-07-14)
 
 ## Corpus Check
-- 40 files · ~30,604 words
+- 40 files · ~30,726 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4f45d179`
+- Built from commit: `45e4b7fa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

@@ -573,7 +573,7 @@
       "label": "validate_config()",
       "file_type": "code",
       "source_file": "src/config.py",
-      "source_location": "L253",
+      "source_location": "L254",
       "_origin": "ast",
       "id": "src_config_validate_config",
       "community": 4,
@@ -583,7 +583,7 @@
       "label": "validate_gemini_model_priority()",
       "file_type": "code",
       "source_file": "src/config.py",
-      "source_location": "L258",
+      "source_location": "L259",
       "_origin": "ast",
       "id": "src_config_validate_gemini_model_priority",
       "community": 4,
@@ -593,9 +593,9 @@
       "label": "Legacy wrapper for the new Settings validation logic.",
       "file_type": "rationale",
       "source_file": "src/config.py",
-      "source_location": "L254",
+      "source_location": "L255",
       "_origin": "ast",
-      "id": "src_config_rationale_254",
+      "id": "src_config_rationale_255",
       "community": 4,
       "norm_label": "legacy wrapper for the new settings validation logic."
     },
@@ -603,9 +603,9 @@
       "label": "Legacy wrapper for Gemini model self-discovery.",
       "file_type": "rationale",
       "source_file": "src/config.py",
-      "source_location": "L259",
+      "source_location": "L260",
       "_origin": "ast",
-      "id": "src_config_rationale_259",
+      "id": "src_config_rationale_260",
       "community": 4,
       "norm_label": "legacy wrapper for gemini model self-discovery."
     },
@@ -7235,9 +7235,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/config.py",
-      "source_location": "L254",
+      "source_location": "L255",
       "weight": 1.0,
-      "source": "src_config_rationale_254",
+      "source": "src_config_rationale_255",
       "target": "src_config_validate_config",
       "confidence_score": 1.0
     },
@@ -7289,9 +7289,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/config.py",
-      "source_location": "L259",
+      "source_location": "L260",
       "weight": 1.0,
-      "source": "src_config_rationale_259",
+      "source": "src_config_rationale_260",
       "target": "src_config_validate_gemini_model_priority",
       "confidence_score": 1.0
     },
@@ -13165,5 +13165,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "4f45d1797d836e402848b746a3b5e11c999f1f5e"
+  "built_at_commit": "45e4b7fae2a72beeed61420e05c21e0828f6bd8d"
 }
