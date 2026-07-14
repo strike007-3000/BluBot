@@ -166,11 +166,11 @@ async def send_draft_for_approval(
                                     await query.answer()
                                     continue
                                 
-                                status_msg = await bot.send_message(chat_id=chat_id, text="🎨 Regenerating image card using NVIDIA SD3 NIM...")
+                                status_msg = await bot.send_message(chat_id=chat_id, text=f"🎨 Regenerating image card using {settings.image_provider.upper()}...")
                                 await query.answer("Regenerating image...")
                                 
                                 try:
-                                    from src.curator import generate_visual_prompt, generate_nvidia_image, generate_image_alt_text
+                                    from src.curator import generate_visual_prompt, generate_ai_image, generate_image_alt_text
                                     from PIL import Image
                                     import io
                                     from src.utils import get_image_mime
@@ -178,8 +178,8 @@ async def send_draft_for_approval(
                                     # 1. Generate new visual prompt
                                     visual_prompt = await generate_visual_prompt(genai_client, text, topic)
                                     
-                                    # 2. Generate nvidia image
-                                    new_image_data = await generate_nvidia_image(client, visual_prompt)
+                                    # 2. Generate AI image
+                                    new_image_data = await generate_ai_image(client, genai_client, visual_prompt)
                                     
                                     if new_image_data:
                                         # 3. Generate image alt text

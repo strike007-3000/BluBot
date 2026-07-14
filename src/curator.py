@@ -482,6 +482,33 @@ async def generate_image_alt_text(image_bytes: bytes, prompt: str) -> str:
         SafeLogger.warn(f"Failed to generate alt text via Gemini Vision: {e}. Falling back to default.")
         return f"Tech illustration of: {prompt}"
 
+async def generate_imagen_image(genai_client, prompt: str):
+    """Calls Google Imagen 4 for image generation."""
+    try:
+        from src.config import IMAGEN_MODEL
+        from google.genai import types
+        SafeLogger.info("Sage Designer: Generating Imagen 4 thumbnail...")
+        response = await genai_client.aio.models.generate_images(
+            model=IMAGEN_MODEL,
+            prompt=prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio='1:1'
+            )
+        )
+        if response.generated_images:
+            return response.generated_images[0].image._image_bytes
+    except Exception as e:
+        SafeLogger.warn(f"Imagen generation failed: {e}")
+    return None
+
+async def generate_ai_image(client, genai_client, prompt: str):
+    """Generates an image using the configured provider (nvidia or imagen)."""
+    if settings.image_provider == "imagen":
+        return await generate_imagen_image(genai_client, prompt)
+    else:
+        return await generate_nvidia_image(client, prompt)
+
 @retry_with_backoff
 async def generate_nvidia_image(client, prompt):
     """Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing."""

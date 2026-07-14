@@ -291,3 +291,44 @@ async def test_media_stage_resilience(monkeypatch, mocker):
         media = await media_strategy_stage(client, None, synthesis, curation)
 
     assert media is None
+
+@pytest.mark.asyncio
+async def test_media_strategy_imagen_provider(monkeypatch, mocker):
+    mock_settings = Settings(gemini_key="mock", is_dry_run=False, enable_image_gen=True, image_provider="imagen")
+    monkeypatch.setattr("src.settings.settings", mock_settings)
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+    monkeypatch.setattr("bot.settings", mock_settings)
+
+    mocker.patch("src.curator.generate_visual_prompt", new_callable=AsyncMock, return_value="Tech Prompt")
+    
+    # Mock Imagen generation
+    gen_bytes = create_dummy_image()
+    mocker.patch("src.curator.generate_imagen_image", new_callable=AsyncMock, return_value=gen_bytes)
+    mocker.patch("src.curator.generate_image_alt_text", new_callable=AsyncMock, return_value="Generated Alt")
+
+    synthesis = SynthesisResult(content="Scratch post content", lead_link=None, topic="Agents")
+    curation = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
+
+    async with httpx.AsyncClient() as client:
+        media = await media_strategy_stage(client, MagicMock(), synthesis, curation)
+
+    assert media is not None
+    assert media.source == MediaSource.GENERATED
+    assert media.image_bytes == gen_bytes
+
+def test_smart_split_paragraph_truncation():
+    from src.utils import smart_split
+    # Para 1 is small, Para 2 is small. Limit fits both.
+    text = "Paragraph one.\n\nParagraph two."
+    res = smart_split(text, limit=100, max_chunks=2)
+    assert len(res) == 2
+    assert res[0] == "Paragraph one."
+    assert res[1] == "Paragraph two."
+
+    # Para 1 needs to be split (limit = 10), which takes up the full budget of 2 chunks.
+    # Para 2 exists. The second paragraph should be dropped and the last chunk of Para 1 gets "..."
+    text2 = "abcdef ghijkl\n\nParagraph two."
+    res2 = smart_split(text2, limit=8, max_chunks=2)
+    assert len(res2) == 2
+    assert res2[0] == "abcdef"
+    assert res2[1] == "ghijkl..."

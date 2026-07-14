@@ -533,13 +533,25 @@ def smart_split(text, limit, max_chunks=None):
     if "\n\n" in text:
         paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
         final_chunks = []
-        for p in paragraphs:
+        truncated = False
+        for idx, p in enumerate(paragraphs):
+            if max_chunks and len(final_chunks) >= max_chunks:
+                truncated = True
+                break
+            remaining_budget = max_chunks - len(final_chunks) if max_chunks else None
             if len(p) <= limit:
                 final_chunks.append(p)
             else:
-                final_chunks.extend(smart_split(p, limit, max_chunks))
-        if max_chunks:
+                split_p = smart_split(p, limit, remaining_budget)
+                if split_p and split_p[-1].endswith("..."):
+                    truncated = True
+                final_chunks.extend(split_p)
+        if max_chunks and (len(final_chunks) > max_chunks or truncated):
             final_chunks = final_chunks[:max_chunks]
+            if final_chunks:
+                last = final_chunks[-1]
+                if not last.endswith("..."):
+                    final_chunks[-1] = last.rstrip() + "..."
         return final_chunks
         
     # Expert Review: If text fits in one part, return immediately

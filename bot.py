@@ -25,7 +25,7 @@ from src.utils import (
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
-    get_temporal_context, generate_visual_prompt, generate_nvidia_image,
+    get_temporal_context, generate_visual_prompt, generate_ai_image,
     generate_interactive_reply, prune_gemini_model_priority_async,
     generate_image_alt_text, strip_markdown
 )
@@ -293,7 +293,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
 async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult, curation: CurationResult) -> Optional[MediaAsset]:
     """Dedicated media decision stage (Step 1 & 2 & 3 & 4 & 5)."""
     from src.models import MediaAsset, MediaSource
-    from src.curator import validate_opengraph_image, generate_visual_prompt, generate_nvidia_image, generate_image_alt_text
+    from src.curator import validate_opengraph_image, generate_visual_prompt, generate_ai_image, generate_image_alt_text
     from src.utils import get_image_mime, SafeLogger
     from PIL import Image
     import io
@@ -356,8 +356,8 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
             # Generate visual prompt (passing category)
             visual_prompt = await generate_visual_prompt(genai_client, synthesis.content, synthesis.topic, category)
             
-            # Generate NVIDIA image
-            gen_bytes = await generate_nvidia_image(client, visual_prompt)
+            # Generate AI image based on configured provider
+            gen_bytes = await generate_ai_image(client, genai_client, visual_prompt)
             if gen_bytes:
                 image_bytes = gen_bytes
                 public_url = None
@@ -367,7 +367,7 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
                 alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {synthesis.topic}"
                 alt_text = await generate_image_alt_text(gen_bytes, alt_prompt)
             else:
-                SafeLogger.warn("NVIDIA NIM image generation returned no bytes.")
+                SafeLogger.warn(f"AI image generation ({settings.image_provider}) returned no bytes.")
         except Exception as e:
             SafeLogger.warn(f"AI image generation failed: {e}")
             
