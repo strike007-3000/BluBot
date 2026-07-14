@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.07587",
-    "https://arxiv.org/abs/2606.07591",
-    "https://deepmind.google/blog/fluid-natural-voice-translation-with-gemini-35-live-translate/",
-    "https://deepmind.google/blog/introducing-gemma-4-12b-a-unified-encoder-free-multimodal-model/",
-    "https://deepmind.google/blog/powering-the-future-of-robotics-in-europe/",
-    "https://huggingface.co/blog/mishig/spaces-agents-md",
-    "https://arxiv.org/abs/2606.07601",
-    "https://arxiv.org/abs/2606.07602",
     "https://arxiv.org/abs/2606.07603",
     "https://arxiv.org/abs/2606.07616",
     "https://huggingface.co/blog/ServiceNow-AI/code-switching",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.09528",
     "https://arxiv.org/abs/2607.08681",
     "https://arxiv.org/abs/2607.08775",
-    "https://arxiv.org/abs/2607.08894"
+    "https://arxiv.org/abs/2607.08894",
+    "https://arxiv.org/abs/2607.09682",
+    "https://arxiv.org/abs/2607.09686",
+    "https://arxiv.org/abs/2607.09693",
+    "https://arxiv.org/abs/2607.09704",
+    "https://arxiv.org/abs/2607.09711",
+    "https://arxiv.org/abs/2607.09982",
+    "https://arxiv.org/abs/2607.10128",
+    "https://arxiv.org/abs/2607.10139"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 750,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 751,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31"
 }
