@@ -16,7 +16,7 @@ from src.settings import settings
 from src import models as src_models
 from src.models import (
     Article, CurationResult, SynthesisResult, BroadcastResult,
-    InteractionNote, InteractionResult
+    InteractionNote, InteractionResult, MediaAsset, MediaSource
 )
 from src.utils import (
     load_seen_articles, save_seen_articles, SafeLogger, 
@@ -281,44 +281,160 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         return SynthesisResult(content="", lead_link=None, topic="General", writing_style=chosen_style), curation
 
 
-    # Visual Asset Creation
-    image_data, image_url = None, None
-    visual_prompt = None
-    if not settings.is_dry_run and lead_link:
-        meta = await get_link_metadata(client, lead_link)
-        if meta:
-            image_url = meta.get('image_url')
-            if not meta.get('image') and settings.enable_image_gen:
-                visual_prompt = await generate_visual_prompt(genai_client, summary, topic)
-                if settings.image_provider == "nvidia":
-                    image_data = await generate_nvidia_image(client, visual_prompt)
-            else:
-                image_data = meta.get('image')
-
-    # Alt text generation
-    image_alt_text = None
-    if not settings.is_dry_run and image_data:
-        alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
-        image_alt_text = await generate_image_alt_text(image_data, alt_prompt)
-
     return SynthesisResult(
         content=summary, 
         lead_link=lead_link, 
         topic=topic, 
         is_failover=is_failover,
-        image_data=image_data,
-        image_url=image_url,
-        image_alt_text=image_alt_text,
+        media=None,
         writing_style=chosen_style
     ), curation
+
+async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult, curation: CurationResult) -> Optional[MediaAsset]:
+    """Dedicated media decision stage (Step 1 & 2 & 3 & 4 & 5)."""
+    from src.models import MediaAsset, MediaSource
+    from src.curator import validate_opengraph_image, generate_visual_prompt, generate_nvidia_image, generate_image_alt_text
+    from src.utils import get_image_mime, SafeLogger
+    from PIL import Image
+    import io
+    
+    # Defaults and info for logging
+    lead_link = synthesis.lead_link
+    has_lead_link = lead_link is not None
+    
+    # Extract category for prompts
+    category = "unknown"
+    lead_article = curation.top_articles[0] if curation.top_articles else None
+    if lead_article:
+        from src.config import FEED_CATEGORY_MAP
+        category = FEED_CATEGORY_MAP.get(lead_article.source_id, "unknown")
+        
+    validation_res = None
+    image_bytes = None
+    public_url = None
+    source = None
+    alt_text = None
+    
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Constructing mock MediaAsset.")
+        return MediaAsset(
+            source=MediaSource.GENERATED,
+            image_bytes=b"mock_dry_run_image_bytes",
+            public_url="https://example.com/mock-dry-run-image.png",
+            mime_type="image/png",
+            width=1200,
+            height=630,
+            alt_text="Mock dry-run tech illustration.",
+            attribution_url=lead_link
+        )
+
+    # 1. Valid lead link and valid OpenGraph image -> use OpenGraph asset
+    if has_lead_link:
+        try:
+            meta = await get_link_metadata(client, lead_link)
+            if meta:
+                og_url = meta.get('image_url')
+                og_bytes = meta.get('image')
+                
+                if og_bytes:
+                    # Validate OpenGraph image
+                    validation_res = validate_opengraph_image(og_bytes, og_url or "")
+                    if validation_res.valid:
+                        image_bytes = og_bytes
+                        public_url = og_url
+                        source = MediaSource.OPENGRAPH
+                        # Generate alt text for OpenGraph image
+                        alt_text = await generate_image_alt_text(og_bytes, f"OpenGraph image for {synthesis.topic}")
+                    else:
+                        SafeLogger.info(f"OpenGraph validation failed: {validation_res.reason}. Falling back to AI Image generation.")
+        except Exception as e:
+            SafeLogger.warn(f"Failed to fetch metadata or validate OpenGraph: {e}")
+    
+    # 2. Lead link but invalid/missing OpenGraph image OR No lead link -> generate illustration if enabled
+    if not source and settings.enable_image_gen:
+        try:
+            # Generate visual prompt (passing category)
+            visual_prompt = await generate_visual_prompt(genai_client, synthesis.content, synthesis.topic, category)
+            
+            # Generate NVIDIA image
+            gen_bytes = await generate_nvidia_image(client, visual_prompt)
+            if gen_bytes:
+                image_bytes = gen_bytes
+                public_url = None
+                source = MediaSource.GENERATED
+                
+                # Generate alt text for generated image
+                alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {synthesis.topic}"
+                alt_text = await generate_image_alt_text(gen_bytes, alt_prompt)
+            else:
+                SafeLogger.warn("NVIDIA NIM image generation returned no bytes.")
+        except Exception as e:
+            SafeLogger.warn(f"AI image generation failed: {e}")
+            
+    # 3. Fallback/Final Asset Construction
+    if source and image_bytes:
+        mime_type = get_image_mime(image_bytes)
+        width, height = None, None
+        try:
+            img = Image.open(io.BytesIO(image_bytes))
+            width, height = img.size
+        except Exception:
+            pass
+            
+        media = MediaAsset(
+            source=source,
+            image_bytes=image_bytes,
+            public_url=public_url,
+            mime_type=mime_type,
+            width=width,
+            height=height,
+            alt_text=alt_text,
+            attribution_url=lead_link
+        )
+    else:
+        media = None
+        
+    # 4. Structured Logging (Step 8 & 6 refinements)
+    log_lines = [
+        "Media Strategy",
+        "--------------",
+        f"Article: {'Yes' if has_lead_link else 'No'}",
+        f"OpenGraph: {'Valid' if source == MediaSource.OPENGRAPH else 'Rejected' if validation_res else 'N/A'}"
+    ]
+    if validation_res and not validation_res.valid:
+        log_lines.append(f"  Reason: {validation_res.reason}")
+        
+    log_lines.append(f"AI: {'Generated' if source == MediaSource.GENERATED else 'Skipped' if source == MediaSource.OPENGRAPH else 'Failed' if settings.enable_image_gen else 'Disabled'}")
+    
+    # dimensions, MIME type, and byte size
+    if media:
+        log_lines.append(f"Dimensions: {media.width}x{media.height}")
+        log_lines.append(f"MIME type: {media.mime_type}")
+        log_lines.append(f"Byte size: {len(media.image_bytes)} bytes")
+    
+    # intended delivery modes
+    bsky_mode = "External card" if has_lead_link else "Image embed" if media else "Text only"
+    mast_mode = "Uploaded media" if media else "Text only"
+    threads_mode = "Hosted image" if (media and media.public_url) else "Text only"
+    
+    log_lines.append(f"Bluesky: {bsky_mode}")
+    log_lines.append(f"Mastodon: {mast_mode}")
+    log_lines.append(f"Threads: {threads_mode}")
+    
+    if not media:
+        log_lines.append("Text-only Fallback: Yes")
+        
+    SafeLogger.info("\n".join(log_lines))
+    
+    return media
 
 async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> Tuple[List[BroadcastResult], Any]:
     """Stage 3: Multi-platform delivery."""
     if settings.is_dry_run:
         SafeLogger.info("DRY RUN: Skip broadcasting to social networks.")
         SafeLogger.info(f"DRY RUN Synthesis:\n{synthesis.content}")
-        if synthesis.image_alt_text:
-            SafeLogger.info(f"DRY RUN Image Alt Text: {synthesis.image_alt_text}")
+        if synthesis.media and synthesis.media.alt_text:
+            SafeLogger.info(f"DRY RUN Image Alt Text: {synthesis.media.alt_text}")
         return [
             BroadcastResult(platform="Bluesky", success=True),
             BroadcastResult(platform="Mastodon", success=True),
@@ -342,9 +458,9 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
         bsky_client = None
 
     tasks = [
-        ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.image_data, synthesis.image_alt_text)) if bsky_client else None,
-        ("Mastodon", post_to_mastodon(synthesis.content, synthesis.image_data, synthesis.image_alt_text)),
-        ("Threads", post_to_threads(client, synthesis.content, synthesis.image_url, synthesis.image_alt_text))
+        ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.media)) if bsky_client else None,
+        ("Mastodon", post_to_mastodon(synthesis.content, synthesis.media)),
+        ("Threads", post_to_threads(client, synthesis.content, synthesis.media))
     ]
     
     active = [t for t in tasks if t]
@@ -562,12 +678,16 @@ async def main():
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
 
+        # 2.2 Media Strategy Decision
+        media = await media_strategy_stage(client, genai_client, synthesis, curation)
+        from dataclasses import replace
+        synthesis = replace(synthesis, media=media)
+
         # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
         if settings.enable_telegram_approval and not settings.is_dry_run:
-            final_content, final_image, final_alt = await send_draft_for_approval(
+            final_content, final_media = await send_draft_for_approval(
                 text=synthesis.content,
-                image_bytes=synthesis.image_data,
-                image_alt_text=synthesis.image_alt_text,
+                media=synthesis.media,
                 client=client,
                 genai_client=genai_client,
                 topic=synthesis.topic
@@ -576,15 +696,10 @@ async def main():
                 SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
                 return
             
-            # Update synthesis with approved/edited text and media
-            from dataclasses import replace
-            new_image_url = synthesis.image_url if final_image == synthesis.image_data else None
             synthesis = replace(
                 synthesis,
                 content=final_content,
-                image_data=final_image,
-                image_url=new_image_url,
-                image_alt_text=final_alt
+                media=final_media
             )
 
         # 3. Broadcast

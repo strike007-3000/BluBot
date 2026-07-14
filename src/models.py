@@ -1,6 +1,31 @@
+from enum import Enum
 from dataclasses import dataclass, field
 from typing import List, Optional, Any
 from datetime import datetime
+
+class MediaSource(str, Enum):
+    OPENGRAPH = "opengraph"
+    GENERATED = "generated"
+
+@dataclass(frozen=True)
+class MediaAsset:
+    source: MediaSource
+    image_bytes: Optional[bytes] = None
+    public_url: Optional[str] = None
+    mime_type: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    alt_text: Optional[str] = None
+    attribution_url: Optional[str] = None
+
+@dataclass(frozen=True)
+class ImageValidationResult:
+    valid: bool
+    reason: Optional[str] = None
+    mime_type: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    final_url: Optional[str] = None
 
 @dataclass(frozen=True)
 class Article:
@@ -36,10 +61,7 @@ class SynthesisResult:
     lead_link: Optional[str]
     topic: str
     is_failover: bool = False
-    visual_prompt: Optional[str] = None
-    image_data: Optional[bytes] = None
-    image_url: Optional[str] = None
-    image_alt_text: Optional[str] = None
+    media: Optional[MediaAsset] = None
     writing_style: Optional[str] = None
 
 @dataclass(frozen=True)

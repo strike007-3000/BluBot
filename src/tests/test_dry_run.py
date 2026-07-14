@@ -12,12 +12,16 @@ async def test_dry_run_broadcaster_bypasses_real_posts(monkeypatch):
     monkeypatch.setattr("src.settings.settings", mock_settings)
     monkeypatch.setattr("bot.settings", mock_settings)
     
+    from src.models import MediaAsset, MediaSource
     synthesis = SynthesisResult(
         content="Test content",
         lead_link="https://example.com",
         topic="Test Topic",
-        image_data=b"imagebytes",
-        image_alt_text="Alt Text"
+        media=MediaAsset(
+            source=MediaSource.GENERATED,
+            image_bytes=b"imagebytes",
+            alt_text="Alt Text"
+        )
     )
     
     async with httpx.AsyncClient() as client:

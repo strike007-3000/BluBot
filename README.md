@@ -13,7 +13,13 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
-- **🖼️ Self-Healing Image Generation**: 
+- **🖼️ Unified Media Strategy Stage**:
+    - **Single Media Decision Point**: Decides if a post should contain media, extracts/validates OpenGraph metadata, generates a visual prompt, fetches an NVIDIA illustration if necessary, and compiles everything into a single `MediaAsset`.
+    - **Self-Healing OpenGraph Validation**: Runs multi-criteria validation (dimensions, size, aspect ratios, decoding, known placeholder logo patterns) before selecting.
+    - **Platform-Specific Adaptors**: Intelligently renders the canonical `MediaAsset` according to platform requirements:
+        - *Bluesky*: Uses `AppBskyEmbedExternal` for link cards and `AppBskyEmbedImages` for scratch posts.
+        - *Mastodon*: Uploads image bytes, degrading gracefully to text on upload errors.
+        - *Threads*: Renders OpenGraph public URLs only, gracefully falling back to text-only mode for generated assets lacking public hosting.
     - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture**:
