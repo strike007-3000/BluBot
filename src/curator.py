@@ -415,7 +415,7 @@ async def generate_visual_prompt(client, summary, topic, category="unknown"):
     except Exception:
         return f"Minimalist tech illustration of {topic}"
 
-def validate_opengraph_image(image_bytes: bytes, image_url: str) -> Any:
+def validate_opengraph_image(image_bytes: bytes, image_url: str) -> "ImageValidationResult":
     """Validates the OpenGraph image and returns structured ImageValidationResult."""
     from src.models import ImageValidationResult
     from PIL import Image
