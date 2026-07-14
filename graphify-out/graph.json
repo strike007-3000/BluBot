@@ -26,7 +26,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "bot",
-      "community": 3,
+      "community": 1,
       "norm_label": "bot.py"
     },
     {
@@ -36,7 +36,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "bot_update_status_dashboard_sync",
-      "community": 2,
+      "community": 1,
       "norm_label": "_update_status_dashboard_sync()"
     },
     {
@@ -86,7 +86,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "bot_synthesis_stage",
-      "community": 3,
+      "community": 1,
       "norm_label": "synthesis_stage()"
     },
     {
@@ -116,7 +116,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "any",
-      "community": 1,
+      "community": 2,
       "norm_label": "any"
     },
     {
@@ -136,7 +136,7 @@
       "source_location": "L427",
       "_origin": "ast",
       "id": "bot_interaction_stage",
-      "community": 3,
+      "community": 1,
       "norm_label": "interaction_stage()"
     },
     {
@@ -146,7 +146,7 @@
       "source_location": "L530",
       "_origin": "ast",
       "id": "bot_main",
-      "community": 3,
+      "community": 1,
       "norm_label": "main()"
     },
     {
@@ -156,7 +156,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "bot_rationale_49",
-      "community": 2,
+      "community": 1,
       "norm_label": "synchronous implementation of status.md update to be offloaded to thread."
     },
     {
@@ -196,7 +196,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "bot_rationale_191",
-      "community": 3,
+      "community": 1,
       "norm_label": "stage 2: ai summarization and persona application."
     },
     {
@@ -226,7 +226,7 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "bot_rationale_428",
-      "community": 3,
+      "community": 1,
       "norm_label": "handles social interactions (mentions/replies) with humanized engagement."
     },
     {
@@ -326,7 +326,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_update_config_keywords",
-      "community": 4,
+      "community": 6,
       "norm_label": "update_config_keywords.py"
     },
     {
@@ -336,7 +336,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_fetch_feed_headlines",
-      "community": 4,
+      "community": 6,
       "norm_label": "fetch_feed_headlines()"
     },
     {
@@ -346,7 +346,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_main",
-      "community": 4,
+      "community": 6,
       "norm_label": "main()"
     },
     {
@@ -356,7 +356,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "scripts_update_config_keywords_rationale_19",
-      "community": 4,
+      "community": 6,
       "norm_label": "fetches first 5 headlines from a single rss feed."
     },
     {
@@ -386,7 +386,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_broadcaster",
-      "community": 11,
+      "community": 1,
       "norm_label": "broadcaster.py"
     },
     {
@@ -396,7 +396,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_broadcaster_clean_hashtags_if_needed",
-      "community": 11,
+      "community": 1,
       "norm_label": "clean_hashtags_if_needed()"
     },
     {
@@ -406,7 +406,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_bluesky",
-      "community": 3,
+      "community": 1,
       "norm_label": "post_to_bluesky()"
     },
     {
@@ -416,7 +416,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_mastodon",
-      "community": 11,
+      "community": 1,
       "norm_label": "post_to_mastodon()"
     },
     {
@@ -426,7 +426,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "src_broadcaster_post_to_threads",
-      "community": 3,
+      "community": 1,
       "norm_label": "post_to_threads()"
     },
     {
@@ -436,7 +436,7 @@
       "source_location": "L233",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_bluesky_mentions",
-      "community": 11,
+      "community": 1,
       "norm_label": "fetch_bluesky_mentions()"
     },
     {
@@ -446,7 +446,7 @@
       "source_location": "L293",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_mastodon_mentions",
-      "community": 11,
+      "community": 1,
       "norm_label": "fetch_mastodon_mentions()"
     },
     {
@@ -456,7 +456,7 @@
       "source_location": "L344",
       "_origin": "ast",
       "id": "src_broadcaster_fetch_threads_replies",
-      "community": 11,
+      "community": 1,
       "norm_label": "fetch_threads_replies()"
     },
     {
@@ -466,7 +466,7 @@
       "source_location": "L424",
       "_origin": "ast",
       "id": "src_broadcaster_update_social_profiles",
-      "community": 3,
+      "community": 1,
       "norm_label": "update_social_profiles()"
     },
     {
@@ -476,7 +476,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_14",
-      "community": 11,
+      "community": 1,
       "norm_label": "helper to strip or format hashtags based on platform settings."
     },
     {
@@ -486,7 +486,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_24",
-      "community": 3,
+      "community": 1,
       "norm_label": "posts to bluesky with conditional multi-post threading (the weaver)."
     },
     {
@@ -496,7 +496,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_114",
-      "community": 11,
+      "community": 1,
       "norm_label": "posts to mastodon with conditional multi-post threading (the weaver)."
     },
     {
@@ -506,7 +506,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_165",
-      "community": 3,
+      "community": 1,
       "norm_label": "posts to threads with conditional multi-post threading (the weaver)."
     },
     {
@@ -516,7 +516,7 @@
       "source_location": "L234",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_234",
-      "community": 11,
+      "community": 1,
       "norm_label": "fetches recent mentions and replies from bluesky within 24 hours."
     },
     {
@@ -526,7 +526,7 @@
       "source_location": "L294",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_294",
-      "community": 11,
+      "community": 1,
       "norm_label": "fetches recent mentions and replies from mastodon within 24 hours."
     },
     {
@@ -536,7 +536,7 @@
       "source_location": "L345",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_345",
-      "community": 11,
+      "community": 1,
       "norm_label": "fetches recent replies to threads posts within 24 hours."
     },
     {
@@ -546,7 +546,7 @@
       "source_location": "L425",
       "_origin": "ast",
       "id": "src_broadcaster_rationale_425",
-      "community": 3,
+      "community": 1,
       "norm_label": "dynamically update social media bios with exciting telemetry."
     },
     {
@@ -616,7 +616,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_curator",
-      "community": 3,
+      "community": 4,
       "norm_label": "curator.py"
     },
     {
@@ -626,7 +626,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_curator_calculate_relevance_score",
-      "community": 7,
+      "community": 4,
       "norm_label": "calculate_relevance_score()"
     },
     {
@@ -636,7 +636,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_curator_fetch_single_feed",
-      "community": 7,
+      "community": 4,
       "norm_label": "fetch_single_feed()"
     },
     {
@@ -656,7 +656,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "src_curator_strip_markdown",
-      "community": 3,
+      "community": 4,
       "norm_label": "strip_markdown()"
     },
     {
@@ -666,7 +666,7 @@
       "source_location": "L178",
       "_origin": "ast",
       "id": "src_curator_supports_thinking",
-      "community": 3,
+      "community": 4,
       "norm_label": "supports_thinking()"
     },
     {
@@ -676,7 +676,7 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "src_curator_prune_gemini_model_priority_async",
-      "community": 3,
+      "community": 4,
       "norm_label": "prune_gemini_model_priority_async()"
     },
     {
@@ -686,7 +686,7 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "src_curator_summarize_news",
-      "community": 3,
+      "community": 4,
       "norm_label": "summarize_news()"
     },
     {
@@ -696,7 +696,7 @@
       "source_location": "L313",
       "_origin": "ast",
       "id": "src_curator_generate_mentor_insight",
-      "community": 3,
+      "community": 4,
       "norm_label": "generate_mentor_insight()"
     },
     {
@@ -706,7 +706,7 @@
       "source_location": "L355",
       "_origin": "ast",
       "id": "src_curator_get_temporal_context",
-      "community": 3,
+      "community": 1,
       "norm_label": "get_temporal_context()"
     },
     {
@@ -736,7 +736,7 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "src_curator_generate_nvidia_image",
-      "community": 3,
+      "community": 4,
       "norm_label": "generate_nvidia_image()"
     },
     {
@@ -746,7 +746,7 @@
       "source_location": "L473",
       "_origin": "ast",
       "id": "src_curator_generate_interactive_reply",
-      "community": 3,
+      "community": 6,
       "norm_label": "generate_interactive_reply()"
     },
     {
@@ -756,7 +756,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_curator_rationale_30",
-      "community": 7,
+      "community": 4,
       "norm_label": "calculates a multi-factor breakthrough score for an article using stable ids."
     },
     {
@@ -766,7 +766,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_curator_rationale_99",
-      "community": 7,
+      "community": 4,
       "norm_label": "fetches and parses a single rss feed with bozo resilience."
     },
     {
@@ -786,7 +786,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "src_curator_rationale_179",
-      "community": 3,
+      "community": 4,
       "norm_label": "determines if a model supports the thinking_budget parameter.     currently sup"
     },
     {
@@ -796,7 +796,7 @@
       "source_location": "L193",
       "_origin": "ast",
       "id": "src_curator_rationale_193",
-      "community": 3,
+      "community": 4,
       "norm_label": "asynchronously lists available models and prunes the gemini_model_priority in-pl"
     },
     {
@@ -806,7 +806,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "src_curator_rationale_218",
-      "community": 3,
+      "community": 4,
       "norm_label": "synthesizes news with full failover loop and randomized dialect adaptation."
     },
     {
@@ -816,7 +816,7 @@
       "source_location": "L356",
       "_origin": "ast",
       "id": "src_curator_rationale_356",
-      "community": 3,
+      "community": 1,
       "norm_label": "enhanced temporal awareness for v3.7.0 (high resolution + manual intercept)."
     },
     {
@@ -836,7 +836,7 @@
       "source_location": "L420",
       "_origin": "ast",
       "id": "src_curator_rationale_420",
-      "community": 3,
+      "community": 4,
       "norm_label": "calls nvidia nim for sd3-medium image generation with robust response parsing."
     },
     {
@@ -846,7 +846,7 @@
       "source_location": "L474",
       "_origin": "ast",
       "id": "src_curator_rationale_474",
-      "community": 3,
+      "community": 6,
       "norm_label": "generates an ai reply for a social mention, maintaining the sage persona."
     },
     {
@@ -896,7 +896,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_feed_vanguard_vanguardmanager_save_state",
-      "community": 5,
+      "community": 6,
       "norm_label": "._save_state()"
     },
     {
@@ -1166,7 +1166,7 @@
       "source_location": "L181",
       "_origin": "ast",
       "id": "src_logger_safelogger_info",
-      "community": 3,
+      "community": 1,
       "norm_label": ".info()"
     },
     {
@@ -1176,7 +1176,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "src_logger_safelogger_warn",
-      "community": 3,
+      "community": 4,
       "norm_label": ".warn()"
     },
     {
@@ -1186,7 +1186,7 @@
       "source_location": "L189",
       "_origin": "ast",
       "id": "src_logger_safelogger_error",
-      "community": 2,
+      "community": 6,
       "norm_label": ".error()"
     },
     {
@@ -1196,7 +1196,7 @@
       "source_location": "L193",
       "_origin": "ast",
       "id": "src_logger_safelogger_debug",
-      "community": 2,
+      "community": 1,
       "norm_label": ".debug()"
     },
     {
@@ -1396,7 +1396,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_settings_settings_from_env",
-      "community": 6,
+      "community": 3,
       "norm_label": ".from_env()"
     },
     {
@@ -1426,7 +1426,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "src_settings_settings_validate",
-      "community": 2,
+      "community": 6,
       "norm_label": ".validate()"
     },
     {
@@ -1466,7 +1466,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_settings_rationale_138",
-      "community": 2,
+      "community": 6,
       "norm_label": "validates critical settings and returns true if valid."
     },
     {
@@ -1503,10 +1503,10 @@
       "label": "check_for_telegram_topic()",
       "file_type": "code",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L376",
+      "source_location": "L377",
       "_origin": "ast",
       "id": "src_telegram_gateway_check_for_telegram_topic",
-      "community": 3,
+      "community": 1,
       "norm_label": "check_for_telegram_topic()"
     },
     {
@@ -1533,10 +1533,10 @@
       "label": "Checks if there's a recent /topic or /curate command sent by the authorized user",
       "file_type": "rationale",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L377",
+      "source_location": "L378",
       "_origin": "ast",
-      "id": "src_telegram_gateway_rationale_377",
-      "community": 3,
+      "id": "src_telegram_gateway_rationale_378",
+      "community": 1,
       "norm_label": "checks if there's a recent /topic or /curate command sent by the authorized user"
     },
     {
@@ -1746,7 +1746,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_curator",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_curator.py"
     },
     {
@@ -1756,7 +1756,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_curator_test_calculate_relevance_score_factors",
-      "community": 7,
+      "community": 4,
       "norm_label": "test_calculate_relevance_score_factors()"
     },
     {
@@ -1766,7 +1766,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "tests_test_curator_test_strip_markdown_cleanliness",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_strip_markdown_cleanliness()"
     },
     {
@@ -1786,7 +1786,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "tests_test_curator_test_supports_thinking",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_supports_thinking()"
     },
     {
@@ -1796,7 +1796,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "tests_test_curator_test_prune_gemini_model_priority_async",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_prune_gemini_model_priority_async()"
     },
     {
@@ -1806,7 +1806,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "tests_test_curator_test_summarize_news_with_thinking_budget",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_summarize_news_with_thinking_budget()"
     },
     {
@@ -1816,7 +1816,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "tests_test_curator_test_registry_validation",
-      "community": 3,
+      "community": 4,
       "norm_label": "test_registry_validation()"
     },
     {
@@ -1826,7 +1826,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "tests_test_curator_test_fallback_behavior_unknown_source",
-      "community": 7,
+      "community": 4,
       "norm_label": "test_fallback_behavior_unknown_source()"
     },
     {
@@ -1836,7 +1836,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "tests_test_curator_rationale_7",
-      "community": 7,
+      "community": 4,
       "norm_label": "verify that different scoring factors are correctly applied."
     },
     {
@@ -1846,7 +1846,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "tests_test_curator_rationale_41",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify that bold and italic markers are stripped."
     },
     {
@@ -1866,7 +1866,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "tests_test_curator_rationale_119",
-      "community": 3,
+      "community": 4,
       "norm_label": "verify that summarize_news includes thinking_config when supported by the model."
     },
     {
@@ -2106,7 +2106,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_settings",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_settings.py"
     },
     {
@@ -2116,7 +2116,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_from_env_default",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_settings_from_env_default()"
     },
     {
@@ -2126,7 +2126,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_validation_dry_run",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_settings_validation_dry_run()"
     },
     {
@@ -2136,7 +2136,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_validation_missing_keys",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_settings_validation_missing_keys()"
     },
     {
@@ -2146,7 +2146,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_validation_success",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_settings_validation_success()"
     },
     {
@@ -2156,7 +2156,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_is_manual_run",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_settings_is_manual_run()"
     },
     {
@@ -2166,7 +2166,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "tests_test_settings_test_settings_should_bypass_rest",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_settings_should_bypass_rest()"
     },
     {
@@ -2176,7 +2176,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_settings_test_telegram_settings_defaults",
-      "community": 6,
+      "community": 3,
       "norm_label": "test_telegram_settings_defaults()"
     },
     {
@@ -2186,7 +2186,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_6",
-      "community": 6,
+      "community": 3,
       "norm_label": "verify that settings.from_env() reads correct defaults."
     },
     {
@@ -2196,7 +2196,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_21",
-      "community": 6,
+      "community": 3,
       "norm_label": "verify that validate() always returns true in dry run."
     },
     {
@@ -2206,7 +2206,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_26",
-      "community": 6,
+      "community": 3,
       "norm_label": "verify validate() fails when required production keys are missing."
     },
     {
@@ -2216,7 +2216,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_40",
-      "community": 6,
+      "community": 3,
       "norm_label": "verify validate() succeeds with valid parameters."
     },
     {
@@ -2226,7 +2226,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_45",
-      "community": 6,
+      "community": 3,
       "norm_label": "verify is_manual_run checks correct github event."
     },
     {
@@ -2236,7 +2236,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_53",
-      "community": 6,
+      "community": 3,
       "norm_label": "verify should_bypass_rest determines when rest is bypassed."
     },
     {
@@ -2246,7 +2246,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "tests_test_settings_rationale_67",
-      "community": 6,
+      "community": 3,
       "norm_label": "verify that settings correctly capture telegram environment variables."
     },
     {
@@ -2326,7 +2326,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_telegram_propagation",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_telegram_propagation.py"
     },
     {
@@ -2336,7 +2336,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_changed",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_telegram_approval_image_url_propagation_changed()"
     },
     {
@@ -2346,7 +2346,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "tests_test_telegram_propagation_test_telegram_approval_image_url_propagation_unchanged",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_telegram_approval_image_url_propagation_unchanged()"
     },
     {
@@ -2356,7 +2356,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "tests_test_telegram_propagation_rationale_10",
-      "community": 3,
+      "community": 1,
       "norm_label": "test that image_url is set to none if image bytes are changed/regenerated."
     },
     {
@@ -2366,7 +2366,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "tests_test_telegram_propagation_rationale_68",
-      "community": 3,
+      "community": 1,
       "norm_label": "test that image_url is preserved if image bytes remain the same."
     },
     {
@@ -2416,7 +2416,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_utils",
-      "community": 14,
+      "community": 7,
       "norm_label": "test_utils.py"
     },
     {
@@ -2426,7 +2426,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_test_utils_test_is_public_ip_validation",
-      "community": 14,
+      "community": 15,
       "norm_label": "test_is_public_ip_validation()"
     },
     {
@@ -2436,7 +2436,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "tests_test_utils_test_truncate_bytes_unicode",
-      "community": 14,
+      "community": 29,
       "norm_label": "test_truncate_bytes_unicode()"
     },
     {
@@ -2446,7 +2446,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_utils_test_get_image_mime_detection",
-      "community": 14,
+      "community": 16,
       "norm_label": "test_get_image_mime_detection()"
     },
     {
@@ -2456,7 +2456,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "tests_test_utils_test_compress_image_reduction",
-      "community": 14,
+      "community": 7,
       "norm_label": "test_compress_image_reduction()"
     },
     {
@@ -2466,7 +2466,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "tests_test_utils_test_ssrf_blocking_in_redirects",
-      "community": 14,
+      "community": 11,
       "norm_label": "test_ssrf_blocking_in_redirects()"
     },
     {
@@ -2476,7 +2476,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "tests_test_utils_test_normalize_url_scenarios",
-      "community": 14,
+      "community": 27,
       "norm_label": "test_normalize_url_scenarios()"
     },
     {
@@ -2486,7 +2486,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "tests_test_utils_test_smart_truncate_edge_cases",
-      "community": 14,
+      "community": 7,
       "norm_label": "test_smart_truncate_edge_cases()"
     },
     {
@@ -2496,7 +2496,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "tests_test_utils_test_smart_split_edge_cases",
-      "community": 14,
+      "community": 7,
       "norm_label": "test_smart_split_edge_cases()"
     },
     {
@@ -2506,7 +2506,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "tests_test_utils_test_seen_interactions_persistence",
-      "community": 14,
+      "community": 10,
       "norm_label": "test_seen_interactions_persistence()"
     },
     {
@@ -2516,7 +2516,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_7",
-      "community": 14,
+      "community": 15,
       "norm_label": "verify that private and reserved ip addresses are correctly identified as non-pu"
     },
     {
@@ -2526,7 +2526,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_28",
-      "community": 14,
+      "community": 29,
       "norm_label": "verify that truncation doesn't break multi-byte unicode characters."
     },
     {
@@ -2536,7 +2536,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_45",
-      "community": 14,
+      "community": 16,
       "norm_label": "verify mime type detection for different image headers."
     },
     {
@@ -2546,7 +2546,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_62",
-      "community": 14,
+      "community": 7,
       "norm_label": "verify that compress_image actually reduces size if needed."
     },
     {
@@ -2556,7 +2556,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_79",
-      "community": 14,
+      "community": 11,
       "norm_label": "verify that get_with_safe_redirects blocks redirects to private ips."
     },
     {
@@ -2566,7 +2566,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "tests_test_utils_rationale_103",
-      "community": 14,
+      "community": 27,
       "norm_label": "verify that normalize_url handles various edge cases correctly."
     },
     {
@@ -2586,7 +2586,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_utils_human_delay",
-      "community": 3,
+      "community": 1,
       "norm_label": "human_delay()"
     },
     {
@@ -2596,7 +2596,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_utils_retry_with_backoff",
-      "community": 11,
+      "community": 4,
       "norm_label": "retry_with_backoff()"
     },
     {
@@ -2606,7 +2606,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "src_utils_save_session_string",
-      "community": 2,
+      "community": 6,
       "norm_label": "save_session_string()"
     },
     {
@@ -2616,7 +2616,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_utils_load_session_string",
-      "community": 2,
+      "community": 6,
       "norm_label": "load_session_string()"
     },
     {
@@ -2626,7 +2626,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_utils_filelock",
-      "community": 14,
+      "community": 8,
       "norm_label": "filelock"
     },
     {
@@ -2636,7 +2636,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "src_utils_filelock_init",
-      "community": 14,
+      "community": 8,
       "norm_label": ".__init__()"
     },
     {
@@ -2646,7 +2646,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "src_utils_filelock_enter",
-      "community": 14,
+      "community": 8,
       "norm_label": ".__enter__()"
     },
     {
@@ -2656,7 +2656,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "src_utils_filelock_exit",
-      "community": 14,
+      "community": 8,
       "norm_label": ".__exit__()"
     },
     {
@@ -2666,7 +2666,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "src_utils_load_gist_state",
-      "community": 14,
+      "community": 8,
       "norm_label": "_load_gist_state()"
     },
     {
@@ -2686,7 +2686,7 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "src_utils_load_json_state",
-      "community": 14,
+      "community": 10,
       "norm_label": "load_json_state()"
     },
     {
@@ -2706,7 +2706,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "src_utils_load_seen_interactions",
-      "community": 14,
+      "community": 10,
       "norm_label": "load_seen_interactions()"
     },
     {
@@ -2716,7 +2716,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "src_utils_save_seen_interactions",
-      "community": 14,
+      "community": 10,
       "norm_label": "save_seen_interactions()"
     },
     {
@@ -2726,7 +2726,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "src_utils_load_seen_articles",
-      "community": 3,
+      "community": 8,
       "norm_label": "load_seen_articles()"
     },
     {
@@ -2746,7 +2746,7 @@
       "source_location": "L271",
       "_origin": "ast",
       "id": "src_utils_normalize_url",
-      "community": 14,
+      "community": 27,
       "norm_label": "normalize_url()"
     },
     {
@@ -2756,7 +2756,7 @@
       "source_location": "L323",
       "_origin": "ast",
       "id": "src_utils_is_public_ip",
-      "community": 14,
+      "community": 15,
       "norm_label": "_is_public_ip()"
     },
     {
@@ -2766,7 +2766,7 @@
       "source_location": "L338",
       "_origin": "ast",
       "id": "src_utils_resolve_public_ip_candidates",
-      "community": 14,
+      "community": 15,
       "norm_label": "_resolve_public_ip_candidates()"
     },
     {
@@ -2776,7 +2776,7 @@
       "source_location": "L351",
       "_origin": "ast",
       "id": "src_utils_resolver_pinned_to_ips",
-      "community": 14,
+      "community": 11,
       "norm_label": "_resolver_pinned_to_ips()"
     },
     {
@@ -2786,7 +2786,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "src_utils_get_with_safe_redirects",
-      "community": 14,
+      "community": 11,
       "norm_label": "get_with_safe_redirects()"
     },
     {
@@ -2796,7 +2796,7 @@
       "source_location": "L424",
       "_origin": "ast",
       "id": "src_utils_get_link_metadata",
-      "community": 3,
+      "community": 1,
       "norm_label": "get_link_metadata()"
     },
     {
@@ -2806,7 +2806,7 @@
       "source_location": "L471",
       "_origin": "ast",
       "id": "src_utils_compress_image",
-      "community": 14,
+      "community": 7,
       "norm_label": "compress_image()"
     },
     {
@@ -2816,7 +2816,7 @@
       "source_location": "L495",
       "_origin": "ast",
       "id": "src_utils_get_image_mime",
-      "community": 14,
+      "community": 16,
       "norm_label": "get_image_mime()"
     },
     {
@@ -2826,7 +2826,7 @@
       "source_location": "L503",
       "_origin": "ast",
       "id": "src_utils_truncate_bytes",
-      "community": 14,
+      "community": 29,
       "norm_label": "truncate_bytes()"
     },
     {
@@ -2836,7 +2836,7 @@
       "source_location": "L510",
       "_origin": "ast",
       "id": "src_utils_smart_truncate",
-      "community": 14,
+      "community": 7,
       "norm_label": "smart_truncate()"
     },
     {
@@ -2846,7 +2846,7 @@
       "source_location": "L526",
       "_origin": "ast",
       "id": "src_utils_smart_split",
-      "community": 14,
+      "community": 7,
       "norm_label": "smart_split()"
     },
     {
@@ -2856,7 +2856,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_utils_rationale_33",
-      "community": 3,
+      "community": 1,
       "norm_label": "wait for a random duration to simulate human activity."
     },
     {
@@ -2866,7 +2866,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_utils_rationale_44",
-      "community": 11,
+      "community": 4,
       "norm_label": "decorator to retry an async function with exponential backoff and jitter."
     },
     {
@@ -2876,7 +2876,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_utils_rationale_82",
-      "community": 2,
+      "community": 6,
       "norm_label": "saves the bluesky session string to a private file."
     },
     {
@@ -2886,7 +2886,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_utils_rationale_92",
-      "community": 2,
+      "community": 6,
       "norm_label": "loads the cached bluesky session string if it exists."
     },
     {
@@ -2896,7 +2896,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_utils_rationale_102",
-      "community": 14,
+      "community": 8,
       "norm_label": "cross-platform advisory file lock context manager."
     },
     {
@@ -2906,7 +2906,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "src_utils_rationale_127",
-      "community": 14,
+      "community": 8,
       "norm_label": "helper to pull state from a private github gist."
     },
     {
@@ -2926,7 +2926,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "src_utils_rationale_173",
-      "community": 14,
+      "community": 10,
       "norm_label": "helper to load json data from a file path."
     },
     {
@@ -2946,7 +2946,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "src_utils_rationale_183",
-      "community": 14,
+      "community": 10,
       "norm_label": "loads the list of social interaction ids we've already responded to."
     },
     {
@@ -2956,7 +2956,7 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "src_utils_rationale_192",
-      "community": 14,
+      "community": 10,
       "norm_label": "saves the list of social interaction ids to persistent store."
     },
     {
@@ -2966,7 +2966,7 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "src_utils_rationale_199",
-      "community": 3,
+      "community": 8,
       "norm_label": "3-tier resilience: local -> backup -> gist -> default."
     },
     {
@@ -2986,7 +2986,7 @@
       "source_location": "L272",
       "_origin": "ast",
       "id": "src_utils_rationale_272",
-      "community": 14,
+      "community": 27,
       "norm_label": "normalizes a url by resolving protocol-relative links, stripping fragments,"
     },
     {
@@ -2996,7 +2996,7 @@
       "source_location": "L324",
       "_origin": "ast",
       "id": "src_utils_rationale_324",
-      "community": 14,
+      "community": 15,
       "norm_label": "checks if an ip address is a routable public address."
     },
     {
@@ -3006,7 +3006,7 @@
       "source_location": "L339",
       "_origin": "ast",
       "id": "src_utils_rationale_339",
-      "community": 14,
+      "community": 15,
       "norm_label": "resolves a hostname and returns only public ip candidates."
     },
     {
@@ -3016,7 +3016,7 @@
       "source_location": "L352",
       "_origin": "ast",
       "id": "src_utils_rationale_352",
-      "community": 14,
+      "community": 11,
       "norm_label": "temporarily constrains dns resolution for one hostname to a prevalidated set."
     },
     {
@@ -3026,7 +3026,7 @@
       "source_location": "L379",
       "_origin": "ast",
       "id": "src_utils_rationale_379",
-      "community": 14,
+      "community": 11,
       "norm_label": "fetches a url while validating every hop in the redirect chain."
     },
     {
@@ -3036,7 +3036,7 @@
       "source_location": "L425",
       "_origin": "ast",
       "id": "src_utils_rationale_425",
-      "community": 3,
+      "community": 1,
       "norm_label": "fetches high-fidelity metadata (og:image, description) from a url with ssrf prot"
     },
     {
@@ -3046,7 +3046,7 @@
       "source_location": "L472",
       "_origin": "ast",
       "id": "src_utils_rationale_472",
-      "community": 14,
+      "community": 7,
       "norm_label": "losslessly then lossily compresses image to stay within platform limits (e.g., b"
     },
     {
@@ -3056,7 +3056,7 @@
       "source_location": "L496",
       "_origin": "ast",
       "id": "src_utils_rationale_496",
-      "community": 14,
+      "community": 16,
       "norm_label": "detects mime type from image bytes for broadcaster fidelity."
     },
     {
@@ -3066,7 +3066,7 @@
       "source_location": "L504",
       "_origin": "ast",
       "id": "src_utils_rationale_504",
-      "community": 14,
+      "community": 29,
       "norm_label": "unicode-aware byte-level truncation to prevent bluesky index errors."
     },
     {
@@ -3076,7 +3076,7 @@
       "source_location": "L511",
       "_origin": "ast",
       "id": "src_utils_rationale_511",
-      "community": 14,
+      "community": 7,
       "norm_label": "truncates text at word boundaries within the limit, appending a suffix."
     },
     {
@@ -3086,7 +3086,7 @@
       "source_location": "L527",
       "_origin": "ast",
       "id": "src_utils_rationale_527",
-      "community": 14,
+      "community": 7,
       "norm_label": "splits text into chunks within the limit, prioritizing paragraph and sentence bo"
     },
     {
@@ -4190,14 +4190,14 @@
       "norm_label": "pr_description.md"
     },
     {
-      "label": "\ud83d\udcc4 PR v3.13.4: Comprehensive Documentation Sync",
+      "label": "\ud83d\udcc4 PR v3.13.5: Curation Engine v4 (Stable ID Registry, Category Rotation, and Telegram Overrides)",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "pr_description_pr_v3_13_4_comprehensive_documentation_sync",
+      "id": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides",
       "community": 12,
-      "norm_label": "\ud83d\udcc4 pr v3.13.4: comprehensive documentation sync"
+      "norm_label": "\ud83d\udcc4 pr v3.13.5: curation engine v4 (stable id registry, category rotation, and telegram overrides)"
     },
     {
       "label": "Changes",
@@ -4210,70 +4210,40 @@
       "norm_label": "changes"
     },
     {
-      "label": "\ud83d\udcc4 SECURITY.md",
+      "label": "\ud83d\udce1 Curation Engine & Registry Refinement",
       "file_type": "document",
       "source_file": "pr_description.md",
       "source_location": "L9",
       "_origin": "ast",
-      "id": "pr_description_security_md",
+      "id": "pr_description_curation_engine_registry_refinement",
       "community": 12,
-      "norm_label": "\ud83d\udcc4 security.md"
+      "norm_label": "\ud83d\udce1 curation engine & registry refinement"
     },
     {
-      "label": "\ud83d\udd12 PRIVACY.md",
+      "label": "\ud83d\udee0\ufe0f Telegram Topic Persistence",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L18",
+      "source_location": "L16",
       "_origin": "ast",
-      "id": "pr_description_privacy_md",
+      "id": "pr_description_telegram_topic_persistence",
       "community": 12,
-      "norm_label": "\ud83d\udd12 privacy.md"
+      "norm_label": "\ud83d\udee0\ufe0f telegram topic persistence"
     },
     {
-      "label": "\ud83d\udcd6 docs/WIKI_MANUAL.md",
+      "label": "\ud83e\udde0 Curation Diversity & Writing-Style Rotation",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L28",
+      "source_location": "L20",
       "_origin": "ast",
-      "id": "pr_description_docs_wiki_manual_md",
+      "id": "pr_description_curation_diversity_writing_style_rotation",
       "community": 12,
-      "norm_label": "\ud83d\udcd6 docs/wiki_manual.md"
-    },
-    {
-      "label": "\ud83d\udccb README.md",
-      "file_type": "document",
-      "source_file": "pr_description.md",
-      "source_location": "L37",
-      "_origin": "ast",
-      "id": "pr_description_readme_md",
-      "community": 12,
-      "norm_label": "\ud83d\udccb readme.md"
-    },
-    {
-      "label": "\ud83d\udcca STATUS.md",
-      "file_type": "document",
-      "source_file": "pr_description.md",
-      "source_location": "L44",
-      "_origin": "ast",
-      "id": "pr_description_status_md",
-      "community": 12,
-      "norm_label": "\ud83d\udcca status.md"
-    },
-    {
-      "label": "\ud83d\udd22 VERSION",
-      "file_type": "document",
-      "source_file": "pr_description.md",
-      "source_location": "L47",
-      "_origin": "ast",
-      "id": "pr_description_version",
-      "community": 12,
-      "norm_label": "\ud83d\udd22 version"
+      "norm_label": "\ud83e\udde0 curation diversity & writing-style rotation"
     },
     {
       "label": "\ud83d\udee0\ufe0f Compliance with `AGENTS.md` Rules",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L52",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "pr_description_compliance_with_agents_md_rules",
       "community": 12,
@@ -4283,7 +4253,7 @@
       "label": "1. What was Deleted or Simplified",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L54",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "pr_description_1_what_was_deleted_or_simplified",
       "community": 12,
@@ -4293,7 +4263,7 @@
       "label": "2. Why the Simpler Version is Safe",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L58",
+      "source_location": "L33",
       "_origin": "ast",
       "id": "pr_description_2_why_the_simpler_version_is_safe",
       "community": 12,
@@ -4303,21 +4273,11 @@
       "label": "3. Verification & Tests Run",
       "file_type": "document",
       "source_file": "pr_description.md",
-      "source_location": "L61",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "pr_description_3_verification_tests_run",
       "community": 12,
       "norm_label": "3. verification & tests run"
-    },
-    {
-      "label": "Type of Change",
-      "file_type": "document",
-      "source_file": "pr_description.md",
-      "source_location": "L66",
-      "_origin": "ast",
-      "id": "pr_description_type_of_change",
-      "community": 12,
-      "norm_label": "type of change"
     },
     {
       "label": "Doc: dependabot.yml",
@@ -4485,7 +4445,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Multi-model failover and self-healing AI loop",
-      "community": 11,
+      "community": 1,
       "norm_label": "sage intelligence v3",
       "id": "sage_intelligence"
     },
@@ -4499,7 +4459,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Chains high-res news analysis into platform-native threads",
-      "community": 11,
+      "community": 1,
       "norm_label": "the weaver (conditional threading)",
       "id": "the_weaver"
     },
@@ -4555,7 +4515,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Replies to comments/mentions with persona-aligned logic",
-      "community": 11,
+      "community": 1,
       "norm_label": "interaction engine",
       "id": "interaction_engine"
     },
@@ -4569,7 +4529,7 @@
       "author": null,
       "contributor": null,
       "rationale": "Scoring factors for AI news curation signal processing",
-      "community": 3,
+      "community": 4,
       "norm_label": "weighted curation matrix",
       "id": "weighted_curation_matrix"
     },
@@ -5275,9 +5235,9 @@
       "source_file": "bot.py",
       "source_location": "L132",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_curation_stage",
-      "target": "asyncclient",
-      "confidence_score": 1.0
+      "target": "asyncclient"
     },
     {
       "relation": "calls",
@@ -5427,9 +5387,9 @@
       "source_file": "bot.py",
       "source_location": "L315",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_broadcast_stage",
-      "target": "asyncclient",
-      "confidence_score": 1.0
+      "target": "asyncclient"
     },
     {
       "relation": "calls",
@@ -5438,9 +5398,9 @@
       "source_file": "bot.py",
       "source_location": "L543",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_main",
-      "target": "asyncclient",
-      "confidence_score": 1.0
+      "target": "asyncclient"
     },
     {
       "relation": "references",
@@ -5449,9 +5409,9 @@
       "source_file": "bot.py",
       "source_location": "L190",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_synthesis_stage",
-      "target": "asyncclient",
-      "confidence_score": 1.0
+      "target": "asyncclient"
     },
     {
       "relation": "calls",
@@ -5460,9 +5420,9 @@
       "source_file": "src/feed_vanguard.py",
       "source_location": "L141",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_feed_vanguard_diagnostic",
-      "target": "asyncclient",
-      "confidence_score": 1.0
+      "target": "asyncclient"
     },
     {
       "relation": "references",
@@ -5471,9 +5431,9 @@
       "source_file": "src/feed_vanguard.py",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_feed_vanguard_vanguardmanager_audit_and_update",
-      "target": "asyncclient",
-      "confidence_score": 1.0
+      "target": "asyncclient"
     },
     {
       "relation": "references",
@@ -5482,9 +5442,9 @@
       "source_file": "src/telegram_gateway.py",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "asyncclient",
-      "confidence_score": 1.0
+      "target": "asyncclient"
     },
     {
       "relation": "calls",
@@ -5503,9 +5463,9 @@
       "source_file": "bot.py",
       "source_location": "L191",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_rationale_191",
-      "target": "bot_synthesis_stage",
-      "confidence_score": 1.0
+      "target": "bot_synthesis_stage"
     },
     {
       "relation": "references",
@@ -5760,9 +5720,9 @@
       "source_file": "bot.py",
       "source_location": "L315",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_broadcast_stage",
-      "target": "any",
-      "confidence_score": 1.0
+      "target": "any"
     },
     {
       "relation": "calls",
@@ -5837,9 +5797,9 @@
       "source_file": "bot.py",
       "source_location": "L315",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_broadcast_stage",
-      "target": "src_models_synthesisresult",
-      "confidence_score": 1.0
+      "target": "src_models_synthesisresult"
     },
     {
       "relation": "calls",
@@ -5858,9 +5818,9 @@
       "source_file": "bot.py",
       "source_location": "L316",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_rationale_316",
-      "target": "bot_broadcast_stage",
-      "confidence_score": 1.0
+      "target": "bot_broadcast_stage"
     },
     {
       "relation": "imports",
@@ -5891,9 +5851,9 @@
       "source_file": "bot.py",
       "source_location": "L361",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_persistence_stage",
-      "target": "any",
-      "confidence_score": 1.0
+      "target": "any"
     },
     {
       "relation": "references",
@@ -5902,9 +5862,9 @@
       "source_file": "src/logger.py",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_logger_secretredactionfilter_sanitize",
-      "target": "any",
-      "confidence_score": 1.0
+      "target": "any"
     },
     {
       "relation": "references",
@@ -5913,9 +5873,9 @@
       "source_file": "src/telegram_gateway.py",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_telegram_gateway_send_draft_for_approval",
-      "target": "any",
-      "confidence_score": 1.0
+      "target": "any"
     },
     {
       "relation": "calls",
@@ -5957,9 +5917,9 @@
       "source_file": "bot.py",
       "source_location": "L361",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_persistence_stage",
-      "target": "src_models_curationresult",
-      "confidence_score": 1.0
+      "target": "src_models_curationresult"
     },
     {
       "relation": "references",
@@ -5968,9 +5928,9 @@
       "source_file": "bot.py",
       "source_location": "L361",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_persistence_stage",
-      "target": "src_models_synthesisresult",
-      "confidence_score": 1.0
+      "target": "src_models_synthesisresult"
     },
     {
       "relation": "rationale_for",
@@ -5978,9 +5938,9 @@
       "source_file": "bot.py",
       "source_location": "L362",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_rationale_362",
-      "target": "bot_persistence_stage",
-      "confidence_score": 1.0
+      "target": "bot_persistence_stage"
     },
     {
       "relation": "imports",
@@ -6109,9 +6069,9 @@
       "source_file": "bot.py",
       "source_location": "L428",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bot_rationale_428",
-      "target": "bot_interaction_stage",
-      "confidence_score": 1.0
+      "target": "bot_interaction_stage"
     },
     {
       "relation": "calls",
@@ -7277,9 +7237,9 @@
       "source_file": "src/config.py",
       "source_location": "L267",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_config_rationale_267",
-      "target": "src_config_validate_config",
-      "confidence_score": 1.0
+      "target": "src_config_validate_config"
     },
     {
       "relation": "calls",
@@ -7331,9 +7291,9 @@
       "source_file": "src/config.py",
       "source_location": "L272",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_config_rationale_272",
-      "target": "src_config_validate_gemini_model_priority",
-      "confidence_score": 1.0
+      "target": "src_config_validate_gemini_model_priority"
     },
     {
       "relation": "calls",
@@ -7624,9 +7584,9 @@
       "source_file": "src/tests/test_curator.py",
       "source_location": "L195",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_curator_test_fallback_behavior_unknown_source",
-      "target": "src_curator_calculate_relevance_score",
-      "confidence_score": 1.0
+      "target": "src_curator_calculate_relevance_score"
     },
     {
       "relation": "calls",
@@ -7645,9 +7605,9 @@
       "source_file": "src/curator.py",
       "source_location": "L99",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_99",
-      "target": "src_curator_fetch_single_feed",
-      "confidence_score": 1.0
+      "target": "src_curator_fetch_single_feed"
     },
     {
       "relation": "rationale_for",
@@ -7655,9 +7615,9 @@
       "source_file": "src/curator.py",
       "source_location": "L134",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_134",
-      "target": "src_curator_fetch_news",
-      "confidence_score": 1.0
+      "target": "src_curator_fetch_news"
     },
     {
       "relation": "imports",
@@ -7764,9 +7724,9 @@
       "source_file": "src/curator.py",
       "source_location": "L179",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_179",
-      "target": "src_curator_supports_thinking",
-      "confidence_score": 1.0
+      "target": "src_curator_supports_thinking"
     },
     {
       "relation": "calls",
@@ -7829,9 +7789,9 @@
       "source_file": "src/curator.py",
       "source_location": "L193",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_193",
-      "target": "src_curator_prune_gemini_model_priority_async",
-      "confidence_score": 1.0
+      "target": "src_curator_prune_gemini_model_priority_async"
     },
     {
       "relation": "imports",
@@ -7861,9 +7821,9 @@
       "source_file": "src/curator.py",
       "source_location": "L218",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_218",
-      "target": "src_curator_summarize_news",
-      "confidence_score": 1.0
+      "target": "src_curator_summarize_news"
     },
     {
       "relation": "calls",
@@ -7937,9 +7897,9 @@
       "source_file": "src/curator.py",
       "source_location": "L356",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_356",
-      "target": "src_curator_get_temporal_context",
-      "confidence_score": 1.0
+      "target": "src_curator_get_temporal_context"
     },
     {
       "relation": "imports",
@@ -7980,9 +7940,9 @@
       "source_file": "src/curator.py",
       "source_location": "L396",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_396",
-      "target": "src_curator_generate_image_alt_text",
-      "confidence_score": 1.0
+      "target": "src_curator_generate_image_alt_text"
     },
     {
       "relation": "imports",
@@ -8034,9 +7994,9 @@
       "source_file": "src/curator.py",
       "source_location": "L420",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_420",
-      "target": "src_curator_generate_nvidia_image",
-      "confidence_score": 1.0
+      "target": "src_curator_generate_nvidia_image"
     },
     {
       "relation": "imports",
@@ -8077,9 +8037,9 @@
       "source_file": "src/curator.py",
       "source_location": "L474",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_curator_rationale_474",
-      "target": "src_curator_generate_interactive_reply",
-      "confidence_score": 1.0
+      "target": "src_curator_generate_interactive_reply"
     },
     {
       "relation": "implements",
@@ -8295,9 +8255,9 @@
       "source_file": "src/feed_vanguard.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_feed_vanguard_rationale_59",
-      "target": "src_feed_vanguard_vanguardmanager_audit_and_update",
-      "confidence_score": 1.0
+      "target": "src_feed_vanguard_vanguardmanager_audit_and_update"
     },
     {
       "relation": "calls",
@@ -8360,9 +8320,9 @@
       "source_file": "src/feed_vanguard.py",
       "source_location": "L120",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_feed_vanguard_rationale_120",
-      "target": "src_feed_vanguard_vanguardmanager_check_feed",
-      "confidence_score": 1.0
+      "target": "src_feed_vanguard_vanguardmanager_check_feed"
     },
     {
       "relation": "contains",
@@ -9317,9 +9277,9 @@
       "source_file": "src/models.py",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_models_rationale_22",
-      "target": "src_models_curationresult",
-      "confidence_score": 1.0
+      "target": "src_models_curationresult"
     },
     {
       "relation": "imports",
@@ -9415,9 +9375,9 @@
       "source_file": "src/models.py",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_models_rationale_34",
-      "target": "src_models_synthesisresult",
-      "confidence_score": 1.0
+      "target": "src_models_synthesisresult"
     },
     {
       "relation": "imports",
@@ -9502,9 +9462,9 @@
       "source_file": "src/models.py",
       "source_location": "L47",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_models_rationale_47",
-      "target": "src_models_broadcastresult",
-      "confidence_score": 1.0
+      "target": "src_models_broadcastresult"
     },
     {
       "relation": "imports",
@@ -9523,9 +9483,9 @@
       "source_file": "src/models.py",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_models_rationale_55",
-      "target": "src_models_interactionnote",
-      "confidence_score": 1.0
+      "target": "src_models_interactionnote"
     },
     {
       "relation": "imports",
@@ -9555,9 +9515,9 @@
       "source_file": "src/models.py",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_models_rationale_68",
-      "target": "src_models_interactionresult",
-      "confidence_score": 1.0
+      "target": "src_models_interactionresult"
     },
     {
       "relation": "imports",
@@ -10209,9 +10169,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/telegram_gateway.py",
-      "source_location": "L377",
+      "source_location": "L378",
       "weight": 1.0,
-      "source": "src_telegram_gateway_rationale_377",
+      "source": "src_telegram_gateway_rationale_378",
       "target": "src_telegram_gateway_check_for_telegram_topic",
       "confidence_score": 1.0
     },
@@ -10401,9 +10361,9 @@
       "source_file": "src/tests/test_curator.py",
       "source_location": "L187",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_curator",
-      "target": "tests_test_curator_test_fallback_behavior_unknown_source",
-      "confidence_score": 1.0
+      "target": "tests_test_curator_test_fallback_behavior_unknown_source"
     },
     {
       "relation": "contains",
@@ -10431,9 +10391,9 @@
       "source_file": "src/tests/test_curator.py",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_curator",
-      "target": "tests_test_curator_test_registry_validation",
-      "confidence_score": 1.0
+      "target": "tests_test_curator_test_registry_validation"
     },
     {
       "relation": "contains",
@@ -10481,9 +10441,9 @@
       "source_file": "src/tests/test_curator.py",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_curator_rationale_41",
-      "target": "tests_test_curator_test_strip_markdown_cleanliness",
-      "confidence_score": 1.0
+      "target": "tests_test_curator_test_strip_markdown_cleanliness"
     },
     {
       "relation": "rationale_for",
@@ -10491,9 +10451,9 @@
       "source_file": "src/tests/test_curator.py",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_curator_rationale_49",
-      "target": "tests_test_curator_test_fetch_news_synergy_and_deduplication",
-      "confidence_score": 1.0
+      "target": "tests_test_curator_test_fetch_news_synergy_and_deduplication"
     },
     {
       "relation": "rationale_for",
@@ -10501,9 +10461,9 @@
       "source_file": "src/tests/test_curator.py",
       "source_location": "L119",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_curator_rationale_119",
-      "target": "tests_test_curator_test_summarize_news_with_thinking_budget",
-      "confidence_score": 1.0
+      "target": "tests_test_curator_test_summarize_news_with_thinking_budget"
     },
     {
       "relation": "contains",
@@ -11880,9 +11840,9 @@
       "source_file": "src/utils.py",
       "source_location": "L249",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_249",
-      "target": "src_utils_save_seen_articles",
-      "confidence_score": 1.0
+      "target": "src_utils_save_seen_articles"
     },
     {
       "relation": "calls",
@@ -11901,9 +11861,9 @@
       "source_file": "src/utils.py",
       "source_location": "L272",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_272",
-      "target": "src_utils_normalize_url",
-      "confidence_score": 1.0
+      "target": "src_utils_normalize_url"
     },
     {
       "relation": "rationale_for",
@@ -11911,9 +11871,9 @@
       "source_file": "src/utils.py",
       "source_location": "L324",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_324",
-      "target": "src_utils_is_public_ip",
-      "confidence_score": 1.0
+      "target": "src_utils_is_public_ip"
     },
     {
       "relation": "calls",
@@ -11943,9 +11903,9 @@
       "source_file": "src/utils.py",
       "source_location": "L339",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_339",
-      "target": "src_utils_resolve_public_ip_candidates",
-      "confidence_score": 1.0
+      "target": "src_utils_resolve_public_ip_candidates"
     },
     {
       "relation": "calls",
@@ -11964,9 +11924,9 @@
       "source_file": "src/utils.py",
       "source_location": "L352",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_352",
-      "target": "src_utils_resolver_pinned_to_ips",
-      "confidence_score": 1.0
+      "target": "src_utils_resolver_pinned_to_ips"
     },
     {
       "relation": "calls",
@@ -11985,9 +11945,9 @@
       "source_file": "src/utils.py",
       "source_location": "L379",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_379",
-      "target": "src_utils_get_with_safe_redirects",
-      "confidence_score": 1.0
+      "target": "src_utils_get_with_safe_redirects"
     },
     {
       "relation": "rationale_for",
@@ -11995,9 +11955,9 @@
       "source_file": "src/utils.py",
       "source_location": "L425",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_425",
-      "target": "src_utils_get_link_metadata",
-      "confidence_score": 1.0
+      "target": "src_utils_get_link_metadata"
     },
     {
       "relation": "rationale_for",
@@ -12005,9 +11965,9 @@
       "source_file": "src/utils.py",
       "source_location": "L472",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_472",
-      "target": "src_utils_compress_image",
-      "confidence_score": 1.0
+      "target": "src_utils_compress_image"
     },
     {
       "relation": "rationale_for",
@@ -12015,9 +11975,9 @@
       "source_file": "src/utils.py",
       "source_location": "L496",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_496",
-      "target": "src_utils_get_image_mime",
-      "confidence_score": 1.0
+      "target": "src_utils_get_image_mime"
     },
     {
       "relation": "rationale_for",
@@ -12025,9 +11985,9 @@
       "source_file": "src/utils.py",
       "source_location": "L504",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_504",
-      "target": "src_utils_truncate_bytes",
-      "confidence_score": 1.0
+      "target": "src_utils_truncate_bytes"
     },
     {
       "relation": "rationale_for",
@@ -12035,9 +11995,9 @@
       "source_file": "src/utils.py",
       "source_location": "L511",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_511",
-      "target": "src_utils_smart_truncate",
-      "confidence_score": 1.0
+      "target": "src_utils_smart_truncate"
     },
     {
       "relation": "rationale_for",
@@ -12045,9 +12005,9 @@
       "source_file": "src/utils.py",
       "source_location": "L527",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_rationale_527",
-      "target": "src_utils_smart_split",
-      "confidence_score": 1.0
+      "target": "src_utils_smart_split"
     },
     {
       "relation": "contains",
@@ -12095,9 +12055,9 @@
       "source_file": "CONTRIBUTING.md",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "contributing",
-      "target": "docs_wiki_manual",
-      "confidence_score": 1.0
+      "target": "docs_wiki_manual"
     },
     {
       "relation": "contains",
@@ -12215,9 +12175,9 @@
       "source_file": "README.md",
       "source_location": "L78",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme",
-      "target": "docs_wiki_manual",
-      "confidence_score": 1.0
+      "target": "docs_wiki_manual"
     },
     {
       "relation": "contains",
@@ -12235,9 +12195,9 @@
       "source_file": "README.md",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme",
-      "target": "status",
-      "confidence_score": 1.0
+      "target": "status"
     },
     {
       "relation": "contains",
@@ -13085,9 +13045,9 @@
       "source_file": "pr_description.md",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "pr_description",
-      "target": "pr_description_pr_v3_13_4_comprehensive_documentation_sync"
+      "target": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -13095,59 +13055,29 @@
       "source_file": "pr_description.md",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_pr_v3_13_4_comprehensive_documentation_sync",
-      "target": "pr_description_changes"
+      "source": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides",
+      "target": "pr_description_changes",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "pr_description.md",
-      "source_location": "L52",
+      "source_location": "L26",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_pr_v3_13_4_comprehensive_documentation_sync",
-      "target": "pr_description_compliance_with_agents_md_rules"
+      "source": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides",
+      "target": "pr_description_compliance_with_agents_md_rules",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "pr_description.md",
-      "source_location": "L66",
+      "source_location": "L20",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_pr_v3_13_4_comprehensive_documentation_sync",
-      "target": "pr_description_type_of_change"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "pr_description.md",
-      "source_location": "L28",
-      "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "pr_description_changes",
-      "target": "pr_description_docs_wiki_manual_md"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "pr_description.md",
-      "source_location": "L18",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_changes",
-      "target": "pr_description_privacy_md"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "pr_description.md",
-      "source_location": "L37",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_changes",
-      "target": "pr_description_readme_md"
+      "target": "pr_description_curation_diversity_writing_style_rotation",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -13155,29 +13085,19 @@
       "source_file": "pr_description.md",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "pr_description_changes",
-      "target": "pr_description_security_md"
+      "target": "pr_description_curation_engine_registry_refinement",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "pr_description.md",
-      "source_location": "L44",
+      "source_location": "L16",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "pr_description_changes",
-      "target": "pr_description_status_md"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "pr_description.md",
-      "source_location": "L47",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pr_description_changes",
-      "target": "pr_description_version"
+      "target": "pr_description_telegram_topic_persistence",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -13245,5 +13165,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "1a049a3a1649765fd47b03e197bc795e9eb83f79"
+  "built_at_commit": "87760341288e5fddab280944b90198e3ddffc87f"
 }
