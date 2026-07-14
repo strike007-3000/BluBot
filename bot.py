@@ -148,7 +148,8 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
         seen_data["links"], 
         seen_data["recent_topics"], 
         feed_list=active_feeds, 
-        limit=None if telegram_topic else 8
+        limit=None if telegram_topic else 8,
+        recent_categories=seen_data.get("recent_categories", [])
     )
     all_articles = [Article(**item) for item in raw_news]
 
@@ -181,7 +182,9 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
         seen_links=seen_data["links"],
         recent_topics=seen_data["recent_topics"],
         last_dialect=seen_data.get("last_dialect"),
-        session_name=context['session']
+        session_name=context['session'],
+        recent_categories=seen_data.get("recent_categories", []),
+        recent_styles=seen_data.get("recent_styles", [])
     )
 
 async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult, telegram_topic: Optional[str] = None) -> Tuple[SynthesisResult, CurationResult]:
@@ -191,13 +194,39 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     
     summary, lead_link, topic, is_failover = None, None, "General", False
     
+    # Choose writing style from styles compatible with selected content
+    from src.config import FEED_CATEGORY_MAP, STYLE_COMPATIBILITY, ALL_STYLES
+    lead_article = curation.top_articles[0] if curation.top_articles else None
+    lead_category = "unknown"
+    if lead_article:
+        lead_category = FEED_CATEGORY_MAP.get(lead_article.source_id, "unknown")
+    
+    compatible_styles = STYLE_COMPATIBILITY.get(lead_category, ALL_STYLES)
+    if not compatible_styles:
+        compatible_styles = ALL_STYLES
+        
+    recent_styles = curation.recent_styles or []
+    last_indices = {}
+    for style in compatible_styles:
+        try:
+            idx = len(recent_styles) - 1 - recent_styles[::-1].index(style)
+        except ValueError:
+            idx = -1
+        last_indices[style] = idx
+        
+    sorted_styles = sorted(compatible_styles, key=lambda s: last_indices[s])
+    chosen_style = sorted_styles[0]
+    
+    has_only_synthetic = all(a.source == "Telegram Intercept" for a in curation.top_articles)
+    use_scratch_synthesis = telegram_topic and (news_count == 0 or has_only_synthetic)
+
     if settings.is_dry_run:
         SafeLogger.info("DRY RUN: Generating mock synthesis summary.")
         summary = "DRY RUN: This is a mock synthesis summary of AI breakthrough news. #AI #Tech"
         lead_link = "https://example.com/mock-lead-link"
         topic = telegram_topic if telegram_topic else "DryRun"
         is_failover = False
-    elif telegram_topic and not (news_count > 0 and not any(a.source == "Telegram Intercept" for a in curation.top_articles)):
+    elif use_scratch_synthesis:
         SafeLogger.info(f"Synthesis Stage: Generating on-demand post from scratch for topic: '{telegram_topic}'")
         try:
             from src.config import CURATOR_SYSTEM_INSTRUCTION
@@ -226,7 +255,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
             # Convert back to dict for legacy curator logic (minimizing regression)
             news_dicts = [vars(a) for a in curation.top_articles]
             summary, lead_link, topic, is_failover, current_dialect = await summarize_news(
-                news_dicts, context, mode=mode, last_dialect=curation.last_dialect
+                news_dicts, context, mode=mode, last_dialect=curation.last_dialect, writing_style=chosen_style
             )
             if telegram_topic:
                 topic = telegram_topic
@@ -237,7 +266,9 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
                 recent_topics=curation.recent_topics,
                 last_dialect=current_dialect,
                 session_name=curation.session_name,
-                timestamp=curation.timestamp
+                timestamp=curation.timestamp,
+                recent_categories=curation.recent_categories,
+                recent_styles=curation.recent_styles
             )
         except Exception as e:
             SafeLogger.warn(f"Synthesis failed, falling back to insight: {e}")
@@ -247,7 +278,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
 
     if not summary:
-        return SynthesisResult(content="", lead_link=None, topic="General"), curation
+        return SynthesisResult(content="", lead_link=None, topic="General", writing_style=chosen_style), curation
 
 
     # Visual Asset Creation
@@ -277,7 +308,8 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
         is_failover=is_failover,
         image_data=image_data,
         image_url=image_url,
-        image_alt_text=image_alt_text
+        image_alt_text=image_alt_text,
+        writing_style=chosen_style
     ), curation
 
 async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> Tuple[List[BroadcastResult], Any]:
@@ -342,6 +374,24 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
 
     if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
         state.setdefault("recent_topics", []).append(synthesis.topic)
+
+    published_category = "unknown"
+    if synthesis.lead_link:
+        for article in curation.top_articles:
+            if article.link == synthesis.lead_link:
+                from src.config import FEED_CATEGORY_MAP
+                published_category = FEED_CATEGORY_MAP.get(article.source_id, "unknown")
+                break
+    elif curation.top_articles:
+        from src.config import FEED_CATEGORY_MAP
+        published_category = FEED_CATEGORY_MAP.get(curation.top_articles[0].source_id, "unknown")
+
+    state.setdefault("recent_categories", []).append(published_category)
+    state["recent_categories"] = state["recent_categories"][-10:]
+
+    if synthesis.writing_style:
+        state.setdefault("recent_styles", []).append(synthesis.writing_style)
+        state["recent_styles"] = state["recent_styles"][-10:]
 
     # Update stats
     today_date = datetime.now(timezone.utc).date()

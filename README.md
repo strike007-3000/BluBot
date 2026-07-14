@@ -47,20 +47,27 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **24-Hour Lookback Filters**: Strict timestamp boundaries filter out notifications/comments older than 24 hours to prevent scanning entire profile histories.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
     - **Conversational Quality & Persona**: System prompts are highly tailored to speak in a natural, peer-like mentor/analyst voice, stripping robotic introductory pre-ambles and hashtags.
-- **Breakthrough Scoring Engine v3 (Elite Signal Processing)**: 
-    - **Weighted Curation Matrix**:
+- **Breakthrough Scoring Engine v4 (Elite Signal Processing)**: 
+    - **Stable-ID Curation Registry**:
         
-        | Factor / Signal | Weight / Modification | Notes |
+        | Source Category | Base Score | Notes / Source Tiers |
         | :--- | :--- | :--- |
-        | **Tier 1 Sources** | `+30` | Top-tier AI Labs (OpenAI, DeepMind, etc.) |
-        | **Hidden Gems / Tier 3** | `+15` | Research/Academic (ArXiv, BAIR, Stanford) |
-        | **Tier 2 Sources** | `+15` | Elite Analysts & Newsletters |
-        | **High-Signal Keywords** | `+12` | Boosts *SOTA, agentic, world model, open weights*, etc. |
-        | **Momentum Products** | `+18` | Boosts *GPT-5, Llama 4, Gemini 3, Gemma 4*, etc. |
-        | **Consensus Synergy** | `+15` | Story present across multiple independent feeds |
-        | **Topic Diversity Penalty**| `-12` * | Applied if topic is in recent_topics (config lists penalty as `25`) |
-        | **Time Decay** | `-0.5` / hour | Linearly decays relevance score over time |
-    - **Curated Feed Network**: **32 active feeds** across 4 tiers (AI Labs, Elite Analysts, Research, Journalism), dynamically audited for freshness.
+        | **Research Labs** | `+30` | OpenAI, Anthropic, DeepMind, Meta AI, HuggingFace |
+        | **Enterprise AI** | `+25`–`+27` | Microsoft AI, Google Cloud AI, AWS, NVIDIA |
+        | **Practitioner** | `+20` | Simon Willison, Weights & Biases, LangChain, Latent Space |
+        | **Open Source** | `+18` | vLLM, Ollama, LM Studio |
+        | **Infrastructure/Business** | `+15` | SemiAnalysis, Together AI, a16z, Sequoia |
+        | **Journalism** | `+12` | The Verge, Wired, MIT Tech Review, TechCrunch |
+        | **Academic** | `+10` | arXiv CS.LG, The Gradient, BAIR Blog |
+        | **Critical** | `+5` | Supporting context only (AI Snake Oil, Gary Marcus) |
+    - **Curation Boosts & Penalties**:
+        - **High-Signal Keywords**: `+12` (Boosts *SOTA, agentic, world model, open weights*, etc.)
+        - **Momentum Products**: `+18` (Boosts *gpt-5, claude 4, llama 4*, etc.)
+        - **Consensus Synergy**: `+15` (Story present across multiple independent feeds)
+        - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
+        - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
+    - **Writing-Style Rotation**: Least-Recently-Used (LRU) style selection across 5 distinct writing structures to prevent structural narration repetition.
+    - **Curated Feed Network**: **50+ active feeds** mapped dynamically via registry and audited for freshness.
 
 
 ## 🛠️ Setup Instructions

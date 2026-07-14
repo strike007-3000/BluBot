@@ -197,13 +197,26 @@ def save_seen_interactions(interacted_ids: List[str]):
 
 def load_seen_articles():
     """3-Tier Resilience: Local -> Backup -> Gist -> Default."""
-    default_state = {"links": [], "recent_topics": [], "last_dialect": None, "total_posts_curated": 0}
+    default_state = {
+        "links": [],
+        "recent_topics": [],
+        "last_dialect": None,
+        "total_posts_curated": 0,
+        "recent_categories": [],
+        "recent_styles": []
+    }
     
     with FileLock(SEEN_FILE_PATH):
         # Tier 1: Local primary
         if os.path.exists(SEEN_FILE_PATH):
             try:
-                return load_json_state(SEEN_FILE_PATH)
+                state = load_json_state(SEEN_FILE_PATH)
+                # Ensure new keys are present
+                if "recent_categories" not in state:
+                    state["recent_categories"] = []
+                if "recent_styles" not in state:
+                    state["recent_styles"] = []
+                return state
             except (json.JSONDecodeError, IOError) as e:
                 SafeLogger.warn(f"Local seen articles file corrupted: {e}. Trying backup...")
 
@@ -211,7 +224,12 @@ def load_seen_articles():
         bak_path = f"{SEEN_FILE_PATH}.bak"
         if os.path.exists(bak_path):
             try:
-                return load_json_state(bak_path)
+                state = load_json_state(bak_path)
+                if "recent_categories" not in state:
+                    state["recent_categories"] = []
+                if "recent_styles" not in state:
+                    state["recent_styles"] = []
+                return state
             except (json.JSONDecodeError, IOError):
                 SafeLogger.warn("Local backup corrupted as well.")
 
@@ -219,6 +237,10 @@ def load_seen_articles():
         gist_data = _load_gist_state("seen_articles.json")
         if gist_data:
             SafeLogger.info("Restored seen articles from GitHub Gist.")
+            if "recent_categories" not in gist_data:
+                gist_data["recent_categories"] = []
+            if "recent_styles" not in gist_data:
+                gist_data["recent_styles"] = []
             return gist_data
             
         return default_state

@@ -14,6 +14,8 @@ class Article:
     topic: Optional[str] = "General"
     _score_debug: Optional[Any] = None
     consensus_synergy: Optional[bool] = False
+    source_url: Optional[str] = None
+    source_id: Optional[str] = None
 
 @dataclass(frozen=True)
 class CurationResult:
@@ -24,6 +26,8 @@ class CurationResult:
     last_dialect: Optional[str] = None
     session_name: str = "General Intelligence"
     timestamp: datetime = field(default_factory=datetime.now)
+    recent_categories: List[str] = field(default_factory=list)
+    recent_styles: List[str] = field(default_factory=list)
 
 @dataclass(frozen=True)
 class SynthesisResult:
@@ -36,6 +40,7 @@ class SynthesisResult:
     image_data: Optional[bytes] = None
     image_url: Optional[str] = None
     image_alt_text: Optional[str] = None
+    writing_style: Optional[str] = None
 
 @dataclass(frozen=True)
 class BroadcastResult:

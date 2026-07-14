@@ -34,8 +34,11 @@ class VanguardManager:
         """Returns the list of feeds that are NOT currently blacklisted or have passed their retry gate."""
         active = []
         now = datetime.now(timezone.utc)
+        from src.config import URL_TO_ID, ID_TO_NAME
         
         for url in RSS_FEEDS:
+            source_id = URL_TO_ID.get(url, "unknown")
+            name = ID_TO_NAME.get(source_id, url)
             if url not in self.blacklist:
                 active.append(url)
                 continue
@@ -45,10 +48,10 @@ class VanguardManager:
             retry_at = datetime.fromisoformat(data["retry_at"])
             
             if now >= retry_at:
-                SafeLogger.info(f"Vanguard: Attempting recovery for {url}")
+                SafeLogger.info(f"Vanguard: Attempting recovery for {name}")
                 active.append(url)
             else:
-                SafeLogger.info(f"Vanguard: Skipping blacklisted feed (until {retry_at.strftime('%H:%M')}): {url}")
+                SafeLogger.info(f"Vanguard: Skipping blacklisted feed (until {retry_at.strftime('%H:%M')}): {name}")
                 
         return active
 
@@ -58,11 +61,14 @@ class VanguardManager:
         tasks = [self._check_feed(client, url) for url in active_pool]
         results = await asyncio.gather(*tasks)
         
+        from src.config import URL_TO_ID, ID_TO_NAME
         updates_made = False
         for url, is_healthy, error_msg in results:
+            source_id = URL_TO_ID.get(url, "unknown")
+            name = ID_TO_NAME.get(source_id, url)
             if is_healthy:
                 if url in self.blacklist:
-                    SafeLogger.info(f"Vanguard: ✅ Feed recovered: {url}")
+                    SafeLogger.info(f"Vanguard: ✅ Feed recovered: {name}")
                     del self.blacklist[url]
                     updates_made = True
             else:
@@ -76,6 +82,9 @@ class VanguardManager:
     def _penalize_feed(self, url, error_msg):
         now = datetime.now(timezone.utc)
         count = self.blacklist.get(url, {}).get("fail_count", 0) + 1
+        from src.config import URL_TO_ID, ID_TO_NAME
+        source_id = URL_TO_ID.get(url, "unknown")
+        name = ID_TO_NAME.get(source_id, url)
         
         # Soft-Backoff Strategy:
         # 1 fail: Warning only (retry_at = now)
@@ -101,11 +110,11 @@ class VanguardManager:
         }
         
         if count >= 6:
-            SafeLogger.warn(f"Vanguard: 🚨 Feed marked TERMINAL after 6 failures: {url}")
+            SafeLogger.warn(f"Vanguard: 🚨 Feed marked TERMINAL after 6 failures: {name}")
         elif count == 1:
-            SafeLogger.info(f"Vanguard: ⚠️ Feed warning (hiccup detected): {url}")
+            SafeLogger.info(f"Vanguard: ⚠️ Feed warning (hiccup detected): {name}")
         else:
-            SafeLogger.info(f"Vanguard: 📉 Feed penalized ({count} fails, backoff {backoff_delay}h): {url}")
+            SafeLogger.info(f"Vanguard: 📉 Feed penalized ({count} fails, backoff {backoff_delay}h): {name}")
 
     async def _check_feed(self, client, url):
         """Helper to check a single feed's health."""
