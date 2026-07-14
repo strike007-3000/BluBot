@@ -573,7 +573,7 @@
       "label": "validate_config()",
       "file_type": "code",
       "source_file": "src/config.py",
-      "source_location": "L266",
+      "source_location": "L253",
       "_origin": "ast",
       "id": "src_config_validate_config",
       "community": 4,
@@ -583,7 +583,7 @@
       "label": "validate_gemini_model_priority()",
       "file_type": "code",
       "source_file": "src/config.py",
-      "source_location": "L271",
+      "source_location": "L258",
       "_origin": "ast",
       "id": "src_config_validate_gemini_model_priority",
       "community": 4,
@@ -593,9 +593,9 @@
       "label": "Legacy wrapper for the new Settings validation logic.",
       "file_type": "rationale",
       "source_file": "src/config.py",
-      "source_location": "L267",
+      "source_location": "L254",
       "_origin": "ast",
-      "id": "src_config_rationale_267",
+      "id": "src_config_rationale_254",
       "community": 4,
       "norm_label": "legacy wrapper for the new settings validation logic."
     },
@@ -603,9 +603,9 @@
       "label": "Legacy wrapper for Gemini model self-discovery.",
       "file_type": "rationale",
       "source_file": "src/config.py",
-      "source_location": "L272",
+      "source_location": "L259",
       "_origin": "ast",
-      "id": "src_config_rationale_272",
+      "id": "src_config_rationale_259",
       "community": 4,
       "norm_label": "legacy wrapper for gemini model self-discovery."
     },
@@ -7235,11 +7235,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/config.py",
-      "source_location": "L267",
+      "source_location": "L254",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_config_rationale_267",
-      "target": "src_config_validate_config"
+      "source": "src_config_rationale_254",
+      "target": "src_config_validate_config",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -7289,11 +7289,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "src/config.py",
-      "source_location": "L272",
+      "source_location": "L259",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_config_rationale_272",
-      "target": "src_config_validate_gemini_model_priority"
+      "source": "src_config_rationale_259",
+      "target": "src_config_validate_gemini_model_priority",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -10171,9 +10171,9 @@
       "source_file": "src/telegram_gateway.py",
       "source_location": "L378",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_telegram_gateway_rationale_378",
-      "target": "src_telegram_gateway_check_for_telegram_topic",
-      "confidence_score": 1.0
+      "target": "src_telegram_gateway_check_for_telegram_topic"
     },
     {
       "relation": "contains",
@@ -13045,9 +13045,9 @@
       "source_file": "pr_description.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pr_description",
-      "target": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides",
-      "confidence_score": 1.0
+      "target": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides"
     },
     {
       "relation": "contains",
@@ -13055,9 +13055,9 @@
       "source_file": "pr_description.md",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides",
-      "target": "pr_description_changes",
-      "confidence_score": 1.0
+      "target": "pr_description_changes"
     },
     {
       "relation": "contains",
@@ -13065,9 +13065,9 @@
       "source_file": "pr_description.md",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pr_description_pr_v3_13_5_curation_engine_v4_stable_id_registry_category_rotation_and_telegram_overrides",
-      "target": "pr_description_compliance_with_agents_md_rules",
-      "confidence_score": 1.0
+      "target": "pr_description_compliance_with_agents_md_rules"
     },
     {
       "relation": "contains",
@@ -13075,9 +13075,9 @@
       "source_file": "pr_description.md",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pr_description_changes",
-      "target": "pr_description_curation_diversity_writing_style_rotation",
-      "confidence_score": 1.0
+      "target": "pr_description_curation_diversity_writing_style_rotation"
     },
     {
       "relation": "contains",
@@ -13085,9 +13085,9 @@
       "source_file": "pr_description.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pr_description_changes",
-      "target": "pr_description_curation_engine_registry_refinement",
-      "confidence_score": 1.0
+      "target": "pr_description_curation_engine_registry_refinement"
     },
     {
       "relation": "contains",
@@ -13095,9 +13095,9 @@
       "source_file": "pr_description.md",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "pr_description_changes",
-      "target": "pr_description_telegram_topic_persistence",
-      "confidence_score": 1.0
+      "target": "pr_description_telegram_topic_persistence"
     },
     {
       "relation": "contains",
@@ -13165,5 +13165,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "87760341288e5fddab280944b90198e3ddffc87f"
+  "built_at_commit": "4f45d1797d836e402848b746a3b5e11c999f1f5e"
 }

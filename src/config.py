@@ -78,24 +78,16 @@ SOURCE_REGISTRY = [
     
     # === Tier 1: AI Research Labs (base 30) ===
     {"id": "openai_news",         "name": "OpenAI News",         "url": "https://openai.com/news/rss.xml",                                    "category": "research_lab",   "quality": "official",   "base_score": 30},
-    {"id": "anthropic_news",      "name": "Anthropic News",      "url": "https://www.anthropic.com/news/rss",                                  "category": "research_lab",   "quality": "official",   "base_score": 30},
     {"id": "deepmind_blog",       "name": "DeepMind Blog",       "url": "https://deepmind.google/blog/rss.xml",                               "category": "research_lab",   "quality": "official",   "base_score": 30},
-    {"id": "meta_ai_blog",        "name": "Meta AI Blog",        "url": "https://ai.meta.com/blog/rss/",                                      "category": "research_lab",   "quality": "official",   "base_score": 30},
     {"id": "huggingface_blog",    "name": "HuggingFace Blog",    "url": "https://huggingface.co/blog/feed.xml",                               "category": "research_lab",   "quality": "official",   "base_score": 30},
 
     # === Tier 2: Enterprise AI Blogs (base 25-27) ===
-    {"id": "microsoft_ai_blog",   "name": "Microsoft AI Blog",   "url": "https://blogs.microsoft.com/ai/feed/",                               "category": "enterprise",     "quality": "official",   "base_score": 25},
     {"id": "microsoft_research",  "name": "Microsoft Research",  "url": "https://www.microsoft.com/en-us/research/blog/feed/",                "category": "enterprise",     "quality": "official",   "base_score": 25},
-    {"id": "google_cloud_ai",     "name": "Google Cloud AI",     "url": "https://cloud.google.com/blog/products/ai-machine-learning/rss",     "category": "enterprise",     "quality": "official",   "base_score": 25},
     {"id": "aws_ml_blog",         "name": "AWS ML Blog",         "url": "https://aws.amazon.com/blogs/machine-learning/feed/",                "category": "enterprise",     "quality": "official",   "base_score": 25},
     {"id": "nvidia_dl_blog",      "name": "NVIDIA Deep Learning","url": "https://blogs.nvidia.com/blog/category/deep-learning/feed/",         "category": "enterprise",     "quality": "official",   "base_score": 27},
-    {"id": "cohere_blog",         "name": "Cohere Blog",         "url": "https://txt.cohere.com/rss/",                                        "category": "enterprise",     "quality": "official",   "base_score": 25},
-    {"id": "mistral_blog",        "name": "Mistral Blog",        "url": "https://mistral.ai/news/rss",                                        "category": "enterprise",     "quality": "official",   "base_score": 25},
 
     # === Tier 3: Practitioner / Developer Ecosystem (base 20) ===
     {"id": "simon_willison",      "name": "Simon Willison",      "url": "https://simonwillison.net/atom/everything/",                         "category": "practitioner",   "quality": "opinion",    "base_score": 20},
-    {"id": "weights_biases",      "name": "Weights & Biases",    "url": "https://wandb.ai/fully-connected/rss.xml",                          "category": "practitioner",   "quality": "community",  "base_score": 20},
-    {"id": "langchain_blog",      "name": "LangChain Blog",      "url": "https://blog.langchain.dev/rss/",                                    "category": "practitioner",   "quality": "community",  "base_score": 20},
     {"id": "interconnects_ai",    "name": "Interconnects.ai",    "url": "https://www.interconnects.ai/feed",                                  "category": "practitioner",   "quality": "opinion",    "base_score": 20},
     {"id": "latent_space",        "name": "Latent Space",        "url": "https://www.latent.space/feed",                                      "category": "practitioner",   "quality": "community",  "base_score": 20},
     {"id": "one_useful_thing",    "name": "One Useful Thing",    "url": "https://www.oneusefulthing.org/feed",                                 "category": "practitioner",   "quality": "opinion",    "base_score": 20},
@@ -104,19 +96,16 @@ SOURCE_REGISTRY = [
     {"id": "jack_clark",          "name": "Jack Clark",          "url": "https://jack-clark.net/feed/",                                       "category": "practitioner",   "quality": "opinion",    "base_score": 20},
 
     # === Tier 4: Open-Source Ecosystem (base 18) ===
-    {"id": "vllm_blog",           "name": "vLLM Blog",           "url": "https://blog.vllm.ai/feed.xml",                                      "category": "open_source",    "quality": "community",  "base_score": 18},
-    {"id": "ollama_blog",         "name": "Ollama Blog",         "url": "https://ollama.com/blog/rss",                                        "category": "open_source",    "quality": "community",  "base_score": 18},
-    {"id": "lm_studio_blog",      "name": "LM Studio Blog",      "url": "https://lmstudio.ai/blog/rss",                                       "category": "open_source",    "quality": "community",  "base_score": 18},
+    # None currently active; PyTorch 403s, others 404. Relies on Tiers 1-3 practitioners for OS.
 
     # === Tier 5: Infrastructure / Business Analysis (base 15) ===
     {"id": "semianalysis",        "name": "SemiAnalysis",        "url": "https://semianalysis.com/feed/",                                     "category": "infrastructure", "quality": "opinion",    "base_score": 15},
     {"id": "together_ai",         "name": "Together AI Blog",    "url": "https://www.together.ai/blog/rss.xml",                               "category": "infrastructure", "quality": "official",   "base_score": 15},
-    {"id": "a16z_ai",             "name": "a16z AI",             "url": "https://a16z.com/feed/",                                             "category": "business",       "quality": "opinion",    "base_score": 15},
     {"id": "sequoia_cap",         "name": "Sequoia Capital",     "url": "https://www.sequoiacap.com/feed/",                                   "category": "business",       "quality": "opinion",    "base_score": 15},
     {"id": "cb_insights_ai",      "name": "CB Insights AI",      "url": "https://www.cbinsights.com/research/feed/",                          "category": "business",       "quality": "journalism", "base_score": 15},
 
     # === Tier 6: Journalism / Industry / General (base 12) ===
-    {"id": "the_verge_ai",        "name": "The Verge AI",        "url": "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml", "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "the_verge_ai",        "name": "The Verge AI",        "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "mit_tech_review",     "name": "MIT Tech Review AI",  "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed/","category": "journalism",   "quality": "journalism", "base_score": 12},
     {"id": "ieee_spectrum",       "name": "IEEE Spectrum AI",    "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "the_decoder",         "name": "The Decoder",         "url": "https://www.the-decoder.com/feed/",                                  "category": "journalism",     "quality": "journalism", "base_score": 12},
@@ -125,9 +114,7 @@ SOURCE_REGISTRY = [
     {"id": "techcrunch_ai",       "name": "TechCrunch AI",       "url": "https://techcrunch.com/category/artificial-intelligence/feed/",      "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "four_hundred_four",   "name": "404 Media",           "url": "https://404media.co/rss/",                                           "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "silicon_angle",       "name": "Silicon Angle AI",    "url": "https://siliconangle.com/category/ai/feed/",                         "category": "journalism",     "quality": "journalism", "base_score": 12},
-    {"id": "alphasignal_ai",      "name": "AlphaSignal AI",      "url": "https://alphasignalai.beehiiv.com/feed",                             "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "the_sequence",        "name": "The Sequence",        "url": "https://thesequence.substack.com/feed",                              "category": "journalism",     "quality": "journalism", "base_score": 12},
-    {"id": "tldr_ai",             "name": "TLDR AI",             "url": "https://tldr.tech/ai/rss",                                           "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "marktechpost",        "name": "MarktechPost",        "url": "https://www.marktechpost.com/feed/",                                  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "ai_accelerator_inst", "name": "AI Accelerator Inst", "url": "https://aiacceleratorinstitute.com/rss/",                            "category": "journalism",     "quality": "journalism", "base_score": 12},
 

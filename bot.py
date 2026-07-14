@@ -540,7 +540,10 @@ async def main():
     logging.getLogger("atproto").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    async with httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=30) as client:
         genai_client = genai.Client(api_key=settings.gemini_key)
         
         # Prune models dynamically at startup based on API limits
