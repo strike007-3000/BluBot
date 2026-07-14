@@ -2,7 +2,7 @@
 # Use 'pip-compile requirements.in' to generate requirements.txt
 
 atproto>=0.0.69
-google-genai>=2.10.0
+google-genai>=2.11.0
 feedparser>=6.0.12
 python-dotenv>=1.2.1
 requests==2.34.2
@@ -20,7 +20,7 @@ python-telegram-bot[ext]>=21.0
 # public web service. Revisit this when atproto releases a compatible version.
 cryptography>=46.0.7,<47
 urllib3==2.7.0
-anyio==4.14.1
+anyio==4.14.2
 zipp==4.1.0
 dnspython==2.8.0
 
