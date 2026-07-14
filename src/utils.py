@@ -528,6 +528,20 @@ def smart_split(text, limit, max_chunks=None):
     if not text:
         return []
         
+    # If the text has double-newlines, it is explicitly structured as paragraphs/posts by the model.
+    # We should split by \n\n first if present, then process each paragraph.
+    if "\n\n" in text:
+        paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+        final_chunks = []
+        for p in paragraphs:
+            if len(p) <= limit:
+                final_chunks.append(p)
+            else:
+                final_chunks.extend(smart_split(p, limit, max_chunks))
+        if max_chunks:
+            final_chunks = final_chunks[:max_chunks]
+        return final_chunks
+        
     # Expert Review: If text fits in one part, return immediately
     if len(text) <= limit:
         return [text]

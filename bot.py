@@ -167,7 +167,7 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
             SafeLogger.info(f"Curation Stage: No matching articles found in feeds for '{telegram_topic}'. Falling back to raw focus.")
             articles = [Article(
                 title=f"On-demand topic request: {telegram_topic}",
-                link="https://telegram.org",
+                link=None,
                 summary=f"Synthesize strategic insights regarding the topic: {telegram_topic}.",
                 published=datetime.now(timezone.utc).isoformat(),
                 source="Telegram Intercept",
@@ -242,7 +242,7 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
                 config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.7)
             )
             summary = strip_markdown(response.text.strip())
-            lead_link = "https://telegram.org"
+            lead_link = None
             topic = telegram_topic
         except Exception as e:
             SafeLogger.warn(f"Telegram topic synthesis failed: {e}")
