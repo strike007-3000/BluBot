@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.07603",
-    "https://arxiv.org/abs/2606.07616",
-    "https://huggingface.co/blog/ServiceNow-AI/code-switching",
-    "https://huggingface.co/blog/CohereLabs/introducing-north-mini-code",
-    "https://openai.com/index/nextdoor",
-    "https://huggingface.co/blog/github-ci-hf-jobs",
-    "https://arxiv.org/abs/2606.07623",
-    "https://arxiv.org/abs/2606.07710",
     "https://arxiv.org/abs/2606.07726",
     "https://arxiv.org/abs/2606.07789",
     "https://openai.com/index/lseg",
@@ -499,13 +491,21 @@
     "https://arxiv.org/abs/2607.09711",
     "https://arxiv.org/abs/2607.09982",
     "https://arxiv.org/abs/2607.10128",
-    "https://arxiv.org/abs/2607.10139"
+    "https://arxiv.org/abs/2607.10139",
+    "https://openai.com/academy/codex-for-work/how-sales-teams-use-codex",
+    "https://openai.com/academy/codex-for-work/how-data-science-teams-use-codex",
+    "https://arxiv.org/abs/2607.10169",
+    "https://arxiv.org/abs/2607.10190",
+    "https://arxiv.org/abs/2607.10203",
+    "https://arxiv.org/abs/2607.10362",
+    "https://arxiv.org/abs/2607.10481",
+    "https://arxiv.org/abs/2607.10582"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash"
   ],
-  "total_posts_curated": 751,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 752,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31"
 }
