@@ -18,3 +18,5 @@ When modifying this repository, follow these rules:
    - why the simpler version is safe,
    - what tests should be run.
 9. For every change, update all documentation, bump versioning, and always create a new PR. Make sure to create tests for the changes and run the tests before creating the PR.
+10. When creating a Pull Request via the GitHub CLI (`gh pr create`) on stacked branches (e.g., branching off a custom feature branch instead of `main`), always explicitly specify the parent branch as the base using the `--base <parent-branch>` flag.
+11. Strictly verify the codebase for existing diagnostics, setup tools, or script utilities (like `scripts/diagnostic.py`) before proposing or creating any new test/verification scripts. Integrate new diagnostic modes as options in existing scripts to keep code lean.
