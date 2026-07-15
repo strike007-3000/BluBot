@@ -347,6 +347,25 @@ def _resolve_public_ip_candidates(hostname: str) -> Optional[List[str]]:
     except Exception:
         return None
 
+def is_safe_url(url: str) -> bool:
+    """Validates if a URL is safe from SSRF without sending a request."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https'):
+            return False
+            
+        hostname = parsed.hostname
+        if not hostname or hostname.lower() == 'localhost':
+            return False
+            
+        ips = _resolve_public_ip_candidates(hostname)
+        if not ips:
+            return False
+            
+        return True
+    except Exception:
+        return False
+
 @contextmanager
 def _resolver_pinned_to_ips(hostname: str, allowed_ips: List[str]):
     """

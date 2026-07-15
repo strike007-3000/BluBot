@@ -332,3 +332,42 @@ def test_smart_split_paragraph_truncation():
     assert len(res2) == 2
     assert res2[0] == "abcdef"
     assert res2[1] == "ghijkl..."
+
+@pytest.mark.asyncio
+async def test_media_strategy_url_only_opengraph_fallback(monkeypatch, mocker):
+    mock_settings = Settings(gemini_key="mock", is_dry_run=False, enable_image_gen=False)
+    monkeypatch.setattr("src.settings.settings", mock_settings)
+    monkeypatch.setattr("bot.settings", mock_settings)
+
+    # Mock DNS resolution to ensure it passes offline checks
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["93.184.216.34"])
+
+    # Mock metadata with valid image_url but NO image bytes (download blocked/failed)
+    mocker.patch("bot.get_link_metadata", new_callable=AsyncMock, return_value={
+        "title": "Blocked Download News",
+        "description": "Image bytes could not be fetched",
+        "url": "https://example.com/blocked-article",
+        "image": None,
+        "image_url": "https://example.com/blocked-image.png"
+    })
+
+    synthesis = SynthesisResult(content="Article post", lead_link="https://example.com/blocked-article", topic="General")
+    curation = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
+
+    async with httpx.AsyncClient() as client:
+        media = await media_strategy_stage(client, None, synthesis, curation)
+
+    assert media is not None
+    assert media.source == MediaSource.OPENGRAPH
+    assert media.public_url == "https://example.com/blocked-image.png"
+    assert media.image_bytes is None
+
+def test_is_safe_url():
+    from src.utils import is_safe_url
+    
+    # Safe public URL (resolves to public IP if network available, or we check scheme/localhost)
+    assert is_safe_url("http://localhost/image.png") is False
+    assert is_safe_url("http://127.0.0.1/image.png") is False
+    assert is_safe_url("http://192.168.1.1/image.png") is False
+    assert is_safe_url("ftp://example.com/image.png") is False
+    assert is_safe_url("file:///etc/passwd") is False
