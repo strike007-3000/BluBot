@@ -20,7 +20,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - *Bluesky*: Uses `AppBskyEmbedExternal` for link cards and `AppBskyEmbedImages` for scratch posts.
         - *Mastodon*: Uploads image bytes, degrading gracefully to text on upload errors.
         - *Threads*: Renders OpenGraph public URLs only, gracefully falling back to text-only mode for generated assets lacking public hosting.
-    - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
+    - **NVIDIA NIM Integration**: Uses **Black Forest Labs FLUX.1-schnell** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture**:
     - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
@@ -85,7 +85,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 #### NVIDIA AI (Required for v3.6+)
 - Get a free API key from [build.nvidia.com](https://build.nvidia.com/).
-- Integrated for **Stable Diffusion 3 Medium**.
+- Integrated for **FLUX.1-schnell**.
 
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
@@ -97,7 +97,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky App Password |
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
-| `NVIDIA_KEY` | **Yes** | Your NVIDIA API Key (for SD3) |
+| `NVIDIA_KEY` | **Yes** | Your NVIDIA API Key (for FLUX.1-schnell) |
 | `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
 | `GEMINI_MODEL` | No | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
 | `IMAGE_PROVIDER` | No | Default: `nvidia`. Set to `imagen` to switch back. |
