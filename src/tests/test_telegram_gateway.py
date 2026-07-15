@@ -281,7 +281,7 @@ async def test_send_draft_for_approval_regenerate_text(monkeypatch, mocker):
     mock_genai.aio.models.generate_content.assert_called()
 
 @pytest.mark.asyncio
-async def test_send_draft_for_approval_regenerate_image(monkeypatch, mocker):
+async def test_send_draft_for_approval_regenerate_image_success(monkeypatch, mocker):
     mock_settings = Settings(
         gemini_key="mock",
         telegram_bot_token="123:abc",
@@ -362,3 +362,91 @@ async def test_send_draft_for_approval_regenerate_image(monkeypatch, mocker):
     assert media.image_bytes == b"NewImageBytes"
     assert media.alt_text == "New Alt Text"
     mock_bot_instance.edit_message_media.assert_called()
+
+@pytest.mark.asyncio
+async def test_send_draft_for_approval_regenerate_image_failure(monkeypatch, mocker):
+    mock_settings = Settings(
+        gemini_key="mock",
+        telegram_bot_token="123:abc",
+        telegram_user_id="98765",
+        telegram_timeout_minutes=1,
+        is_dry_run=False
+    )
+    monkeypatch.setattr("src.telegram_gateway.settings", mock_settings)
+    
+    mock_bot_instance = MagicMock()
+    mock_bot_instance.send_message = AsyncMock()
+    mock_bot_instance.send_photo = AsyncMock()
+    mock_bot_instance.edit_message_media = AsyncMock()
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot_instance)
+    
+    sent_msg = MagicMock()
+    sent_msg.message_id = 999
+    sent_msg.photo = [MagicMock()]
+    mock_bot_instance.send_photo.return_value = sent_msg
+    
+    # 1. User clicks regenerate image callback (which will fail)
+    mock_update_regen = MagicMock()
+    mock_update_regen.update_id = 1000
+    mock_update_regen.message = None
+    mock_update_regen.callback_query = MagicMock()
+    mock_update_regen.callback_query.from_user.id = "98765"
+    mock_update_regen.callback_query.data = "regenerate_image"
+    mock_update_regen.callback_query.answer = AsyncMock()
+    mock_update_regen.callback_query.message = MagicMock()
+    mock_update_regen.callback_query.message.message_id = 999
+    
+    # 2. User approves (after failure)
+    mock_update_approve = MagicMock()
+    mock_update_approve.update_id = 1001
+    mock_update_approve.message = None
+    mock_update_approve.callback_query = MagicMock()
+    mock_update_approve.callback_query.from_user.id = "98765"
+    mock_update_approve.callback_query.data = "approve"
+    mock_update_approve.callback_query.answer = AsyncMock()
+    mock_update_approve.callback_query.message = MagicMock()
+    mock_update_approve.callback_query.message.message_id = 999
+    
+    updates_queue = [
+        [],
+        [mock_update_regen],
+        [mock_update_approve]
+    ]
+    async def mock_get_updates(*args, **kwargs):
+        if updates_queue:
+            return updates_queue.pop(0)
+        return []
+    mock_bot_instance.get_updates = AsyncMock(side_effect=mock_get_updates)
+    
+    # Mock curator functions to fail image generation
+    mocker.patch("src.curator.generate_visual_prompt", return_value="Visual Prompt")
+    mocker.patch("src.curator.generate_ai_image", return_value=None)
+    
+    mock_client = MagicMock()
+    mock_genai = MagicMock()
+    
+    from src.models import MediaAsset, MediaSource
+    media_asset = MediaAsset(
+        source=MediaSource.GENERATED,
+        image_bytes=b"OldImageBytes",
+        alt_text="Old Alt"
+    )
+    
+    text, media = await send_draft_for_approval(
+        text="Original draft text",
+        media=media_asset,
+        client=mock_client,
+        genai_client=mock_genai
+    )
+    
+    # Verification:
+    # 1. Approval loop was kept active (returned successfully because approve update was processed)
+    assert text == "Original draft text"
+    # 2. Preview image was preserved (retained original OldImageBytes)
+    assert media.image_bytes == b"OldImageBytes"
+    # 3. User received a clear failure message
+    mock_bot_instance.send_message.assert_any_call(
+        chat_id="98765",
+        text="❌ Image generation returned no data."
+    )
+

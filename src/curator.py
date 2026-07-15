@@ -507,11 +507,24 @@ async def generate_ai_image(client, genai_client, prompt: str):
     if settings.image_provider == "imagen":
         return await generate_imagen_image(genai_client, prompt)
     else:
-        return await generate_nvidia_image(client, prompt)
+        try:
+            img = await generate_nvidia_image(client, prompt)
+            if img is not None:
+                return img
+        except Exception as e:
+            SafeLogger.warn(f"NVIDIA image generation failed: {e}")
+            
+        if genai_client is not None:
+            SafeLogger.info("Falling back to Imagen for image generation...")
+            try:
+                return await generate_imagen_image(genai_client, prompt)
+            except Exception as e:
+                SafeLogger.warn(f"Imagen fallback also failed: {e}")
+        return None
 
 @retry_with_backoff
 async def generate_nvidia_image(client, prompt):
-    """Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing."""
+    """Calls NVIDIA NIM for FLUX.1-schnell image generation with robust response parsing."""
     nv_key = settings.nvidia_key
     if not nv_key:
         return None
@@ -522,31 +535,37 @@ async def generate_nvidia_image(client, prompt):
     }
     payload = {
         "prompt": prompt,
-        "aspect_ratio": "1:1",
-        "mode": "text-to-image",
-        "model": "sd3"
+        "width": 1024,
+        "height": 1024,
+        "steps": 4,
+        "seed": 0,
+        "samples": 1
     }
     
     try:
-        response = None
-        result = None
-        try:
-            response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
-            response.raise_for_status()
-            result = response.json()
-        except Exception as e:
-            SafeLogger.warn(f"NVIDIA NIM primary endpoint failed ({e}). Attempting OpenAI-compatible endpoint fallback...")
-            fallback_url = "https://ai.api.nvidia.com/v1/images/generations"
-            fallback_payload = {
-                "prompt": prompt,
-                "model": "black-forest-labs/flux.2-klein-4b",
-                "response_format": "b64_json"
-            }
-            response = await client.post(fallback_url, headers=headers, json=fallback_payload, timeout=45)
-            response.raise_for_status()
-            result = response.json()
+        response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
         
-        # Expert Review Fix: Robust multi-format base64 parsing (artifacts vs direct image field)
+        # Diagnostic logging
+        status_code = response.status_code
+        body_excerpt = response.text[:200]
+        SafeLogger.info(
+            f"NVIDIA NIM diagnostic: Status={status_code}, Endpoint={NVIDIA_INVOKE_URL}, "
+            f"Model={NVIDIA_MODEL_ID}, Provider=nvidia, ResponseSnippet={body_excerpt}"
+        )
+        
+        if status_code in [400, 401, 403, 404, 422]:
+            err = httpx.HTTPStatusError(
+                f"NVIDIA NIM deterministic HTTP error {status_code}: {response.text}",
+                request=response.request,
+                response=response
+            )
+            err.skip_backoff_retry = True
+            raise err
+            
+        response.raise_for_status()
+        result = response.json()
+        
+        # Robust multi-format base64 parsing (artifacts vs direct image field)
         image_b64 = None
         if "image" in result:
             image_b64 = result["image"]
@@ -561,8 +580,10 @@ async def generate_nvidia_image(client, prompt):
             
         SafeLogger.warn(f"NVIDIA NIM: Response succeeded but no image found. Response keys: {list(result.keys())}")
     except Exception as e:
+        if getattr(e, "skip_backoff_retry", False):
+            raise
         SafeLogger.warn(f"NVIDIA NIM failed: {e}")
-    return None
+        raise
 
 async def generate_interactive_reply(original_text, author, context):
     """Generates an AI reply for a social mention, maintaining the Sage persona."""

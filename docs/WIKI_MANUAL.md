@@ -129,7 +129,7 @@ Scanning exactly **32 premium feeds** across 4 tiers.
 | Variable | Description |
 | :--- | :--- |
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
-| `NVIDIA_KEY` | NVIDIA Build API Key (for SD3) |
+| `NVIDIA_KEY` | NVIDIA Build API Key (for FLUX.1-schnell) |
 | `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma models) |
 | `GEMINI_MODEL` | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
 | `BSKY_HANDLE` | Your Bluesky handle |
