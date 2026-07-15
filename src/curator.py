@@ -544,7 +544,7 @@ async def generate_nvidia_image(client, prompt):
     }
     
     try:
-        response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
+        response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=120)
         
         # Diagnostic logging
         status_code = response.status_code
