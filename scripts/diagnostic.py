@@ -116,25 +116,20 @@ async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
     
-    # AI Model Key Management
+    # 1. AI Model Key Management (Gemini)
     api_key = os.getenv("GEMINI_KEY")
     if not api_key:
         print("\n--- GEMINI_KEY not found ---")
         api_key = input("Please enter your Gemini API Key: ").strip()
         os.environ["GEMINI_KEY"] = api_key
 
-    if IMAGE_PROVIDER == "nvidia":
-        nv_key = os.getenv("NVIDIA_KEY")
-        if not nv_key:
-            print("\n--- NVIDIA_KEY not found ---")
-            nv_key = input("Please enter your NVIDIA API Key: ").strip()
-            os.environ["NVIDIA_KEY"] = nv_key
+    # 2. AI Model Key Management (NVIDIA)
+    nv_key = os.getenv("NVIDIA_KEY")
+    if not nv_key:
+        print("\n--- NVIDIA_KEY not found ---")
+        nv_key = input("Please enter your NVIDIA API Key: ").strip()
+        os.environ["NVIDIA_KEY"] = nv_key
 
-    # Validate models with user keys
-    if not validate_gemini_model_priority():
-        print("ERROR: Gemini validation failed with provided key.")
-        return
-        
     # Re-initialize and patch Settings with the newly provided/collected keys
     import src.settings
     import src.curator
@@ -143,6 +138,20 @@ async def main():
     src.settings.settings = new_settings
     src.curator.settings = new_settings
     bot.settings = new_settings
+
+    # Validate models with user keys
+    if not validate_gemini_model_priority():
+        print("ERROR: Gemini validation failed with the loaded key.")
+        api_key = input("Please enter a valid Gemini API Key: ").strip()
+        os.environ["GEMINI_KEY"] = api_key
+        # Re-initialize again with updated key
+        new_settings = src.settings.Settings.from_env()
+        src.settings.settings = new_settings
+        src.curator.settings = new_settings
+        bot.settings = new_settings
+        if not validate_gemini_model_priority():
+            print("ERROR: Gemini validation failed again. Exiting.")
+            return
     
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
