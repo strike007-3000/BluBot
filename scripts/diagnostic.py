@@ -112,15 +112,31 @@ async def test_image_generation():
     else:
         print("\nGEMINI_KEY not available, skipping Gemini Imagen test.")
 
+def check_gemini_key_valid(key: str) -> bool:
+    """Explicitly tests a Gemini API key using models.list()."""
+    if not key:
+        return False
+    try:
+        from google import genai
+        client = genai.Client(api_key=key)
+        # Attempt to list models to verify the key is valid and active
+        client.models.list()
+        return True
+    except Exception:
+        return False
+
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
     
     # 1. AI Model Key Management (Gemini)
     api_key = os.getenv("GEMINI_KEY")
-    if not api_key:
-        print("\n--- GEMINI_KEY not found ---")
-        api_key = input("Please enter your Gemini API Key: ").strip()
+    if not api_key or not check_gemini_key_valid(api_key):
+        if api_key:
+            print("\n⚠️  Loaded GEMINI_KEY is invalid or expired.")
+        else:
+            print("\n--- GEMINI_KEY not found ---")
+        api_key = input("Please enter a valid Gemini API Key: ").strip()
         os.environ["GEMINI_KEY"] = api_key
 
     # 2. AI Model Key Management (NVIDIA)
@@ -139,19 +155,8 @@ async def main():
     src.curator.settings = new_settings
     bot.settings = new_settings
 
-    # Validate models with user keys
-    if not validate_gemini_model_priority():
-        print("ERROR: Gemini validation failed with the loaded key.")
-        api_key = input("Please enter a valid Gemini API Key: ").strip()
-        os.environ["GEMINI_KEY"] = api_key
-        # Re-initialize again with updated key
-        new_settings = src.settings.Settings.from_env()
-        src.settings.settings = new_settings
-        src.curator.settings = new_settings
-        bot.settings = new_settings
-        if not validate_gemini_model_priority():
-            print("ERROR: Gemini validation failed again. Exiting.")
-            return
+    # Validate models with user keys (falls back to defaults if there's a transient error)
+    validate_gemini_model_priority()
     
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
