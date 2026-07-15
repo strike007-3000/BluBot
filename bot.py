@@ -347,6 +347,9 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
                         alt_text = await generate_image_alt_text(og_bytes, f"OpenGraph image for {synthesis.topic}")
                     else:
                         SafeLogger.info(f"OpenGraph validation failed: {validation_res.reason}. Falling back to AI Image generation.")
+                elif og_url:
+                    # Capture public URL even if download failed/was blocked, allowing threads/link-only fallback
+                    public_url = og_url
         except Exception as e:
             SafeLogger.warn(f"Failed to fetch metadata or validate OpenGraph: {e}")
     
@@ -372,14 +375,18 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
             SafeLogger.warn(f"AI image generation failed: {e}")
             
     # 3. Fallback/Final Asset Construction
-    if source and image_bytes:
-        mime_type = get_image_mime(image_bytes)
+    if not source and public_url:
+        source = MediaSource.OPENGRAPH
+
+    if source and (image_bytes or public_url):
+        mime_type = get_image_mime(image_bytes) if image_bytes else None
         width, height = None, None
-        try:
-            img = Image.open(io.BytesIO(image_bytes))
-            width, height = img.size
-        except Exception:
-            pass
+        if image_bytes:
+            try:
+                img = Image.open(io.BytesIO(image_bytes))
+                width, height = img.size
+            except Exception:
+                pass
             
         media = MediaAsset(
             source=source,
@@ -410,7 +417,8 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
     if media:
         log_lines.append(f"Dimensions: {media.width}x{media.height}")
         log_lines.append(f"MIME type: {media.mime_type}")
-        log_lines.append(f"Byte size: {len(media.image_bytes)} bytes")
+        byte_size_str = f"{len(media.image_bytes)} bytes" if media.image_bytes else "None"
+        log_lines.append(f"Byte size: {byte_size_str}")
     
     # intended delivery modes
     bsky_mode = "External card" if has_lead_link else "Image embed" if media else "Text only"
