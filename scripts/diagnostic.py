@@ -61,6 +61,55 @@ async def test_full_dry_run():
             await bot.main()
             print(f"\n{'='*20}\nDRY RUN COMPLETE (v3.6.5)\n{'='*20}")
 
+async def test_image_generation():
+    print(f"\n{'='*20}")
+    print(f"DIAGNOSTIC: LIVE IMAGE GENERATION TEST")
+    print(f"{'='*20}")
+    
+    import httpx
+    from google import genai
+    from src.curator import generate_nvidia_image, generate_imagen_image
+    
+    prompt = "A minimalist icon of a blue bird holding a newspaper, clean digital art, simple illustration"
+    
+    # 1. NVIDIA Test
+    nv_key = os.getenv("NVIDIA_KEY")
+    if nv_key:
+        print(f"\nRunning NVIDIA FLUX.1-schnell image generation...")
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await generate_nvidia_image(client, prompt)
+            if res:
+                out_path = "nvidia_flux_test.png"
+                with open(out_path, "wb") as f:
+                    f.write(res)
+                print(f"✅ Success! NVIDIA image generated and saved to: {out_path} ({len(res)} bytes)")
+            else:
+                print("❌ Failure: NVIDIA generation returned no bytes.")
+        except Exception as e:
+            print(f"❌ Failure: NVIDIA generation failed: {e}")
+    else:
+        print("\nNVIDIA_KEY not available, skipping NVIDIA test.")
+        
+    # 2. Gemini/Imagen Test
+    gemini_key = os.getenv("GEMINI_KEY")
+    if gemini_key:
+        print(f"\nRunning Gemini Imagen image generation...")
+        try:
+            genai_client = genai.Client(api_key=gemini_key)
+            res = await generate_imagen_image(genai_client, prompt)
+            if res:
+                out_path = "gemini_imagen_test.png"
+                with open(out_path, "wb") as f:
+                    f.write(res)
+                print(f"✅ Success! Gemini Imagen image generated and saved to: {out_path} ({len(res)} bytes)")
+            else:
+                print("❌ Failure: Gemini Imagen generation returned no bytes.")
+        except Exception as e:
+            print(f"❌ Failure: Gemini Imagen generation failed: {e}")
+    else:
+        print("\nGEMINI_KEY not available, skipping Gemini Imagen test.")
+
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
@@ -87,13 +136,16 @@ async def main():
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
+    print("3. Live Image Generation Test (NVIDIA FLUX & Gemini Imagen)")
     
     try:
-        choice = input("\nEnter choice (1-2) or 'q' to quit: ").strip().lower()
+        choice = input("\nEnter choice (1-3) or 'q' to quit: ").strip().lower()
         if choice == "1":
             await test_scoring()
         elif choice == "2":
             await test_full_dry_run()
+        elif choice == "3":
+            await test_image_generation()
         elif choice == "q":
             print("Exiting.")
         else:

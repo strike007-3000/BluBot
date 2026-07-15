@@ -497,7 +497,8 @@ async def generate_imagen_image(genai_client, prompt: str):
             )
         )
         if response.generated_images:
-            return response.generated_images[0].image._image_bytes
+            img = response.generated_images[0].image
+            return getattr(img, "image_bytes", None) or getattr(img, "_image_bytes", None)
     except Exception as e:
         SafeLogger.warn(f"Imagen generation failed: {e}")
     return None
