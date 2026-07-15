@@ -132,6 +132,15 @@ async def main():
     if not validate_gemini_model_priority():
         print("ERROR: Gemini validation failed with provided key.")
         return
+        
+    # Re-initialize and patch Settings with the newly provided/collected keys
+    import src.settings
+    import src.curator
+    import bot
+    new_settings = src.settings.Settings.from_env()
+    src.settings.settings = new_settings
+    src.curator.settings = new_settings
+    bot.settings = new_settings
     
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
