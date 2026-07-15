@@ -45,8 +45,8 @@ VERSION = get_version()
 
 # Platform Constraints
 IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "nvidia")
-NVIDIA_MODEL_ID = "stabilityai/stable-diffusion-3-medium"
-NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-3-medium"
+NVIDIA_MODEL_ID = "black-forest-labs/flux.1-schnell"
+NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-schnell"
 
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.1-flash-lite-preview",

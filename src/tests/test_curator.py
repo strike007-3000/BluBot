@@ -195,3 +195,82 @@ def test_fallback_behavior_unknown_source():
     score = calculate_relevance_score(item_unknown, now_utc, now_utc)
     assert score <= 0
 
+from src.curator import generate_ai_image, generate_nvidia_image
+import httpx
+
+@pytest.mark.asyncio
+async def test_generate_nvidia_image_success(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(gemini_key="mock", nvidia_key="nvapi-test-key", image_provider="nvidia")
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+    
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    # Base64 for "test_image" is "dGVzdF9pbWFnZQ=="
+    mock_response.json = MagicMock(return_value={"artifacts": [{"base64": "dGVzdF9pbWFnZQ=="}]})
+    mock_response.text = '{"artifacts": [{"base64": "dGVzdF9pbWFnZQ=="}]}'
+    
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+    
+    res = await generate_nvidia_image(mock_client, "Prompt")
+    assert res == b"test_image"
+    mock_client.post.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_generate_nvidia_image_deterministic_error(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(gemini_key="mock", nvidia_key="nvapi-test-key", image_provider="nvidia")
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+    
+    mock_response = MagicMock()
+    mock_response.status_code = 422
+    mock_response.text = "Unprocessable Entity"
+    
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+    
+    with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        await generate_nvidia_image(mock_client, "Prompt")
+        
+    assert exc_info.value.response.status_code == 422
+    assert getattr(exc_info.value, "skip_backoff_retry", False) is True
+
+@pytest.mark.asyncio
+async def test_generate_ai_image_fallback_to_imagen(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(gemini_key="mock", nvidia_key="nvapi-test-key", image_provider="nvidia")
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+    
+    # Force generate_nvidia_image to raise an error
+    mocker.patch("src.curator.generate_nvidia_image", side_effect=Exception("NVIDIA failure"))
+    
+    # Mock generate_imagen_image to return dummy bytes
+    mocker.patch("src.curator.generate_imagen_image", return_value=b"ImagenBytes")
+    
+    mock_client = AsyncMock()
+    mock_genai = MagicMock()
+    
+    res = await generate_ai_image(mock_client, mock_genai, "Prompt")
+    assert res == b"ImagenBytes"
+
+@pytest.mark.asyncio
+async def test_live_nvidia_smoke(monkeypatch):
+    import os
+    if not os.getenv("RUN_LIVE_NVIDIA_TEST") or not os.getenv("NVIDIA_KEY"):
+        pytest.skip("Skipping live NVIDIA smoke test (RUN_LIVE_NVIDIA_TEST=1 or NVIDIA_KEY missing)")
+        
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        nvidia_key=os.getenv("NVIDIA_KEY"),
+        image_provider="nvidia"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+    
+    async with httpx.AsyncClient() as client:
+        res = await generate_nvidia_image(client, "A minimalist drawing of a cute robot coding on a laptop, line art, simple, high quality")
+        assert res is not None
+        assert len(res) > 100 # Should contain valid image bytes
+
+
