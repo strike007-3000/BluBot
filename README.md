@@ -20,7 +20,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - *Bluesky*: Uses `AppBskyEmbedExternal` for link cards and `AppBskyEmbedImages` for scratch posts.
         - *Mastodon*: Uploads image bytes, degrading gracefully to text on upload errors.
         - *Threads*: Renders OpenGraph public URLs only, gracefully falling back to text-only mode for generated assets lacking public hosting.
-    - **NVIDIA NIM Integration**: Uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
+    - **NVIDIA NIM Integration**: Uses **Black Forest Labs FLUX.1-schnell** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture**:
     - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
@@ -85,7 +85,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 #### NVIDIA AI (Required for v3.6+)
 - Get a free API key from [build.nvidia.com](https://build.nvidia.com/).
-- Integrated for **Stable Diffusion 3 Medium**.
+- Integrated for **FLUX.1-schnell**.
 
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).

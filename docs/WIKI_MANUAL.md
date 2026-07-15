@@ -73,7 +73,7 @@ The Sage is designed to be **unbreakable**.
 
 ## 🎨 Page 4: NVIDIA NIM Image Generation
 
-The Sage uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference Microservices as the primary image provider.
+The Sage uses **Black Forest Labs FLUX.1-schnell** via NVIDIA's Inference Microservices as the primary image provider.
 
 ### The Designer & Image Pipeline
 
@@ -85,7 +85,7 @@ The Sage uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference 
            /                        \
       (Found)                     (Not Found)
          ▼                            ▼
-  [Normalize URL]            [Call NVIDIA SD3 NIM]
+  [Normalize URL]            [Call NVIDIA FLUX NIM]
          ▼                    (Generate Isometric Prompt)
   [Filter Generic Logos]              ▼
   (Skip if e.g. "arxiv-logo") [Convert Base64 to Bytes]
@@ -109,7 +109,7 @@ The Sage uses **Stability AI Stable Diffusion 3 Medium** via NVIDIA's Inference 
 
 1. **Lead Selection & Scraper**: The metadata scraper extracts metadata tags like `og:image` from the target article.
 2. **URL Normalization & Logo Filter**: Resolves protocol-relative link formats (e.g. `//site.com/img.png` to `https://site.com/img.png`) and checks the path against `GENERIC_IMAGE_PATTERNS`. If a site logo is detected, it is discarded.
-3. **NVIDIA NIM SD3 Generation (Fallback)**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using `models/gemini-3.1-flash-lite-preview`, then invokes the SD3 NIM microservice to generate the base64-encoded JPEG image.
+3. **NVIDIA NIM FLUX Generation (Fallback)**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using `models/gemini-3.1-flash-lite-preview`, then invokes the FLUX NIM microservice to generate the base64-encoded JPEG image.
 4. **RGB Conversion**: Standardizes image mode representations by converting CMYK or Grayscale source images to standard RGB, preventing rendering distortions.
 5. **Iterative Quality Compression**: Fits the binary payload under the strict 900KB platform upload cap. The optimizer iteratively scales JPEG quality down (from 85% to 30%, in steps of 10%) and writes to an in-memory buffer (`io.BytesIO()`) until the constraints are met.
 
@@ -428,7 +428,7 @@ You can control the bot directly from Telegram. The integration supports two key
   - **Interactive Editing**: You can edit the draft inline by replying directly to the draft message with your new text, or sending a `/edit <new text>` command. The bot will validate the text length against safety-buffered limits (Bluesky 290, Mastodon 485, Threads 490) and warn you if it will split into a thread or truncate.
   - **Interactive Curation & Image Regeneration (v3.13.0)**:
     - **`[🔄 Regenerate Text]`**: Prompts the user to supply an optional feedback hint. You can reply with formatting instructions (e.g. "shorter", "make it more technical") or write `/skip` to regenerate using default options. Gemini rewrites the draft inline.
-    - **`[🎨 Regenerate Image]`**: Automatically regenerates the isometric card prompt using the latest draft text, requests a fresh image using NVIDIA NIM SD3, regenerates the screen-reader alt-text using Gemini Vision, and updates the preview media dynamically.
+    - **`[🎨 Regenerate Image]`**: Automatically regenerates the isometric card prompt using the latest draft text, requests a fresh image using NVIDIA NIM FLUX.1-schnell, regenerates the screen-reader alt-text using Gemini Vision, and updates the preview media dynamically.
 * **On-Demand Topic Curation**: Send `/topic <your_keyword>` or `/curate <your_keyword>` to your Telegram bot. When the GHA runner starts, it performs a real-time keyword search against all active RSS feeds:
   - **RSS Grounding**: If matching articles are found (e.g. searching "Cursor" matches the SpaceX-Cursor deal), the bot curates and synthesizes directly from the actual news articles (preserving original links/facts) rather than relying on stale parametric knowledge.
   - **Raw Curation Fallback**: If no matching articles are found in your RSS feeds, the bot gracefully falls back to raw synthesis from scratch.
