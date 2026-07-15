@@ -21,7 +21,8 @@ from src.models import (
 from src.utils import (
     load_seen_articles, save_seen_articles, SafeLogger, 
     load_session_string, save_session_string, get_link_metadata,
-    load_seen_interactions, save_seen_interactions, human_delay
+    load_seen_interactions, save_seen_interactions, human_delay,
+    is_safe_url
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
@@ -347,7 +348,7 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
                         alt_text = await generate_image_alt_text(og_bytes, f"OpenGraph image for {synthesis.topic}")
                     else:
                         SafeLogger.info(f"OpenGraph validation failed: {validation_res.reason}. Falling back to AI Image generation.")
-                elif og_url:
+                elif og_url and is_safe_url(og_url):
                     # Capture public URL even if download failed/was blocked, allowing threads/link-only fallback
                     public_url = og_url
         except Exception as e:
