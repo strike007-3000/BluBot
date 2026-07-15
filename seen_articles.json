@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.09887",
-    "https://arxiv.org/abs/2606.09890",
-    "https://arxiv.org/abs/2606.09898",
-    "https://arxiv.org/abs/2606.09907",
-    "https://arxiv.org/abs/2606.09916",
-    "https://arxiv.org/abs/2606.09919",
-    "https://arxiv.org/abs/2606.09926",
-    "https://arxiv.org/abs/2606.09936",
     "https://arxiv.org/abs/2606.09937",
     "https://openai.com/index/using-codex-to-simulate-black-holes",
     "https://openai.com/index/supporting-eu-trustworthy-ai-ecosystem",
@@ -499,7 +491,15 @@
     "https://techcrunch.com/2026/07/14/openai-researcher-miles-wang-in-talks-to-launch-ai-drug-discovery-startup-valued-at-2b/",
     "https://arxiv.org/abs/2607.11928",
     "https://arxiv.org/abs/2607.11964",
-    "https://arxiv.org/abs/2607.12067"
+    "https://arxiv.org/abs/2607.12067",
+    "https://huggingface.co/blog/real-world-voiceeq",
+    "https://simonwillison.net/2026/Jul/15/claude-web-fetch-exfiltration/#atom-everything",
+    "https://arxiv.org/abs/2607.12111",
+    "https://arxiv.org/abs/2607.12122",
+    "https://arxiv.org/abs/2607.12267",
+    "https://arxiv.org/abs/2607.12523",
+    "https://arxiv.org/abs/2607.12650",
+    "https://arxiv.org/abs/2607.12771"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -507,17 +507,19 @@
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
     "k and v cache quantization"
   ],
-  "total_posts_curated": 755,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 756,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
     "unknown",
     "research_lab",
-    "enterprise"
+    "enterprise",
+    "research_lab"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "RISK_VERIFICATION"
   ]
 }
