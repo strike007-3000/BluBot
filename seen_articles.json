@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.07789",
-    "https://openai.com/index/lseg",
-    "https://arxiv.org/abs/2606.09863",
-    "https://arxiv.org/abs/2606.09864",
-    "https://arxiv.org/abs/2606.09873",
-    "https://arxiv.org/abs/2606.09878",
-    "https://arxiv.org/abs/2606.09883",
-    "https://arxiv.org/abs/2606.09886",
     "https://arxiv.org/abs/2606.09887",
     "https://arxiv.org/abs/2606.09890",
     "https://arxiv.org/abs/2606.09898",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.10362",
     "https://arxiv.org/abs/2607.10481",
     "https://arxiv.org/abs/2607.10582",
-    "https://huggingface.co/blog/kv-cache-quantization"
+    "https://huggingface.co/blog/kv-cache-quantization",
+    "https://aws.amazon.com/blogs/machine-learning/multi-agent-social-intelligence-with-strands-agents-and-amazon-bedrock/",
+    "https://aws.amazon.com/blogs/machine-learning/accelerating-software-delivery-with-agentic-qa-automation-using-amazon-nova-act-part-2/",
+    "https://openai.com/index/managing-ai-investments-in-agentic-era",
+    "https://aws.amazon.com/blogs/machine-learning/openai-gpt-5-6-sol-terra-and-luna-are-now-generally-available-on-amazon-bedrock/",
+    "https://techcrunch.com/2026/07/14/openai-researcher-miles-wang-in-talks-to-launch-ai-drug-discovery-startup-valued-at-2b/",
+    "https://arxiv.org/abs/2607.11928",
+    "https://arxiv.org/abs/2607.11964",
+    "https://arxiv.org/abs/2607.12067"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -507,15 +507,17 @@
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
     "k and v cache quantization"
   ],
-  "total_posts_curated": 754,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 755,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
     "unknown",
-    "research_lab"
+    "research_lab",
+    "enterprise"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "ENTERPRISE_ROI"
   ]
 }

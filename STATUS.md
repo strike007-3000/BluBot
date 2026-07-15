@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-07-14 | 🔍 Evening Synthesis (Intercept) (k and v cache quantization) |
+| **Broadcaster** | Operational | 2026-07-15 | 🚀 Morning Intelligence (General) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
