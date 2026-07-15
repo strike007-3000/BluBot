@@ -9,7 +9,7 @@ os.environ["DRY_RUN"] = "true"
 
 # Ensure we can import from src
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(BASE_DIR)
+sys.path.append(os.path.dirname(BASE_DIR))
 
 from src.curator import fetch_news, summarize_news
 from src.logger import SafeLogger
