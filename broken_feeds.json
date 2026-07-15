@@ -1,23 +1,128 @@
 {
     "https://alphasignalai.beehiiv.com/feed": {
-        "fail_count": 2,
+        "fail_count": 3,
         "last_error": "Parse error/Invalid RSS",
-        "last_seen": "2026-06-17T17:29:00.068356+00:00",
-        "retry_at": "2026-06-17T18:29:00.068356+00:00",
+        "last_seen": "2026-07-14T15:50:04.735486+00:00",
+        "retry_at": "2026-07-15T03:50:04.735486+00:00",
         "status": "PENALIZED"
     },
     "https://tldr.tech/ai/rss": {
-        "fail_count": 2,
+        "fail_count": 3,
         "last_error": "HTTP 404",
-        "last_seen": "2026-06-17T17:29:00.068582+00:00",
-        "retry_at": "2026-06-17T18:29:00.068582+00:00",
+        "last_seen": "2026-07-14T15:50:04.735825+00:00",
+        "retry_at": "2026-07-15T03:50:04.735825+00:00",
         "status": "PENALIZED"
     },
     "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml": {
+        "fail_count": 3,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-07-14T15:50:04.735138+00:00",
+        "retry_at": "2026-07-15T03:50:04.735138+00:00",
+        "status": "PENALIZED"
+    },
+    "https://www.anthropic.com/news/rss": {
         "fail_count": 2,
         "last_error": "HTTP 404",
-        "last_seen": "2026-06-17T17:29:48.348007+00:00",
-        "retry_at": "2026-06-17T18:29:48.348007+00:00",
+        "last_seen": "2026-07-14T15:50:56.151108+00:00",
+        "retry_at": "2026-07-14T16:50:56.151108+00:00",
         "status": "PENALIZED"
+    },
+    "https://ai.meta.com/blog/rss/": {
+        "fail_count": 2,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-07-14T15:50:56.151550+00:00",
+        "retry_at": "2026-07-14T16:50:56.151550+00:00",
+        "status": "PENALIZED"
+    },
+    "https://blogs.microsoft.com/ai/feed/": {
+        "fail_count": 2,
+        "last_error": "HTTP 403",
+        "last_seen": "2026-07-14T15:50:56.151705+00:00",
+        "retry_at": "2026-07-14T16:50:56.151705+00:00",
+        "status": "PENALIZED"
+    },
+    "https://cloud.google.com/blog/products/ai-machine-learning/rss": {
+        "fail_count": 2,
+        "last_error": "Parse error/Invalid RSS",
+        "last_seen": "2026-07-14T15:50:56.151846+00:00",
+        "retry_at": "2026-07-14T16:50:56.151846+00:00",
+        "status": "PENALIZED"
+    },
+    "https://txt.cohere.com/rss/": {
+        "fail_count": 2,
+        "last_error": "Empty feed",
+        "last_seen": "2026-07-14T15:50:56.151979+00:00",
+        "retry_at": "2026-07-14T16:50:56.151979+00:00",
+        "status": "PENALIZED"
+    },
+    "https://mistral.ai/news/rss": {
+        "fail_count": 2,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-07-14T15:50:56.152099+00:00",
+        "retry_at": "2026-07-14T16:50:56.152099+00:00",
+        "status": "PENALIZED"
+    },
+    "https://wandb.ai/fully-connected/rss.xml": {
+        "fail_count": 2,
+        "last_error": "Parse error/Invalid RSS",
+        "last_seen": "2026-07-14T15:50:56.152219+00:00",
+        "retry_at": "2026-07-14T16:50:56.152219+00:00",
+        "status": "PENALIZED"
+    },
+    "https://blog.langchain.dev/rss/": {
+        "fail_count": 2,
+        "last_error": "Parse error/Invalid RSS",
+        "last_seen": "2026-07-14T15:50:56.152346+00:00",
+        "retry_at": "2026-07-14T16:50:56.152346+00:00",
+        "status": "PENALIZED"
+    },
+    "https://www.interconnects.ai/feed": {
+        "fail_count": 2,
+        "last_error": "HTTP 403",
+        "last_seen": "2026-07-14T15:50:56.152495+00:00",
+        "retry_at": "2026-07-14T16:50:56.152495+00:00",
+        "status": "PENALIZED"
+    },
+    "https://blog.vllm.ai/feed.xml": {
+        "fail_count": 2,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-07-14T15:50:56.152619+00:00",
+        "retry_at": "2026-07-14T16:50:56.152619+00:00",
+        "status": "PENALIZED"
+    },
+    "https://ollama.com/blog/rss": {
+        "fail_count": 2,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-07-14T15:50:56.152742+00:00",
+        "retry_at": "2026-07-14T16:50:56.152742+00:00",
+        "status": "PENALIZED"
+    },
+    "https://lmstudio.ai/blog/rss": {
+        "fail_count": 2,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-07-14T15:50:56.152863+00:00",
+        "retry_at": "2026-07-14T16:50:56.152863+00:00",
+        "status": "PENALIZED"
+    },
+    "https://a16z.com/feed/": {
+        "fail_count": 2,
+        "last_error": "HTTP 404",
+        "last_seen": "2026-07-14T15:50:56.153034+00:00",
+        "retry_at": "2026-07-14T16:50:56.153034+00:00",
+        "status": "PENALIZED"
+    },
+    "https://pytorch.org/feed.xml": {
+        "fail_count": 1,
+        "last_error": "HTTP 403",
+        "last_seen": "2026-07-14T16:22:13.000334+00:00",
+        "retry_at": "2026-07-14T16:22:13.000334+00:00",
+        "status": "WARNING"
+    },
+    "https://www.sequoiacap.com/feed/": {
+        "fail_count": 1,
+        "last_error": "",
+        "last_seen": "2026-07-14T16:27:55.155051+00:00",
+        "retry_at": "2026-07-14T16:27:55.155051+00:00",
+        "status": "WARNING"
     }
 }
