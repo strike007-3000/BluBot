@@ -87,7 +87,9 @@ async def test_image_generation():
             else:
                 print("❌ Failure: NVIDIA generation returned no bytes.")
         except Exception as e:
-            print(f"❌ Failure: NVIDIA generation failed: {e}")
+            import traceback
+            traceback.print_exc()
+            print(f"❌ Failure: NVIDIA generation failed: {repr(e)}")
     else:
         print("\nNVIDIA_KEY not available, skipping NVIDIA test.")
         
