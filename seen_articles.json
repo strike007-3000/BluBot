@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.11562",
-    "https://openai.com/index/openai-to-acquire-ona",
-    "https://arxiv.org/abs/2606.11625",
-    "https://arxiv.org/abs/2606.11652",
-    "https://arxiv.org/abs/2606.11657",
-    "https://arxiv.org/abs/2606.11660",
-    "https://arxiv.org/abs/2606.11709",
-    "https://arxiv.org/abs/2606.11831",
     "https://arxiv.org/abs/2606.11893",
     "https://openai.com/index/preply",
     "https://arxiv.org/abs/2606.11998",
@@ -499,7 +491,15 @@
     "https://siliconangle.com/2026/07/15/agentic-inference-reshapes-ai-infrastructure-raise-summit-raisesummit/",
     "https://arxiv.org/abs/2607.13120",
     "https://arxiv.org/abs/2607.13274",
-    "https://arxiv.org/abs/2607.13389"
+    "https://arxiv.org/abs/2607.13389",
+    "https://the-decoder.com/gemma-4-gets-a-stealth-update-that-fixes-tool-calling-bugs-and-truncated-responses-under-the-same-name/",
+    "https://huggingface.co/blog/Dharma-AI/newer-models-same-advantages",
+    "https://techcrunch.com/2026/07/16/why-ami-labs-alexandre-lebrun-wont-call-his-ai-agi-or-superintelligence/",
+    "https://the-decoder.com/sakana-ais-fugu-adds-nvidia-nemotron-to-prove-collective-intelligence-can-rival-single-frontier-models/",
+    "https://deepmind.google/blog/our-approach-to-bioresilience/",
+    "https://huggingface.co/blog/security-incident-july-2026",
+    "https://arxiv.org/abs/2607.13395",
+    "https://arxiv.org/abs/2607.13413"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -507,21 +507,23 @@
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
     "k and v cache quantization"
   ],
-  "total_posts_curated": 757,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 758,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
     "unknown",
     "research_lab",
     "enterprise",
     "research_lab",
-    "practitioner"
+    "practitioner",
+    "journalism"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "ENTERPRISE_ROI",
     "RISK_VERIFICATION",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "STRATEGIC_CONTRAST"
   ]
 }
