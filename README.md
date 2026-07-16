@@ -102,7 +102,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `black-forest-labs/FLUX.1-schnell`) |
 | `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
 | `GEMINI_MODEL` | No | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
-| `IMAGE_PROVIDER` | No | Default: `pollinations`. Set to `huggingface` or `imagen` to switch. |
+| `IMAGE_PROVIDER` | No | Default: `huggingface`. Options: `huggingface`, `pollinations`, `nvidia`, `imagen`. Each runs a fallback chain. |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL |
 | `THREADS_ACCESS_TOKEN` | No | Your Threads Long-Lived Access Token |

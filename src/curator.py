@@ -483,11 +483,11 @@ async def generate_image_alt_text(image_bytes: bytes, prompt: str) -> str:
         return f"Tech illustration of: {prompt}"
 
 async def generate_imagen_image(genai_client, prompt: str):
-    """Calls Google Imagen 4 for image generation."""
+    """Calls Google Imagen for image generation."""
     try:
         from src.config import IMAGEN_MODEL
         from google.genai import types
-        SafeLogger.info("Sage Designer: Generating Imagen 4 thumbnail...")
+        SafeLogger.info("Sage Designer: Generating Imagen thumbnail...")
         response = await genai_client.aio.models.generate_images(
             model=IMAGEN_MODEL,
             prompt=prompt,
@@ -576,7 +576,7 @@ async def generate_huggingface_image(
     # Use hf API key if present, otherwise fall back to nvidia key for token backward compatibility
     token = settings.huggingface_api_key or settings.nvidia_key
     if not token:
-        SafeLogger.info("Hugging Face: Skipping because neither huggingface_api_key nor nvidia_key is missing.")
+        SafeLogger.info("Hugging Face: Skipping because neither huggingface_api_key nor nvidia_key is set.")
         return None
 
     model = settings.huggingface_image_model

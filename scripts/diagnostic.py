@@ -95,7 +95,7 @@ async def test_image_generation():
         if hf_key:
             os.environ["HUGGINGFACE_API_KEY"] = hf_key
             from src.settings import settings
-            settings.huggingface_api_key = hf_key
+            object.__setattr__(settings, "huggingface_api_key", hf_key)
 
     if os.getenv("HUGGINGFACE_API_KEY"):
         print(f"\nRunning Hugging Face image generation...")
@@ -122,7 +122,7 @@ async def test_image_generation():
         if gemini_key:
             os.environ["GEMINI_KEY"] = gemini_key
             from src.settings import settings
-            settings.gemini_key = gemini_key
+            object.__setattr__(settings, "gemini_key", gemini_key)
 
     if os.getenv("GEMINI_KEY"):
         print(f"\nRunning Gemini Imagen image generation...")
@@ -162,7 +162,7 @@ async def main():
                 gemini_key = input("Please enter your Gemini API Key: ").strip()
                 os.environ["GEMINI_KEY"] = gemini_key
                 from src.settings import settings
-                settings.gemini_key = gemini_key
+                object.__setattr__(settings, "gemini_key", gemini_key)
             if validate_gemini_model_priority():
                 await test_full_dry_run()
         elif choice == "3":

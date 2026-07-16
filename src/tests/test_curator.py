@@ -487,7 +487,29 @@ async def test_dispatcher_unexpected_provider_exception_continues(monkeypatch, m
     assert res == valid_bytes
     assert mock_poll["pollinations"].await_count == 1
     assert mock_poll["huggingface"].await_count == 1
+@pytest.mark.asyncio
+async def test_generate_huggingface_skips_without_keys(monkeypatch):
+    """HF generator returns None when neither huggingface_api_key nor nvidia_key is set."""
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        huggingface_api_key=None,
+        nvidia_key=None,
+        huggingface_image_model="black-forest-labs/FLUX.1-schnell",
+        image_provider="huggingface"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    mock_client = AsyncMock()
+    res = await generate_huggingface_image("Test Prompt", mock_client)
+    assert res is None
+    mock_client.post.assert_not_called()
 
 
-
+def test_frozen_settings_setattr():
+    """Verify object.__setattr__ bypass works on frozen Settings (used by diagnostic.py)."""
+    from src.settings import Settings
+    s = Settings(gemini_key="original")
+    object.__setattr__(s, "gemini_key", "patched")
+    assert s.gemini_key == "patched"
 
