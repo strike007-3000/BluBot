@@ -14,13 +14,13 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **🖼️ Unified Media Strategy Stage**:
-    - **Single Media Decision Point**: Decides if a post should contain media, extracts/validates OpenGraph metadata, generates a visual prompt, fetches an NVIDIA illustration if necessary, and compiles everything into a single `MediaAsset`.
+    - **Single Media Decision Point**: Decides if a post should contain media, extracts/validates OpenGraph metadata, generates a visual prompt, fetches an image from Pollinations (with Hugging Face fallback) if necessary, and compiles everything into a single `MediaAsset`.
     - **Self-Healing OpenGraph Validation**: Runs multi-criteria validation (dimensions, size, aspect ratios, decoding, known placeholder logo patterns) before selecting.
     - **Platform-Specific Adaptors**: Intelligently renders the canonical `MediaAsset` according to platform requirements:
         - *Bluesky*: Uses `AppBskyEmbedExternal` for link cards and `AppBskyEmbedImages` for scratch posts.
         - *Mastodon*: Uploads image bytes, degrading gracefully to text on upload errors.
         - *Threads*: Renders OpenGraph public URLs only, gracefully falling back to text-only mode for generated assets lacking public hosting.
-    - **NVIDIA NIM Integration**: Uses **Black Forest Labs FLUX.1-schnell** via NVIDIA's Inference Microservices as the primary image provider, bypassing the 100-run "Imagen restricted" blockers.
+    - **Pollinations & Hugging Face Integration**: Uses **Pollinations** (Flux) as the primary provider with serverless **Hugging Face Inference Providers** (Flux Schnell) as the immediate fallback.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture**:
     - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
@@ -83,9 +83,9 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 #### Bluesky & Mastodon
 Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
-#### NVIDIA AI (Required for v3.6+)
-- Get a free API key from [build.nvidia.com](https://build.nvidia.com/).
-- Integrated for **FLUX.1-schnell**.
+#### Pollinations & Hugging Face (Required for v3.14.0+)
+- Get a free API key from [Hugging Face](https://huggingface.co/settings/tokens) (read token).
+- Integrated for **FLUX.1-schnell** via Pollinations and Hugging Face Serverless API.
 
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
@@ -97,10 +97,12 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky App Password |
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
-| `NVIDIA_KEY` | **Yes** | Your NVIDIA API Key (for FLUX.1-schnell) |
+| `POLLINATIONS_API_KEY` | No | Your Pollinations API Key (optional) |
+| `HUGGINGFACE_API_KEY` | **Yes** | Your Hugging Face access token |
+| `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `black-forest-labs/FLUX.1-schnell`) |
 | `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
 | `GEMINI_MODEL` | No | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
-| `IMAGE_PROVIDER` | No | Default: `nvidia`. Set to `imagen` to switch back. |
+| `IMAGE_PROVIDER` | No | Default: `pollinations`. Set to `huggingface` or `imagen` to switch. |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL |
 | `THREADS_ACCESS_TOKEN` | No | Your Threads Long-Lived Access Token |

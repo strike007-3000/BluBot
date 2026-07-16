@@ -71,9 +71,9 @@ The Sage is designed to be **unbreakable**.
 
 ---
 
-## 🎨 Page 4: NVIDIA NIM Image Generation
+## 🎨 Page 4: Pollinations & Hugging Face Image Generation
 
-The Sage uses **Black Forest Labs FLUX.1-schnell** via NVIDIA's Inference Microservices as the primary image provider.
+The Sage uses **Pollinations** (Flux) as the primary image provider with serverless **Hugging Face Inference Providers** (Flux Schnell) as the immediate fallback.
 
 ### The Designer & Image Pipeline
 
@@ -85,7 +85,7 @@ The Sage uses **Black Forest Labs FLUX.1-schnell** via NVIDIA's Inference Micros
            /                        \
       (Found)                     (Not Found)
          ▼                            ▼
-  [Normalize URL]            [Call NVIDIA FLUX NIM]
+  [Normalize URL]            [Call Pollinations / Hugging Face]
          ▼                    (Generate Isometric Prompt)
   [Filter Generic Logos]              ▼
   (Skip if e.g. "arxiv-logo") [Convert Base64 to Bytes]
@@ -95,21 +95,21 @@ The Sage uses **Black Forest Labs FLUX.1-schnell** via NVIDIA's Inference Micros
          └─────────────┬──────────────┘
                        │
                        ▼
-           [RGB Mode Normalization]
-         (Convert CMYK/Grayscale -> RGB)
+            [RGB Mode Normalization]
+          (Convert CMYK/Grayscale -> RGB)
                        │
                        ▼
-           [Pillow Image Optimizer]
-        (Scale JPEG quality down to 80-30%
-         until file size is under 900 KB)
+            [Pillow Image Optimizer]
+         (Scale JPEG quality down to 80-30%
+          until file size is under 900 KB)
                        │
                        ▼
-         [Broadcast to Platform APIs]
+          [Broadcast to Platform APIs]
 ```
 
 1. **Lead Selection & Scraper**: The metadata scraper extracts metadata tags like `og:image` from the target article.
 2. **URL Normalization & Logo Filter**: Resolves protocol-relative link formats (e.g. `//site.com/img.png` to `https://site.com/img.png`) and checks the path against `GENERIC_IMAGE_PATTERNS`. If a site logo is detected, it is discarded.
-3. **NVIDIA NIM FLUX Generation (Fallback)**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using `models/gemini-3.1-flash-lite-preview`, then invokes the FLUX NIM microservice to generate the base64-encoded JPEG image.
+3. **Pollinations & Hugging Face Generation (Fallback)**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using the active Gemini model, then invokes the Pollinations API (falling back to Hugging Face serverless API) to generate the image.
 4. **RGB Conversion**: Standardizes image mode representations by converting CMYK or Grayscale source images to standard RGB, preventing rendering distortions.
 5. **Iterative Quality Compression**: Fits the binary payload under the strict 900KB platform upload cap. The optimizer iteratively scales JPEG quality down (from 85% to 30%, in steps of 10%) and writes to an in-memory buffer (`io.BytesIO()`) until the constraints are met.
 
@@ -129,7 +129,9 @@ Scanning exactly **32 premium feeds** across 4 tiers.
 | Variable | Description |
 | :--- | :--- |
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
-| `NVIDIA_KEY` | NVIDIA Build API Key (for FLUX.1-schnell) |
+| `POLLINATIONS_API_KEY` | Optional token for Pollinations custom accounts |
+| `HUGGINGFACE_API_KEY` | Hugging Face Hub User Access Token |
+| `HUGGINGFACE_IMAGE_MODEL` | Hugging Face model target (default: `black-forest-labs/FLUX.1-schnell`) |
 | `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma models) |
 | `GEMINI_MODEL` | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
 | `BSKY_HANDLE` | Your Bluesky handle |
@@ -140,7 +142,7 @@ Scanning exactly **32 premium feeds** across 4 tiers.
 | `THREADS_USER_ID` | Your Threads User ID |
 | `GIST_ID` | Private GitHub Gist ID |
 | `GIST_TOKEN` | GitHub Token with `gist` scope |
-| `IMAGE_PROVIDER` | `nvidia` (default) or `imagen` |
+| `IMAGE_PROVIDER` | `pollinations` (default) or `huggingface` or `imagen` |
 | `TELEGRAM_BOT_TOKEN` | (Optional) Your Telegram Bot API Token |
 | `TELEGRAM_USER_ID` | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | (Optional) Telegram polling timeout in minutes (default: `5`) |

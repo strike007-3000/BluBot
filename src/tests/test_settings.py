@@ -32,13 +32,9 @@ def test_settings_validation_missing_keys():
     settings = Settings(gemini_key="key", bsky_handle="", bsky_password="")
     assert settings.validate() is False
 
-    # Missing Nvidia Key but selecting Nvidia provider
-    settings = Settings(gemini_key="key", bsky_handle="h", bsky_password="p", image_provider="nvidia", nvidia_key="")
-    assert settings.validate() is False
-
 def test_settings_validation_success():
     """Verify validate() succeeds with valid parameters."""
-    settings = Settings(gemini_key="key", bsky_handle="h", bsky_password="p", image_provider="nvidia", nvidia_key="nkey")
+    settings = Settings(gemini_key="key", bsky_handle="h", bsky_password="p", image_provider="pollinations")
     assert settings.validate() is True
 
 def test_settings_is_manual_run():
