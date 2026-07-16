@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.09937",
-    "https://openai.com/index/using-codex-to-simulate-black-holes",
-    "https://openai.com/index/supporting-eu-trustworthy-ai-ecosystem",
-    "https://huggingface.co/blog/torch-mlp-fusion",
-    "https://arxiv.org/abs/2606.11290",
-    "https://arxiv.org/abs/2606.11391",
-    "https://arxiv.org/abs/2606.11417",
-    "https://arxiv.org/abs/2606.11521",
     "https://arxiv.org/abs/2606.11562",
     "https://openai.com/index/openai-to-acquire-ona",
     "https://arxiv.org/abs/2606.11625",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.12267",
     "https://arxiv.org/abs/2607.12523",
     "https://arxiv.org/abs/2607.12650",
-    "https://arxiv.org/abs/2607.12771"
+    "https://arxiv.org/abs/2607.12771",
+    "https://www.latent.space/p/ainews-thinkys-inkling-975b-a41b",
+    "https://aws.amazon.com/blogs/machine-learning/agentic-vision-building-visual-intelligence-with-amazon-bedrock-and-mcp-servers/",
+    "https://simonwillison.net/2026/Jul/15/grok-build/#atom-everything",
+    "https://the-decoder.com/gpt-5-6-sol-reportedly-disproves-a-30-year-old-statistics-conjecture-in-90-minutes-after-humans-couldnt-crack-it/",
+    "https://siliconangle.com/2026/07/15/agentic-inference-reshapes-ai-infrastructure-raise-summit-raisesummit/",
+    "https://arxiv.org/abs/2607.13120",
+    "https://arxiv.org/abs/2607.13274",
+    "https://arxiv.org/abs/2607.13389"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -507,19 +507,21 @@
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
     "k and v cache quantization"
   ],
-  "total_posts_curated": 756,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 757,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
     "unknown",
     "research_lab",
     "enterprise",
-    "research_lab"
+    "research_lab",
+    "practitioner"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "ENTERPRISE_ROI",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "PRACTICAL_WORKFLOW"
   ]
 }
