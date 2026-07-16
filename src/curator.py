@@ -18,7 +18,7 @@ from src.config import (
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
     MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
-    FEED_SUMMARY_MAX_CHARS, NVIDIA_MODEL_ID, NVIDIA_INVOKE_URL
+    FEED_SUMMARY_MAX_CHARS
 )
 from src.utils import retry_with_backoff, SafeLogger
 
@@ -503,88 +503,189 @@ async def generate_imagen_image(genai_client, prompt: str):
         SafeLogger.warn(f"Imagen generation failed: {e}")
     return None
 
-async def generate_ai_image(client, genai_client, prompt: str):
-    """Generates an image using the configured provider (nvidia or imagen)."""
-    if settings.image_provider == "imagen":
-        return await generate_imagen_image(genai_client, prompt)
-    else:
-        try:
-            img = await generate_nvidia_image(client, prompt)
-            if img is not None:
-                return img
-        except Exception as e:
-            SafeLogger.warn(f"NVIDIA image generation failed: {e}")
+from io import BytesIO
+from PIL import Image, UnidentifiedImageError
+from urllib.parse import quote
+
+def validate_image_bytes(image_bytes: bytes) -> bool:
+    if not image_bytes:
+        return False
+
+    try:
+        with Image.open(BytesIO(image_bytes)) as image:
+            image.verify()
+            return image.format in {"JPEG", "PNG", "WEBP"}
+    except (UnidentifiedImageError, OSError, ValueError):
+        return False
+
+async def generate_pollinations_image(
+    prompt: str,
+    client: httpx.AsyncClient,
+) -> bytes | None:
+    if not settings.pollinations_api_key:
+        SafeLogger.info("Pollinations: Skipping because pollinations_api_key is missing.")
+        return None
+
+    encoded_prompt = quote(prompt, safe="")
+    url = f"{settings.pollinations_api_url.rstrip('/')}/{encoded_prompt}"
+    headers = {
+        "Authorization": f"Bearer {settings.pollinations_api_key}",
+        "Accept": "image/*",
+    }
+    params = {
+        "width": 1024,
+        "height": 1024,
+        "model": "flux",
+        "seed": 0,
+    }
+
+    try:
+        # 90 seconds timeout
+        timeout = httpx.Timeout(90.0, connect=10.0)
+        response = await client.get(url, headers=headers, params=params, timeout=timeout)
+        
+        status_code = response.status_code
+        if status_code in [401, 402, 429] or (500 <= status_code < 600):
+            SafeLogger.warn(f"Pollinations HTTP error: Status={status_code}")
             
+        response.raise_for_status()
+
+        content_type = response.headers.get("Content-Type", "")
+        if not content_type.startswith("image/"):
+            SafeLogger.warn(f"Pollinations response content type invalid: {content_type}")
+            return None
+
+        img_bytes = response.content
+        if not validate_image_bytes(img_bytes):
+            SafeLogger.warn("Pollinations response returned invalid image bytes")
+            return None
+
+        return img_bytes
+
+    except (httpx.TimeoutException, httpx.HTTPStatusError, httpx.RequestError) as e:
+        SafeLogger.warn(f"Pollinations failed: {e}")
+        return None
+
+async def generate_huggingface_image(
+    prompt: str,
+    client: httpx.AsyncClient,
+) -> bytes | None:
+    # Use hf API key if present, otherwise fall back to nvidia key for token backward compatibility
+    token = settings.huggingface_api_key or settings.nvidia_key
+    if not token:
+        SafeLogger.info("Hugging Face: Skipping because neither huggingface_api_key nor nvidia_key is missing.")
+        return None
+
+    model = settings.huggingface_image_model
+    url = f"https://api-inference.huggingface.co/models/{model}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "width": 1024,
+            "height": 1024,
+            "seed": 0
+        }
+    }
+
+
+    try:
+        timeout = httpx.Timeout(90.0, connect=10.0)
+        response = await client.post(url, headers=headers, json=payload, timeout=timeout)
+        
+        status_code = response.status_code
+        if status_code in [401, 402, 403, 429, 503]:
+            SafeLogger.warn(f"Hugging Face HTTP error: Status={status_code}")
+            
+        response.raise_for_status()
+
+        content_type = response.headers.get("Content-Type", "")
+        if not content_type.startswith("image/"):
+            SafeLogger.warn(f"Hugging Face response content type invalid: {content_type}")
+            return None
+
+        img_bytes = response.content
+        if not validate_image_bytes(img_bytes):
+            SafeLogger.warn("Hugging Face response returned invalid image bytes")
+            return None
+
+        return img_bytes
+
+    except (httpx.TimeoutException, httpx.HTTPStatusError, httpx.RequestError) as e:
+        SafeLogger.warn(f"Hugging Face failed: {e}")
+        return None
+
+IMAGE_PROVIDER_CHAINS = {
+    "pollinations": ["pollinations", "huggingface"],
+    "huggingface": ["huggingface", "pollinations"],
+}
+
+IMAGE_GENERATORS = {
+    "pollinations": generate_pollinations_image,
+    "huggingface": generate_huggingface_image,
+}
+
+async def generate_ai_image(client: httpx.AsyncClient, genai_client, prompt: str) -> bytes | None:
+    """Generates an image using the configured provider dispatcher chain, falling back to Imagen if both fail."""
+    configured_provider = settings.image_provider.strip().lower()
+
+    # Explicitly handle legacy/explicit selections.
+    # If the user explicitly configured 'imagen', run it directly and skip the dynamic chain.
+    if configured_provider == "imagen":
         if genai_client is not None:
-            SafeLogger.info("Falling back to Imagen for image generation...")
+            SafeLogger.info("Sage Designer: Generating Imagen 4 thumbnail...")
             try:
                 return await generate_imagen_image(genai_client, prompt)
             except Exception as e:
-                SafeLogger.warn(f"Imagen fallback also failed: {e}")
+                SafeLogger.warn(f"Imagen generation failed: {e}")
         return None
 
-@retry_with_backoff
-async def generate_nvidia_image(client, prompt):
-    """Calls NVIDIA NIM for FLUX.1-schnell image generation with robust response parsing."""
-    nv_key = settings.nvidia_key
-    if not nv_key:
-        return None
+    # Handle legacy 'nvidia' setting: treat it as 'pollinations' to run the new dynamic provider chain
+    if configured_provider == "nvidia":
+        configured_provider = "pollinations"
+
+    chain = IMAGE_PROVIDER_CHAINS.get(
+        configured_provider,
+        ["pollinations", "huggingface"],
+    )
+
+    attempted = set()
+    img_bytes = None
+
+    for provider_name in chain:
+        if provider_name in attempted:
+            continue
+
+        attempted.add(provider_name)
+        generator = IMAGE_GENERATORS.get(provider_name)
+
+        if generator is None:
+            continue
+
+        try:
+            img_bytes = await generator(prompt, client)
+        except Exception as e:
+            SafeLogger.warn(f"Unexpected image provider failure: {provider_name} ({e})")
+            continue
+
+        if img_bytes:
+            SafeLogger.info(f"Image generated successfully using {provider_name}")
+            return img_bytes
+
+    SafeLogger.error("All dynamic image providers failed")
     
-    headers = {
-        "Authorization": f"Bearer {nv_key}",
-        "Accept": "application/json"
-    }
-    payload = {
-        "prompt": prompt,
-        "width": 1024,
-        "height": 1024,
-        "steps": 4,
-        "seed": 0,
-        "samples": 1
-    }
-    
-    try:
-        response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=45)
-        
-        # Diagnostic logging
-        status_code = response.status_code
-        body_excerpt = response.text[:200]
-        SafeLogger.info(
-            f"NVIDIA NIM diagnostic: Status={status_code}, Endpoint={NVIDIA_INVOKE_URL}, "
-            f"Model={NVIDIA_MODEL_ID}, Provider=nvidia, ResponseSnippet={body_excerpt}"
-        )
-        
-        if status_code in [400, 401, 403, 404, 422]:
-            err = httpx.HTTPStatusError(
-                f"NVIDIA NIM deterministic HTTP error {status_code}: {response.text}",
-                request=response.request,
-                response=response
-            )
-            err.skip_backoff_retry = True
-            raise err
+    if genai_client is not None:
+        SafeLogger.info("Falling back to Imagen for image generation...")
+        try:
+            return await generate_imagen_image(genai_client, prompt)
+        except Exception as e:
+            SafeLogger.warn(f"Imagen fallback also failed: {e}")
             
-        response.raise_for_status()
-        result = response.json()
-        
-        # Robust multi-format base64 parsing (artifacts vs direct image field)
-        image_b64 = None
-        if "image" in result:
-            image_b64 = result["image"]
-        elif "artifacts" in result and len(result["artifacts"]) > 0:
-            image_b64 = result["artifacts"][0].get("base64")
-        elif "data" in result and len(result["data"]) > 0:
-            image_b64 = result["data"][0].get("b64_json") or result["data"][0].get("base64")
-        
-        if image_b64:
-            SafeLogger.info("NVIDIA NIM: Image successfully generated.")
-            return base64.b64decode(image_b64)
-            
-        SafeLogger.warn(f"NVIDIA NIM: Response succeeded but no image found. Response keys: {list(result.keys())}")
-    except Exception as e:
-        if getattr(e, "skip_backoff_retry", False):
-            raise
-        SafeLogger.warn(f"NVIDIA NIM failed: {e}")
-        raise
+    return None
+
 
 async def generate_interactive_reply(original_text, author, context):
     """Generates an AI reply for a social mention, maintaining the Sage persona."""

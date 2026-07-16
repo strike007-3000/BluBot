@@ -101,7 +101,7 @@ async def test_media_strategy_invalid_opengraph_fallback_success(monkeypatch, mo
     # AI Fallback mocks
     mocker.patch("src.curator.generate_visual_prompt", new_callable=AsyncMock, return_value="Tech Prompt")
     gen_bytes = create_dummy_image()
-    mocker.patch("src.curator.generate_nvidia_image", new_callable=AsyncMock, return_value=gen_bytes)
+    mocker.patch("src.curator.generate_ai_image", new_callable=AsyncMock, return_value=gen_bytes)
     mocker.patch("src.curator.generate_image_alt_text", new_callable=AsyncMock, return_value="Generated Alt")
 
     synthesis = SynthesisResult(content="Article post", lead_link="https://example.com/article", topic="General")
@@ -127,7 +127,7 @@ async def test_media_strategy_invalid_opengraph_fallback_failed(monkeypatch, moc
     
     # Fail AI generation
     mocker.patch("src.curator.generate_visual_prompt", new_callable=AsyncMock, return_value="Tech Prompt")
-    mocker.patch("src.curator.generate_nvidia_image", new_callable=AsyncMock, return_value=None)
+    mocker.patch("src.curator.generate_ai_image", new_callable=AsyncMock, return_value=None)
 
     synthesis = SynthesisResult(content="Article post", lead_link="https://example.com/article", topic="General")
     curation = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
@@ -146,7 +146,7 @@ async def test_media_strategy_scratch_post_enabled(monkeypatch, mocker):
 
     mocker.patch("src.curator.generate_visual_prompt", new_callable=AsyncMock, return_value="Tech Prompt")
     gen_bytes = create_dummy_image()
-    mocker.patch("src.curator.generate_nvidia_image", new_callable=AsyncMock, return_value=gen_bytes)
+    mocker.patch("src.curator.generate_ai_image", new_callable=AsyncMock, return_value=gen_bytes)
     mocker.patch("src.curator.generate_image_alt_text", new_callable=AsyncMock, return_value="Generated Alt")
 
     # No lead link (scratch-generated)

@@ -68,30 +68,49 @@ async def test_image_generation():
     
     import httpx
     from google import genai
-    from src.curator import generate_nvidia_image, generate_imagen_image
+    from src.curator import generate_pollinations_image, generate_huggingface_image, generate_imagen_image
     
     prompt = "A minimalist icon of a blue bird holding a newspaper, clean digital art, simple illustration"
     
-    # 1. NVIDIA Test
-    nv_key = os.getenv("NVIDIA_KEY")
-    if nv_key:
-        print(f"\nRunning NVIDIA FLUX.1-schnell image generation...")
+    # 1. Pollinations Test
+    pollinations_key = os.getenv("POLLINATIONS_API_KEY")
+    if pollinations_key:
+        print(f"\nRunning Pollinations image generation...")
         try:
             async with httpx.AsyncClient() as client:
-                res = await generate_nvidia_image(client, prompt)
+                res = await generate_pollinations_image(prompt, client)
             if res:
-                out_path = "nvidia_flux_test.png"
+                out_path = "pollinations_test.png"
                 with open(out_path, "wb") as f:
                     f.write(res)
-                print(f"✅ Success! NVIDIA image generated and saved to: {out_path} ({len(res)} bytes)")
+                print(f"✅ Success! Pollinations image generated and saved to: {out_path} ({len(res)} bytes)")
             else:
-                print("❌ Failure: NVIDIA generation returned no bytes.")
+                print("❌ Failure: Pollinations generation returned no bytes.")
         except Exception as e:
-            print(f"❌ Failure: NVIDIA generation failed: {e}")
+            print(f"❌ Failure: Pollinations generation failed: {e}")
     else:
-        print("\nNVIDIA_KEY not available, skipping NVIDIA test.")
+        print("\nPOLLINATIONS_API_KEY not available, skipping Pollinations test.")
         
-    # 2. Gemini/Imagen Test
+    # 2. Hugging Face Test
+    hf_key = os.getenv("HUGGINGFACE_API_KEY")
+    if hf_key:
+        print(f"\nRunning Hugging Face image generation...")
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await generate_huggingface_image(prompt, client)
+            if res:
+                out_path = "huggingface_test.png"
+                with open(out_path, "wb") as f:
+                    f.write(res)
+                print(f"✅ Success! Hugging Face image generated and saved to: {out_path} ({len(res)} bytes)")
+            else:
+                print("❌ Failure: Hugging Face generation returned no bytes.")
+        except Exception as e:
+            print(f"❌ Failure: Hugging Face generation failed: {e}")
+    else:
+        print("\nHUGGINGFACE_API_KEY not available, skipping Hugging Face test.")
+        
+    # 3. Gemini/Imagen Test
     gemini_key = os.getenv("GEMINI_KEY")
     if gemini_key:
         print(f"\nRunning Gemini Imagen image generation...")
@@ -121,12 +140,12 @@ async def main():
         api_key = input("Please enter your Gemini API Key: ").strip()
         os.environ["GEMINI_KEY"] = api_key
 
-    if IMAGE_PROVIDER == "nvidia":
-        nv_key = os.getenv("NVIDIA_KEY")
-        if not nv_key:
-            print("\n--- NVIDIA_KEY not found ---")
-            nv_key = input("Please enter your NVIDIA API Key: ").strip()
-            os.environ["NVIDIA_KEY"] = nv_key
+    if IMAGE_PROVIDER == "huggingface" or IMAGE_PROVIDER == "pollinations":
+        hf_key = os.getenv("HUGGINGFACE_API_KEY")
+        if not hf_key and IMAGE_PROVIDER == "huggingface":
+            print("\n--- HUGGINGFACE_API_KEY not found ---")
+            hf_key = input("Please enter your Hugging Face API Key: ").strip()
+            os.environ["HUGGINGFACE_API_KEY"] = hf_key
 
     # Validate models with user keys
     if not validate_gemini_model_priority():
@@ -136,7 +155,7 @@ async def main():
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
-    print("3. Live Image Generation Test (NVIDIA FLUX & Gemini Imagen)")
+    print("3. Live Image Generation Test (Pollinations, Hugging Face, & Gemini Imagen)")
     
     try:
         choice = input("\nEnter choice (1-3) or 'q' to quit: ").strip().lower()

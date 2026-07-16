@@ -25,7 +25,11 @@ class Settings:
     is_dry_run: bool = False
     is_ci: bool = False
     github_event: str = "schedule"
-    image_provider: str = "nvidia"
+    image_provider: str = "pollinations"
+    pollinations_api_url: str = "" # will load from config constant in from_env
+    pollinations_api_key: Optional[str] = None
+    huggingface_api_key: Optional[str] = None
+    huggingface_image_model: str = ""
     enable_image_gen: bool = True
     enable_bio_management: bool = True
     enable_interactions: bool = True
@@ -63,11 +67,14 @@ class Settings:
         
         is_dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
         is_ci = os.getenv("CI", "false").lower() == "true"
-        image_provider = os.getenv("IMAGE_PROVIDER", "nvidia")
+        image_provider = os.getenv("IMAGE_PROVIDER", "pollinations")
         
         # Parse thinking budget safely
         tb_env = os.getenv("THINKING_BUDGET")
         thinking_budget = int(tb_env) if tb_env and tb_env.strip().isdigit() else None
+
+        from .config import POLLINATIONS_API_URL, HF_IMAGE_MODEL
+
 
         # Core validation logic moved from config.py
         settings_dict = {
@@ -93,6 +100,10 @@ class Settings:
             "is_ci": is_ci,
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
+            "pollinations_api_url": os.getenv("POLLINATIONS_API_URL", POLLINATIONS_API_URL),
+            "pollinations_api_key": os.getenv("POLLINATIONS_API_KEY"),
+            "huggingface_api_key": os.getenv("HUGGINGFACE_API_KEY"),
+            "huggingface_image_model": os.getenv("HUGGINGFACE_IMAGE_MODEL", HF_IMAGE_MODEL),
             "thinking_budget": thinking_budget,
             "gemini_model": os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-lite"),
             
@@ -142,10 +153,6 @@ class Settings:
 
         if not self.gemini_key:
             SafeLogger.error("Settings: Missing GEMINI_KEY.")
-            return False
-            
-        if self.image_provider == "nvidia" and not self.nvidia_key:
-            SafeLogger.error("Settings: NVIDIA image provider selected but NVIDIA_KEY is missing.")
             return False
             
         if not self.bsky_handle or not self.bsky_password:

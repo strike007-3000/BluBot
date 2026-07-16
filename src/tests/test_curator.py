@@ -195,82 +195,231 @@ def test_fallback_behavior_unknown_source():
     score = calculate_relevance_score(item_unknown, now_utc, now_utc)
     assert score <= 0
 
-from src.curator import generate_ai_image, generate_nvidia_image
+from src.curator import (
+    generate_ai_image,
+    validate_image_bytes,
+    generate_pollinations_image,
+    generate_huggingface_image,
+)
 import httpx
+from PIL import Image
+import io
+
+def create_valid_test_image_bytes() -> bytes:
+    # Helper to generate minimal valid PNG bytes
+    out = io.BytesIO()
+    im = Image.new("RGBA", (10, 10), "blue")
+    im.save(out, format="PNG")
+    return out.getvalue()
+
+def test_validate_image_bytes():
+    valid_bytes = create_valid_test_image_bytes()
+    assert validate_image_bytes(valid_bytes) is True
+    assert validate_image_bytes(b"") is False
+    assert validate_image_bytes(b"{}") is False
+    assert validate_image_bytes(valid_bytes[:10]) is False  # truncated
 
 @pytest.mark.asyncio
-async def test_generate_nvidia_image_success(monkeypatch, mocker):
-    from src.settings import Settings
-    mock_settings = Settings(gemini_key="mock", nvidia_key="nvapi-test-key", image_provider="nvidia")
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-    
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    # Base64 for "test_image" is "dGVzdF9pbWFnZQ=="
-    mock_response.json = MagicMock(return_value={"artifacts": [{"base64": "dGVzdF9pbWFnZQ=="}]})
-    mock_response.text = '{"artifacts": [{"base64": "dGVzdF9pbWFnZQ=="}]}'
-    
-    mock_client = AsyncMock()
-    mock_client.post = AsyncMock(return_value=mock_response)
-    
-    res = await generate_nvidia_image(mock_client, "Prompt")
-    assert res == b"test_image"
-    mock_client.post.assert_called_once()
-
-@pytest.mark.asyncio
-async def test_generate_nvidia_image_deterministic_error(monkeypatch, mocker):
-    from src.settings import Settings
-    mock_settings = Settings(gemini_key="mock", nvidia_key="nvapi-test-key", image_provider="nvidia")
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-    
-    mock_response = MagicMock()
-    mock_response.status_code = 422
-    mock_response.text = "Unprocessable Entity"
-    
-    mock_client = AsyncMock()
-    mock_client.post = AsyncMock(return_value=mock_response)
-    
-    with pytest.raises(httpx.HTTPStatusError) as exc_info:
-        await generate_nvidia_image(mock_client, "Prompt")
-        
-    assert exc_info.value.response.status_code == 422
-    assert getattr(exc_info.value, "skip_backoff_retry", False) is True
-
-@pytest.mark.asyncio
-async def test_generate_ai_image_fallback_to_imagen(monkeypatch, mocker):
-    from src.settings import Settings
-    mock_settings = Settings(gemini_key="mock", nvidia_key="nvapi-test-key", image_provider="nvidia")
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-    
-    # Force generate_nvidia_image to raise an error
-    mocker.patch("src.curator.generate_nvidia_image", side_effect=Exception("NVIDIA failure"))
-    
-    # Mock generate_imagen_image to return dummy bytes
-    mocker.patch("src.curator.generate_imagen_image", return_value=b"ImagenBytes")
-    
-    mock_client = AsyncMock()
-    mock_genai = MagicMock()
-    
-    res = await generate_ai_image(mock_client, mock_genai, "Prompt")
-    assert res == b"ImagenBytes"
-
-@pytest.mark.asyncio
-async def test_live_nvidia_smoke(monkeypatch):
-    import os
-    if not os.getenv("RUN_LIVE_NVIDIA_TEST") or not os.getenv("NVIDIA_KEY"):
-        pytest.skip("Skipping live NVIDIA smoke test (RUN_LIVE_NVIDIA_TEST=1 or NVIDIA_KEY missing)")
-        
+async def test_generate_pollinations_success(monkeypatch):
     from src.settings import Settings
     mock_settings = Settings(
         gemini_key="mock",
-        nvidia_key=os.getenv("NVIDIA_KEY"),
+        pollinations_api_key="test-key",
+        pollinations_api_url="https://gen.pollinations.ai/image/",
+        image_provider="pollinations"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.content = valid_bytes
+    mock_response.headers = {"Content-Type": "image/png"}
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(return_value=mock_response)
+
+    res = await generate_pollinations_image("Test Prompt", mock_client)
+    assert res == valid_bytes
+
+    # Assert get arguments
+    mock_client.get.assert_called_once()
+    args, kwargs = mock_client.get.call_args
+    assert "Authorization" in kwargs["headers"]
+    assert "Bearer test-key" in kwargs["headers"]["Authorization"]
+
+@pytest.mark.asyncio
+async def test_generate_pollinations_missing_key(monkeypatch):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        pollinations_api_key=None,
+        image_provider="pollinations"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    mock_client = AsyncMock()
+    res = await generate_pollinations_image("Test Prompt", mock_client)
+    assert res is None
+
+@pytest.mark.asyncio
+async def test_generate_huggingface_success(monkeypatch):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        huggingface_api_key="hf-token",
+        huggingface_image_model="black-forest-labs/FLUX.1-schnell",
+        image_provider="huggingface"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.content = valid_bytes
+    mock_response.headers = {"Content-Type": "image/png"}
+
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    res = await generate_huggingface_image("Test Prompt", mock_client)
+    assert res == valid_bytes
+
+    mock_client.post.assert_called_once()
+    args, kwargs = mock_client.post.call_args
+    assert "Authorization" in kwargs["headers"]
+    assert "Bearer hf-token" in kwargs["headers"]["Authorization"]
+
+@pytest.mark.asyncio
+async def test_generate_huggingface_nvidia_fallback(monkeypatch):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        huggingface_api_key=None,
+        nvidia_key="legacy-nv-token",
+        huggingface_image_model="black-forest-labs/FLUX.1-schnell",
+        image_provider="huggingface"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.content = valid_bytes
+    mock_response.headers = {"Content-Type": "image/png"}
+
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    res = await generate_huggingface_image("Test Prompt", mock_client)
+    assert res == valid_bytes
+
+    mock_client.post.assert_called_once()
+    args, kwargs = mock_client.post.call_args
+    assert "Authorization" in kwargs["headers"]
+    assert "Bearer legacy-nv-token" in kwargs["headers"]["Authorization"]
+
+@pytest.mark.asyncio
+async def test_dispatcher_pollinations_success_stops_chain(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        image_provider="pollinations"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    
+    # Mock the functions inside curator using mocker.patch
+    mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "pollinations": AsyncMock(return_value=valid_bytes),
+        "huggingface": AsyncMock(return_value=None)
+    })
+
+    mock_client = AsyncMock()
+    res = await generate_ai_image(mock_client, None, "Test Prompt")
+    assert res == valid_bytes
+    assert mock_poll["pollinations"].await_count == 1
+    assert mock_poll["huggingface"].await_count == 0
+
+@pytest.mark.asyncio
+async def test_dispatcher_pollinations_failure_uses_huggingface(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        image_provider="pollinations"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "pollinations": AsyncMock(return_value=None),
+        "huggingface": AsyncMock(return_value=valid_bytes)
+    })
+
+    mock_client = AsyncMock()
+    res = await generate_ai_image(mock_client, None, "Test Prompt")
+    assert res == valid_bytes
+    assert mock_poll["pollinations"].await_count == 1
+    assert mock_poll["huggingface"].await_count == 1
+
+@pytest.mark.asyncio
+async def test_dispatcher_explicit_imagen_provider(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        image_provider="imagen"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    mock_imagen = mocker.patch("src.curator.generate_imagen_image", return_value=b"ImagenBytes")
+    
+    mock_client = AsyncMock()
+    mock_genai = MagicMock()
+    res = await generate_ai_image(mock_client, mock_genai, "Test Prompt")
+    assert res == b"ImagenBytes"
+    mock_imagen.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_dispatcher_legacy_nvidia_provider(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
         image_provider="nvidia"
     )
     monkeypatch.setattr("src.curator.settings", mock_settings)
-    
-    async with httpx.AsyncClient() as client:
-        res = await generate_nvidia_image(client, "A minimalist drawing of a cute robot coding on a laptop, line art, simple, high quality")
-        assert res is not None
-        assert len(res) > 100 # Should contain valid image bytes
+
+    valid_bytes = create_valid_test_image_bytes()
+    mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "pollinations": AsyncMock(return_value=valid_bytes)
+    })
+
+    mock_client = AsyncMock()
+    res = await generate_ai_image(mock_client, None, "Test Prompt")
+    assert res == valid_bytes
+    assert mock_poll["pollinations"].await_count == 1
+
+@pytest.mark.asyncio
+async def test_dispatcher_unexpected_provider_exception_continues(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        image_provider="pollinations"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "pollinations": AsyncMock(side_effect=Exception("Unexpected API error")),
+        "huggingface": AsyncMock(return_value=valid_bytes)
+    })
+
+    mock_client = AsyncMock()
+    res = await generate_ai_image(mock_client, None, "Test Prompt")
+    assert res == valid_bytes
+    assert mock_poll["pollinations"].await_count == 1
+    assert mock_poll["huggingface"].await_count == 1
+
+
 
 

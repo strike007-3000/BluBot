@@ -338,7 +338,16 @@ async def test_send_draft_for_approval_regenerate_image_success(monkeypatch, moc
     
     # Mock curator functions
     mocker.patch("src.curator.generate_visual_prompt", return_value="Visual Prompt")
-    mocker.patch("src.curator.generate_nvidia_image", return_value=b"NewImageBytes")
+    
+    # Generate minimal valid PNG bytes so validate_image_bytes returns True
+    from PIL import Image
+    import io
+    out = io.BytesIO()
+    im = Image.new("RGBA", (10, 10), "blue")
+    im.save(out, format="PNG")
+    valid_bytes = out.getvalue()
+    
+    mocker.patch("src.curator.generate_ai_image", return_value=valid_bytes)
     mocker.patch("src.curator.generate_image_alt_text", return_value="New Alt Text")
     
     mock_client = MagicMock()
@@ -359,7 +368,7 @@ async def test_send_draft_for_approval_regenerate_image_success(monkeypatch, moc
     )
     
     assert text == "Original draft text"
-    assert media.image_bytes == b"NewImageBytes"
+    assert media.image_bytes == valid_bytes
     assert media.alt_text == "New Alt Text"
     mock_bot_instance.edit_message_media.assert_called()
 
@@ -447,6 +456,8 @@ async def test_send_draft_for_approval_regenerate_image_failure(monkeypatch, moc
     # 3. User received a clear failure message
     mock_bot_instance.send_message.assert_any_call(
         chat_id="98765",
-        text="❌ Image generation returned no data."
+        text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.",
+        reply_to_message_id=mocker.ANY
     )
+
 

@@ -44,9 +44,11 @@ def get_version():
 VERSION = get_version()
 
 # Platform Constraints
-IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "nvidia")
-NVIDIA_MODEL_ID = "black-forest-labs/flux.1-schnell"
-NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-schnell"
+# Platform Constraints
+IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "pollinations")
+POLLINATIONS_API_URL = "https://gen.pollinations.ai/image/"
+HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell"
+
 
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.1-flash-lite-preview",

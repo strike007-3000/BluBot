@@ -181,7 +181,9 @@ async def send_draft_for_approval(
                                     # 2. Generate AI image
                                     new_image_data = await generate_ai_image(client, genai_client, visual_prompt)
                                     
-                                    if new_image_data:
+                                    from src.curator import validate_image_bytes
+
+                                    if new_image_data and validate_image_bytes(new_image_data):
                                         # 3. Generate image alt text
                                         alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
                                         new_alt_text = await generate_image_alt_text(new_image_data, alt_prompt)
@@ -237,10 +239,10 @@ async def send_draft_for_approval(
                                             SafeLogger.info("Telegram: Image generated and attached successfully.")
                                             await bot.send_message(chat_id=chat_id, text="🎨 Image card generated and attached successfully!", reply_to_message_id=status_msg.message_id)
                                     else:
-                                        await bot.send_message(chat_id=chat_id, text="❌ Image generation returned no data.")
+                                        await bot.send_message(chat_id=chat_id, text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.", reply_to_message_id=status_msg.message_id)
                                 except Exception as e:
                                     SafeLogger.error(f"Telegram: Image regeneration failed: {e}")
-                                    await bot.send_message(chat_id=chat_id, text=f"❌ Image regeneration failed: {e}", reply_to_message_id=status_msg.message_id)
+                                    await bot.send_message(chat_id=chat_id, text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.", reply_to_message_id=status_msg.message_id)
 
                     # Handle incoming text messages (direct edits, replies, or feedback)
                     elif update.message and update.message.text:
