@@ -200,6 +200,7 @@ from src.curator import (
     validate_image_bytes,
     generate_pollinations_image,
     generate_huggingface_image,
+    generate_nvidia_image,
 )
 import httpx
 from PIL import Image
@@ -249,6 +250,51 @@ async def test_generate_pollinations_success(monkeypatch):
     assert "Bearer test-key" in kwargs["headers"]["Authorization"]
 
 @pytest.mark.asyncio
+async def test_generate_nvidia_success(monkeypatch):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        nvidia_key="nv-token",
+        image_provider="nvidia"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    
+    # NVIDIA NIM returns base64 string in JSON {"image": "..."}
+    import base64
+    encoded = base64.b64encode(valid_bytes).decode("utf-8")
+    
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json = MagicMock(return_value={"image": encoded})
+
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    res = await generate_nvidia_image("Test Prompt", mock_client)
+    assert res == valid_bytes
+
+    mock_client.post.assert_called_once()
+    args, kwargs = mock_client.post.call_args
+    assert "Authorization" in kwargs["headers"]
+    assert "Bearer nv-token" in kwargs["headers"]["Authorization"]
+
+@pytest.mark.asyncio
+async def test_generate_nvidia_missing_key(monkeypatch):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        nvidia_key=None,
+        image_provider="nvidia"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    mock_client = AsyncMock()
+    res = await generate_nvidia_image("Test Prompt", mock_client)
+    assert res is None
+
+@pytest.mark.asyncio
 async def test_generate_pollinations_missing_key(monkeypatch):
     from src.settings import Settings
     mock_settings = Settings(
@@ -261,6 +307,7 @@ async def test_generate_pollinations_missing_key(monkeypatch):
     mock_client = AsyncMock()
     res = await generate_pollinations_image("Test Prompt", mock_client)
     assert res is None
+
 
 @pytest.mark.asyncio
 async def test_generate_huggingface_success(monkeypatch):
@@ -381,23 +428,44 @@ async def test_dispatcher_explicit_imagen_provider(monkeypatch, mocker):
     mock_imagen.assert_called_once()
 
 @pytest.mark.asyncio
-async def test_dispatcher_legacy_nvidia_provider(monkeypatch, mocker):
+async def test_dispatcher_legacy_nvidia_provider_no_key(monkeypatch, mocker):
     from src.settings import Settings
     mock_settings = Settings(
         gemini_key="mock",
-        image_provider="nvidia"
+        image_provider="nvidia",
+        nvidia_key=None
     )
     monkeypatch.setattr("src.curator.settings", mock_settings)
 
     valid_bytes = create_valid_test_image_bytes()
     mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
-        "pollinations": AsyncMock(return_value=valid_bytes)
+        "huggingface": AsyncMock(return_value=valid_bytes)
     })
 
     mock_client = AsyncMock()
     res = await generate_ai_image(mock_client, None, "Test Prompt")
     assert res == valid_bytes
-    assert mock_poll["pollinations"].await_count == 1
+    assert mock_poll["huggingface"].await_count == 1
+
+@pytest.mark.asyncio
+async def test_dispatcher_legacy_nvidia_provider_with_key(monkeypatch, mocker):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        image_provider="nvidia",
+        nvidia_key="test-nv-key"
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "nvidia": AsyncMock(return_value=valid_bytes)
+    })
+
+    mock_client = AsyncMock()
+    res = await generate_ai_image(mock_client, None, "Test Prompt")
+    assert res == valid_bytes
+    assert mock_poll["nvidia"].await_count == 1
 
 @pytest.mark.asyncio
 async def test_dispatcher_unexpected_provider_exception_continues(monkeypatch, mocker):

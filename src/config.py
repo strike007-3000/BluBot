@@ -45,10 +45,11 @@ VERSION = get_version()
 
 # Platform Constraints
 # Platform Constraints
-IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "pollinations")
+IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "huggingface")
 POLLINATIONS_API_URL = "https://gen.pollinations.ai/image/"
 HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell"
-
+NVIDIA_MODEL_ID = "stabilityai/stable-diffusion-3-medium"
+NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-3-medium"
 
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.1-flash-lite-preview",
@@ -60,7 +61,7 @@ GEMINI_MODEL_PRIORITY = [
 BLUESKY_LIMIT = 300
 MASTODON_LIMIT = 500
 THREADS_LIMIT = 500
-IMAGEN_MODEL = "models/imagen-4.0-generate-001"
+IMAGEN_MODEL = "models/imagen-3.0-generate-002"
 ENABLE_IMAGE_GEN = True
 FEED_SUMMARY_MAX_CHARS = 500
 GENERIC_IMAGE_PATTERNS = [

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 os.environ["DRY_RUN"] = "true"
 
 # Ensure we can import from src
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
 from src.curator import fetch_news, summarize_news
@@ -73,27 +73,31 @@ async def test_image_generation():
     prompt = "A minimalist icon of a blue bird holding a newspaper, clean digital art, simple illustration"
     
     # 1. Pollinations Test
-    pollinations_key = os.getenv("POLLINATIONS_API_KEY")
-    if pollinations_key:
-        print(f"\nRunning Pollinations image generation...")
-        try:
-            async with httpx.AsyncClient() as client:
-                res = await generate_pollinations_image(prompt, client)
-            if res:
-                out_path = "pollinations_test.png"
-                with open(out_path, "wb") as f:
-                    f.write(res)
-                print(f"✅ Success! Pollinations image generated and saved to: {out_path} ({len(res)} bytes)")
-            else:
-                print("❌ Failure: Pollinations generation returned no bytes.")
-        except Exception as e:
-            print(f"❌ Failure: Pollinations generation failed: {e}")
-    else:
-        print("\nPOLLINATIONS_API_KEY not available, skipping Pollinations test.")
+    print(f"\nRunning Pollinations image generation...")
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await generate_pollinations_image(prompt, client)
+        if res:
+            out_path = "pollinations_test.png"
+            with open(out_path, "wb") as f:
+                f.write(res)
+            print(f"✅ Success! Pollinations image generated and saved to: {out_path} ({len(res)} bytes)")
+        else:
+            print("❌ Failure: Pollinations generation returned no bytes.")
+    except Exception as e:
+        print(f"❌ Failure: Pollinations generation failed: {e}")
         
     # 2. Hugging Face Test
     hf_key = os.getenv("HUGGINGFACE_API_KEY")
-    if hf_key:
+    if not hf_key:
+        print("\n--- HUGGINGFACE_API_KEY not found ---")
+        hf_key = input("Please enter your Hugging Face API Key (or press enter to skip): ").strip()
+        if hf_key:
+            os.environ["HUGGINGFACE_API_KEY"] = hf_key
+            from src.settings import settings
+            settings.huggingface_api_key = hf_key
+
+    if os.getenv("HUGGINGFACE_API_KEY"):
         print(f"\nRunning Hugging Face image generation...")
         try:
             async with httpx.AsyncClient() as client:
@@ -112,10 +116,18 @@ async def test_image_generation():
         
     # 3. Gemini/Imagen Test
     gemini_key = os.getenv("GEMINI_KEY")
-    if gemini_key:
+    if not gemini_key:
+        print("\n--- GEMINI_KEY not found ---")
+        gemini_key = input("Please enter your Gemini API Key (or press enter to skip): ").strip()
+        if gemini_key:
+            os.environ["GEMINI_KEY"] = gemini_key
+            from src.settings import settings
+            settings.gemini_key = gemini_key
+
+    if os.getenv("GEMINI_KEY"):
         print(f"\nRunning Gemini Imagen image generation...")
         try:
-            genai_client = genai.Client(api_key=gemini_key)
+            genai_client = genai.Client(api_key=os.getenv("GEMINI_KEY"))
             res = await generate_imagen_image(genai_client, prompt)
             if res:
                 out_path = "gemini_imagen_test.png"
@@ -133,25 +145,6 @@ async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
     
-    # AI Model Key Management
-    api_key = os.getenv("GEMINI_KEY")
-    if not api_key:
-        print("\n--- GEMINI_KEY not found ---")
-        api_key = input("Please enter your Gemini API Key: ").strip()
-        os.environ["GEMINI_KEY"] = api_key
-
-    if IMAGE_PROVIDER == "huggingface" or IMAGE_PROVIDER == "pollinations":
-        hf_key = os.getenv("HUGGINGFACE_API_KEY")
-        if not hf_key and IMAGE_PROVIDER == "huggingface":
-            print("\n--- HUGGINGFACE_API_KEY not found ---")
-            hf_key = input("Please enter your Hugging Face API Key: ").strip()
-            os.environ["HUGGINGFACE_API_KEY"] = hf_key
-
-    # Validate models with user keys
-    if not validate_gemini_model_priority():
-        print("ERROR: Gemini validation failed with provided key.")
-        return
-    
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
@@ -162,14 +155,23 @@ async def main():
         if choice == "1":
             await test_scoring()
         elif choice == "2":
-            await test_full_dry_run()
+            # Prompt for Gemini key since full dry run needs it
+            gemini_key = os.getenv("GEMINI_KEY")
+            if not gemini_key:
+                print("\n--- GEMINI_KEY not found ---")
+                gemini_key = input("Please enter your Gemini API Key: ").strip()
+                os.environ["GEMINI_KEY"] = gemini_key
+                from src.settings import settings
+                settings.gemini_key = gemini_key
+            if validate_gemini_model_priority():
+                await test_full_dry_run()
         elif choice == "3":
             await test_image_generation()
         elif choice == "q":
             print("Exiting.")
         else:
-            print("Defaulting to Full Dry Run.")
-            await test_full_dry_run()
+            print("Defaulting to Scoring Breakdown.")
+            await test_scoring()
     except EOFError:
         # Handle non-interactive environments
         await test_scoring()

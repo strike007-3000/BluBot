@@ -25,7 +25,7 @@ class Settings:
     is_dry_run: bool = False
     is_ci: bool = False
     github_event: str = "schedule"
-    image_provider: str = "pollinations"
+    image_provider: str = "huggingface"
     pollinations_api_url: str = "" # will load from config constant in from_env
     pollinations_api_key: Optional[str] = None
     huggingface_api_key: Optional[str] = None
@@ -67,7 +67,7 @@ class Settings:
         
         is_dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
         is_ci = os.getenv("CI", "false").lower() == "true"
-        image_provider = os.getenv("IMAGE_PROVIDER", "pollinations")
+        image_provider = os.getenv("IMAGE_PROVIDER", "huggingface")
         
         # Parse thinking budget safely
         tb_env = os.getenv("THINKING_BUDGET")

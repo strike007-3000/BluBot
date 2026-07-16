@@ -21,6 +21,7 @@ from src.config import (
     FEED_SUMMARY_MAX_CHARS
 )
 from src.utils import retry_with_backoff, SafeLogger
+from src.models import ImageValidationResult
 
 MODEL_ATTEMPT_RETRIES = 2
 
@@ -415,9 +416,8 @@ async def generate_visual_prompt(client, summary, topic, category="unknown"):
     except Exception:
         return f"Minimalist tech illustration of {topic}"
 
-def validate_opengraph_image(image_bytes: bytes, image_url: str) -> "ImageValidationResult":
+def validate_opengraph_image(image_bytes: bytes, image_url: str) -> ImageValidationResult:
     """Validates the OpenGraph image and returns structured ImageValidationResult."""
-    from src.models import ImageValidationResult
     from PIL import Image
     import io
     from src.utils import get_image_mime, SafeLogger
@@ -529,15 +529,18 @@ async def generate_pollinations_image(
     encoded_prompt = quote(prompt, safe="")
     url = f"{settings.pollinations_api_url.rstrip('/')}/{encoded_prompt}"
     headers = {
-        "Authorization": f"Bearer {settings.pollinations_api_key}",
         "Accept": "image/*",
     }
+    if settings.pollinations_api_key:
+        headers["Authorization"] = f"Bearer {settings.pollinations_api_key}"
+
     params = {
         "width": 1024,
         "height": 1024,
         "model": "flux",
         "seed": 0,
     }
+
 
     try:
         # 90 seconds timeout
@@ -618,14 +621,55 @@ async def generate_huggingface_image(
         SafeLogger.warn(f"Hugging Face failed: {e}")
         return None
 
+@retry_with_backoff
+async def generate_nvidia_image(
+    prompt: str,
+    client: httpx.AsyncClient,
+) -> bytes | None:
+    """Calls NVIDIA NIM for SD3-Medium image generation with robust response parsing."""
+    from src.config import NVIDIA_INVOKE_URL
+    if not settings.nvidia_key:
+        SafeLogger.info("NVIDIA NIM: Skipping because nvidia_key is missing.")
+        return None
+
+    headers = {
+        "Authorization": f"Bearer {settings.nvidia_key}",
+        "Accept": "application/json",
+    }
+    payload = {
+        "prompt": prompt,
+        "aspect_ratio": "1:1",
+        "mode": "text-to-image",
+        "model": "sd3",
+    }
+
+    try:
+        # 45 seconds timeout
+        timeout = httpx.Timeout(45.0, connect=10.0)
+        response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=timeout)
+        response.raise_for_status()
+        result = response.json()
+
+        if "image" in result:
+            img_bytes = base64.b64decode(result["image"])
+            if not validate_image_bytes(img_bytes):
+                SafeLogger.warn("NVIDIA NIM returned invalid image bytes")
+                return None
+            return img_bytes
+    except Exception as e:
+        SafeLogger.warn(f"NVIDIA NIM failed: {e}")
+    return None
+
 IMAGE_PROVIDER_CHAINS = {
     "pollinations": ["pollinations", "huggingface"],
     "huggingface": ["huggingface", "pollinations"],
+    "nvidia": ["nvidia", "huggingface", "pollinations"],
 }
 
 IMAGE_GENERATORS = {
     "pollinations": generate_pollinations_image,
     "huggingface": generate_huggingface_image,
+    "nvidia": generate_nvidia_image,
 }
 
 async def generate_ai_image(client: httpx.AsyncClient, genai_client, prompt: str) -> bytes | None:
@@ -643,13 +687,13 @@ async def generate_ai_image(client: httpx.AsyncClient, genai_client, prompt: str
                 SafeLogger.warn(f"Imagen generation failed: {e}")
         return None
 
-    # Handle legacy 'nvidia' setting: treat it as 'pollinations' to run the new dynamic provider chain
-    if configured_provider == "nvidia":
-        configured_provider = "pollinations"
+    # Handle legacy 'nvidia' setting: only remap to 'huggingface' if there is no nvidia_key configured
+    if configured_provider == "nvidia" and not settings.nvidia_key:
+        configured_provider = "huggingface"
 
     chain = IMAGE_PROVIDER_CHAINS.get(
         configured_provider,
-        ["pollinations", "huggingface"],
+        ["huggingface", "pollinations"],
     )
 
     attempted = set()
