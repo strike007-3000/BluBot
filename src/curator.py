@@ -580,7 +580,7 @@ async def generate_huggingface_image(
         return None
 
     model = settings.huggingface_image_model
-    url = f"https://api-inference.huggingface.co/models/{model}"
+    url = f"https://router.huggingface.co/hf-inference/models/{model}"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
