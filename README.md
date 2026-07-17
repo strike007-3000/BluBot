@@ -84,8 +84,8 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 #### Pollinations & Hugging Face (Required for v3.14.0+)
-- Get a free API key from [Hugging Face](https://huggingface.co/settings/tokens) (read token).
-- Integrated for **FLUX.1-schnell** via Pollinations and Hugging Face Serverless API.
+- Pollinations is free and requires no API key.
+- Get a Hugging Face token from [Hugging Face](https://huggingface.co/settings/tokens) with **Inference** permissions.
 
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
@@ -97,12 +97,12 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky App Password |
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
-| `POLLINATIONS_API_KEY` | No | Your Pollinations API Key (optional) |
-| `HUGGINGFACE_API_KEY` | **Yes** | Your Hugging Face access token |
-| `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `black-forest-labs/FLUX.1-schnell`) |
+| `POLLINATIONS_API_KEY` | No | Deprecated — Pollinations free API requires no key |
+| `HUGGINGFACE_API_KEY` | **Yes** | Hugging Face token with **Inference** permissions |
+| `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
 | `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
 | `GEMINI_MODEL` | No | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
-| `IMAGE_PROVIDER` | No | Default: `pollinations`. Set to `huggingface` or `imagen` to switch. |
+| `IMAGE_PROVIDER` | No | Default: `huggingface`. Options: `huggingface`, `pollinations`, `nvidia`, `imagen`. Each runs a fallback chain. |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL |
 | `THREADS_ACCESS_TOKEN` | No | Your Threads Long-Lived Access Token |
