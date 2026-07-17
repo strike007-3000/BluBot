@@ -483,22 +483,38 @@ async def generate_image_alt_text(image_bytes: bytes, prompt: str) -> str:
         return f"Tech illustration of: {prompt}"
 
 async def generate_imagen_image(genai_client, prompt: str):
-    """Calls Google Imagen for image generation."""
+    """Calls Gemini API for image generation using active recommended models."""
     try:
         from src.config import IMAGEN_MODEL
         from google.genai import types
-        SafeLogger.info("Sage Designer: Generating Imagen thumbnail...")
-        response = await genai_client.aio.models.generate_images(
-            model=IMAGEN_MODEL,
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio='1:1'
+        SafeLogger.info(f"Sage Designer: Generating Imagen thumbnail with {IMAGEN_MODEL}...")
+        
+        if IMAGEN_MODEL.startswith("imagen-"):
+            # Legacy Imagen models
+            response = await genai_client.aio.models.generate_images(
+                model=IMAGEN_MODEL,
+                prompt=prompt,
+                config=types.GenerateImagesConfig(
+                    number_of_images=1,
+                    aspect_ratio='1:1'
+                )
             )
-        )
-        if response.generated_images:
-            img = response.generated_images[0].image
-            return getattr(img, "image_bytes", None) or getattr(img, "_image_bytes", None)
+            if response.generated_images:
+                img = response.generated_images[0].image
+                return getattr(img, "image_bytes", None) or getattr(img, "_image_bytes", None)
+        else:
+            # Recommended Gemini multimodal image models (e.g. gemini-3.1-flash-image)
+            response = await genai_client.aio.models.generate_content(
+                model=IMAGEN_MODEL,
+                contents=[prompt],
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"],
+                )
+            )
+            if response.candidates and response.candidates[0].content.parts:
+                for part in response.candidates[0].content.parts:
+                    if part.inline_data:
+                        return part.inline_data.data
     except Exception as e:
         SafeLogger.warn(f"Imagen generation failed: {e}")
     return None

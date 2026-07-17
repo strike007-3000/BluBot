@@ -562,3 +562,50 @@ async def test_huggingface_url_uses_correct_domain(monkeypatch):
     await generate_huggingface_image("test", mock_client)
     url_called = mock_client.post.call_args[0][0]
     assert "router.huggingface.co" in url_called, f"HF URL stale: {url_called}"
+
+
+@pytest.mark.asyncio
+async def test_generate_imagen_legacy_mode(monkeypatch):
+    """Verify legacy imagen- model uses generate_images API."""
+    monkeypatch.setattr("src.config.IMAGEN_MODEL", "imagen-4.0-generate-001")
+    
+    mock_response = MagicMock()
+    mock_image = MagicMock()
+    mock_image.image_bytes = b"LegacyImagenBytes"
+    mock_response.generated_images = [MagicMock(image=mock_image)]
+    
+    mock_client = MagicMock()
+    mock_client.aio = MagicMock()
+    mock_client.aio.models = MagicMock()
+    mock_client.aio.models.generate_images = AsyncMock(return_value=mock_response)
+    
+    from src.curator import generate_imagen_image
+    res = await generate_imagen_image(mock_client, "test prompt")
+    assert res == b"LegacyImagenBytes"
+    mock_client.aio.models.generate_images.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_generate_imagen_multimodal_mode(monkeypatch):
+    """Verify gemini-3.1-flash-image model uses generate_content API with image response modality."""
+    monkeypatch.setattr("src.config.IMAGEN_MODEL", "gemini-3.1-flash-image")
+    
+    mock_part = MagicMock()
+    mock_part.inline_data = MagicMock(data=b"MultimodalImagenBytes")
+    
+    mock_candidate = MagicMock()
+    mock_candidate.content.parts = [mock_part]
+    
+    mock_response = MagicMock()
+    mock_response.candidates = [mock_candidate]
+    
+    mock_client = MagicMock()
+    mock_client.aio = MagicMock()
+    mock_client.aio.models = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+    
+    from src.curator import generate_imagen_image
+    res = await generate_imagen_image(mock_client, "test prompt")
+    assert res == b"MultimodalImagenBytes"
+    mock_client.aio.models.generate_content.assert_called_once()
+
