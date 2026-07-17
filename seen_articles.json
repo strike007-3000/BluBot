@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.11893",
-    "https://openai.com/index/preply",
-    "https://arxiv.org/abs/2606.11998",
-    "https://arxiv.org/abs/2606.12334",
-    "https://arxiv.org/abs/2606.12344",
-    "https://arxiv.org/abs/2606.12384",
-    "https://arxiv.org/abs/2606.12397",
-    "https://arxiv.org/abs/2606.11199",
     "https://arxiv.org/abs/2606.11209",
     "https://huggingface.co/blog/allenai/olmo-eval",
     "https://arxiv.org/abs/2606.11211",
@@ -499,7 +491,15 @@
     "https://deepmind.google/blog/our-approach-to-bioresilience/",
     "https://huggingface.co/blog/security-incident-july-2026",
     "https://arxiv.org/abs/2607.13395",
-    "https://arxiv.org/abs/2607.13413"
+    "https://arxiv.org/abs/2607.13413",
+    "https://huggingface.co/blog/nvidia/nemotron-3-embed-wins-rteb",
+    "https://the-decoder.com/kimis-open-model-k3-nears-gpt-5-6-sol-and-fable-5-while-signaling-the-end-of-super-cheap-chinese-ai/",
+    "https://aws.amazon.com/blogs/machine-learning/introducing-grok-on-amazon-bedrock/",
+    "https://simonwillison.net/2026/Jul/16/kimi-k3/#atom-everything",
+    "https://openai.com/index/cars24",
+    "https://arxiv.org/abs/2607.14180",
+    "https://arxiv.org/abs/2607.14185",
+    "https://arxiv.org/abs/2607.14315"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -507,8 +507,8 @@
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
     "k and v cache quantization"
   ],
-  "total_posts_curated": 758,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 759,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
     "unknown",
@@ -516,7 +516,8 @@
     "enterprise",
     "research_lab",
     "practitioner",
-    "journalism"
+    "journalism",
+    "research_lab"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
@@ -524,6 +525,7 @@
     "ENTERPRISE_ROI",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "QUESTION_FIRST"
   ]
 }
