@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.11209",
-    "https://huggingface.co/blog/allenai/olmo-eval",
-    "https://arxiv.org/abs/2606.11211",
-    "https://arxiv.org/abs/2606.11257",
-    "https://arxiv.org/abs/2606.11324",
-    "https://arxiv.org/abs/2606.11437",
-    "https://arxiv.org/abs/2606.11459",
-    "https://arxiv.org/abs/2606.11680",
     "https://arxiv.org/abs/2606.11687",
     "https://the-decoder.com/moonshots-open-model-kimi-k2-7-code-undercuts-gpt-5-5-and-claude-by-up-to-12x-on-price-per-token/",
     "https://www.microsoft.com/en-us/research/blog/ire-identifies-another-lotuslite-specimen/",
@@ -499,7 +491,15 @@
     "https://openai.com/index/cars24",
     "https://arxiv.org/abs/2607.14180",
     "https://arxiv.org/abs/2607.14185",
-    "https://arxiv.org/abs/2607.14315"
+    "https://arxiv.org/abs/2607.14315",
+    "https://machinelearningmastery.com/agentic-ai-security-defending-against-prompt-injection-and-tool-misuse/",
+    "https://openai.com/index/a-scorecard-for-the-ai-age",
+    "https://simonwillison.net/2026/Jul/17/kimi-k3/#atom-everything",
+    "https://arxiv.org/abs/2607.14419",
+    "https://arxiv.org/abs/2607.14506",
+    "https://arxiv.org/abs/2607.14733",
+    "https://arxiv.org/abs/2607.14770",
+    "https://arxiv.org/abs/2607.14895"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -507,8 +507,8 @@
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
     "k and v cache quantization"
   ],
-  "total_posts_curated": 759,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 760,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
     "unknown",
@@ -517,7 +517,8 @@
     "research_lab",
     "practitioner",
     "journalism",
-    "research_lab"
+    "research_lab",
+    "academic"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
@@ -526,6 +527,7 @@
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION"
   ]
 }
