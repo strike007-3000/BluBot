@@ -1,6 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.11687",
     "https://the-decoder.com/moonshots-open-model-kimi-k2-7-code-undercuts-gpt-5-5-and-claude-by-up-to-12x-on-price-per-token/",
     "https://www.microsoft.com/en-us/research/blog/ire-identifies-another-lotuslite-specimen/",
     "https://openai.com/index/academy-courses-applying-ai-at-work",
@@ -499,15 +498,17 @@
     "https://arxiv.org/abs/2607.14506",
     "https://arxiv.org/abs/2607.14733",
     "https://arxiv.org/abs/2607.14770",
-    "https://arxiv.org/abs/2607.14895"
+    "https://arxiv.org/abs/2607.14895",
+    null
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
     "Fable 5 ban blacklash",
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
-    "k and v cache quantization"
+    "k and v cache quantization",
+    "Token-maxxing: The Wrong Metric for AI Adoption"
   ],
-  "total_posts_curated": 760,
+  "total_posts_curated": 761,
   "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
@@ -518,7 +519,8 @@
     "practitioner",
     "journalism",
     "research_lab",
-    "academic"
+    "academic",
+    "unknown"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
@@ -528,6 +530,7 @@
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "ENTERPRISE_ROI"
   ]
 }
