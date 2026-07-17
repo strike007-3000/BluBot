@@ -131,7 +131,7 @@ Scanning exactly **32 premium feeds** across 4 tiers.
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
 | `POLLINATIONS_API_KEY` | Optional token for Pollinations custom accounts |
 | `HUGGINGFACE_API_KEY` | Hugging Face Hub User Access Token |
-| `HUGGINGFACE_IMAGE_MODEL` | Hugging Face model target (default: `black-forest-labs/FLUX.1-schnell`) |
+| `HUGGINGFACE_IMAGE_MODEL` | Hugging Face model target (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
 | `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma models) |
 | `GEMINI_MODEL` | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
 | `BSKY_HANDLE` | Your Bluesky handle |
@@ -142,7 +142,7 @@ Scanning exactly **32 premium feeds** across 4 tiers.
 | `THREADS_USER_ID` | Your Threads User ID |
 | `GIST_ID` | Private GitHub Gist ID |
 | `GIST_TOKEN` | GitHub Token with `gist` scope |
-| `IMAGE_PROVIDER` | `pollinations` (default) or `huggingface` or `imagen` |
+| `IMAGE_PROVIDER` | `huggingface` (default) or `pollinations` or `nvidia` or `imagen` |
 | `TELEGRAM_BOT_TOKEN` | (Optional) Your Telegram Bot API Token |
 | `TELEGRAM_USER_ID` | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | (Optional) Telegram polling timeout in minutes (default: `5`) |
@@ -430,7 +430,7 @@ You can control the bot directly from Telegram. The integration supports two key
   - **Interactive Editing**: You can edit the draft inline by replying directly to the draft message with your new text, or sending a `/edit <new text>` command. The bot will validate the text length against safety-buffered limits (Bluesky 290, Mastodon 485, Threads 490) and warn you if it will split into a thread or truncate.
   - **Interactive Curation & Image Regeneration (v3.13.0)**:
     - **`[🔄 Regenerate Text]`**: Prompts the user to supply an optional feedback hint. You can reply with formatting instructions (e.g. "shorter", "make it more technical") or write `/skip` to regenerate using default options. Gemini rewrites the draft inline.
-    - **`[🎨 Regenerate Image]`**: Automatically regenerates the isometric card prompt using the latest draft text, requests a fresh image using NVIDIA NIM FLUX.1-schnell, regenerates the screen-reader alt-text using Gemini Vision, and updates the preview media dynamically.
+    - **`[🎨 Regenerate Image]`**: Automatically regenerates the isometric card prompt using the latest draft text, requests a fresh image using the configured image provider chain, regenerates the screen-reader alt-text using Gemini Vision, and updates the preview media dynamically.
 * **On-Demand Topic Curation**: Send `/topic <your_keyword>` or `/curate <your_keyword>` to your Telegram bot. When the GHA runner starts, it performs a real-time keyword search against all active RSS feeds:
   - **RSS Grounding**: If matching articles are found (e.g. searching "Cursor" matches the SpaceX-Cursor deal), the bot curates and synthesizes directly from the actual news articles (preserving original links/facts) rather than relying on stale parametric knowledge.
   - **Raw Curation Fallback**: If no matching articles are found in your RSS feeds, the bot gracefully falls back to raw synthesis from scratch.

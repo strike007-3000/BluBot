@@ -46,8 +46,8 @@ VERSION = get_version()
 # Platform Constraints
 # Platform Constraints
 IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "huggingface")
-POLLINATIONS_API_URL = "https://gen.pollinations.ai/image/"
-HF_IMAGE_MODEL = "black-forest-labs/FLUX.1-schnell"
+POLLINATIONS_API_URL = "https://image.pollinations.ai/prompt/"
+HF_IMAGE_MODEL = "stabilityai/stable-diffusion-3-medium-diffusers"
 NVIDIA_MODEL_ID = "stabilityai/stable-diffusion-3-medium"
 NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-3-medium"
 

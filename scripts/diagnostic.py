@@ -69,6 +69,22 @@ async def test_image_generation():
     import httpx
     from google import genai
     from src.curator import generate_pollinations_image, generate_huggingface_image, generate_imagen_image
+    from src.config import POLLINATIONS_API_URL, HF_IMAGE_MODEL
+
+    # --- Endpoint Connectivity Pre-Check ---
+    print(f"\n--- Endpoint Connectivity Check ---")
+    endpoints = {
+        "Pollinations": POLLINATIONS_API_URL.rstrip("/") + "/test",
+        "Hugging Face": f"https://router.huggingface.co/hf-inference/models/{HF_IMAGE_MODEL}",
+    }
+    async with httpx.AsyncClient() as check_client:
+        for name, url in endpoints.items():
+            try:
+                resp = await check_client.head(url, timeout=10.0, follow_redirects=True)
+                print(f"  {name}: {url} → HTTP {resp.status_code} ✓")
+            except Exception as e:
+                print(f"  {name}: {url} → UNREACHABLE ({e})")
+    print()
     
     prompt = "A minimalist icon of a blue bird holding a newspaper, clean digital art, simple illustration"
     

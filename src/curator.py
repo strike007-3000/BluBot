@@ -522,23 +522,18 @@ async def generate_pollinations_image(
     prompt: str,
     client: httpx.AsyncClient,
 ) -> bytes | None:
-    if not settings.pollinations_api_key:
-        SafeLogger.info("Pollinations: Skipping because pollinations_api_key is missing.")
-        return None
-
     encoded_prompt = quote(prompt, safe="")
     url = f"{settings.pollinations_api_url.rstrip('/')}/{encoded_prompt}"
     headers = {
         "Accept": "image/*",
     }
-    if settings.pollinations_api_key:
-        headers["Authorization"] = f"Bearer {settings.pollinations_api_key}"
 
     params = {
         "width": 1024,
         "height": 1024,
         "model": "flux",
         "seed": 0,
+        "nologo": "true",
     }
 
 
