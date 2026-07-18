@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://the-decoder.com/moonshots-open-model-kimi-k2-7-code-undercuts-gpt-5-5-and-claude-by-up-to-12x-on-price-per-token/",
-    "https://www.microsoft.com/en-us/research/blog/ire-identifies-another-lotuslite-specimen/",
-    "https://openai.com/index/academy-courses-applying-ai-at-work",
-    "https://www.latent.space/p/ainews-fable-and-mythos-officially",
-    "https://www.marktechpost.com/2026/06/12/google-releases-gemini-sql2-gemini-3-1-pro-text-to-sql-scores-80-04-on-bird-single-model-leaderboard/",
-    "https://www.marktechpost.com/2026/06/12/moonshot-ai-releases-kimi-k2-7-code-a-coding-model-reporting-21-8-on-kimi-code-bench-v2-over-k2-6/",
-    "https://machinelearningmastery.com/python-concepts-every-ai-engineer-must-master/",
-    "https://the-decoder.com/anthropics-claude-fable-5-costs-twice-as-much-for-5-7-percent-more-performance/",
     "https://the-decoder.com/ai-coding-agents-find-the-right-file-but-miss-the-exact-lines-that-matter-study-shows/",
     "https://the-decoder.com/microsofts-skillopt-boosts-gpt-5-5-by-using-nothing-but-a-trained-markdown-file/",
     "https://the-decoder.com/claude-fable-5-outpaces-gpt-5-5-by-13-points-on-frontiermaths-toughest-problems/",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.14733",
     "https://arxiv.org/abs/2607.14770",
     "https://arxiv.org/abs/2607.14895",
-    null
+    null,
+    "https://aws.amazon.com/blogs/machine-learning/transform-your-sales-organization-with-amazon-quick-your-new-agentic-ai-teammate/",
+    "https://the-decoder.com/gpt-5-6-is-deleting-user-files-when-given-full-access-and-openai-says-it-shouldnt-but-did/",
+    "https://huggingface.co/blog/nvidia/scale-diffusers-finetuning-nemo-automodel",
+    "https://simonwillison.net/2026/Jul/18/claude-make-fable-5-permanent/#atom-everything",
+    "https://arxiv.org/abs/2607.14937",
+    "https://arxiv.org/abs/2607.14145",
+    "https://arxiv.org/abs/2607.14149",
+    "https://arxiv.org/abs/2607.14169"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -508,8 +508,8 @@
     "k and v cache quantization",
     "Token-maxxing: The Wrong Metric for AI Adoption"
   ],
-  "total_posts_curated": 761,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 762,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
     "unknown",
@@ -520,7 +520,8 @@
     "journalism",
     "research_lab",
     "academic",
-    "unknown"
+    "unknown",
+    "enterprise"
   ],
   "recent_styles": [
     "STRATEGIC_CONTRAST",
@@ -531,6 +532,7 @@
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "PRACTICAL_WORKFLOW"
   ]
 }
