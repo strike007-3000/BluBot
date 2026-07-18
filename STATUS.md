@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-07-17 | 🔍 Evening Synthesis (Intercept) (Token-maxxing: The Wrong Metric for AI Adoption) |
+| **Broadcaster** | Operational | 2026-07-18 | 🚀 Morning Intelligence (General) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
