@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://the-decoder.com/ai-coding-agents-find-the-right-file-but-miss-the-exact-lines-that-matter-study-shows/",
-    "https://the-decoder.com/microsofts-skillopt-boosts-gpt-5-5-by-using-nothing-but-a-trained-markdown-file/",
-    "https://the-decoder.com/claude-fable-5-outpaces-gpt-5-5-by-13-points-on-frontiermaths-toughest-problems/",
-    "https://the-decoder.com/google-researchs-gemini-sql2-tops-text-to-sql-benchmarks-by-a-wide-margin/",
-    "https://www.apple.com/newsroom/2026/06/apple-unveils-innovative-features-and-intelligence-experiences-across-services/",
-    "https://www.apple.com/newsroom/2026/06/apple-aids-app-development-with-new-intelligence-frameworks-and-advanced-tools/",
-    "https://www.apple.com/newsroom/2026/06/apple-unveils-next-generation-of-apple-intelligence-siri-ai-and-more/",
-    "https://www.apple.com/newsroom/2026/06/apple-intelligence-brings-powerful-ai-capabilities-into-everyday-experiences/",
     "https://www.interconnects.ai/p/welcome-to-the-agi-era-of-ai-governance",
     "https://the-decoder.com/microsoft-researchs-mirage-gives-video-generation-a-persistent-spatial-memory-that-doesnt-forget-whats-around-the-corner/",
     "https://www.apple.com/newsroom/2026/06/apple-introduces-siri-ai-a-profoundly-more-capable-and-personal-assistant/",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.14937",
     "https://arxiv.org/abs/2607.14145",
     "https://arxiv.org/abs/2607.14149",
-    "https://arxiv.org/abs/2607.14169"
+    "https://arxiv.org/abs/2607.14169",
+    "https://the-decoder.com/ai-chatbots-reading-x-rays-can-be-dangerously-confident-even-when-theyre-wrong/",
+    "https://www.marktechpost.com/2026/07/19/perplexity-ai-releases-wandr-an-open-benchmark-evaluating-research-agents-that-must-search-wide-and-deep/",
+    "https://magazine.sebastianraschka.com/p/controlling-reasoning-effort-in-llms",
+    "https://www.marktechpost.com/2026/07/18/kimi-k3-vs-deepseek-v4-pro-vs-glm-5-2-open-trillion-scale-moe-models-compared-on-benchmarks-license-and-serving-cost/",
+    "https://simonwillison.net/2026/Jul/19/ai-mania/#atom-everything",
+    "https://www.marktechpost.com/2026/07/18/google-clouds-always-on-memory-agent-replaces-rag-and-embeddings-with-continuous-llm-consolidation-on-gemini-3-1-flash-lite/",
+    "https://simonwillison.net/2026/Jul/19/claude-code-in-bun-in-rust/#atom-everything",
+    "https://www.marktechpost.com/2026/07/18/nvidia-released-deepstream-9-1-bringing-agentic-ai-to-vision-ai-with-13-skills-and-multi-view-3d-tracking/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -508,11 +508,10 @@
     "k and v cache quantization",
     "Token-maxxing: The Wrong Metric for AI Adoption"
   ],
-  "total_posts_curated": 762,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 763,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "unknown",
     "research_lab",
     "enterprise",
     "research_lab",
@@ -521,10 +520,10 @@
     "research_lab",
     "academic",
     "unknown",
-    "enterprise"
+    "enterprise",
+    "journalism"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "ENTERPRISE_ROI",
     "RISK_VERIFICATION",
@@ -533,6 +532,7 @@
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "ENTERPRISE_ROI",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "STRATEGIC_CONTRAST"
   ]
 }
