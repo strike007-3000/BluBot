@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-07-19 | 🚀 Morning Intelligence (General) |
+| **Broadcaster** | Operational | 2026-07-19 | 🔍 Evening Synthesis (Intercept) (spain wins FIFA World Cup 2026) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
