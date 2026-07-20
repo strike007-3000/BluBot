@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.interconnects.ai/p/welcome-to-the-agi-era-of-ai-governance",
-    "https://the-decoder.com/microsoft-researchs-mirage-gives-video-generation-a-persistent-spatial-memory-that-doesnt-forget-whats-around-the-corner/",
-    "https://www.apple.com/newsroom/2026/06/apple-introduces-siri-ai-a-profoundly-more-capable-and-personal-assistant/",
-    "https://www.apple.com/newsroom/2026/06/apple-previews-new-child-safety-features/",
-    "https://www.apple.com/newsroom/2026/06/due-to-dma-siri-ai-delayed-in-eu-for-ios-27-and-ipados-27/",
-    "https://www.apple.com/newsroom/2026/06/apple-expands-app-store-capabilities-to-help-developers-grow-and-reach-new-users/",
-    "https://blog.google/company-news/inside-google/message-ceo/stanford-commencement-speech-2026/",
-    "https://techcrunch.com/2026/06/14/as-ai-companies-race-to-go-public-who-else-is-along-for-the-ride/",
     "https://www.marktechpost.com/2026/06/14/a-coding-hands-on-on-fineweb-for-streaming-filtering-deduplication-tokenization-and-large-scale-web-corpus-analytics/",
     "https://the-decoder.com/google-clouds-open-knowledge-format-turns-scattered-docs-into-markdown-files-for-ai-agents/",
     "https://the-decoder.com/kpmg-fabricated-ai-case-studies-in-a-report-designed-to-sell-clients-on-ai-adoption/",
@@ -499,7 +491,15 @@
     "https://simonwillison.net/2026/Jul/19/ai-mania/#atom-everything",
     "https://www.marktechpost.com/2026/07/18/google-clouds-always-on-memory-agent-replaces-rag-and-embeddings-with-continuous-llm-consolidation-on-gemini-3-1-flash-lite/",
     "https://simonwillison.net/2026/Jul/19/claude-code-in-bun-in-rust/#atom-everything",
-    "https://www.marktechpost.com/2026/07/18/nvidia-released-deepstream-9-1-bringing-agentic-ai-to-vision-ai-with-13-skills-and-multi-view-3d-tracking/"
+    "https://www.marktechpost.com/2026/07/18/nvidia-released-deepstream-9-1-bringing-agentic-ai-to-vision-ai-with-13-skills-and-multi-view-3d-tracking/",
+    "https://arxiv.org/abs/2607.15509",
+    "https://simonwillison.net/2026/Jul/20/sam-altman/#atom-everything",
+    "https://arxiv.org/abs/2607.15313",
+    "https://arxiv.org/abs/2607.15562",
+    "https://arxiv.org/abs/2607.15705",
+    "https://arxiv.org/abs/2607.15810",
+    "https://arxiv.org/abs/2607.15899",
+    "https://arxiv.org/abs/2607.16062"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -509,11 +509,10 @@
     "Token-maxxing: The Wrong Metric for AI Adoption",
     "spain wins FIFA World Cup 2026"
   ],
-  "total_posts_curated": 764,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 765,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "research_lab",
     "practitioner",
     "journalism",
@@ -522,10 +521,10 @@
     "unknown",
     "enterprise",
     "journalism",
-    "unknown"
+    "unknown",
+    "academic"
   ],
   "recent_styles": [
-    "ENTERPRISE_ROI",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
@@ -534,6 +533,7 @@
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION"
   ]
 }
