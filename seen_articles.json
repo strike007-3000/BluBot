@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.marktechpost.com/2026/06/14/a-coding-hands-on-on-fineweb-for-streaming-filtering-deduplication-tokenization-and-large-scale-web-corpus-analytics/",
-    "https://the-decoder.com/google-clouds-open-knowledge-format-turns-scattered-docs-into-markdown-files-for-ai-agents/",
-    "https://the-decoder.com/kpmg-fabricated-ai-case-studies-in-a-report-designed-to-sell-clients-on-ai-adoption/",
-    "https://the-decoder.com/amazon-and-five-other-companies-reportedly-triggered-the-government-crackdown-on-anthropics-fable-model/",
-    "https://www.marktechpost.com/2026/06/13/databricks-open-sources-omnigent-a-meta-harness-that-composes-governs-and-shares-ai-agents-across-claude-code-codex-and-pi/",
-    "https://techcrunch.com/2026/06/13/as-anthropic-suspends-access-to-new-models-india-debates-its-ai-future/",
-    "https://techcrunch.com/2026/06/13/meta-reportedly-moves-to-unwind-2b-manus-deal-after-beijings-demand/",
-    "https://techcrunch.com/2026/06/13/kpmg-pulls-report-on-ai-usage-due-to-apparent-hallucinations/",
     "https://arxiv.org/abs/2606.13862",
     "https://arxiv.org/abs/2606.14155",
     "https://arxiv.org/abs/2606.14245",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.15705",
     "https://arxiv.org/abs/2607.15810",
     "https://arxiv.org/abs/2607.15899",
-    "https://arxiv.org/abs/2607.16062"
+    "https://arxiv.org/abs/2607.16062",
+    "https://the-decoder.com/hugging-face-says-an-ai-agent-hacked-its-infrastructure-and-it-used-ai-to-fight-back/",
+    "https://jack-clark.net/2026/07/20/import-ai-465-open-vs-closed-gaps-kimi-k3-demis-big-policy-plan/",
+    "https://www.marktechpost.com/2026/07/19/someone-fine-tuned-openbmbs-minicpm5-1b-on-claude-fable-5-traces-to-ship-a-657mb-local-thinking-model/",
+    "https://www.cbinsights.com/research/ceo-interview-kudos/",
+    "https://www.cbinsights.com/research/ceo-interview-unsiloed-ai/",
+    "https://machinelearningmastery.com/building-agentic-workflows-in-python-with-langgraph/",
+    "https://www.marktechpost.com/2026/07/19/alibaba-previews-qwen3-8-max-a-2-4-trillion-parameter-multimodal-model-days-after-moonshots-kimi-k3-open-weight-launch/",
+    "https://arxiv.org/abs/2607.16097"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -509,11 +509,10 @@
     "Token-maxxing: The Wrong Metric for AI Adoption",
     "spain wins FIFA World Cup 2026"
   ],
-  "total_posts_curated": 765,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 766,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "practitioner",
     "journalism",
     "research_lab",
@@ -522,10 +521,10 @@
     "enterprise",
     "journalism",
     "unknown",
-    "academic"
+    "academic",
+    "journalism"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
@@ -534,6 +533,7 @@
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "STRATEGIC_CONTRAST"
   ]
 }
