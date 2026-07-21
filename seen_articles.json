@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.13862",
-    "https://arxiv.org/abs/2606.14155",
-    "https://arxiv.org/abs/2606.14245",
-    "https://arxiv.org/abs/2606.14397",
-    "https://arxiv.org/abs/2606.14398",
-    "https://arxiv.org/abs/2606.14463",
-    "https://arxiv.org/abs/2606.14492",
-    "https://arxiv.org/abs/2606.14604",
     "https://arxiv.org/abs/2606.14934",
     "https://arxiv.org/abs/2606.14945",
     "https://arxiv.org/abs/2606.14956",
@@ -499,7 +491,15 @@
     "https://www.cbinsights.com/research/ceo-interview-unsiloed-ai/",
     "https://machinelearningmastery.com/building-agentic-workflows-in-python-with-langgraph/",
     "https://www.marktechpost.com/2026/07/19/alibaba-previews-qwen3-8-max-a-2-4-trillion-parameter-multimodal-model-days-after-moonshots-kimi-k3-open-weight-launch/",
-    "https://arxiv.org/abs/2607.16097"
+    "https://arxiv.org/abs/2607.16097",
+    "https://aws.amazon.com/blogs/machine-learning/evolving-from-legacy-bi-to-agentic-ai-at-tradeshift-with-amazon-quick/",
+    "https://huggingface.co/blog/nvidia/cosmos3edge",
+    "https://openai.com/index/safety-alignment-long-horizon-models",
+    "https://www.latent.space/p/ainews-not-much-happened-today-173",
+    "https://arxiv.org/abs/2607.16237",
+    "https://arxiv.org/abs/2607.16241",
+    "https://arxiv.org/abs/2607.16250",
+    "https://arxiv.org/abs/2607.16255"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -509,11 +509,10 @@
     "Token-maxxing: The Wrong Metric for AI Adoption",
     "spain wins FIFA World Cup 2026"
   ],
-  "total_posts_curated": 766,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 767,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "practitioner",
     "journalism",
     "research_lab",
     "academic",
@@ -522,10 +521,10 @@
     "journalism",
     "unknown",
     "academic",
-    "journalism"
+    "journalism",
+    "enterprise"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
@@ -534,6 +533,7 @@
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "ENTERPRISE_ROI"
   ]
 }
