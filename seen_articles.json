@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.14934",
-    "https://arxiv.org/abs/2606.14945",
-    "https://arxiv.org/abs/2606.14956",
-    "https://arxiv.org/abs/2606.14965",
-    "https://arxiv.org/abs/2606.15032",
-    "https://arxiv.org/abs/2606.15058",
-    "https://arxiv.org/abs/2606.15127",
-    "https://arxiv.org/abs/2606.15155",
     "https://arxiv.org/abs/2606.15240",
     "https://arxiv.org/abs/2606.15306",
     "https://arxiv.org/abs/2606.15436",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.16237",
     "https://arxiv.org/abs/2607.16241",
     "https://arxiv.org/abs/2607.16250",
-    "https://arxiv.org/abs/2607.16255"
+    "https://arxiv.org/abs/2607.16255",
+    "https://huggingface.co/blog/grabette",
+    "https://simonwillison.net/2026/Jul/21/nativ/#atom-everything",
+    "https://simonwillison.net/2026/Jul/21/cat-and-thariq/#atom-everything",
+    "https://machinelearningmastery.com/the-current-state-of-agentic-ai/",
+    "https://spectrum.ieee.org/ai-coding-assistant-china-anthropic",
+    "https://www.marktechpost.com/2026/07/21/nvidia-releases-cosmos-3-edge-a-4b-parameter-open-world-model-that-reasons-and-generates-robot-actions-on-device/",
+    "https://arxiv.org/abs/2607.16259",
+    "https://arxiv.org/abs/2607.16262"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -509,11 +509,10 @@
     "Token-maxxing: The Wrong Metric for AI Adoption",
     "spain wins FIFA World Cup 2026"
   ],
-  "total_posts_curated": 767,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 768,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "research_lab",
     "academic",
     "unknown",
@@ -522,10 +521,10 @@
     "unknown",
     "academic",
     "journalism",
-    "enterprise"
+    "enterprise",
+    "research_lab"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "ENTERPRISE_ROI",
@@ -534,6 +533,7 @@
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "QUESTION_FIRST"
   ]
 }
