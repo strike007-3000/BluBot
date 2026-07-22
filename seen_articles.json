@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://openai.com/index/deployment-simulation",
-    "https://arxiv.org/abs/2606.15625",
-    "https://arxiv.org/abs/2606.15633",
-    "https://arxiv.org/abs/2606.15682",
-    "https://arxiv.org/abs/2606.15716",
-    "https://arxiv.org/abs/2606.15760",
-    "https://arxiv.org/abs/2606.15868",
-    "https://arxiv.org/abs/2606.15980",
     "https://huggingface.co/blog/amazon/strands-lerobot-hub-to-hardware",
     "https://huggingface.co/blog/zai-org/glm-52-blog",
     "https://arxiv.org/abs/2606.17118",
@@ -499,7 +491,15 @@
     "https://the-decoder.com/openai-claims-responsibility-for-the-hugging-face-hack-after-its-own-models-escaped-a-test-sandbox/",
     "https://www.marktechpost.com/2026/07/21/cisco-foundation-ai-releases-antares-350m-and-1b-open-weight-models-that-localize-known-vulnerabilities-inside-real-codebases/",
     "https://www.marktechpost.com/2026/07/21/poolside-releases-laguna-s-2-1/",
-    "https://huggingface.co/blog/nvidia/state-of-simulation-for-physical-ai"
+    "https://huggingface.co/blog/nvidia/state-of-simulation-for-physical-ai",
+    "https://deepmind.google/blog/accelerating-the-frontiers-of-scientific-discovery-googles-40m-commitment-to-the-genesis-mission/",
+    "https://openai.com/index/building-ai-infrastructure-with-the-effingham-county-community",
+    "https://www.interconnects.ai/p/open-models-recap-more-on-kimi-k3",
+    "https://openai.com/index/introducing-openai-presence",
+    "https://arxiv.org/abs/2607.18289",
+    "https://arxiv.org/abs/2607.18294",
+    "https://arxiv.org/abs/2607.18308",
+    "https://arxiv.org/abs/2607.18504"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -509,11 +509,10 @@
     "Token-maxxing: The Wrong Metric for AI Adoption",
     "spain wins FIFA World Cup 2026"
   ],
-  "total_posts_curated": 769,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 770,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "academic",
     "unknown",
     "enterprise",
     "journalism",
@@ -522,10 +521,10 @@
     "journalism",
     "enterprise",
     "research_lab",
+    "research_lab",
     "research_lab"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
@@ -534,6 +533,7 @@
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "STRATEGIC_CONTRAST"
   ]
 }
