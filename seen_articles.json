@@ -507,13 +507,13 @@
     "Colibr\u00ec is a pure-C inference engine that runs the 744B GLM-5.2 on an ordinary PC with about 25GB of RAM",
     "k and v cache quantization",
     "Token-maxxing: The Wrong Metric for AI Adoption",
-    "spain wins FIFA World Cup 2026"
+    "spain wins FIFA World Cup 2026",
+    "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 770,
+  "total_posts_curated": 771,
   "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "unknown",
     "enterprise",
     "journalism",
     "unknown",
@@ -522,10 +522,10 @@
     "enterprise",
     "research_lab",
     "research_lab",
-    "research_lab"
+    "research_lab",
+    "unknown"
   ],
   "recent_styles": [
-    "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
@@ -534,6 +534,7 @@
     "ENTERPRISE_ROI",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "PRACTICAL_WORKFLOW"
   ]
 }
