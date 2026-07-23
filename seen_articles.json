@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://huggingface.co/blog/amazon/strands-lerobot-hub-to-hardware",
-    "https://huggingface.co/blog/zai-org/glm-52-blog",
-    "https://arxiv.org/abs/2606.17118",
-    "https://arxiv.org/abs/2606.17180",
-    "https://arxiv.org/abs/2606.17414",
-    "https://arxiv.org/abs/2606.17451",
-    "https://arxiv.org/abs/2606.17524",
-    "https://arxiv.org/abs/2606.17541",
     "https://arxiv.org/abs/2606.17579",
     "https://arxiv.org/abs/2606.17680",
     "https://arxiv.org/abs/2606.17803",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.18289",
     "https://arxiv.org/abs/2607.18294",
     "https://arxiv.org/abs/2607.18308",
-    "https://arxiv.org/abs/2607.18504"
+    "https://arxiv.org/abs/2607.18504",
+    "https://www.latent.space/p/poolside",
+    "https://simonwillison.net/2026/Jul/22/thomas-ptacek/#atom-everything",
+    "https://simonwillison.net/2026/Jul/22/are-ai-labs-pelicanmaxxing/#atom-everything",
+    "https://aws.amazon.com/blogs/machine-learning/ai-teammates-how-monday-com-runs-production-ai-agents-on-amazon-bedrock/",
+    "https://the-decoder.com/cisco-bets-its-small-open-cybersecurity-models-can-outperform-gpt-5-5-at-vulnerability-detection-for-a-fraction-of-the-cost/",
+    "https://huggingface.co/blog/nunchaku-diffusers",
+    "https://arxiv.org/abs/2607.19380",
+    "https://arxiv.org/abs/2607.19381"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 771,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 772,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "journalism",
     "unknown",
     "academic",
@@ -523,10 +522,10 @@
     "research_lab",
     "research_lab",
     "research_lab",
-    "unknown"
+    "unknown",
+    "practitioner"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
@@ -535,6 +534,7 @@
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "QUESTION_FIRST"
   ]
 }
