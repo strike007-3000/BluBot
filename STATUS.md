@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-07-22 | 🔍 Evening Synthesis (Intercept) (Hugging Face cyber attack by OpenAI) |
+| **Broadcaster** | Operational | 2026-07-23 | 🚀 Morning Intelligence (General) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
