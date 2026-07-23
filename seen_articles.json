@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.17579",
-    "https://arxiv.org/abs/2606.17680",
-    "https://arxiv.org/abs/2606.17803",
-    "https://arxiv.org/abs/2606.17952",
-    "https://arxiv.org/abs/2606.18089",
-    "https://arxiv.org/abs/2606.18208",
-    "https://arxiv.org/abs/2606.17121",
-    "https://arxiv.org/abs/2606.17127",
     "https://openai.com/index/ai-chemist-improves-reaction",
     "https://huggingface.co/blog/agentic-resource-discovery-launch",
     "https://huggingface.co/blog/allenai/molmomotion",
@@ -499,7 +491,15 @@
     "https://the-decoder.com/cisco-bets-its-small-open-cybersecurity-models-can-outperform-gpt-5-5-at-vulnerability-detection-for-a-fraction-of-the-cost/",
     "https://huggingface.co/blog/nunchaku-diffusers",
     "https://arxiv.org/abs/2607.19380",
-    "https://arxiv.org/abs/2607.19381"
+    "https://arxiv.org/abs/2607.19381",
+    "https://www.aiacceleratorinstitute.com/the-causality-test-that-humbled-six-ai-agents/",
+    "https://the-decoder.com/poolsides-laguna-s-2-1-is-a-small-open-weight-coding-model-that-punches-well-above-its-size/",
+    "https://arxiv.org/abs/2607.19393",
+    "https://arxiv.org/abs/2607.19399",
+    "https://arxiv.org/abs/2607.19403",
+    "https://arxiv.org/abs/2607.19405",
+    "https://arxiv.org/abs/2607.19406",
+    "https://arxiv.org/abs/2607.19450"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 772,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 773,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "unknown",
     "academic",
     "journalism",
@@ -523,10 +522,10 @@
     "research_lab",
     "research_lab",
     "unknown",
-    "practitioner"
+    "practitioner",
+    "journalism"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
@@ -535,6 +534,7 @@
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION"
   ]
 }
