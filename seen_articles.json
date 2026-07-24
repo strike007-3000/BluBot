@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://openai.com/index/ai-chemist-improves-reaction",
-    "https://huggingface.co/blog/agentic-resource-discovery-launch",
-    "https://huggingface.co/blog/allenai/molmomotion",
-    "https://arxiv.org/abs/2606.17362",
-    "https://arxiv.org/abs/2606.17383",
-    "https://arxiv.org/abs/2606.17389",
-    "https://arxiv.org/abs/2606.17391",
-    "https://arxiv.org/abs/2606.17417",
     "https://arxiv.org/abs/2606.17426",
     "https://arxiv.org/abs/2606.17449",
     "https://arxiv.org/abs/2606.17645",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.19403",
     "https://arxiv.org/abs/2607.19405",
     "https://arxiv.org/abs/2607.19406",
-    "https://arxiv.org/abs/2607.19450"
+    "https://arxiv.org/abs/2607.19450",
+    "https://aws.amazon.com/blogs/machine-learning/agentic-retrieval-for-amazon-bedrock-managed-knowledge-base/",
+    "https://aws.amazon.com/blogs/machine-learning/best-practices-for-applying-amazon-bedrock-guardrails-to-code-generation-workflows/",
+    "https://arxiv.org/abs/2607.20465",
+    "https://arxiv.org/abs/2607.20517",
+    "https://arxiv.org/abs/2607.20535",
+    "https://arxiv.org/abs/2607.20541",
+    "https://arxiv.org/abs/2607.20543",
+    "https://arxiv.org/abs/2607.20557"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 773,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 774,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "unknown",
     "academic",
     "journalism",
     "enterprise",
@@ -523,10 +522,10 @@
     "research_lab",
     "unknown",
     "practitioner",
-    "journalism"
+    "journalism",
+    "enterprise"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
@@ -535,6 +534,7 @@
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "ENTERPRISE_ROI"
   ]
 }
