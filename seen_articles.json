@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.17426",
-    "https://arxiv.org/abs/2606.17449",
-    "https://arxiv.org/abs/2606.17645",
-    "https://arxiv.org/abs/2606.17710",
-    "https://arxiv.org/abs/2606.17958",
-    "https://arxiv.org/abs/2606.18166",
-    "https://arxiv.org/abs/2606.18223",
-    "https://arxiv.org/abs/2606.18237",
     "https://siliconangle.com/2026/06/16/spacex-acquire-vibe-coding-startup-cursor-60b/",
     "https://openai.com/index/introducing-life-sci-bench",
     "https://arxiv.org/abs/2606.18284",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.20535",
     "https://arxiv.org/abs/2607.20541",
     "https://arxiv.org/abs/2607.20543",
-    "https://arxiv.org/abs/2607.20557"
+    "https://arxiv.org/abs/2607.20557",
+    "https://machinelearningmastery.com/stateful-vs-stateless-agent-design-tradeoffs-for-scalable-agentic-systems/",
+    "https://the-decoder.com/german-ai-consortium-releases-soofi-s-an-open-30b-model-that-tops-benchmarks-in-both-english-and-german/",
+    "https://the-decoder.com/kimi-k3-trails-frontier-us-models-by-a-wide-margin-on-cyber-exploits-and-distillation-may-explain-why/",
+    "https://arxiv.org/abs/2607.20558",
+    "https://arxiv.org/abs/2607.20864",
+    "https://arxiv.org/abs/2607.20908",
+    "https://arxiv.org/abs/2607.20952",
+    "https://arxiv.org/abs/2607.21069"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 774,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 775,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "academic",
     "journalism",
     "enterprise",
     "research_lab",
@@ -523,10 +522,10 @@
     "unknown",
     "practitioner",
     "journalism",
-    "enterprise"
+    "enterprise",
+    "academic"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "QUESTION_FIRST",
@@ -535,6 +534,7 @@
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "STRATEGIC_CONTRAST"
   ]
 }
