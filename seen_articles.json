@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.18539",
-    "https://openai.com/index/diagnose-rare-childhood-diseases",
-    "https://huggingface.co/blog/is-it-agentic-enough",
-    "https://huggingface.co/blog/peft-beyond-lora",
-    "https://arxiv.org/abs/2606.18640",
-    "https://arxiv.org/abs/2606.18688",
-    "https://arxiv.org/abs/2606.18697",
-    "https://arxiv.org/abs/2606.18785",
     "https://arxiv.org/abs/2606.18810",
     "https://openai.com/index/improving-health-intelligence-in-chatgpt",
     "https://arxiv.org/abs/2606.19364",
@@ -499,7 +491,15 @@
     "https://the-decoder.com/anthropic-claims-its-new-claude-opus-5-delivers-near-fable-5-performance-at-half-the-token-price/",
     "https://the-decoder.com/anthropics-claude-opus-5-costs-well-below-fable-5-while-matching-or-beating-it-across-most-benchmarks/",
     "https://the-decoder.com/hundreds-asked-chatgpt-for-poison-and-bioweapon-recipes-and-some-got-step-by-step-high-school-level-guides/",
-    "https://the-decoder.com/us-reportedly-favors-selective-bans-over-blanket-restrictions-on-chinese-open-weight-models-citing-security-concerns/"
+    "https://the-decoder.com/us-reportedly-favors-selective-bans-over-blanket-restrictions-on-chinese-open-weight-models-citing-security-concerns/",
+    "https://the-decoder.com/anthropics-opus-5-blows-past-fable-5-and-gpt-5-6-sol-on-the-benchmark-designed-to-measure-real-intelligence/",
+    "https://huggingface.co/blog/nvidia/cosmos-h-dreams",
+    "https://arxiv.org/abs/2607.21635",
+    "https://arxiv.org/abs/2607.21637",
+    "https://arxiv.org/abs/2607.21645",
+    "https://arxiv.org/abs/2607.21653",
+    "https://arxiv.org/abs/2607.21680",
+    "https://arxiv.org/abs/2607.21855"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 776,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 777,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "research_lab",
     "research_lab",
     "research_lab",
@@ -523,10 +522,10 @@
     "journalism",
     "enterprise",
     "academic",
-    "enterprise"
+    "enterprise",
+    "journalism"
   ],
   "recent_styles": [
-    "ENTERPRISE_ROI",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
@@ -535,6 +534,7 @@
     "RISK_VERIFICATION",
     "ENTERPRISE_ROI",
     "STRATEGIC_CONTRAST",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "QUESTION_FIRST"
   ]
 }
