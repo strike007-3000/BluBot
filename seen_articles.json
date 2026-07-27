@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.18810",
-    "https://openai.com/index/improving-health-intelligence-in-chatgpt",
-    "https://arxiv.org/abs/2606.19364",
-    "https://arxiv.org/abs/2606.19404",
-    "https://arxiv.org/abs/2606.19416",
-    "https://arxiv.org/abs/2606.19476",
-    "https://arxiv.org/abs/2606.19489",
-    "https://arxiv.org/abs/2606.19558",
     "https://arxiv.org/abs/2606.19595",
     "https://www.interconnects.ai/p/banning-open-source-ai-would-be-a",
     "https://arxiv.org/abs/2606.19624",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.21645",
     "https://arxiv.org/abs/2607.21653",
     "https://arxiv.org/abs/2607.21680",
-    "https://arxiv.org/abs/2607.21855"
+    "https://arxiv.org/abs/2607.21855",
+    "https://openai.com/index/how-ai-is-expanding-what-people-do-at-work",
+    "https://www.technologyreview.com/2026/07/27/1140668/building-the-enterprise-environment-for-agentic-ai/",
+    "https://www.cbinsights.com/research/executive-interview-allica-bank/",
+    "https://www.cbinsights.com/research/ceo-interview-exosystems/",
+    "https://www.cbinsights.com/research/ceo-interview-jp-jenkins/",
+    "https://arxiv.org/abs/2607.21856",
+    "https://arxiv.org/abs/2607.21866",
+    "https://arxiv.org/abs/2607.21949"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 777,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 778,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "research_lab",
     "research_lab",
     "unknown",
@@ -523,10 +522,10 @@
     "enterprise",
     "academic",
     "enterprise",
-    "journalism"
+    "journalism",
+    "research_lab"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
@@ -535,6 +534,7 @@
     "ENTERPRISE_ROI",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION"
   ]
 }
