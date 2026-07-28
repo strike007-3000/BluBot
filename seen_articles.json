@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.19595",
-    "https://www.interconnects.ai/p/banning-open-source-ai-would-be-a",
-    "https://arxiv.org/abs/2606.19624",
-    "https://arxiv.org/abs/2606.19636",
-    "https://arxiv.org/abs/2606.19697",
-    "https://arxiv.org/abs/2606.19712",
-    "https://arxiv.org/abs/2606.19750",
-    "https://arxiv.org/abs/2606.19853",
     "https://arxiv.org/abs/2606.19919",
     "https://www.latent.space/p/ainews-not-much-happened-today-e7b",
     "https://www.marktechpost.com/2026/06/20/yandex-open-sources-yaff-a-zero-copy-wire-format-for-protobuf-with-near-struct-read-speed/",
@@ -499,7 +491,15 @@
     "https://www.cbinsights.com/research/ceo-interview-jp-jenkins/",
     "https://arxiv.org/abs/2607.21856",
     "https://arxiv.org/abs/2607.21866",
-    "https://arxiv.org/abs/2607.21949"
+    "https://arxiv.org/abs/2607.21949",
+    "https://www.latent.space/p/ainews-much-ado-about-open-weights",
+    "https://simonwillison.net/2026/Jul/27/an-opinionated-guide-to-which-ai-to-use-to-do-stuff/#atom-everything",
+    "https://jack-clark.net/2026/07/27/import-ai-466-the-bitter-lesson-for-robotics-ais-complete-week-long-programming-tasks-and-openais-accidental-ai-hacker/",
+    "https://arxiv.org/abs/2607.22545",
+    "https://arxiv.org/abs/2607.22711",
+    "https://arxiv.org/abs/2607.22724",
+    "https://arxiv.org/abs/2607.22872",
+    "https://arxiv.org/abs/2607.22910"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 778,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 779,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "research_lab",
     "unknown",
     "practitioner",
@@ -523,10 +522,10 @@
     "academic",
     "enterprise",
     "journalism",
-    "research_lab"
+    "research_lab",
+    "practitioner"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
@@ -535,6 +534,7 @@
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "PRACTICAL_WORKFLOW"
   ]
 }
