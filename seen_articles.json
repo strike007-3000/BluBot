@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.19919",
-    "https://www.latent.space/p/ainews-not-much-happened-today-e7b",
-    "https://www.marktechpost.com/2026/06/20/yandex-open-sources-yaff-a-zero-copy-wire-format-for-protobuf-with-near-struct-read-speed/",
-    "https://huggingface.co/blog/ServiceNow/mosaicleaks",
-    "https://openai.com/index/chatgpt-enterprise-spend-controls",
-    "https://www.marktechpost.com/2026/06/19/nvidia-ai-introduce-spatialclaw-a-training-free-agent-that-treats-code-as-the-action-interface-for-spatial-reasoning/",
-    "https://www.marktechpost.com/2026/06/19/vibethinker-3b-a-3b-dense-reasoning-model-built-on-qwen2-5-coder-3b-with-the-spectrum-to-signal-post-training-pipeline/",
-    "https://spectrum.ieee.org/large-language-models-ieee-course",
     "https://the-decoder.com/new-benchmark-exposes-how-badly-ai-struggles-with-real-knowledge-work/",
     "https://www.apple.com/newsroom/2026/06/apple-announces-changes-to-ios-in-brazil/",
     "https://the-decoder.com/sam-altman-says-a-whole-generation-of-researchers-held-ai-back-by-underestimating-what-scaling-could-do/",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.22711",
     "https://arxiv.org/abs/2607.22724",
     "https://arxiv.org/abs/2607.22872",
-    "https://arxiv.org/abs/2607.22910"
+    "https://arxiv.org/abs/2607.22910",
+    "https://huggingface.co/blog/LiquidAI/lfm2-5-encoders",
+    "https://www.theverge.com/ai-artificial-intelligence/971750/perplexity-personal-computer-windows-ai-agents",
+    "https://arxiv.org/abs/2607.22980",
+    "https://arxiv.org/abs/2607.23050",
+    "https://arxiv.org/abs/2607.23134",
+    "https://arxiv.org/abs/2607.23146",
+    "https://arxiv.org/abs/2607.23225",
+    "https://arxiv.org/abs/2607.23332"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 779,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 780,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "unknown",
     "practitioner",
     "journalism",
@@ -523,10 +522,10 @@
     "enterprise",
     "journalism",
     "research_lab",
-    "practitioner"
+    "practitioner",
+    "research_lab"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
@@ -535,6 +534,7 @@
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "STRATEGIC_CONTRAST"
   ]
 }
