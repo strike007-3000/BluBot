@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://the-decoder.com/new-benchmark-exposes-how-badly-ai-struggles-with-real-knowledge-work/",
-    "https://www.apple.com/newsroom/2026/06/apple-announces-changes-to-ios-in-brazil/",
-    "https://the-decoder.com/sam-altman-says-a-whole-generation-of-researchers-held-ai-back-by-underestimating-what-scaling-could-do/",
-    "https://the-decoder.com/aws-says-ai-agents-lack-business-context-and-security-launches-two-services-to-patch-the-gaps/",
-    "https://techcrunch.com/2026/06/20/signals-meredith-whittaker-wants-you-to-remember-that-ai-chatbots-are-not-your-friends/",
-    "https://techcrunch.com/2026/06/20/in-the-weights-is-your-new-ai-centric-vanity-search/",
-    "https://the-decoder.com/the-eu-doesnt-really-know-what-a-deepfake-is-and-thats-becoming-a-problem-for-retail/",
-    "https://techcrunch.com/2026/06/20/nobel-laureate-john-jumper-is-leaving-deepmind-for-rival-anthropic/",
     "https://the-decoder.com/openais-codex-can-now-watch-you-work-once-and-repeat-the-task-forever/",
     "https://telegram.org",
     "https://openai.com/index/patch-the-planet",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.23134",
     "https://arxiv.org/abs/2607.23146",
     "https://arxiv.org/abs/2607.23225",
-    "https://arxiv.org/abs/2607.23332"
+    "https://arxiv.org/abs/2607.23332",
+    "https://aws.amazon.com/blogs/machine-learning/market-surveillance-agent-with-langgraph-and-strands-on-agentcore/",
+    "https://openai.com/index/scientific-computing-agentic-ai",
+    "https://huggingface.co/blog/allenai/olmoearth-infrastructure",
+    "https://arxiv.org/abs/2607.23364",
+    "https://arxiv.org/abs/2607.23412",
+    "https://arxiv.org/abs/2607.23617",
+    "https://arxiv.org/abs/2607.23777",
+    "https://arxiv.org/abs/2607.23821"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 780,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 781,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "unknown",
     "practitioner",
     "journalism",
     "enterprise",
@@ -523,10 +522,10 @@
     "journalism",
     "research_lab",
     "practitioner",
-    "research_lab"
+    "research_lab",
+    "enterprise"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "ENTERPRISE_ROI",
@@ -535,6 +534,7 @@
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "ENTERPRISE_ROI"
   ]
 }
