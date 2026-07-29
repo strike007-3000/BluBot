@@ -47,9 +47,9 @@ dnspython==2.8.0
     #   atproto
 feedparser==6.0.12
     # via -r requirements.in
-google-auth[requests]==2.55.0
+google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.11.0
+google-genai==2.14.0
     # via -r requirements.in
 h11==0.16.0
     # via httpcore
