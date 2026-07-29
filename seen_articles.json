@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://the-decoder.com/openais-codex-can-now-watch-you-work-once-and-repeat-the-task-forever/",
-    "https://telegram.org",
-    "https://openai.com/index/patch-the-planet",
-    "https://openai.com/index/omio",
-    "https://huggingface.co/blog/huggingface-hub-release-ci",
-    "https://huggingface.co/blog/PaddlePaddle/pp-ocrv6",
-    "https://openai.com/index/daybreak-securing-the-world",
-    "https://www.latent.space/p/ainews-spacex-is-already-a-28byr",
     "https://openai.com/index/codex-maxxing-long-running-work",
     "https://huggingface.co/blog/local-models-pr-triage",
     "https://huggingface.co/blog/ibm-research/cuga-apps",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.23412",
     "https://arxiv.org/abs/2607.23617",
     "https://arxiv.org/abs/2607.23777",
-    "https://arxiv.org/abs/2607.23821"
+    "https://arxiv.org/abs/2607.23821",
+    "https://www.aiacceleratorinstitute.com/the-agentic-operating-model-report/",
+    "https://arxiv.org/abs/2607.23822",
+    "https://arxiv.org/abs/2607.23909",
+    "https://arxiv.org/abs/2607.24010",
+    "https://arxiv.org/abs/2607.24145",
+    "https://arxiv.org/abs/2607.24365",
+    "https://arxiv.org/abs/2607.24434",
+    "https://arxiv.org/abs/2607.24519"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 781,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 782,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "practitioner",
     "journalism",
     "enterprise",
     "academic",
@@ -523,10 +522,10 @@
     "research_lab",
     "practitioner",
     "research_lab",
-    "enterprise"
+    "enterprise",
+    "journalism"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "ENTERPRISE_ROI",
     "STRATEGIC_CONTRAST",
@@ -535,6 +534,7 @@
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "QUESTION_FIRST"
   ]
 }
