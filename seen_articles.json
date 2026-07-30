@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://techcrunch.com/2026/06/22/openai-launches-new-initiative-to-help-find-and-patch-open-source-bugs/",
-    "https://techcrunch.com/2026/06/22/the-ai-world-is-getting-loopy/",
-    "https://openai.com/index/gpt-5-immunology-mystery",
-    "https://arxiv.org/abs/2606.23739",
-    "https://arxiv.org/abs/2606.23740",
-    "https://arxiv.org/abs/2606.23741",
-    "https://arxiv.org/abs/2606.23961",
-    "https://arxiv.org/abs/2606.24020",
     "https://arxiv.org/abs/2606.24062",
     "https://arxiv.org/abs/2606.24084",
     "https://www.microsoft.com/en-us/research/blog/talos-scaling-rare-disease-diagnosis-with-automated-iterative-genomic-reanalysis/",
@@ -499,7 +491,15 @@
     "https://deepmind.google/blog/were-launching-lyria-35-in-google-flow-music-with-advances-across-musicality-lyrics-vocals-and-creative-control/",
     "https://arxiv.org/abs/2607.26298",
     "https://arxiv.org/abs/2607.26336",
-    "https://arxiv.org/abs/2607.26467"
+    "https://arxiv.org/abs/2607.26467",
+    "https://the-decoder.com/language-models-cant-spark-scientific-revolutions-but-world-models-might/",
+    "https://the-decoder.com/microsoft-ai-bets-on-cheap-specialist-models-instead-of-chasing-the-frontier/",
+    "https://www.latent.space/p/ontologies-agentic-systems",
+    "https://arxiv.org/abs/2607.26504",
+    "https://arxiv.org/abs/2607.26581",
+    "https://arxiv.org/abs/2607.26618",
+    "https://arxiv.org/abs/2607.26752",
+    "https://arxiv.org/abs/2607.26784"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 783,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 784,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "academic",
     "enterprise",
     "journalism",
@@ -523,10 +522,10 @@
     "research_lab",
     "enterprise",
     "journalism",
-    "research_lab"
+    "research_lab",
+    "journalism"
   ],
   "recent_styles": [
-    "ENTERPRISE_ROI",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
@@ -535,6 +534,7 @@
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "STRATEGIC_CONTRAST"
   ]
 }
