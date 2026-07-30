@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://openai.com/index/codex-maxxing-long-running-work",
-    "https://huggingface.co/blog/local-models-pr-triage",
-    "https://huggingface.co/blog/ibm-research/cuga-apps",
-    "https://the-decoder.com/openai-says-new-gpt-5-5-cyber-outperforms-anthropics-mythos-on-cybersecurity-benchmark/",
-    "https://machinelearningmastery.com/clustering-unstructured-text-with-llm-embeddings-and-hdbscan/",
-    "https://openai.com/index/samsung-electronics-chatgpt-codex-deployment",
-    "https://the-decoder.com/sakana-ais-fugu-orchestrates-multiple-llms-to-match-anthropics-fable-and-mythos-benchmarks/",
-    "https://www.latent.space/p/gray-swan",
     "https://techcrunch.com/2026/06/22/openai-launches-new-initiative-to-help-find-and-patch-open-source-bugs/",
     "https://techcrunch.com/2026/06/22/the-ai-world-is-getting-loopy/",
     "https://openai.com/index/gpt-5-immunology-mystery",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.24145",
     "https://arxiv.org/abs/2607.24365",
     "https://arxiv.org/abs/2607.24434",
-    "https://arxiv.org/abs/2607.24519"
+    "https://arxiv.org/abs/2607.24519",
+    "https://openai.com/index/gpt-5-6-frontier-intelligence-efficiency",
+    "https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores",
+    "https://aws.amazon.com/blogs/machine-learning/generate-autonomous-business-insights-with-ai-agent-and-mcp-servers/",
+    "https://the-decoder.com/openai-claims-gpt-5-6-sol-beats-opus-5-on-arc-agi-3-with-its-latest-api-and-two-additional-settings/",
+    "https://deepmind.google/blog/were-launching-lyria-35-in-google-flow-music-with-advances-across-musicality-lyrics-vocals-and-creative-control/",
+    "https://arxiv.org/abs/2607.26298",
+    "https://arxiv.org/abs/2607.26336",
+    "https://arxiv.org/abs/2607.26467"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 782,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 783,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "enterprise",
     "academic",
     "enterprise",
@@ -523,10 +522,10 @@
     "practitioner",
     "research_lab",
     "enterprise",
-    "journalism"
+    "journalism",
+    "research_lab"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "ENTERPRISE_ROI",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
@@ -535,6 +534,7 @@
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION"
   ]
 }
