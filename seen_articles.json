@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.23937",
-    "https://arxiv.org/abs/2606.23959",
-    "https://deepmind.google/blog/introducing-computer-use-in-gemini-3-5-flash/",
-    "https://the-decoder.com/google-bakes-computer-control-directly-into-gemini-3-5-flash-letting-the-model-see-and-operate-your-screen/",
-    "https://openai.com/index/how-agents-are-transforming-work",
-    "https://huggingface.co/blog/ffasr-leaderboard",
-    "https://arxiv.org/abs/2606.24901",
-    "https://arxiv.org/abs/2606.24945",
     "https://arxiv.org/abs/2606.24946",
     "https://arxiv.org/abs/2606.24948",
     "https://machinelearningmastery.com/agentic-workflow-vs-autonomous-agent-whats-the-difference/",
@@ -499,7 +491,15 @@
     "https://openai.com/index/unive",
     "https://arxiv.org/abs/2607.27263",
     "https://arxiv.org/abs/2607.27265",
-    "https://arxiv.org/abs/2607.27275"
+    "https://arxiv.org/abs/2607.27275",
+    "https://openai.com/index/building-abundant-intelligence",
+    "https://www.theverge.com/podcast/973668/ai-safety-openai-hugging-face-vergecast",
+    "https://www.marktechpost.com/2026/07/31/nous-research-ships-three-integration-paths-for-hermes-agent-and-buzz-blocks-open-source-nostr-workspace-for-humans-and-agents/",
+    "https://arxiv.org/abs/2607.27283",
+    "https://arxiv.org/abs/2607.27289",
+    "https://arxiv.org/abs/2607.27304",
+    "https://arxiv.org/abs/2607.27404",
+    "https://arxiv.org/abs/2607.27418"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 785,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 786,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "journalism",
     "research_lab",
     "practitioner",
@@ -523,10 +522,10 @@
     "journalism",
     "research_lab",
     "journalism",
-    "enterprise"
+    "enterprise",
+    "research_lab"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
@@ -535,6 +534,7 @@
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "QUESTION_FIRST"
   ]
 }
