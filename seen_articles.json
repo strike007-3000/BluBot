@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.24062",
-    "https://arxiv.org/abs/2606.24084",
-    "https://www.microsoft.com/en-us/research/blog/talos-scaling-rare-disease-diagnosis-with-automated-iterative-genomic-reanalysis/",
-    "https://openai.com/index/openai-broadcom-jalapeno-inference-chip",
-    "https://arxiv.org/abs/2606.24143",
-    "https://arxiv.org/abs/2606.24173",
-    "https://arxiv.org/abs/2606.24543",
-    "https://arxiv.org/abs/2606.24679",
     "https://arxiv.org/abs/2606.23937",
     "https://arxiv.org/abs/2606.23959",
     "https://deepmind.google/blog/introducing-computer-use-in-gemini-3-5-flash/",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.26581",
     "https://arxiv.org/abs/2607.26618",
     "https://arxiv.org/abs/2607.26752",
-    "https://arxiv.org/abs/2607.26784"
+    "https://arxiv.org/abs/2607.26784",
+    "https://aws.amazon.com/blogs/machine-learning/introducing-explicit-prompt-caching-for-openai-gpt-5-6-models-on-amazon-bedrock/",
+    "https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6",
+    "https://openai.com/index/advancing-responsible-ai-across-europe",
+    "https://simonwillison.net/2026/Jul/30/three-real-world-incidents/#atom-everything",
+    "https://openai.com/index/unive",
+    "https://arxiv.org/abs/2607.27263",
+    "https://arxiv.org/abs/2607.27265",
+    "https://arxiv.org/abs/2607.27275"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 784,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 785,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "academic",
     "enterprise",
     "journalism",
     "research_lab",
@@ -523,10 +522,10 @@
     "enterprise",
     "journalism",
     "research_lab",
-    "journalism"
+    "journalism",
+    "enterprise"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
@@ -535,6 +534,7 @@
     "ENTERPRISE_ROI",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "PRACTICAL_WORKFLOW"
   ]
 }
