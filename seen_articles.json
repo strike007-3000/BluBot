@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.24946",
-    "https://arxiv.org/abs/2606.24948",
-    "https://machinelearningmastery.com/agentic-workflow-vs-autonomous-agent-whats-the-difference/",
-    "https://arxiv.org/abs/2606.24950",
-    "https://arxiv.org/abs/2606.24994",
-    "https://arxiv.org/abs/2606.24995",
-    "https://arxiv.org/abs/2606.24998",
-    "https://arxiv.org/abs/2606.25000",
     "https://arxiv.org/abs/2606.25007",
     "https://arxiv.org/abs/2606.25008",
     "https://huggingface.co/blog/vllm-jobs",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.27289",
     "https://arxiv.org/abs/2607.27304",
     "https://arxiv.org/abs/2607.27404",
-    "https://arxiv.org/abs/2607.27418"
+    "https://arxiv.org/abs/2607.27418",
+    "https://aws.amazon.com/blogs/machine-learning/announcing-the-agentic-catalog-experience-in-amazon-quick/",
+    "https://simonwillison.net/2026/Jul/31/deepseek-v4-flash-0731/#atom-everything",
+    "https://simonwillison.net/2026/Jul/31/oxide-and-friends/#atom-everything",
+    "https://the-decoder.com/openai-is-reportedly-building-astra-a-model-family-designed-to-work-on-problems-for-hours-or-days/",
+    "https://the-decoder.com/new-deepseek-flash-model-matches-openais-gpt-5-6-luna-at-roughly-60-percent-lower-cost/",
+    "https://openai.com/index/ten-advances-in-mathematics",
+    "https://www.latent.space/p/ainews-not-much-happened-today-038",
+    "https://simonwillison.net/2026/Jul/31/stateless-mcp/#atom-everything"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 786,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 787,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "research_lab",
     "practitioner",
     "research_lab",
@@ -523,10 +522,10 @@
     "research_lab",
     "journalism",
     "enterprise",
-    "research_lab"
+    "research_lab",
+    "enterprise"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
@@ -535,6 +534,7 @@
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "ENTERPRISE_ROI"
   ]
 }
