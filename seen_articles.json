@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.25007",
-    "https://arxiv.org/abs/2606.25008",
-    "https://huggingface.co/blog/vllm-jobs",
-    "https://arxiv.org/abs/2606.26217",
-    "https://arxiv.org/abs/2606.26294",
-    "https://arxiv.org/abs/2606.26327",
-    "https://arxiv.org/abs/2606.26424",
-    "https://arxiv.org/abs/2606.26429",
     "https://arxiv.org/abs/2606.26472",
     "https://arxiv.org/abs/2606.26474",
     "https://arxiv.org/abs/2606.26476",
@@ -499,7 +491,15 @@
     "https://the-decoder.com/new-deepseek-flash-model-matches-openais-gpt-5-6-luna-at-roughly-60-percent-lower-cost/",
     "https://openai.com/index/ten-advances-in-mathematics",
     "https://www.latent.space/p/ainews-not-much-happened-today-038",
-    "https://simonwillison.net/2026/Jul/31/stateless-mcp/#atom-everything"
+    "https://simonwillison.net/2026/Jul/31/stateless-mcp/#atom-everything",
+    "https://simonwillison.net/2026/Aug/2/open-letters/#atom-everything",
+    "https://the-decoder.com/after-hugging-face-incident-metr-urges-independent-root-cause-investigations-into-ai-agent-misbehavior/",
+    "https://simonwillison.net/2026/Aug/2/july-newsletter/#atom-everything",
+    "https://techcrunch.com/2026/08/01/judge-denies-xais-request-to-block-minnesota-ban-on-nudify-apps/",
+    "https://simonwillison.net/2026/Aug/1/greg-brockman/#atom-everything",
+    "https://simonwillison.net/2026/Aug/1/datasette-apps/#atom-everything",
+    "https://simonwillison.net/2026/Aug/1/ten-advances-in-mathematics/#atom-everything",
+    "https://www.together.ai/blog/kimi-k3-guide"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 787,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 788,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "practitioner",
     "research_lab",
     "enterprise",
@@ -523,10 +522,10 @@
     "journalism",
     "enterprise",
     "research_lab",
-    "enterprise"
+    "enterprise",
+    "practitioner"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
@@ -535,6 +534,7 @@
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "PRACTICAL_WORKFLOW"
   ]
 }
