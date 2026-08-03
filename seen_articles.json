@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.26617",
-    "https://arxiv.org/abs/2606.26797",
-    "https://openai.com/index/previewing-gpt-5-6-sol",
-    "https://www.latent.space/p/ainews-openai-gpt-56-sol-terra-luna",
-    "https://www.marktechpost.com/2026/06/26/openai-previews-gpt-5-6-with-sol-terra-and-luna-tiered-models-new-reasoning-modes-limited-access/",
-    "https://the-decoder.com/openais-claude-mythos-competitor-gpt-5-6-sol-launches-under-government-controlled-access-it-calls-unsustainable/",
-    "https://techcrunch.com/2026/06/26/openai-limits-gpt-5-6-rollout-after-government-request-says-restrictions-shouldnt-be-the-norm/",
-    "https://huggingface.co/blog/allenai/hybrid-token-prediction",
     "https://www.microsoft.com/en-us/research/blog/understanding-the-brain-with-ai-driven-explanations-and-experiments/",
     "https://www.marktechpost.com/2026/06/26/building-supervised-fine-tuning-data-from-nvidia-open-swe-traces-trajectory-parsing-patch-analysis-token-budgets-and-tool-use-metrics/",
     "https://the-decoder.com/sinas-open-model-vibethinker-3b-aims-to-show-reasoning-compresses-well-but-factual-knowledge-doesnt/",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.28908",
     "https://arxiv.org/abs/2607.29055",
     "https://arxiv.org/abs/2607.29064",
-    "https://arxiv.org/abs/2607.29181"
+    "https://arxiv.org/abs/2607.29181",
+    "https://the-decoder.com/two-teams-solved-the-same-quantum-crypto-problem-using-gpt-5-6-just-three-hours-apart/",
+    "https://the-decoder.com/alibabas-open-weight-qwen3-8-max-takes-on-long-horizon-ai-tasks-with-2-4-trillion-parameters/",
+    "https://www.interconnects.ai/p/introducing-our-artifacts-hub-and",
+    "https://jack-clark.net/2026/08/03/import-ai-467-self-sustaining-ai-viruses-pacing-ai-progress-confusion-about-ai-and-creativity/",
+    "https://arxiv.org/abs/2607.29225",
+    "https://arxiv.org/abs/2607.29389",
+    "https://arxiv.org/abs/2607.29491",
+    "https://arxiv.org/abs/2607.28457"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 789,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 790,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "enterprise",
     "journalism",
     "research_lab",
@@ -523,10 +522,10 @@
     "research_lab",
     "enterprise",
     "practitioner",
-    "academic"
+    "academic",
+    "journalism"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
@@ -535,6 +534,7 @@
     "QUESTION_FIRST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "STRATEGIC_CONTRAST"
   ]
 }
