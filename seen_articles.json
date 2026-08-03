@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.26472",
-    "https://arxiv.org/abs/2606.26474",
-    "https://arxiv.org/abs/2606.26476",
-    "https://arxiv.org/abs/2606.26488",
-    "https://arxiv.org/abs/2606.26525",
-    "https://arxiv.org/abs/2606.26527",
-    "https://arxiv.org/abs/2606.26541",
-    "https://arxiv.org/abs/2606.26574",
     "https://arxiv.org/abs/2606.26617",
     "https://arxiv.org/abs/2606.26797",
     "https://openai.com/index/previewing-gpt-5-6-sol",
@@ -499,7 +491,15 @@
     "https://simonwillison.net/2026/Aug/1/greg-brockman/#atom-everything",
     "https://simonwillison.net/2026/Aug/1/datasette-apps/#atom-everything",
     "https://simonwillison.net/2026/Aug/1/ten-advances-in-mathematics/#atom-everything",
-    "https://www.together.ai/blog/kimi-k3-guide"
+    "https://www.together.ai/blog/kimi-k3-guide",
+    "https://arxiv.org/abs/2607.28670",
+    "https://arxiv.org/abs/2607.28693",
+    "https://arxiv.org/abs/2607.28826",
+    "https://arxiv.org/abs/2607.28856",
+    "https://arxiv.org/abs/2607.28908",
+    "https://arxiv.org/abs/2607.29055",
+    "https://arxiv.org/abs/2607.29064",
+    "https://arxiv.org/abs/2607.29181"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,23 +510,22 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 788,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 789,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
+    "research_lab",
+    "enterprise",
+    "journalism",
+    "research_lab",
+    "journalism",
+    "enterprise",
+    "research_lab",
+    "enterprise",
     "practitioner",
-    "research_lab",
-    "enterprise",
-    "journalism",
-    "research_lab",
-    "journalism",
-    "enterprise",
-    "research_lab",
-    "enterprise",
-    "practitioner"
+    "academic"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "QUESTION_FIRST",
@@ -535,6 +534,7 @@
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "ENTERPRISE_ROI",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "RISK_VERIFICATION"
   ]
 }
