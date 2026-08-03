@@ -2,8 +2,8 @@
 # Use 'pip-compile requirements.in' to generate requirements.txt
 
 atproto>=0.0.69
-google-genai>=2.14.0
-feedparser>=6.0.12
+google-genai>=2.16.0
+feedparser>=6.0.14
 python-dotenv>=1.2.1
 requests==2.34.2
 Mastodon.py>=2.2.1
