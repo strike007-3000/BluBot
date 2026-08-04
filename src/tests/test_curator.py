@@ -45,6 +45,33 @@ def test_strip_markdown_cleanliness():
     assert strip_markdown(None) is None
 
 @pytest.mark.asyncio
+async def test_fetch_single_feed_atom_updated_fallback(mock_httpx_client, mocker):
+    """Verify Atom updated_parsed is used when published_parsed is absent."""
+    from src.curator import fetch_single_feed
+    now_utc = datetime.now(timezone.utc)
+    
+    mock_entry = mocker.MagicMock()
+    mock_entry.link = "https://github.com/vllm-project/vllm/releases/tag/v0.26.0"
+    mock_entry.title = "v0.26.0 Release"
+    mock_entry.summary = "Release notes"
+    del mock_entry.published_parsed  # Absent in Atom releases
+    mock_entry.updated_parsed = (2026, 8, 4, 12, 0, 0, 1, 216, 0)
+    
+    mock_feed = mocker.MagicMock()
+    mock_feed.entries = [mock_entry]
+    mock_feed.feed = mocker.MagicMock(title="vLLM Releases")
+    
+    mocker.patch("feedparser.parse", return_value=mock_feed)
+    
+    mock_resp = mocker.MagicMock()
+    mock_resp.content = b"<atom feed>"
+    mock_httpx_client.get = mocker.AsyncMock(return_value=mock_resp)
+    
+    items = await fetch_single_feed(mock_httpx_client, "https://github.com/vllm-project/vllm/releases.atom", now_utc - timedelta(days=2), now_utc, [], [])
+    assert len(items) == 1
+    assert items[0]["published"].startswith("2026-08-04T12:00:00")
+
+@pytest.mark.asyncio
 async def test_fetch_news_synergy_and_deduplication(mock_httpx_client, mocker):
     """Verify that cross-source duplicate stories get a synergy bonus and are ranked correctly."""
     # Mocking fetch_single_feed to return specific items with different publisher domains
