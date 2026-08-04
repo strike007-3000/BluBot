@@ -1,5 +1,6 @@
-# BluBot Source Dependencies (v3.8.2)
-# Use 'pip-compile requirements.in' to generate requirements.txt
+# BluBot Source Dependencies (v3.18.1)
+# Use 'uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt'
+# to generate the Python 3.13 runtime lockfile.
 
 atproto>=0.0.69
 google-genai>=2.16.0

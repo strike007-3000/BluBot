@@ -1,6 +1,6 @@
 # Privacy Policy for BluBot
 
-**Last Updated: June 21, 2026**
+**Last Updated: August 4, 2026**
 
 BluBot ("we", "our", or "the Bot") is an automated news curation and broadcasting tool. This Privacy Policy explains how the Bot handles data when you integrate it with third-party platforms, specifically Bluesky, Mastodon, Meta Threads, and Telegram.
 
@@ -11,7 +11,7 @@ BluBot is designed to run in a self-hosted or automated environment (such as Git
 * **Personal Data:** We do not collect, store, or harvest any personal data, profiles, or contact details of end users.
 * **Credentials & Tokens:** Any access tokens, handles, or user IDs required to run the Bot (e.g., `BSKY_APP_PASSWORD`, `MASTODON_ACCESS_TOKEN`, `THREADS_ACCESS_TOKEN`, `TELEGRAM_BOT_TOKEN`) are stored securely as encrypted secrets in your own hosting platform (e.g., GitHub Secrets). The Bot never transmits these credentials to any party other than the official, respective platform API endpoints.
 * **Interaction Metadata:** If the Interaction Engine is enabled, the Bot reads notification and reply metadata (post IDs, author handles, and post text) from Bluesky, Mastodon, and Threads APIs solely to generate replies. Processed notification IDs are stored locally in `seen_interactions.json` (in your private repository) to prevent double-replies; no personal text is persisted.
-* **Telegram Messages:** If the Telegram gateway is enabled, the Bot reads the most recent messages in your private Telegram bot conversation (up to the last 50 updates) to check for `/topic` or `/curate` commands and to receive approval decisions. All message processing is scoped to the single authorized `TELEGRAM_USER_ID`. Note: `/topic <keyword>` commands and text-regeneration feedback you send are forwarded to the Google Gemini API as part of the synthesis or editing prompt. No Telegram message content is stored locally or transmitted to any other party.
+* **Telegram Messages:** If the Telegram gateway is enabled, the Bot reads the most recent messages in your private Telegram bot conversation (up to the last 50 updates) to check for `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, and `/brief` commands and to receive approval decisions. All message processing is scoped to the single authorized `TELEGRAM_USER_ID`. Note: `/topic <keyword>`, `/brief <keyword>` commands, and text-regeneration feedback you send are forwarded to the Google Gemini API as part of the synthesis, editing, or briefing prompt. `/watch` topic strings are stored locally in `seen_articles.json` under the `watch_topics` key. No Telegram message content beyond watchlist entries is stored locally or transmitted to any other party.
 
 ## 2. How We Use Data
 
@@ -42,7 +42,7 @@ The Bot accesses platform APIs solely to:
 
 BluBot operates in a near-stateless environment. It does not run a persistent database for personal information. The only local state persisted is:
 
-* **`seen_articles.json`**: Public news article URLs (to prevent duplicate posts) and editorial metadata (last dialect, topic history). Capped at the last 500 links and 20 recent topics.
+* **`seen_articles.json`**: Public news article URLs (to prevent duplicate posts) and editorial metadata (last dialect, topic history, watchlist topics). Capped at the last 500 links, 20 recent topics, and 10 watchlist entries.
 * **`seen_interactions.json`**: Social media post/notification IDs of processed interactions, to prevent double-replies. No personal text is stored.
 * **`bluesky_session.txt`**: A Bluesky session token for session resumption, stored in your private repository.
 * **`broken_feeds.json`**: Health status of RSS feeds (URLs and failure counts). No personal data.

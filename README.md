@@ -53,27 +53,28 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **24-Hour Lookback Filters**: Strict timestamp boundaries filter out notifications/comments older than 24 hours to prevent scanning entire profile histories.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
     - **Conversational Quality & Persona**: System prompts are highly tailored to speak in a natural, peer-like mentor/analyst voice, stripping robotic introductory pre-ambles and hashtags.
-- **Breakthrough Scoring Engine v4 (Elite Signal Processing)**: 
-    - **Stable-ID Curation Registry**:
+- **Breakthrough Scoring Engine v5 (Elite Signal Processing)**:
+    - **Stable-ID Curation Registry (8-Tier, 45 Feeds)**:
         
         | Source Category | Base Score | Notes / Source Tiers |
         | :--- | :--- | :--- |
-        | **Research Labs** | `+30` | OpenAI, Anthropic, DeepMind, Meta AI, HuggingFace |
-        | **Enterprise AI** | `+25`–`+27` | Microsoft AI, Google Cloud AI, AWS, NVIDIA |
-        | **Practitioner** | `+20` | Simon Willison, Weights & Biases, LangChain, Latent Space |
+        | **Research Labs** | `+30` | OpenAI, DeepMind, HuggingFace |
+        | **Enterprise AI** | `+25`–`+27` | Microsoft Research, AWS ML, NVIDIA Deep Learning |
+        | **Practitioner** | `+20` | Simon Willison, Interconnects, Latent Space, One Useful Thing, Sebastian Raschka, Jack Clark, Maarten Grootendorst |
         | **Open Source** | `+18` | Hugging Face Transformers Releases, vLLM, Ollama, PyTorch |
-        | **Infrastructure/Business** | `+15` | SemiAnalysis, Together AI, ServeTheHome, Semiconductor Engineering, Sequoia |
-        | **Journalism** | `+12` | The Verge, Wired, MIT Tech Review, TechCrunch |
-        | **Academic** | `+10` | arXiv CS.LG, The Gradient, BAIR Blog |
-        | **Critical / Policy & Security** | `+5`–`+10` | AI Incident Database, EU AI Act Tracker, AI Snake Oil, Gary Marcus |
+        | **Infrastructure/Business** | `+15` | SemiAnalysis, Together AI, ServeTheHome, Semiconductor Engineering, Sequoia, CB Insights |
+        | **Journalism** | `+12` | The Verge, Wired, MIT Tech Review, TechCrunch, VentureBeat, IEEE Spectrum, The Decoder, 404 Media, Silicon Angle, The Sequence, Marktechpost, AI Accelerator Institute |
+        | **Academic** | `+10` | arXiv CS.LG, The Gradient, BAIR Blog, ML Mastery |
+        | **Critical / Policy & Security** | `+5`–`+10` | AI Incident Database, EU AI Act Tracker, AI Snake Oil, Gary Marcus, Algorithmic Bridge, Victoria Krakovna |
     - **Curation Boosts & Penalties**:
         - **High-Signal Keywords**: `+12` (Boosts *SOTA, agentic, world model, open weights*, etc.)
         - **Momentum Products**: `+18` (Boosts *gpt-5, claude 4, llama 4*, etc.)
-        - **Consensus Synergy (Story Clustering)**: `+15` (Awarded when stories from ≥2 distinct publisher domains cluster together based on title normalization and similarity)
+        - **Consensus Synergy (Story Clustering)**: `+15` (Awarded when stories from ≥2 distinct publisher domains cluster together based on title normalization and headline similarity)
+        - **Watchlist Boost**: `+3` to `+8` (Bounded boost for articles matching user-defined `/watch` topics via word-boundary regex matching against title and summary text)
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) style selection across 5 distinct writing structures to prevent structural narration repetition.
-    - **Curated Feed Network**: **45 configured feeds** mapped dynamically via registry and audited for freshness.
+    - **Curated Feed Network**: **45 configured feeds** across 8 tiers mapped dynamically via registry and audited for freshness.
 
 
 ## 🛠️ Setup Instructions
@@ -112,7 +113,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `ENABLE_BSKY_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
-| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token (supports commands: `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, `/brief`) |
+| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token (supports commands: `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, `/brief`). See [Telegram Command Reference](#-telegram-command-reference) below. |
 | `TELEGRAM_USER_ID` | No | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | No | (Optional) Telegram polling timeout in minutes (default: `5`) |
 | `ENABLE_TELEGRAM_APPROVAL` | No | (Optional) Toggle Telegram draft approval (default: `true` if bot token set) |
@@ -162,9 +163,29 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 - `src/tests/`: **Automated Test Suite** (Security, Scoring, Redaction).
 - `scripts/diagnostic.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
 
+## 📡 Telegram Command Reference
+
+| Command | Description |
+| :--- | :--- |
+| `/topic <keyword>` | Curate and broadcast a post on a specific topic, grounded against live RSS feeds |
+| `/curate <keyword>` | Alias for `/topic` |
+| `/watch <keyword>` | Add a topic to your persistent watchlist (max 10). Watched topics receive a bounded `+3` to `+8` scoring boost during curation |
+| `/unwatch <keyword>` | Remove a topic from your watchlist |
+| `/watches` | List all active watchlist topics |
+| `/brief <keyword>` | Generate a **7-day executive briefing** for a topic. Fetches all RSS articles from the past 7 days, clusters corroborated stories, and synthesizes a Gemini-powered analytical report delivered directly to Telegram with no platform character limits |
+
 ## 🗒️ Updates & History
 
-- **v3.13.4 (Current)**: **Documentation Sync Patch**.
+- **v3.18.1 (Current)**: **Python 3.13 Dependency Lock Fix**.
+    - 🐍 **CI Compatibility**: Regenerated the dependency lock for Python 3.13, removing obsolete compatibility packages that cannot be installed on the project runtime.
+- **v3.18.0**: **Grounded Briefings, Watchlists, Story Clustering, and Feed Expansion**.
+    - 📊 **`/brief` Command (PR 3b)**: New Telegram command generates **7-day executive briefings** for any topic. Fetches articles with `days_lookback=7`, clusters corroborated stories across publisher domains, and synthesizes a Gemini-powered analytical report. Delivered to Telegram using `smart_split` with the 4096-character Telegram limit—**no max_chunks cap**, so lengthy briefings are delivered in full. Bypasses Gemini API in dry-run mode.
+    - 📌 **Topic Watchlists (PR 3a)**: Persistent `/watch`, `/unwatch`, and `/watches` commands with structured watchlist entries (topic, display name, keywords, timestamps). Watchlisted topics receive a bounded `+3` to `+8` scoring boost via word-boundary regex matching against article titles and summaries. Capped at 10 active watches.
+    - 🧬 **Cross-Source Story Clustering (PR 1)**: Title normalization engine with headline similarity and multi-domain corroboration. Stories from ≥2 distinct publisher domains are clustered together and the lead article receives a `+15` Consensus Synergy bonus. Supporting source names and links are tracked for transparency.
+    - 📡 **Feed Network Expansion (PR 2)**: Added 8 new live-audited RSS sources: Hugging Face Transformers, vLLM, Ollama, and PyTorch release feeds (Open Source tier), ServeTheHome and Semiconductor Engineering (Infrastructure tier), AI Incident Database and EU AI Act Tracker (Policy & Security tier). Feed network now covers **45 feeds** across 8 tiers.
+    - 🔧 **CI Workflow Fix**: Corrected GitHub Actions version tags (`actions/checkout@v4`, `actions/setup-python@v5`, `actions/cache@v4`) across `test.yml` and `daily_post.yml`.
+    - 🔒 **Dependency Hardening**: Upgraded `cryptography` to `>=46.0.7,<47` resolving CVE-2026-39892.
+- **v3.13.4**: **Documentation Sync Patch**.
     - 📄 **SECURITY.md Overhaul**: Updated supported versions table to the current `3.13.x` line, bumped security baseline reference to `v3.13.3`, and expanded the hardening section with 4 new entries: Decompression Bomb DoS protection, Telegram impersonation gating, Zero-Duplicate Threads logic, and Resilient RSS parsing.
     - 🔒 **PRIVACY.md Expansion**: Broadened privacy policy scope from Threads-only to all 4 platforms (Bluesky, Mastodon, Threads, Telegram). Added sections covering Interaction Engine metadata, Telegram message processing, Google Gemini/NVIDIA NIM data handling, and a full enumeration of all persisted state files.
     - 📖 **WIKI_MANUAL.md Corrections**: Added 11 missing environment variables to the Page 6 secrets table (Mastodon, Threads, Telegram, Hashtag controls), corrected feed count from "over 30" to "exactly 32", removed stale broken anchor links from Page 8, and clarified the `THINKING_BUDGET` Gemma bypass note.
@@ -210,7 +231,7 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
     - 🛠️ **Universal Manual Bypass**: Extended scheduling logic to regard ALL non-scheduled events (Push/Dispatch/PR) as manual runs, ensuring zero weekend development blocks.
 - **v3.8.3**: **Infrastructure Modernization**.
     - 🐍 **Python 3.13 Upgrade**: Realigned the entire CI/CD pipeline and delivery environment to Python 3.13.
-    - ⚡ **Node.js 24 Actions**: Migrated to `actions/checkout@v6`, `actions/setup-python@v6`, and `actions/cache@v5`.
+    - ⚡ **Node.js 24 Actions**: Migrated to `actions/checkout@v4`, `actions/setup-python@v5`, and `actions/cache@v4`.
 - **v3.8.2**: **Hardening, Humanization & The Interaction Engine**.
     - 🛡️ **Feed Vanguard**: Automated RSS resilience engine with soft-disable backoff and pre-flight auditing.
     - 💬 **Interactive Sage**: Conversational AI (Mention Replies) for Bluesky and Mastodon with persona-aligned logic.
@@ -259,14 +280,14 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.13.3 features a dual-layer testing strategy:
+BluBot v3.18.1 features a dual-layer testing strategy with **93 automated tests** across 11 test modules:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:
 ```bash
 pytest src/tests/
 ```
-Targeting **SSRF protection**, **Scoring fidelity**, and **Secret redaction**.
+Targeting **SSRF protection**, **Scoring fidelity**, **Secret redaction**, **Story clustering**, **Watchlist boost scoring**, **Topic grounding**, **Telegram command parsing** (including `/brief`, `/watch`, `/unwatch`), **Dry-run pipeline bypasses**, and **Media pipeline integrity**.
 
 ### 2. Interactive Diagnostic (Developer Tool)
 Run the playground to see manual scoring breakdowns and AI drafts:
