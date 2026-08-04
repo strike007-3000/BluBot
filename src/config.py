@@ -99,15 +99,22 @@ SOURCE_REGISTRY = [
     {"id": "jack_clark",          "name": "Jack Clark",          "url": "https://jack-clark.net/feed/",                                       "category": "practitioner",   "quality": "opinion",    "base_score": 20},
 
     # === Tier 4: Open-Source Ecosystem (base 18) ===
-    # None currently active; PyTorch 403s, others 404. Relies on Tiers 1-3 practitioners for OS.
+    {"id": "hf_transformers_rel", "name": "Hugging Face Transformers Releases", "url": "https://github.com/huggingface/transformers/releases.atom", "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
+    {"id": "vllm_releases",       "name": "vLLM Releases",                   "url": "https://github.com/vllm-project/vllm/releases.atom",         "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
+    {"id": "ollama_releases",     "name": "Ollama Releases",                 "url": "https://github.com/ollama/ollama/releases.atom",             "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
+    {"id": "pytorch_releases",    "name": "PyTorch Releases",                "url": "https://github.com/pytorch/pytorch/releases.atom",            "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
 
     # === Tier 5: Infrastructure / Business Analysis (base 15) ===
     {"id": "semianalysis",        "name": "SemiAnalysis",        "url": "https://semianalysis.com/feed/",                                     "category": "infrastructure", "quality": "opinion",    "base_score": 15},
     {"id": "together_ai",         "name": "Together AI Blog",    "url": "https://www.together.ai/blog/rss.xml",                               "category": "infrastructure", "quality": "official",   "base_score": 15},
+    {"id": "servethehome",        "name": "ServeTheHome",        "url": "https://www.servethehome.com/feed/",                                 "category": "infrastructure", "quality": "journalism", "base_score": 15}, # EVALUATION
+    {"id": "semiengineering",     "name": "Semiconductor Engineering", "url": "https://semiengineering.com/feed/",                             "category": "infrastructure", "quality": "journalism", "base_score": 15}, # EVALUATION
     {"id": "sequoia_cap",         "name": "Sequoia Capital",     "url": "https://www.sequoiacap.com/feed/",                                   "category": "business",       "quality": "opinion",    "base_score": 15},
     {"id": "cb_insights_ai",      "name": "CB Insights AI",      "url": "https://www.cbinsights.com/research/feed/",                          "category": "business",       "quality": "journalism", "base_score": 15},
 
-    # === Tier 6: Journalism / Industry / General (base 12) ===
+    # === Tier 6: Policy & Security Primary / Journalism (base 10-12) ===
+    {"id": "ai_incident_db",      "name": "AI Incident Database", "url": "https://incidentdatabase.ai/rss.xml",                                 "category": "critical",       "quality": "official",   "base_score": 10}, # EVALUATION
+    {"id": "eu_ai_act",           "name": "EU AI Act Tracker",   "url": "https://artificialintelligenceact.eu/feed/",                         "category": "critical",       "quality": "official",   "base_score": 10}, # EVALUATION
     {"id": "the_verge_ai",        "name": "The Verge AI",        "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "mit_tech_review",     "name": "MIT Tech Review AI",  "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed/","category": "journalism",   "quality": "journalism", "base_score": 12},
     {"id": "ieee_spectrum",       "name": "IEEE Spectrum AI",    "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",  "category": "journalism",     "quality": "journalism", "base_score": 12},
