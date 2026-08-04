@@ -150,7 +150,8 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
         seen_data["recent_topics"], 
         feed_list=active_feeds, 
         limit=None if telegram_topic else 8,
-        recent_categories=seen_data.get("recent_categories", [])
+        recent_categories=seen_data.get("recent_categories", []),
+        watch_topics=seen_data.get("watch_topics", [])
     )
     all_articles = [Article(**item) for item in raw_news]
 

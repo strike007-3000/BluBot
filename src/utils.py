@@ -203,7 +203,8 @@ def load_seen_articles():
         "last_dialect": None,
         "total_posts_curated": 0,
         "recent_categories": [],
-        "recent_styles": []
+        "recent_styles": [],
+        "watch_topics": []
     }
     
     with FileLock(SEEN_FILE_PATH):
@@ -216,6 +217,8 @@ def load_seen_articles():
                     state["recent_categories"] = []
                 if "recent_styles" not in state:
                     state["recent_styles"] = []
+                if "watch_topics" not in state:
+                    state["watch_topics"] = []
                 return state
             except (json.JSONDecodeError, IOError) as e:
                 SafeLogger.warn(f"Local seen articles file corrupted: {e}. Trying backup...")
