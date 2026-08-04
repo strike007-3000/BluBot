@@ -61,11 +61,11 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         | **Research Labs** | `+30` | OpenAI, Anthropic, DeepMind, Meta AI, HuggingFace |
         | **Enterprise AI** | `+25`–`+27` | Microsoft AI, Google Cloud AI, AWS, NVIDIA |
         | **Practitioner** | `+20` | Simon Willison, Weights & Biases, LangChain, Latent Space |
-        | **Open Source** | `+18` | vLLM, Ollama, LM Studio |
-        | **Infrastructure/Business** | `+15` | SemiAnalysis, Together AI, a16z, Sequoia |
+        | **Open Source** | `+18` | Hugging Face Transformers Releases, vLLM, Ollama, PyTorch |
+        | **Infrastructure/Business** | `+15` | SemiAnalysis, Together AI, ServeTheHome, Semiconductor Engineering, Sequoia |
         | **Journalism** | `+12` | The Verge, Wired, MIT Tech Review, TechCrunch |
         | **Academic** | `+10` | arXiv CS.LG, The Gradient, BAIR Blog |
-        | **Critical** | `+5` | Supporting context only (AI Snake Oil, Gary Marcus) |
+        | **Critical / Policy & Security** | `+5`–`+10` | AI Incident Database, EU AI Act Tracker, AI Snake Oil, Gary Marcus |
     - **Curation Boosts & Penalties**:
         - **High-Signal Keywords**: `+12` (Boosts *SOTA, agentic, world model, open weights*, etc.)
         - **Momentum Products**: `+18` (Boosts *gpt-5, claude 4, llama 4*, etc.)
@@ -73,7 +73,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) style selection across 5 distinct writing structures to prevent structural narration repetition.
-    - **Curated Feed Network**: **50+ active feeds** mapped dynamically via registry and audited for freshness.
+    - **Curated Feed Network**: **45 configured feeds** mapped dynamically via registry and audited for freshness.
 
 
 ## 🛠️ Setup Instructions

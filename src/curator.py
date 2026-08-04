@@ -114,6 +114,8 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
             pub_date = None
             if hasattr(entry, 'published_parsed') and entry.published_parsed:
                 pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
+            elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                pub_date = datetime.fromtimestamp(calendar.timegm(entry.updated_parsed), timezone.utc)
             else:
                 pub_date = now_utc
             

@@ -46,14 +46,45 @@ async def run_standalone_audit():
             display_url = (url[:47] + "...") if len(url) > 50 else url
             print(f"{icon} {status:<7} | {display_url:<50} | Fail Count: {fails} ({error})")
             
-        # Display Active feeds
+        from src.config import SOURCE_REGISTRY, URL_TO_ID, FEED_CATEGORY_MAP, ID_TO_NAME
+        import feedparser, calendar
+        
+        category_stats = {}
+        
         for url in active:
             if url not in jail:
-                display_url = (url[:47] + "...") if len(url) > 50 else url
-                print(f"✅ ACTIVE    | {display_url:<50} | Latency: OK")
+                source_id = URL_TO_ID.get(url, "unknown")
+                source_name = ID_TO_NAME.get(source_id, url)
+                category = FEED_CATEGORY_MAP.get(source_id, "unknown")
+                
+                latest_str = "N/A"
+                try:
+                    resp = await client.get(url, timeout=10.0)
+                    if resp.status_code == 200:
+                        parsed = await asyncio.to_thread(feedparser.parse, resp.content)
+                        if parsed.entries:
+                            e = parsed.entries[0]
+                            if hasattr(e, 'published_parsed') and e.published_parsed:
+                                dt = datetime.fromtimestamp(calendar.timegm(e.published_parsed), timezone.utc)
+                                latest_str = dt.isoformat()[:10]
+                            elif hasattr(e, 'updated_parsed') and e.updated_parsed:
+                                dt = datetime.fromtimestamp(calendar.timegm(e.updated_parsed), timezone.utc)
+                                latest_str = dt.isoformat()[:10]
+                except Exception:
+                    pass
+                
+                if category not in category_stats:
+                    category_stats[category] = []
+                category_stats[category].append((source_name, latest_str))
+                
+                display_name = (source_name[:47] + "...") if len(source_name) > 50 else source_name
+                print(f"✅ ACTIVE    | [{category:<14}] {display_name:<33} | Freshness: {latest_str}")
 
         print("-"*80)
-        print(f"\nAUDIT SUMMARY:")
+        print(f"\nAUDIT SUMMARY BY CATEGORY:")
+        for cat, items in sorted(category_stats.items()):
+            print(f"  - {cat:<15}: {len(items)} active feed(s)")
+        print(f"\nOVERALL STATS:")
         print(f"  - Total Configured: {len(RSS_FEEDS)}")
         print(f"  - Currently Healthy: {len(active) - len([u for u in active if u in jail])}")
         print(f"  - In Jail (Soft-Disable): {len(jail)}")
