@@ -556,6 +556,9 @@ async def check_for_telegram_topic() -> Optional[str]:
                             
                         if result.get("action") == "topic":
                             return result.get("topic")
+                        else:
+                            # Non-topic command (/watch, /unwatch, /watches) handled and acknowledged. Stop polling to prevent processing older stale updates.
+                            return None
         return None
     except Exception as e:
         SafeLogger.warn(f"Telegram: Error checking for topic intercept: {e}")

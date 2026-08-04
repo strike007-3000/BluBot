@@ -81,27 +81,35 @@ def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recen
             category_penalty = round(total_weight * CATEGORY_RECURRENCE_PENALTY_STEP)
             score -= category_penalty
 
-    # 6. Watchlist Topic Boosting (Capped at +8 max)
+    # 6. Watchlist Topic Boosting (Word-boundary matching, max boost across all watches capped at +8)
     watchlist_score = 0
     matched_watch_topic = None
     if watch_topics:
+        best_boost = 0
+        best_topic = None
         for w in watch_topics:
             w_topic = w.get("topic", "").lower() if isinstance(w, dict) else str(w).lower()
             w_keywords = w.get("keywords", [w_topic]) if isinstance(w, dict) else [w_topic]
             
             raw_boost = 0
-            if w_topic and w_topic in title_text:
-                raw_boost += 8
-            elif any(kw.lower() in title_text for kw in w_keywords if kw):
-                raw_boost += 5
-            elif any(kw.lower() in content_text for kw in w_keywords if kw):
-                raw_boost += 3
+            # Word-boundary matching to prevent false positives like 'ai' inside 'maintenance'
+            if w_topic and re.search(r'\b' + re.escape(w_topic) + r'\b', title_text):
+                raw_boost = 8
+            elif any(kw and re.search(r'\b' + re.escape(kw.lower()) + r'\b', title_text) for kw in w_keywords):
+                raw_boost = 5
+            elif any(kw and re.search(r'\b' + re.escape(kw.lower()) + r'\b', content_text) for kw in w_keywords):
+                raw_boost = 3
                 
-            if raw_boost > 0:
-                watchlist_score = min(8, raw_boost)
-                matched_watch_topic = w_topic
-                break
-        score += watchlist_score
+            if raw_boost > best_boost:
+                best_boost = raw_boost
+                best_topic = w_topic
+                if best_boost >= 8:
+                    break
+                    
+        if best_boost > 0:
+            watchlist_score = min(8, best_boost)
+            matched_watch_topic = best_topic
+            score += watchlist_score
 
     # 7. Time Decay
     age_hours = (now_utc - pub_date).total_seconds() / 3600
