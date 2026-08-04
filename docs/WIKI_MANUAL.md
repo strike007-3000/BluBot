@@ -383,7 +383,7 @@ Set these in `config.py` or as environment variables:
 - `AUTO_LIKE_INTERACTIONS`: Enable/Disable bot "Likes" on interacted posts (default: `true`).
 
 ### Managing Feeds
-- **Standalone Audit**: Run `python scripts/feed_audit.py` to get a full health report of all 29 elite feeds.
+- **Standalone Audit**: Run `python scripts/feed_audit.py` to get a full health report of all configured feeds.
 - **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
 - **Manual Override**: Removing a URL from `broken_feeds.json` forces an immediate recovery attempt on the next run.
 

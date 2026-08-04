@@ -25,7 +25,7 @@ async def run_standalone_audit():
     async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
         vanguard = VanguardManager()
         
-        print("\n[1/2] Probing 29-feed network for health and latency...")
+        print(f"\n[1/2] Probing {len(RSS_FEEDS)}-feed network for health and latency...")
         await vanguard.audit_and_update(client)
         
         active = vanguard.get_active_feeds()

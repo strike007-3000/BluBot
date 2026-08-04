@@ -13,32 +13,85 @@ sys.path.append(BASE_DIR)
 
 from src.curator import fetch_news, summarize_news
 from src.logger import SafeLogger
-from src.config import validate_gemini_model_priority, IMAGE_PROVIDER
+from src.config import validate_gemini_model_priority, IMAGE_PROVIDER, VERSION, FEED_CATEGORY_MAP
 
 async def test_scoring():
     print(f"\n{'='*20}")
-    print(f"DIAGNOSTIC: SCORING ENGINE (v3.6.5)")
+    print(f"DIAGNOSTIC: SCORING ENGINE (v{VERSION})")
     print(f"{'='*20}")
     
     import httpx
     async with httpx.AsyncClient() as client:
-        # P1 Badge: Use production curator logic for scoring diagnostic
-        top_news = await fetch_news(client)
+        # Fetch all candidate items without limit to analyze overall source contributions
+        all_candidates = await fetch_news(client, limit=None)
     
-    if not top_news:
+    if not all_candidates:
         print("No news items found. Check RSS feeds or internet connection.")
         return
 
+    top_news = all_candidates[:8]
+
+    # Source metrics aggregation
+    source_stats = {}
+    for item in all_candidates:
+        src_id = item.get("source_id", item.get("source", "unknown"))
+        if src_id not in source_stats:
+            source_stats[src_id] = {
+                "count": 0,
+                "scores": [],
+                "latest_pub": item.get("published", "")
+            }
+        source_stats[src_id]["count"] += 1
+        source_stats[src_id]["scores"].append(item.get("score", 0))
+        if item.get("published", "") > source_stats[src_id]["latest_pub"]:
+            source_stats[src_id]["latest_pub"] = item.get("published", "")
+
+    # Top selected metrics
+    selected_sources = set()
+    category_counts = {}
+    for item in top_news:
+        src_id = item.get("source_id", item.get("source", "unknown"))
+        selected_sources.add(src_id)
+        cat = FEED_CATEGORY_MAP.get(src_id, "unknown")
+        category_counts[cat] = category_counts.get(cat, 0) + 1
+
+    zero_selection_sources = [src_id for src_id in source_stats if src_id not in selected_sources]
+
+    print(f"\n📊 CANDIDATE & SELECTION SUMMARY:")
+    print(f"   - Total Candidates Fetched: {len(all_candidates)}")
+    print(f"   - Selected for Top Output:  {len(top_news)}")
+    print(f"   - Active Contributing Feeds: {len(source_stats)}")
+    print(f"   - Zero-Selection Feeds:     {len(zero_selection_sources)}")
+
+    print(f"\n🏷️ CATEGORY DISTRIBUTION (Top Selected):")
+    for cat, count in sorted(category_counts.items(), key=lambda x: x[1], reverse=True):
+        print(f"   - {cat:<15}: {count}")
+
+    print(f"\n📡 SOURCE CANDIDATE BREAKDOWN:")
+    print(f"   {'SOURCE ID':<25} | {'CANDIDATES':<10} | {'AVG SCORE':<10} | {'LATEST ITEM DATE'}")
+    print(f"   " + "-"*70)
+    for src_id, data in sorted(source_stats.items(), key=lambda x: x[1]['count'], reverse=True):
+        avg_score = sum(data["scores"]) / len(data["scores"]) if data["scores"] else 0.0
+        pub_str = data["latest_pub"][:19] if data["latest_pub"] else "N/A"
+        sel_flag = "★" if src_id in selected_sources else " "
+        print(f" {sel_flag} {src_id:<24} | {data['count']:<10} | {avg_score:<10.1f} | {pub_str}")
+
+    if zero_selection_sources:
+        print(f"\n⚠️ SOURCES WITH CANDIDATES BUT NO TOP-EIGHT SELECTIONS:")
+        print(f"   " + ", ".join(zero_selection_sources))
+
+    print(f"\n🏆 TOP SELECTED ARTICLES:")
+    print("-" * 70)
     for i, item in enumerate(top_news):
         print(f"{i+1}. {item['title']}")
-        print(f"   Source: {item['source']} | Score: {item.get('score', 0):.1f}")
+        print(f"   Source: {item['source']} ({item.get('source_id', 'unknown')}) | Score: {item.get('score', 0):.1f}")
         debug = item.get('_score_debug', {})
         print(f"   Breakdown: [Src: {debug.get('source')} | Sig: {debug.get('signal')} | Mom: {debug.get('momentum')} | Pen: {debug.get('penalty')} | Dec: {debug.get('decay')}]")
-        print("-" * 10)
+        print("-" * 70)
 
 async def test_full_dry_run():
     print(f"\n{'='*20}")
-    print(f"FULL PIPELINE DRY RUN (v3.6.5)")
+    print(f"FULL PIPELINE DRY RUN (v{VERSION})")
     print(f"{'='*20}")
     
     os.environ["DEBUG"] = "true"
@@ -59,7 +112,7 @@ async def test_full_dry_run():
             
             print(f"Executing full bot orchestration (Offline Mode - {IMAGE_PROVIDER} Image Gen)...")
             await bot.main()
-            print(f"\n{'='*20}\nDRY RUN COMPLETE (v3.6.5)\n{'='*20}")
+            print(f"\n{'='*20}\nDRY RUN COMPLETE (v{VERSION})\n{'='*20}")
 
 def _prompt_key(env_var, label):
     """Prompt for an API key if not set in environment. Returns the key or None."""
