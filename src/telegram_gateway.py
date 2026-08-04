@@ -1,6 +1,8 @@
 import asyncio
 import time
 import httpx
+import re
+from datetime import datetime, timezone
 from typing import Optional, Tuple, Any
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from src.settings import settings
@@ -253,12 +255,12 @@ async def send_draft_for_approval(
                             continue
 
                         text_val = msg.text.strip()
-                        if text_val.startswith("/topic ") or text_val.startswith("/curate "):
-                            from src.config import PENDING_TOPIC_FILE_PATH
-                            import json
-                            topic_cmd = "/topic " if text_val.startswith("/topic ") else "/curate "
-                            topic_str = text_val.replace(topic_cmd, "", 1).strip()
-                            if topic_str:
+                        cmd_res = process_authorized_command(text_val)
+                        if cmd_res:
+                            if cmd_res.get("action") == "topic":
+                                from src.config import PENDING_TOPIC_FILE_PATH
+                                import json
+                                topic_str = cmd_res.get("topic")
                                 try:
                                     with open(PENDING_TOPIC_FILE_PATH, "w", encoding="utf-8") as f:
                                         json.dump({"topic": topic_str, "timestamp": time.time()}, f)
@@ -266,6 +268,8 @@ async def send_draft_for_approval(
                                     await bot.send_message(chat_id=chat_id, text=f"📥 Topic request recorded for next run: *{topic_str}*.", reply_to_message_id=msg.message_id)
                                 except Exception as persist_err:
                                     SafeLogger.error(f"Telegram Loop: Failed to persist topic: {persist_err}")
+                            elif cmd_res.get("response"):
+                                await bot.send_message(chat_id=chat_id, text=cmd_res["response"], reply_to_message_id=msg.message_id)
                             continue
 
                         # Scenario A: User is replying to the text feedback prompt
@@ -402,11 +406,90 @@ async def send_draft_for_approval(
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
         return text, media  # Fallback to current text and media to maintain robustness_bytes, image_alt_text  # Fallback to current text and images to maintain robustness
 
+def process_authorized_command(text: str) -> Optional[dict]:
+    """
+    Consolidated handler for authorized Telegram text commands.
+    Recognizes: /topic <t>, /curate <t>, /watch <t>, /unwatch <t>, /watches.
+    Returns a result dictionary describing the command action or None if unhandled.
+    """
+    if not text:
+        return None
+        
+    cmd_text = text.strip()
+    
+    if cmd_text.startswith("/topic "):
+        topic = cmd_text.replace("/topic ", "", 1).strip()
+        return {"action": "topic", "topic": topic, "response": f"📥 Received topic request: *{topic}*. Curating now..."} if topic else None
+    elif cmd_text.startswith("/curate "):
+        topic = cmd_text.replace("/curate ", "", 1).strip()
+        return {"action": "topic", "topic": topic, "response": f"📥 Received topic request: *{topic}*. Curating now..."} if topic else None
+    elif cmd_text.startswith("/watch "):
+        raw_topic = cmd_text.replace("/watch ", "", 1).strip()
+        if not raw_topic or len(raw_topic) > 100 or "http://" in raw_topic or "https://" in raw_topic:
+            return {"action": "watch_invalid", "response": "⚠️ Invalid watch topic. Provide a clean topic string under 100 characters."}
+            
+        norm_topic = raw_topic.lower()
+        from src.utils import load_seen_articles, save_seen_articles
+        state = load_seen_articles()
+        watches = state.get("watch_topics", [])
+        
+        if len(watches) >= 10:
+            return {"action": "watch_limit", "response": "⚠️ Maximum of 10 watch topics reached. Remove one using /unwatch first."}
+            
+        if any((w.get("topic") if isinstance(w, dict) else str(w).lower()) == norm_topic for w in watches):
+            return {"action": "watch_exists", "response": f"📌 Topic *{raw_topic}* is already in your watchlist."}
+            
+        new_entry = {
+            "topic": norm_topic,
+            "display_name": raw_topic,
+            "created": datetime.now(timezone.utc).isoformat(),
+            "keywords": [k for k in re.findall(r'\b\w+\b', norm_topic) if len(k) > 1],
+            "last_matched": None
+        }
+        watches.append(new_entry)
+        state["watch_topics"] = watches
+        save_seen_articles(state)
+        return {"action": "watch_added", "topic": raw_topic, "response": f"✅ Added *{raw_topic}* to watchlist ({len(watches)}/10 topics active)."}
+        
+    elif cmd_text.startswith("/unwatch "):
+        raw_topic = cmd_text.replace("/unwatch ", "", 1).strip().lower()
+        from src.utils import load_seen_articles, save_seen_articles
+        state = load_seen_articles()
+        watches = state.get("watch_topics", [])
+        
+        initial_len = len(watches)
+        updated_watches = [w for w in watches if (w.get("topic") if isinstance(w, dict) else str(w).lower()) != raw_topic]
+        
+        if len(updated_watches) == initial_len:
+            return {"action": "unwatch_not_found", "response": f"🔍 Topic *{raw_topic}* not found in your watchlist."}
+            
+        state["watch_topics"] = updated_watches
+        save_seen_articles(state)
+        return {"action": "unwatch_removed", "topic": raw_topic, "response": f"🗑️ Removed *{raw_topic}* from watchlist ({len(updated_watches)}/10 remaining)."}
+        
+    elif cmd_text == "/watches" or cmd_text.startswith("/watches "):
+        from src.utils import load_seen_articles
+        state = load_seen_articles()
+        watches = state.get("watch_topics", [])
+        
+        if not watches:
+            return {"action": "watches_list", "response": "📋 Your topic watchlist is empty. Add topics using `/watch <topic>`."}
+            
+        lines = ["📋 *Active Topic Watchlist:*"]
+        for idx, w in enumerate(watches):
+            name = w.get("display_name", w.get("topic", "Unknown")) if isinstance(w, dict) else str(w)
+            date_str = w.get("created", "")[:10] if isinstance(w, dict) else ""
+            suffix = f" (added {date_str})" if date_str else ""
+            lines.append(f"{idx+1}. *{name}*{suffix}")
+        return {"action": "watches_list", "response": "\n".join(lines)}
+        
+    return None
+
 async def check_for_telegram_topic() -> Optional[str]:
     """
-    Checks if there's a recent /topic or /curate command sent by the authorized user,
+    Checks if there's a recent command sent by the authorized user,
     either from pending_topic.json or directly from Telegram updates.
-    Returns the topic string if found and valid (under 15 minutes old), else None.
+    Processes /watch, /unwatch, /watches in-place and returns topic string for /topic or /curate.
     """
     from src.config import PENDING_TOPIC_FILE_PATH
     import os
@@ -460,25 +543,19 @@ async def check_for_telegram_topic() -> Optional[str]:
                 # Verify it was sent in the last 15 minutes
                 if msg.date and (now - msg.date.timestamp()) < 900:
                     text = msg.text or ""
-                    topic = None
-                    if text.startswith("/topic "):
-                        topic = text.replace("/topic ", "", 1).strip()
-                    elif text.startswith("/curate "):
-                        topic = text.replace("/curate ", "", 1).strip()
-                    
-                    if topic:
-                        SafeLogger.info(f'Received topic: "{topic}"')
-                        SafeLogger.info("Using topic override...")
-                        SafeLogger.info("Topic override cleared.")
-                        
-                        # Acknowledge this update and all previous ones to consume it
+                    result = process_authorized_command(text)
+                    if result:
+                        # Acknowledge this update and all previous ones
                         try:
                             await bot.get_updates(offset=update.update_id + 1, limit=1)
                         except Exception as e:
                             SafeLogger.warn(f"Telegram: Failed to acknowledge updates: {e}")
-                        
-                        await bot.send_message(chat_id=chat_id, text=f"📥 Received topic request: *{topic}*. Curating now...")
-                        return topic
+                            
+                        if result.get("response"):
+                            await bot.send_message(chat_id=chat_id, text=result["response"])
+                            
+                        if result.get("action") == "topic":
+                            return result.get("topic")
         return None
     except Exception as e:
         SafeLogger.warn(f"Telegram: Error checking for topic intercept: {e}")

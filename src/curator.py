@@ -28,7 +28,7 @@ MODEL_ATTEMPT_RETRIES = 2
 
 _MARKDOWN_STRIP_RE = re.compile(r'(\*\*|__|\*)')
 
-def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recent_categories=None):
+def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recent_categories=None, watch_topics=None):
     """Calculates a multi-factor breakthrough score for an article using stable IDs."""
     score = 0
     title_text = item['title'].lower()
@@ -81,7 +81,29 @@ def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recen
             category_penalty = round(total_weight * CATEGORY_RECURRENCE_PENALTY_STEP)
             score -= category_penalty
 
-    # 6. Time Decay
+    # 6. Watchlist Topic Boosting (Capped at +8 max)
+    watchlist_score = 0
+    matched_watch_topic = None
+    if watch_topics:
+        for w in watch_topics:
+            w_topic = w.get("topic", "").lower() if isinstance(w, dict) else str(w).lower()
+            w_keywords = w.get("keywords", [w_topic]) if isinstance(w, dict) else [w_topic]
+            
+            raw_boost = 0
+            if w_topic and w_topic in title_text:
+                raw_boost += 8
+            elif any(kw.lower() in title_text for kw in w_keywords if kw):
+                raw_boost += 5
+            elif any(kw.lower() in content_text for kw in w_keywords if kw):
+                raw_boost += 3
+                
+            if raw_boost > 0:
+                watchlist_score = min(8, raw_boost)
+                matched_watch_topic = w_topic
+                break
+        score += watchlist_score
+
+    # 7. Time Decay
     age_hours = (now_utc - pub_date).total_seconds() / 3600
     decay = age_hours * 0.5
     score -= decay
@@ -90,6 +112,8 @@ def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recen
         "source": source_score,
         "signal": signal_score,
         "momentum": momentum_score,
+        "watchlist": watchlist_score,
+        "matched_watch": matched_watch_topic,
         "penalty": topic_penalty,
         "category_penalty": category_penalty,
         "decay": round(decay, 1)
@@ -97,7 +121,7 @@ def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recen
     return score
 
 @retry_with_backoff
-async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent_topics, recent_categories=None):
+async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent_topics, recent_categories=None, watch_topics=None):
     """Fetches and parses a single RSS feed with Bozo resilience."""
     try:
         from src.config import URL_TO_ID
@@ -119,6 +143,10 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
             else:
                 pub_date = now_utc
             
+            # Explicit recency cutoff enforcement
+            if start_time and pub_date < start_time:
+                continue
+
             clean_summary = BeautifulSoup(getattr(entry, 'summary', getattr(entry, 'description', "")), "html.parser").get_text()
             item = {
                 "title": getattr(entry, 'title', 'Untitled'),
@@ -129,7 +157,7 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
                 "source_url": url,
                 "source_id": source_id
             }
-            item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics, recent_categories)
+            item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics, recent_categories, watch_topics)
             items.append(item)
         return items
     except Exception: return []
@@ -257,11 +285,11 @@ def cluster_articles(raw_entries: List[dict]) -> List[dict]:
         
     return result_articles
 
-async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8, recent_categories=None):
+async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8, recent_categories=None, watch_topics=None):
     """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity."""
     now_utc = datetime.now(timezone.utc)
     source_list = feed_list if feed_list is not None else RSS_FEEDS
-    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=2), now_utc, seen_links or [], recent_topics, recent_categories) for url in source_list]
+    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=2), now_utc, seen_links or [], recent_topics, recent_categories, watch_topics) for url in source_list]
     results = await asyncio.gather(*tasks)
     
     all_raw_entries = [e for sublist in results for e in sublist]

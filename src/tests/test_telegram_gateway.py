@@ -33,6 +33,54 @@ def test_validate_text_limits(monkeypatch):
     assert "truncation" in res2 or "truncated" in res2
     assert "Bluesky" in res2
 
+from src.telegram_gateway import process_authorized_command
+from datetime import datetime, timezone
+
+def test_process_authorized_command_watch_flow(mocker):
+    mocker.patch("src.utils.load_seen_articles", return_value={"watch_topics": []})
+    mock_save = mocker.patch("src.utils.save_seen_articles")
+    
+    # 1. Add valid topic
+    res_add = process_authorized_command("/watch Llama 4")
+    assert res_add is not None
+    assert res_add["action"] == "watch_added"
+    assert "Added *Llama 4*" in res_add["response"]
+    mock_save.assert_called_once()
+    
+    # 2. List watches
+    mocker.patch("src.utils.load_seen_articles", return_value={
+        "watch_topics": [{"topic": "llama 4", "display_name": "Llama 4", "created": "2026-08-04T00:00:00Z"}]
+    })
+    res_list = process_authorized_command("/watches")
+    assert res_list["action"] == "watches_list"
+    assert "Llama 4" in res_list["response"]
+    
+    # 3. Unwatch topic
+    mocker.patch("src.utils.load_seen_articles", return_value={
+        "watch_topics": [{"topic": "llama 4", "display_name": "Llama 4", "created": "2026-08-04T00:00:00Z"}]
+    })
+    res_unwatch = process_authorized_command("/unwatch Llama 4")
+    assert res_unwatch["action"] == "unwatch_removed"
+    assert "Removed *llama 4*" in res_unwatch["response"]
+
+def test_watchlist_boost_scoring_cap():
+    from src.curator import calculate_relevance_score
+    now_utc = datetime.now(timezone.utc)
+    item = {
+        "title": "Meta Launches Llama 4 Open Source",
+        "summary": "Full release details of Llama 4 model",
+        "source_id": "unknown"
+    }
+    watch_topics = [{"topic": "llama 4", "keywords": ["llama", "4"]}]
+    
+    # Score with watch topics
+    score_watch = calculate_relevance_score(item, now_utc, now_utc, watch_topics=watch_topics)
+    debug = item.get("_score_debug", {})
+    
+    # +8 boost for exact title phrase match, capped at +8
+    assert debug.get("watchlist") == 8
+    assert debug.get("matched_watch") == "llama 4"
+
 @pytest.mark.asyncio
 async def test_send_draft_for_approval_approve(monkeypatch, mocker):
     mock_settings = Settings(
