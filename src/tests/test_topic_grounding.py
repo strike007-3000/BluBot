@@ -119,3 +119,37 @@ async def test_curation_stage_fallback_when_no_match(monkeypatch, mocker):
         assert len(res.top_articles) == 1
         assert res.top_articles[0].source == "Telegram Intercept"
         assert "On-demand topic request" in res.top_articles[0].title
+
+
+@pytest.mark.asyncio
+async def test_synthesis_stage_passes_temporal_context(monkeypatch, mocker):
+    monkeypatch.setattr("bot.settings", Settings(gemini_key="mock", is_dry_run=False))
+    context = {"day": "Wednesday", "session": "Morning"}
+    mocker.patch("bot.get_temporal_context", return_value=context)
+    summarize = mocker.patch(
+        "bot.summarize_news",
+        new_callable=AsyncMock,
+        return_value=("summary", "https://example.com", "AI", False, "dialect"),
+    )
+    articles = [
+        Article(
+            title=f"Article {index}",
+            link=f"https://example.com/{index}",
+            summary="Summary",
+            published="2026-08-05T00:00:00Z",
+            source="Test",
+        )
+        for index in range(4)
+    ]
+    curation = CurationResult(
+        top_articles=articles,
+        seen_links=[],
+        recent_topics=[],
+        session_name="Morning",
+    )
+
+    async with httpx.AsyncClient() as client:
+        synthesis, _ = await synthesis_stage(client, MagicMock(), curation)
+
+    assert synthesis.content == "summary"
+    assert summarize.await_args.args[1] == context

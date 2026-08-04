@@ -176,7 +176,9 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.18.1 (Current)**: **Python 3.13 Dependency Lock Fix**.
+- **v3.18.2 (Current)**: **Synthesis Context Fix**.
+    - 🧠 **Pipeline Reliability**: Removed a truncated duplicate `synthesis_stage` declaration and restored temporal context initialization in the active synthesis path, preventing scheduled runs from failing before summarization or fallback generation.
+- **v3.18.1**: **Python 3.13 Dependency Lock Fix**.
     - 🐍 **CI Compatibility**: Regenerated the dependency lock for Python 3.13, removing obsolete compatibility packages that cannot be installed on the project runtime.
 - **v3.18.0**: **Grounded Briefings, Watchlists, Story Clustering, and Feed Expansion**.
     - 📊 **`/brief` Command (PR 3b)**: New Telegram command generates **7-day executive briefings** for any topic. Fetches articles with `days_lookback=7`, clusters corroborated stories across publisher domains, and synthesizes a Gemini-powered analytical report. Delivered to Telegram using `smart_split` with the 4096-character Telegram limit—**no max_chunks cap**, so lengthy briefings are delivered in full. Bypasses Gemini API in dry-run mode.
@@ -280,7 +282,7 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.18.1 features a dual-layer testing strategy with **93 automated tests** across 11 test modules:
+BluBot v3.18.2 features a dual-layer testing strategy with **94 automated tests** across 11 test modules:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:
