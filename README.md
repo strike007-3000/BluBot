@@ -69,7 +69,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Curation Boosts & Penalties**:
         - **High-Signal Keywords**: `+12` (Boosts *SOTA, agentic, world model, open weights*, etc.)
         - **Momentum Products**: `+18` (Boosts *gpt-5, claude 4, llama 4*, etc.)
-        - **Consensus Synergy**: `+15` (Story present across multiple independent feeds)
+        - **Consensus Synergy (Story Clustering)**: `+15` (Awarded when stories from ≥2 distinct publisher domains cluster together based on title normalization and similarity)
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) style selection across 5 distinct writing structures to prevent structural narration repetition.

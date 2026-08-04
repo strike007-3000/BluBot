@@ -5,6 +5,7 @@ import feedparser
 import re
 import calendar
 import base64
+from typing import Tuple, List, Optional
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 from google.genai import types
@@ -131,6 +132,129 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         return items
     except Exception: return []
 
+_STOPWORDS = {
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with",
+    "by", "from", "up", "about", "into", "over", "after", "is", "are", "was", "were",
+    "be", "been", "being", "have", "has", "had", "do", "does", "did", "new", "how",
+    "why", "what"
+}
+
+_PUBLISHER_SUFFIX_RE = re.compile(r'\s*[\-\|\:\•]\s*([A-Za-z0-9\s]+)$')
+_VERSION_RE = re.compile(r'\b(v?\d+(?:\.\d+)*[a-z]?)\b', re.IGNORECASE)
+
+def normalize_headline(title: str) -> Tuple[set, set]:
+    """Normalizes a headline into token sets and extracted version numbers."""
+    if not title:
+        return set(), set()
+        
+    cleaned = title.strip()
+    match = _PUBLISHER_SUFFIX_RE.search(cleaned)
+    if match:
+        cleaned = cleaned[:match.start()].strip()
+        
+    versions = set(m.lower() for m in _VERSION_RE.findall(cleaned))
+    words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
+    tokens = {w for w in words if w not in _STOPWORDS and len(w) > 1}
+    return tokens, versions
+
+def calculate_title_similarity(tokens1: set, versions1: set, tokens2: set, versions2: set) -> bool:
+    """Conservative headline similarity check: token overlap and matching versions."""
+    if len(tokens1) < 2 or len(tokens2) < 2:
+        return False
+        
+    if versions1 and versions2 and versions1 != versions2:
+        return False
+        
+    all_tokens1 = tokens1 | versions1
+    all_tokens2 = tokens2 | versions2
+    
+    intersection = all_tokens1 & all_tokens2
+    union = all_tokens1 | all_tokens2
+    if not union:
+        return False
+        
+    jaccard = len(intersection) / len(union)
+    uncommon_matches = len(intersection)
+    
+    return jaccard >= 0.25 and uncommon_matches >= 2
+
+def cluster_articles(raw_entries: List[dict]) -> List[dict]:
+    """Clusters articles by title similarity and domain corroboration."""
+    if not raw_entries:
+        return []
+        
+    parsed_entries = []
+    for entry in raw_entries:
+        tokens, versions = normalize_headline(entry.get("title", ""))
+        from urllib.parse import urlparse
+        domain = urlparse(entry.get("link", "")).netloc.lower()
+        parsed_entries.append({
+            "entry": entry,
+            "tokens": tokens,
+            "versions": versions,
+            "domain": domain,
+            "clustered": False
+        })
+        
+    clusters = []
+    for i, item in enumerate(parsed_entries):
+        if item["clustered"]:
+            continue
+            
+        current_cluster = [item]
+        item["clustered"] = True
+        
+        for j in range(i + 1, len(parsed_entries)):
+            other = parsed_entries[j]
+            if other["clustered"]:
+                continue
+                
+            if calculate_title_similarity(item["tokens"], item["versions"], other["tokens"], other["versions"]):
+                current_cluster.append(other)
+                other["clustered"] = True
+                
+        clusters.append(current_cluster)
+        
+    result_articles = []
+    from src.config import FEED_SCORE_MAP
+    
+    for cluster_id_idx, cluster in enumerate(clusters):
+        lead_item_obj = max(
+            cluster,
+            key=lambda x: (
+                x["entry"].get("score", 0),
+                FEED_SCORE_MAP.get(x["entry"].get("source_id"), 0),
+                x["entry"].get("published", "")
+            )
+        )
+        lead = dict(lead_item_obj["entry"])
+        
+        unique_domains = set(x["domain"] for x in cluster if x["domain"])
+        supporting_items = [x["entry"] for x in cluster if x["entry"]["link"] != lead["link"]]
+        
+        has_corroboration = len(unique_domains) >= 2
+        lead["consensus_synergy"] = has_corroboration
+        if has_corroboration:
+            lead["score"] = lead.get("score", 0) + SYNERGY_BONUS
+            
+        supporting_sources = [item.get("source", "Unknown") for item in supporting_items]
+        supporting_links = [item.get("link", "") for item in supporting_items]
+        
+        lead["cluster_id"] = f"cluster_{cluster_id_idx}"
+        lead["supporting_sources"] = supporting_sources
+        lead["supporting_links"] = supporting_links
+        
+        debug = dict(lead.get("_score_debug", {}))
+        debug["cluster_size"] = len(cluster)
+        debug["cluster_lead"] = lead.get("source_id", "unknown")
+        debug["supporting_sources"] = supporting_sources
+        debug["consensus_bonus_reason"] = "domain_corroboration" if has_corroboration else "none"
+        lead["_score_debug"] = debug
+        
+        result_articles.append(lead)
+        
+    return result_articles
+
 async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8, recent_categories=None):
     """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity."""
     now_utc = datetime.now(timezone.utc)
@@ -140,15 +264,16 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
     
     all_raw_entries = [e for sublist in results for e in sublist]
     
+    # Exact URL deduplication
     unique_by_link = {}
     for e in all_raw_entries:
         if e['link'] not in unique_by_link: 
             unique_by_link[e['link']] = e
-        else:
-            unique_by_link[e['link']]['score'] += SYNERGY_BONUS
-            unique_by_link[e['link']]['consensus_synergy'] = True
             
-    entries = list(unique_by_link.values())
+    deduped_entries = list(unique_by_link.values())
+    
+    # Cross-source Story Clustering
+    entries = cluster_articles(deduped_entries)
     entries.sort(key=lambda x: x["score"], reverse=True)
 
     # Enforce policy: The lead article (index 0) cannot be from a "critical" category
@@ -237,7 +362,13 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
     current_dialect = random.choice(available_dialects)
     dialect_instruction = PERSONA_DIALECTS[current_dialect]
     
-    news_text = "\n".join([f"- {i+1}. {item['title']} ({item['source']})" for i, item in enumerate(news_items)])
+    formatted_lines = []
+    for i, item in enumerate(news_items):
+        line = f"- {i+1}. {item['title']} ({item['source']})"
+        if item.get('supporting_sources'):
+            line += f" [Corroborated by: {', '.join(item['supporting_sources'])}]"
+        formatted_lines.append(line)
+    news_text = "\n".join(formatted_lines)
     
     # Combine instructions
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
