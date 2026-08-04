@@ -52,3 +52,30 @@ async def test_dry_run_persistence_does_not_save(monkeypatch, mocker):
     mock_save.assert_not_called()
     mock_dashboard.assert_not_called()
     mock_profile.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_generate_briefing_dry_run(monkeypatch, mocker):
+    """Verify that generate_briefing bypasses Gemini and returns mock briefing in dry-run."""
+    mock_settings = Settings(gemini_key="mock", is_dry_run=True)
+    monkeypatch.setattr("src.settings.settings", mock_settings)
+    monkeypatch.setattr("bot.settings", mock_settings)
+    
+    mocker.patch("bot.load_seen_articles", return_value={"watch_topics": []})
+    mock_fetch = mocker.patch("bot.fetch_news", new_callable=AsyncMock, return_value=[
+        {"title": "Test Title", "summary": "Test Summary", "link": "https://example.com", "source": "Test Source", "source_id": "test_id", "published": "2026-08-04T12:00:00Z", "score": 8}
+    ])
+    
+    from bot import generate_briefing
+    async with httpx.AsyncClient() as client:
+        genai_client = MagicMock()
+        briefing = await generate_briefing(client, genai_client, "Test")
+        
+        # Verify fetch_news was called with empty seen_links list
+        mock_fetch.assert_called_once()
+        args, kwargs = mock_fetch.call_args
+        assert kwargs.get("seen_links") == []
+        
+        # Verify mock briefing text was returned
+        assert "DRY RUN" in briefing
+        assert "Test Title" in briefing
+        genai_client.aio.models.generate_content.assert_not_called()

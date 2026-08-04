@@ -209,7 +209,7 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
     
     raw_news = await fetch_news(
         client,
-        seen_links=seen_data.get("links", []),
+        seen_links=[],  # Do not filter out previously seen articles for historical 7-day briefings
         recent_topics=seen_data.get("recent_topics", []),
         feed_list=active_feeds,
         limit=None,
@@ -229,6 +229,10 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
         article_bullets.append(f"{idx+1}. **{a.title}** ({a.source}){corrob_str}\n   Summary: {a.summary}\n   URL: {a.link}")
         
     articles_text = "\n\n".join(article_bullets)
+
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Bypassing Gemini briefing synthesis.")
+        return f"📊 *7-Day Executive Briefing: {topic} (DRY RUN)*\n\n**Executive Summary**\nThis is a mock executive briefing compiled under dry-run mode.\n\n**Key Developments**\n- Mock Development 1: Detailed mock description citation [Mock Source](https://example.com).\n\nSource articles analyzed:\n{articles_text}"
     
     prompt = (
         f"Generate a comprehensive, analytical executive briefing for the topic: '{topic}'.\n\n"
