@@ -7,7 +7,7 @@ BluBot is not just a bot; it's an **Impact-Aware Intelligence**. Our goal is to 
 
 ## 🧱 Architectural Guardrails
 1.  **Asynchronous First**: All network operations must use `asyncio` and `httpx`. No blocking calls in the main pipeline.
-2.  **Staged Pipeline (v3.18.2)**: Core logic follows a linear, staged flow (**Curation → Synthesis → Broadcast → Persistence**). Always pass state via frozen dataclasses from `src/models.py`. The Telegram gateway supports an early-exit `/brief` path that bypasses the standard pipeline.
+2.  **Staged Pipeline (v3.18.3)**: Core logic follows a linear, staged flow (**Curation → Synthesis → Broadcast → Persistence**). Always pass state via frozen dataclasses from `src/models.py`. The Telegram gateway supports an early-exit `/brief` path that bypasses the standard pipeline.
 3.  **Absolute Imports**: To ensure test isolation and consistency, always use absolute imports starting with `src.` (e.g., `from src.utils import ...`). No relative imports.
 4.  **Typed Settings**: Centralized configuration belongs in `src/settings.py` via the `Settings` singleton. Never use loose `os.getenv` in business logic.
 5.  **The Fortress (Security)**: All logging must pass through `src/logger.py:SafeLogger`. Use `FileLock` for state persistence and ensuring atomic writes. 
