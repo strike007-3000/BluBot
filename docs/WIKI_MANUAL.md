@@ -38,21 +38,28 @@ The `SafeLogger` automatically redacts secrets based on both keyword matching an
 
 ---
 
-## 🧠 Page 2: Breakthrough Scoring Engine v3
+## 🧠 Page 2: Breakthrough Scoring Engine v5
 
 The "Brain" of the bot ranked by a weighted matrix.
 
 ### The Curation & Scoring Pipeline
 
-1. **Source Tiering**:
-   - **Tier 1 (Labs)**: `+30` score boost.
-   - **Tier 2 (Newsletters & Analysts)**: `+15` score boost.
-   - **Hidden Gems (Tier 3 - Research)**: `+15` score boost (defined as `BASE_HIDDEN_GEM`).
+1. **Source Tiering (8-Tier Stable-ID Registry)**:
+   - **Tier 1 (Research Labs)**: `+30` score boost.
+   - **Tier 2 (Enterprise AI)**: `+25`–`+27` score boost.
+   - **Tier 3 (Practitioner)**: `+20` score boost.
+   - **Tier 4 (Open Source)**: `+18` score boost.
+   - **Tier 5 (Infrastructure/Business)**: `+15` score boost.
+   - **Tier 6 (Policy & Journalism)**: `+10`–`+12` score boost.
+   - **Tier 7 (Academic)**: `+10` score boost.
+   - **Tier 8 (Critical/Balancing)**: `+5` score boost.
 2. **Signal Boosting**: `+12` boost if title or summary contains high-signal keywords (e.g. *SOTA, agentic, world model, open weights*, etc.).
 3. **Momentum Product Boosting**: `+18` boost if title contains momentum products (e.g. *gpt-5, llama 4, gemini 3, gemma 4*, etc.).
-4. **Consensus Synergy Pass**: `+15` synergy bonus added if the article appears across multiple independent RSS feeds.
-5. **Diversity Penalty**: Subtracts `-12` (defined as `-25` in configuration constants but active as `-12` in runtime code) if the article's classified topic is already in `recent_topics` list, preventing repetition.
-6. **Time Decay**: Subtracts `-0.5` score for each hour since the article's publication to keep the feed fresh.
+4. **Consensus Synergy Pass (Story Clustering)**: `+15` synergy bonus added when stories from ≥2 distinct publisher domains cluster together based on title normalization and headline similarity.
+5. **Watchlist Topic Boosting**: Bounded `+3` to `+8` boost for articles matching user-defined `/watch` topics. Uses word-boundary regex matching: `+8` for exact topic match in title, `+5` for keyword match in title, `+3` for keyword match in summary. Maximum boost across all watches capped at `+8`.
+6. **Diversity Penalty**: Subtracts `-12` if the article's classified topic is already in `recent_topics` list, preventing repetition.
+7. **Category Recurrence Penalty**: Progressive `-5` penalty step for each repeat of the same source category within a single run.
+8. **Time Decay**: Subtracts `-0.5` score for each hour since the article's publication to keep the feed fresh.
 
 ---
 
@@ -115,11 +122,9 @@ The Sage uses **Pollinations** (Flux) as the primary image provider with serverl
 
 ---
 
-## 🛰️ Page 5: Source Intelligence
+## 📡 Page 5: Source Intelligence
 
-Scanning exactly **32 premium feeds** across 4 tiers.
-- **Tier 1**: OpenAI, DeepMind, Anthropic, HuggingFace, Mistral.
-- **Hidden Gems**: ArXiv (CS.AI/LG), BAIR (Berkeley), SAIL (Stanford), NVIDIA Research.
+Scanning exactly **45 premium feeds** across 8 tiers.
 
 ---
 
@@ -196,13 +201,18 @@ To ensure the Sage never "forgets" even in ephemeral runner environments, we use
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.6.5 introduces a professional **Automated Test Suite** powered by `pytest`.
+BluBot v3.18.0 maintains a professional **Automated Test Suite** powered by `pytest` with **93 tests** across 11 modules.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
-2. **Intelligence (Scoring)**: The Breakthrough Scoring Engine weights are verified to ensure "Signal over Noise" remains mathematically consistent.
+2. **Intelligence (Scoring)**: The Breakthrough Scoring Engine weights are verified to ensure "Signal over Noise" remains mathematically consistent. Includes watchlist boost scoring and category penalty verification.
 3. **Hardening (Redaction)**: The `SafeLogger` is tested against high-entropy string detection to ensure no API keys leak into production logs.
-4. **Transparency (Diagnostic Scoring)**: The curation engine attaches `_score_debug` metadata to every article, providing a granular breakdown (Source, Signal, Momentum, Penalty, Decay) visible during dry-runs.
+4. **Transparency (Diagnostic Scoring)**: The curation engine attaches `_score_debug` metadata to every article, providing a granular breakdown (Source, Signal, Momentum, Watchlist, Penalty, Category Penalty, Decay) visible during dry-runs.
+5. **Story Clustering**: Validates title normalization, headline similarity, and cross-source consensus synergy bonus assignment.
+6. **Telegram Commands**: Validates `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, and `/brief` command parsing, input sanitization, and state persistence.
+7. **Topic Grounding**: Verifies RSS-grounded topic matching and curation pipeline bypasses.
+8. **Dry-Run Bypasses**: Ensures all external API calls (Gemini, social broadcasting, state persistence) are correctly bypassed in dry-run mode, including the `/brief` briefing synthesis.
+9. **Media Pipeline**: Validates OpenGraph scraping, image compression, alt-text generation, and platform-specific media rendering.
 
 ### Running Automated Tests
 ```bash
@@ -296,47 +306,68 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
    - **6th+ failure**: Silenced for 72 hours max. Marked as `TERMINAL` state once failures hit 6+.
 3. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
 
-### Curation Feed Network (32 Validated Feeds)
+### Curation Feed Network (45 Validated Feeds)
 
-#### Tier 1: AI Lab Blogs
-- Google Blog (`blog.google/rss/`)
-- Apple Newsroom (`apple.com/newsroom/rss-feed.rss`)
-- Verge AI (`theverge.com/ai-artificial-intelligence/rss/index.xml`)
+#### Tier 1: AI Research Labs (base +30)
 - OpenAI (`openai.com/news/rss.xml`)
-- Hugging Face (`huggingface.co/blog/feed.xml`)
 - DeepMind (`deepmind.google/blog/rss.xml`)
-- NVIDIA Deep Learning (`blogs.nvidia.com/blog/category/deep-learning/feed/`)
+- HuggingFace Blog (`huggingface.co/blog/feed.xml`)
+
+#### Tier 2: Enterprise AI (base +25–+27)
 - Microsoft Research (`microsoft.com/en-us/research/blog/feed/`)
+- AWS ML Blog (`aws.amazon.com/blogs/machine-learning/feed/`)
+- NVIDIA Deep Learning (`blogs.nvidia.com/blog/category/deep-learning/feed/`)
 
-#### Tier 2: Elite Newsletters & Analysts
+#### Tier 3: Practitioner / Developer Ecosystem (base +20)
+- Simon Willison (`simonwillison.net/atom/everything/`)
 - Interconnects (`interconnects.ai/feed`)
-- Sebastian Raschka (`magazine.sebastianraschka.com/feed`)
 - Latent Space (`latent.space/feed`)
-- Import AI / Jack Clark (`jack-clark.net/feed/`)
-- One Useful Thing / Ethan Mollick (`oneusefulthing.org/feed`)
+- One Useful Thing (`oneusefulthing.org/feed`)
 - Maarten Grootendorst (`newsletter.maartengrootendorst.com/feed`)
-- AlphaSignal AI (`alphasignalai.beehiiv.com/feed`)
-- TheSequence (`thesequence.substack.com/feed`)
-- TLDR AI (`tldr.tech/ai/rss`)
+- Sebastian Raschka (`magazine.sebastianraschka.com/feed`)
+- Jack Clark / Import AI (`jack-clark.net/feed/`)
 
-#### Tier 3: Research & Academic (Hidden Gems)
-- ArXiv cs.LG (`arxiv.org/rss/cs.LG`)
-- The Gradient (`thegradient.pub/rss/`)
-- Victoria Krakovna (`vkrakovna.wordpress.com/feed/`)
-- BAIR Berkeley (`bair.berkeley.edu/blog/feed.xml`)
-- Machine Learning Mastery (`machinelearningmastery.com/feed/`)
+#### Tier 4: Open-Source Ecosystem (base +18)
+- Hugging Face Transformers Releases (`github.com/huggingface/transformers/releases.atom`)
+- vLLM Releases (`github.com/vllm-project/vllm/releases.atom`)
+- Ollama Releases (`github.com/ollama/ollama/releases.atom`)
+- PyTorch Releases (`github.com/pytorch/pytorch/releases.atom`)
 
-#### Tier 4: Industry & Journalism
+#### Tier 5: Infrastructure / Business Analysis (base +15)
+- SemiAnalysis (`semianalysis.com/feed/`)
+- Together AI (`together.ai/blog/rss.xml`)
+- ServeTheHome (`servethehome.com/feed/`)
+- Semiconductor Engineering (`semiengineering.com/feed/`)
+- Sequoia Capital (`sequoiacap.com/feed/`)
+- CB Insights (`cbinsights.com/research/feed/`)
+
+#### Tier 6: Policy, Security & Journalism (base +10–+12)
+- AI Incident Database (`incidentdatabase.ai/rss.xml`)
+- EU AI Act Tracker (`artificialintelligenceact.eu/feed/`)
+- The Verge AI (`theverge.com/rss/ai-artificial-intelligence/index.xml`)
 - MIT Technology Review (`technologyreview.com/topic/artificial-intelligence/feed/`)
 - IEEE Spectrum AI (`spectrum.ieee.org/feeds/topic/artificial-intelligence.rss`)
 - The Decoder (`the-decoder.com/feed/`)
-- 404 Media (`404media.co/rss/`)
 - Wired AI (`wired.com/feed/tag/ai/latest/rss`)
-- SiliconANGLE AI (`siliconangle.com/category/ai/feed/`)
-- AI Accelerator Institute (`aiacceleratorinstitute.com/rss/`)
-- Marktechpost (`marktechpost.com/feed/`)
-- TechCrunch AI (`techcrunch.com/category/artificial-intelligence/feed/`)
 - VentureBeat AI (`venturebeat.com/category/ai/feed/`)
+- TechCrunch AI (`techcrunch.com/category/artificial-intelligence/feed/`)
+- 404 Media (`404media.co/rss/`)
+- Silicon Angle AI (`siliconangle.com/category/ai/feed/`)
+- The Sequence (`thesequence.substack.com/feed`)
+- Marktechpost (`marktechpost.com/feed/`)
+- AI Accelerator Institute (`aiacceleratorinstitute.com/rss/`)
+
+#### Tier 7: Academic (base +10)
+- arXiv CS.LG (`arxiv.org/rss/cs.LG`)
+- The Gradient (`thegradient.pub/rss/`)
+- BAIR Berkeley (`bair.berkeley.edu/blog/feed.xml`)
+- ML Mastery (`machinelearningmastery.com/feed/`)
+
+#### Tier 8: Critical / Balancing Voices (base +5)
+- AI Snake Oil (`aisnakeoil.com/feed`)
+- Gary Marcus (`garymarcus.substack.com/feed`)
+- Algorithmic Bridge (`thealgorithmicbridge.substack.com/feed`)
+- Victoria Krakovna (`vkrakovna.wordpress.com/feed/`)
 
 ---
 
@@ -469,5 +500,85 @@ BluBot v3.13.2 calibrates the Telegram approval queue timeout:
 BluBot v3.13.3 introduces monotonic time tracking for the Telegram approval queue timeout:
 * **Monotonic Time Polling**: Replaced `time.time()` with `time.monotonic()` to track elapsed timeout duration. This makes the polling loop immune to system clock step changes (e.g. VM/container sleep resumes or NTP sync corrections) and ensures the configured timeout remains accurate under all environments.
 
+---
+
+## 🧬 Page 21: Cross-Source Story Clustering (v3.18.0)
+
+BluBot v3.18.0 introduces a **title normalization and story clustering engine** for cross-source consensus detection.
+
+### How It Works
+1. **Headline Normalization**: Article titles are tokenized and normalized by stripping stopwords, punctuation, and version identifiers (e.g. "GPT-4o" → "gpt"). This produces a canonical token set per article.
+2. **Similarity Matching**: Articles are compared pairwise using Jaccard similarity on their normalized token sets. Articles with high overlap (and optionally matching version strings) are grouped into clusters.
+3. **Domain Corroboration**: Within each cluster, the engine counts distinct publisher domains. If ≥2 unique domains report the same story, the cluster is awarded **Consensus Synergy** (`+15` bonus).
+4. **Lead Selection**: The highest-scoring article in each cluster becomes the lead. Supporting source names and direct article links are attached to the lead article for editorial transparency.
+
+### Scoring Debug Metadata
+Each clustered article's `_score_debug` dictionary is extended with:
+- `cluster_size`: Number of articles in the cluster.
+- `cluster_lead`: Source ID of the lead article.
+- `supporting_sources`: List of source names from non-lead articles in the cluster.
+- `consensus_bonus_reason`: `"domain_corroboration"` if ≥2 domains, `"none"` otherwise.
+
+---
+
+## 📌 Page 22: Topic Watchlists (v3.18.0)
+
+BluBot v3.18.0 adds persistent **topic watchlists** for hands-free priority tracking.
+
+### Telegram Commands
+| Command | Description |
+| :--- | :--- |
+| `/watch <topic>` | Add a topic to the watchlist (max 10 active). Topic must be under 100 characters and cannot contain URLs. |
+| `/unwatch <topic>` | Remove a topic from the watchlist by exact match (case-insensitive). |
+| `/watches` | Display all active watchlist entries with their creation dates. |
+
+### Watchlist Entry Structure
+Each watchlist entry is a structured dictionary stored in `seen_articles.json` under the `watch_topics` key:
+```json
+{
+    "topic": "llama 4",
+    "display_name": "Llama 4",
+    "created": "2026-08-01T12:00:00+00:00",
+    "keywords": ["llama"],
+    "last_matched": null
+}
+```
+
+### Scoring Boost
+During curation, each article is matched against all active watchlist entries using **word-boundary regex** to prevent false positives (e.g. "ai" won't match "maintenance"):
+- **Exact topic match in title**: `+8` boost
+- **Keyword match in title**: `+5` boost
+- **Keyword match in summary**: `+3` boost
+- Maximum boost across all watches is **capped at `+8`** per article.
+
+### Safety Guards
+- Maximum 10 active watches to prevent state inflation.
+- Topics must be under 100 characters.
+- URL-containing topics are rejected.
+- Duplicate topics are rejected with an informative response.
+
+---
+
+## 📊 Page 23: Grounded Executive Briefings via `/brief` (v3.18.0)
+
+BluBot v3.18.0 adds the `/brief <topic>` Telegram command for on-demand **7-day executive briefings**.
+
+### How It Works
+1. **Broadened RSS Fetch**: The briefing engine calls `fetch_news()` with `days_lookback=7` (vs. the default `2` for regular curation) and `seen_links=[]` (no deduplication filter) to retrieve the complete 7-day article archive.
+2. **Topic Matching**: Articles are filtered against the user's topic string using `article_matches_topic()` (same grounding logic as `/topic`).
+3. **Story Clustering**: Matching articles pass through the Consensus Synergy clustering engine, grouping corroborated multi-source stories.
+4. **Gemini Synthesis**: Up to 15 matching articles are compiled into a structured prompt asking Gemini to produce an analytical executive briefing with:
+   - An executive summary paragraph.
+   - 3–5 key developments with direct `[Title](URL)` citations.
+   - Explicit consensus highlighting when multiple sources corroborate.
+5. **Telegram Delivery**: The briefing is delivered to Telegram using `smart_split()` with the 4096-character Telegram message limit. Unlike regular curation, **no `max_chunks` cap** is applied—briefings are delivered in full regardless of length.
+
+### Dry-Run Behavior
+When `is_dry_run=True`, the briefing engine bypasses Gemini API calls entirely and returns a structured mock briefing containing the matched article list.
+
+### Input Validation
+- Topic must be under 100 characters.
+- URL-containing topics are rejected with an `brief_invalid` response.
+- If no articles match the topic in the 7-day window, a "No articles found" message is returned.
 
 
