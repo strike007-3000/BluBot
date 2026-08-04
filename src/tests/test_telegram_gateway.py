@@ -63,6 +63,18 @@ def test_process_authorized_command_watch_flow(mocker):
     assert res_unwatch["action"] == "unwatch_removed"
     assert "Removed *llama 4*" in res_unwatch["response"]
 
+def test_process_authorized_command_brief():
+    # 1. Valid brief command
+    res_brief = process_authorized_command("/brief Quantum Computing")
+    assert res_brief is not None
+    assert res_brief["action"] == "brief"
+    assert res_brief["topic"] == "Quantum Computing"
+    assert "Quantum Computing" in res_brief["response"]
+    
+    # 2. Invalid empty brief command
+    res_invalid = process_authorized_command("/brief")
+    assert res_invalid is None
+
 def test_watchlist_boost_scoring_cap():
     from src.curator import calculate_relevance_score
     now_utc = datetime.now(timezone.utc)

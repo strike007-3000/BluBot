@@ -112,7 +112,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `ENABLE_BSKY_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
-| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token (supports commands: `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`) |
+| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token (supports commands: `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, `/brief`) |
 | `TELEGRAM_USER_ID` | No | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | No | (Optional) Telegram polling timeout in minutes (default: `5`) |
 | `ENABLE_TELEGRAM_APPROVAL` | No | (Optional) Toggle Telegram draft approval (default: `true` if bot token set) |

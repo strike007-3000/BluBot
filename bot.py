@@ -197,6 +197,78 @@ async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client,
     summary, lead_link, topic, is_failover = None, None, "General", False
     
     # Choose writing style from styles compatible with selected content
+async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Client, topic: str) -> str:
+    """Generates a grounded 7-day topic briefing using multi-source story clustering."""
+    SafeLogger.info(f"Briefing Engine: Fetching 7-day RSS articles for topic: '{topic}'")
+    seen_data = await asyncio.to_thread(load_seen_articles)
+    
+    from src.feed_vanguard import VanguardManager
+    vanguard = VanguardManager()
+    await vanguard.audit_and_update(client)
+    active_feeds = vanguard.get_active_feeds()
+    
+    raw_news = await fetch_news(
+        client,
+        seen_links=seen_data.get("links", []),
+        recent_topics=seen_data.get("recent_topics", []),
+        feed_list=active_feeds,
+        limit=None,
+        recent_categories=seen_data.get("recent_categories", []),
+        watch_topics=seen_data.get("watch_topics", []),
+        days_lookback=7
+    )
+    all_articles = [Article(**item) for item in raw_news]
+    matching_articles = [a for a in all_articles if article_matches_topic(a.title, a.summary, topic)]
+    
+    if not matching_articles:
+        return f"🔍 *7-Day Briefing for '{topic}'*\n\nNo articles matching this topic were found in RSS feeds over the past 7 days."
+        
+    article_bullets = []
+    for idx, a in enumerate(matching_articles[:15]):
+        corrob_str = f" [Corroborated by: {', '.join(a.supporting_sources)}]" if a.supporting_sources else ""
+        article_bullets.append(f"{idx+1}. **{a.title}** ({a.source}){corrob_str}\n   Summary: {a.summary}\n   URL: {a.link}")
+        
+    articles_text = "\n\n".join(article_bullets)
+    
+    prompt = (
+        f"Generate a comprehensive, analytical executive briefing for the topic: '{topic}'.\n\n"
+        f"Grounded Source Articles (Past 7 Days):\n{articles_text}\n\n"
+        "Requirements:\n"
+        "1. Write a clean, well-structured Telegram briefing in Markdown format.\n"
+        "2. Provide an Executive Summary paragraph.\n"
+        "3. Highlight 3-5 Key Developments or Trends based strictly on the provided articles.\n"
+        "4. Include direct Markdown link citations [Title](URL) for each key development.\n"
+        "5. If corroboration exists across multiple sources, explicitly highlight the consensus.\n"
+        "6. Do not include hashtags or robotic introductory preambles."
+    )
+    
+    try:
+        from src.config import CURATOR_SYSTEM_INSTRUCTION
+        response = await genai_client.aio.models.generate_content(
+            model=settings.gemini_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.5)
+        )
+        briefing_text = response.text.strip()
+        header = f"📊 *7-Day Executive Briefing: {topic}*\n\n"
+        return header + briefing_text
+    except Exception as e:
+        SafeLogger.error(f"Briefing synthesis failed: {e}")
+        return f"⚠️ Failed to generate briefing for *{topic}*: {e}"
+
+async def synthesis_stage(
+    client: httpx.AsyncClient, 
+    genai_client: genai.Client, 
+    curation: CurationResult, 
+    telegram_topic: Optional[str] = None
+) -> Tuple[SynthesisResult, CurationResult]:
+    """Stage 2: Synthesize Raw News into an Elite Tech Insight Post."""
+    news_count = len(curation.top_articles)
+    SafeLogger.info(f"Synthesis Stage: Processing {news_count} curated articles.")
+    
+    summary, lead_link, topic, is_failover = None, None, "General", False
+    
+    # Choose writing style from styles compatible with selected content
     from src.config import FEED_CATEGORY_MAP, STYLE_COMPATIBILITY, ALL_STYLES
     lead_article = curation.top_articles[0] if curation.top_articles else None
     lead_category = "unknown"
@@ -681,8 +753,30 @@ async def main():
         # Prune models dynamically at startup based on API limits
         await prune_gemini_model_priority_async(genai_client)
         
-        # Check for on-demand Telegram topic intercept
-        telegram_topic = await check_for_telegram_topic()
+        # Check for on-demand Telegram topic or brief intercept
+        res = await check_for_telegram_topic()
+        if isinstance(res, tuple):
+            cmd_type, telegram_topic = res
+        else:
+            cmd_type, telegram_topic = ("topic" if res else None), res
+
+        if cmd_type == "brief":
+            SafeLogger.info(f"Brief Engine: Generating 7-day briefing for topic '{telegram_topic}'")
+            briefing = await generate_briefing(client, genai_client, telegram_topic)
+            if settings.telegram_bot_token and settings.telegram_user_id and not settings.is_dry_run:
+                try:
+                    from telegram import Bot
+                    from src.utils import smart_split
+                    bot = Bot(token=settings.telegram_bot_token)
+                    chunks = smart_split(briefing, 4096)  # No max_chunks cap for Telegram briefing delivery
+                    for chunk in chunks:
+                        await bot.send_message(chat_id=settings.telegram_user_id, text=chunk, parse_mode="Markdown")
+                    SafeLogger.info("Briefing Engine: Successfully delivered briefing to Telegram.")
+                except Exception as e:
+                    SafeLogger.error(f"Briefing Engine: Failed to deliver briefing: {e}")
+            else:
+                SafeLogger.info(f"Briefing Output:\n{briefing}")
+            return
 
         # 1. Curation
         curation = await curation_stage(client, telegram_topic=telegram_topic)
