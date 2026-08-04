@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.microsoft.com/en-us/research/blog/understanding-the-brain-with-ai-driven-explanations-and-experiments/",
-    "https://www.marktechpost.com/2026/06/26/building-supervised-fine-tuning-data-from-nvidia-open-swe-traces-trajectory-parsing-patch-analysis-token-budgets-and-tool-use-metrics/",
-    "https://the-decoder.com/sinas-open-model-vibethinker-3b-aims-to-show-reasoning-compresses-well-but-factual-knowledge-doesnt/",
-    "https://the-decoder.com/gpt-5-6-sol-cheats-on-software-tests-more-than-any-model-before-it/",
-    "https://magazine.sebastianraschka.com/p/using-local-coding-agents",
-    "https://the-decoder.com/chinese-cybersecurity-firm-builds-ai-tools-to-rival-mythos-and-frames-the-race-as-cyber-nuclear-deterrence/",
-    "https://www.marktechpost.com/2026/06/28/building-a-stable-fable-5-traces-workflow-in-colab-parsing-tool-calls-auditing-data-and-training-baselines/",
-    "https://www.marktechpost.com/2026/06/27/liquid-ai-ships-lfm2-5-230m-with-llama-cpp-mlx-vllm-sglang-and-onnx-support-for-on-device-inference/",
     "https://www.marktechpost.com/2026/06/26/cursor-study-finds-reward-hacking-inflates-coding-agent-benchmark-scores-on-swe-bench-pro/",
     "https://techcrunch.com/2026/06/27/softbanks-ceo-isnt-the-only-one-with-questions-about-elon-musks-orbital-data-center-hype/",
     "https://openai.com/index/mapping-ai-jobs-transition-eu",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.29225",
     "https://arxiv.org/abs/2607.29389",
     "https://arxiv.org/abs/2607.29491",
-    "https://arxiv.org/abs/2607.28457"
+    "https://arxiv.org/abs/2607.28457",
+    "https://www.latent.space/p/ainews-qwen-38-max24t-and-27b-new",
+    "https://aws.amazon.com/blogs/machine-learning/from-weeks-to-minutes-how-formula-1-uses-agentic-ai-on-aws-to-accelerate-data-operations/",
+    "https://aws.amazon.com/blogs/machine-learning/automated-reasoning-policy-refinement-in-amazon-bedrock/",
+    "https://www.microsoft.com/en-us/research/blog/orchard-an-open-framework-for-scalable-agentic-ai/",
+    "https://openai.com/index/apple-is-getting-this-wrong",
+    "https://simonwillison.net/2026/Aug/3/david-crawshaw/#atom-everything",
+    "https://simonwillison.net/2026/Aug/3/devtools-must-be-open-source-exedev/#atom-everything",
+    "https://www.marktechpost.com/2026/08/04/reflex-open-sources-xy-a-rust-backed-super-fast-python-charting-library-that-keeps-100-million-point-charts-interactive/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 790,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 791,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "journalism",
     "research_lab",
     "journalism",
@@ -523,10 +522,10 @@
     "enterprise",
     "practitioner",
     "academic",
-    "journalism"
+    "journalism",
+    "practitioner"
   ],
   "recent_styles": [
-    "ENTERPRISE_ROI",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
@@ -535,6 +534,7 @@
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "QUESTION_FIRST"
   ]
 }

@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-08-03 | 🔍 Afternoon Deep Dive (General) |
+| **Broadcaster** | Operational | 2026-08-04 | 🚀 Morning Intelligence (General) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
