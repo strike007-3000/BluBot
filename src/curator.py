@@ -139,7 +139,7 @@ _STOPWORDS = {
     "why", "what"
 }
 
-_PUBLISHER_SUFFIX_RE = re.compile(r'\s*[\-\|\:\•]\s*([A-Za-z0-9\s]+)$')
+_PUBLISHER_SUFFIX_RE = re.compile(r'\s+[\-\|\:\•]\s+([A-Za-z0-9\s]+)$')
 _VERSION_RE = re.compile(r'\b(v?\d+(?:\.\d+)*[a-z]?)\b', re.IGNORECASE)
 
 def normalize_headline(title: str) -> Tuple[set, set]:
@@ -365,7 +365,7 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
     formatted_lines = []
     for i, item in enumerate(news_items):
         line = f"- {i+1}. {item['title']} ({item['source']})"
-        if item.get('supporting_sources'):
+        if item.get('consensus_synergy') and item.get('supporting_sources'):
             line += f" [Corroborated by: {', '.join(item['supporting_sources'])}]"
         formatted_lines.append(line)
     news_text = "\n".join(formatted_lines)

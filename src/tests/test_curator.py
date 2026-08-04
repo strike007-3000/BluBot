@@ -72,6 +72,11 @@ def test_headline_normalization():
     assert "gpt-4.5" in tokens1 or "gpt" in tokens1
     assert "techcrunch" not in tokens1
 
+    # Verify hyphenated product versions like GPT-5 are preserved and not stripped as suffix
+    tokens_hyphen, ver_hyphen = normalize_headline("OpenAI releases GPT-5")
+    assert ver_hyphen == {"5"}
+    assert "gpt-5" in tokens_hyphen or "gpt" in tokens_hyphen
+
 def test_title_similarity_matching():
     # Same announcement with different titles
     t1, v1 = normalize_headline("Meta Unveils Llama 4 Open Model")
@@ -97,6 +102,7 @@ def test_cluster_articles_corroboration():
     clusters_same = cluster_articles(raw_same_domain)
     assert len(clusters_same) == 1
     assert clusters_same[0]["consensus_synergy"] is False
+    assert clusters_same[0]["supporting_sources"] == ["Anthropic"]
     assert clusters_same[0]["score"] == 20
 
     # Cross-domain corroboration -> earns bonus and official source is lead
@@ -109,6 +115,34 @@ def test_cluster_articles_corroboration():
     assert clusters_multi[0]["link"] == "https://anthropic.com/claude4"
     assert clusters_multi[0]["consensus_synergy"] is True
     assert clusters_multi[0]["score"] == 30 + SYNERGY_BONUS
+
+@pytest.mark.asyncio
+async def test_persistence_stage_saves_supporting_links(mocker):
+    from bot import persistence_stage
+    from src.models import Article, CurationResult, SynthesisResult
+    
+    mock_load = mocker.patch("bot.load_seen_articles", return_value={"links": [], "recent_topics": []})
+    mock_save = mocker.patch("bot.save_seen_articles")
+    
+    article = Article(
+        title="Lead Article",
+        link="https://lead.com/1",
+        summary="...",
+        published="2026-08-04T00:00:00Z",
+        source="Lead",
+        supporting_links=["https://supporting1.com/a", "https://supporting2.com/b"]
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(content="Summary", lead_link="https://lead.com/1", topic="General")
+    
+    await persistence_stage(curation, synthesis)
+    
+    mock_save.assert_called_once()
+    saved_data = mock_save.call_args[0][0]
+    assert "https://lead.com/1" in saved_data["links"]
+    assert "https://supporting1.com/a" in saved_data["links"]
+    assert "https://supporting2.com/b" in saved_data["links"]
+
 
 
 from src.curator import supports_thinking, prune_gemini_model_priority_async, summarize_news
