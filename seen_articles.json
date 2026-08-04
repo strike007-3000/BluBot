@@ -1,15 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.27866",
-    "https://arxiv.org/abs/2606.27997",
-    "https://arxiv.org/abs/2606.28179",
-    "https://arxiv.org/abs/2606.28194",
-    "https://arxiv.org/abs/2606.28242",
-    "https://arxiv.org/abs/2606.28294",
-    "https://arxiv.org/abs/2606.27378",
-    "https://arxiv.org/abs/2606.27401",
-    "https://arxiv.org/abs/2606.27539",
-    "https://arxiv.org/abs/2606.27550",
     "https://arxiv.org/abs/2606.28406",
     "https://arxiv.org/abs/2606.28433",
     "https://arxiv.org/abs/2606.28467",
@@ -499,7 +489,17 @@
     "https://arxiv.org/abs/2608.00135",
     "https://arxiv.org/abs/2608.00152",
     "https://arxiv.org/abs/2608.00316",
-    "https://arxiv.org/abs/2608.00320"
+    "https://arxiv.org/abs/2608.00320",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F66387b793059444d7d1203f912bd63793ba118aa",
+    "https://openai.com/index/third-party-cyber-evaluations-involving-openai-models",
+    "https://aws.amazon.com/blogs/machine-learning/introducing-web-search-on-amazon-bedrock-for-foundation-model-grounding/",
+    "https://aws.amazon.com/blogs/machine-learning/automated-web-insight-extraction-with-amazon-bedrock-agentcore/",
+    "https://www.marktechpost.com/2026/08/04/cursor-open-sources-mixture-of-kittens-mok-a-deterministic-moe-training-megakernel-for-gb300-nvl72-racks/",
+    "https://machinelearningmastery.com/measuring-performance-of-transformer-inference/",
+    "https://arxiv.org/abs/2601.22002",
+    "https://semiengineering.com/chip-industry-technical-paper-roundup-aug-4/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F2308ea5fbdaafabb9e4d5ff77fdff09d2fb48ccc",
+    "https://github.com/ollama/ollama/releases/tag/v0.32.6-rc0"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 792,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 793,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "journalism",
     "enterprise",
     "research_lab",
@@ -523,10 +522,10 @@
     "academic",
     "journalism",
     "practitioner",
-    "research_lab"
+    "research_lab",
+    "open_source"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
@@ -535,6 +534,8 @@
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
-  ]
+    "RISK_VERIFICATION",
+    "PRACTICAL_WORKFLOW"
+  ],
+  "watch_topics": []
 }
