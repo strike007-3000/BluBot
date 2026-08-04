@@ -117,9 +117,13 @@ def test_cluster_articles_corroboration():
     assert clusters_multi[0]["score"] == 30 + SYNERGY_BONUS
 
 @pytest.mark.asyncio
-async def test_persistence_stage_saves_supporting_links(mocker):
+async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
     from bot import persistence_stage
     from src.models import Article, CurationResult, SynthesisResult
+    from src.settings import Settings
+    
+    mock_settings = Settings(gemini_key="mock", is_dry_run=False)
+    monkeypatch.setattr("bot.settings", mock_settings)
     
     mock_load = mocker.patch("bot.load_seen_articles", return_value={"links": [], "recent_topics": []})
     mock_save = mocker.patch("bot.save_seen_articles")
