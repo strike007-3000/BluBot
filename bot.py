@@ -189,14 +189,6 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
         recent_styles=seen_data.get("recent_styles", [])
     )
 
-async def synthesis_stage(client: httpx.AsyncClient, genai_client: genai.Client, curation: CurationResult, telegram_topic: Optional[str] = None) -> Tuple[SynthesisResult, CurationResult]:
-    """Stage 2: AI Summarization and Persona Application."""
-    context = get_temporal_context()
-    news_count = len(curation.top_articles)
-    
-    summary, lead_link, topic, is_failover = None, None, "General", False
-    
-    # Choose writing style from styles compatible with selected content
 async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Client, topic: str) -> str:
     """Generates a grounded 7-day topic briefing using multi-source story clustering."""
     SafeLogger.info(f"Briefing Engine: Fetching 7-day RSS articles for topic: '{topic}'")
@@ -267,6 +259,7 @@ async def synthesis_stage(
     telegram_topic: Optional[str] = None
 ) -> Tuple[SynthesisResult, CurationResult]:
     """Stage 2: Synthesize Raw News into an Elite Tech Insight Post."""
+    context = get_temporal_context()
     news_count = len(curation.top_articles)
     SafeLogger.info(f"Synthesis Stage: Processing {news_count} curated articles.")
     

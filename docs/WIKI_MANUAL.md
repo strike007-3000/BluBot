@@ -201,7 +201,7 @@ To ensure the Sage never "forgets" even in ephemeral runner environments, we use
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.18.1 maintains a professional **Automated Test Suite** powered by `pytest` with **93 tests** across 11 modules.
+BluBot v3.18.2 maintains a professional **Automated Test Suite** powered by `pytest` with **94 tests** across 11 modules.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
@@ -580,4 +580,3 @@ When `is_dry_run=True`, the briefing engine bypasses Gemini API calls entirely a
 - Topic must be under 100 characters.
 - URL-containing topics are rejected with an `brief_invalid` response.
 - If no articles match the topic in the 7-day window, a "No articles found" message is returned.
-
