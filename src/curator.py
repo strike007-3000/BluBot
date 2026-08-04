@@ -293,11 +293,11 @@ def cluster_articles(raw_entries: List[dict]) -> List[dict]:
         
     return result_articles
 
-async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8, recent_categories=None, watch_topics=None):
+async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8, recent_categories=None, watch_topics=None, days_lookback=2):
     """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity."""
     now_utc = datetime.now(timezone.utc)
     source_list = feed_list if feed_list is not None else RSS_FEEDS
-    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=2), now_utc, seen_links or [], recent_topics, recent_categories, watch_topics) for url in source_list]
+    tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=days_lookback), now_utc, seen_links or [], recent_topics, recent_categories, watch_topics) for url in source_list]
     results = await asyncio.gather(*tasks)
     
     all_raw_entries = [e for sublist in results for e in sublist]

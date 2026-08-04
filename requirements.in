@@ -14,7 +14,7 @@ python-telegram-bot[ext]>=21.0
 
 # Security Hardening (Specific Transitive Pins)
 # SECURITY-NOTE: cryptography is currently constrained by atproto's dependency cap (<47).
-# The fixed cryptography version is >=48.0.1. Dependabot cannot resolve the upgrade
+# The fixed cryptography version is >=48.0.1/50.0.0. Dependabot cannot resolve the upgrade
 # until atproto relaxes its cryptography constraint. We are accepting the risk temporarily
 # because the bot runs as a short-lived GitHub Actions job and is not a persistent
 # public web service. Revisit this when atproto releases a compatible version.

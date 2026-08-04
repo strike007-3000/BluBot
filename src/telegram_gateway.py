@@ -409,7 +409,7 @@ async def send_draft_for_approval(
 def process_authorized_command(text: str) -> Optional[dict]:
     """
     Consolidated handler for authorized Telegram text commands.
-    Recognizes: /topic <t>, /curate <t>, /watch <t>, /unwatch <t>, /watches.
+    Recognizes: /topic <t>, /curate <t>, /watch <t>, /unwatch <t>, /watches, /brief <t>.
     Returns a result dictionary describing the command action or None if unhandled.
     """
     if not text:
@@ -417,7 +417,12 @@ def process_authorized_command(text: str) -> Optional[dict]:
         
     cmd_text = text.strip()
     
-    if cmd_text.startswith("/topic "):
+    if cmd_text.startswith("/brief "):
+        topic = cmd_text.replace("/brief ", "", 1).strip()
+        if not topic or len(topic) > 100 or "http://" in topic or "https://" in topic:
+            return {"action": "brief_invalid", "response": "⚠️ Invalid brief topic. Provide a clean topic string under 100 characters."}
+        return {"action": "brief", "topic": topic, "response": f"📊 Generating grounded briefing for *{topic}* across past 7 days..."}
+    elif cmd_text.startswith("/topic "):
         topic = cmd_text.replace("/topic ", "", 1).strip()
         return {"action": "topic", "topic": topic, "response": f"📥 Received topic request: *{topic}*. Curating now..."} if topic else None
     elif cmd_text.startswith("/curate "):
@@ -485,11 +490,12 @@ def process_authorized_command(text: str) -> Optional[dict]:
         
     return None
 
-async def check_for_telegram_topic() -> Optional[str]:
+async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
     """
     Checks if there's a recent command sent by the authorized user,
     either from pending_topic.json or directly from Telegram updates.
-    Processes /watch, /unwatch, /watches in-place and returns topic string for /topic or /curate.
+    Processes /watch, /unwatch, /watches in-place.
+    Returns (command_type, topic) tuple where command_type is "topic" or "brief", or (None, None).
     """
     from src.config import PENDING_TOPIC_FILE_PATH
     import os
@@ -522,10 +528,10 @@ async def check_for_telegram_topic() -> Optional[str]:
                 await bot.send_message(chat_id=settings.telegram_user_id, text=f"📥 Using pending topic override: *{topic_to_use}*.")
             except Exception:
                 pass
-        return topic_to_use
+        return ("topic", topic_to_use)
 
     if not settings.telegram_bot_token or not settings.telegram_user_id:
-        return None
+        return (None, None)
 
     try:
         bot = Bot(token=settings.telegram_bot_token)
@@ -533,7 +539,7 @@ async def check_for_telegram_topic() -> Optional[str]:
         
         updates = await bot.get_updates(limit=50)
         if not updates:
-            return None
+            return (None, None)
 
         # Look for the latest message from the authorized user in the last 15 minutes
         now = time.time()
@@ -554,12 +560,12 @@ async def check_for_telegram_topic() -> Optional[str]:
                         if result.get("response"):
                             await bot.send_message(chat_id=chat_id, text=result["response"])
                             
-                        if result.get("action") == "topic":
-                            return result.get("topic")
+                        if result.get("action") in ("topic", "brief"):
+                            return (result.get("action"), result.get("topic"))
                         else:
-                            # Non-topic command (/watch, /unwatch, /watches) handled and acknowledged. Stop polling to prevent processing older stale updates.
-                            return None
-        return None
+                            # Non-topic/brief command (/watch, /unwatch, /watches) handled and acknowledged. Stop polling to prevent processing older stale updates.
+                            return (None, None)
+        return (None, None)
     except Exception as e:
         SafeLogger.warn(f"Telegram: Error checking for topic intercept: {e}")
-        return None
+        return (None, None)
