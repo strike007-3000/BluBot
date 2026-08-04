@@ -176,7 +176,9 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.18.2 (Current)**: **Synthesis Context Fix**.
+- **v3.18.3 (Current)**: **Node 24 Actions Compatibility**.
+    - ⚙️ **CI Maintenance**: Upgraded checkout, Python setup, and cache actions used by the scheduled and test workflows to Node 24-compatible major versions.
+- **v3.18.2**: **Synthesis Context Fix**.
     - 🧠 **Pipeline Reliability**: Removed a truncated duplicate `synthesis_stage` declaration and restored temporal context initialization in the active synthesis path, preventing scheduled runs from failing before summarization or fallback generation.
 - **v3.18.1**: **Python 3.13 Dependency Lock Fix**.
     - 🐍 **CI Compatibility**: Regenerated the dependency lock for Python 3.13, removing obsolete compatibility packages that cannot be installed on the project runtime.
