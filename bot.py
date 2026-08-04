@@ -494,8 +494,14 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     
     seen_links = set(state.get("links", []))
     for article in curation.top_articles[:10]:
-        if article.link not in seen_links:
+        if article.link and article.link not in seen_links:
             state.setdefault("links", []).append(article.link)
+            seen_links.add(article.link)
+        if article.supporting_links:
+            for s_link in article.supporting_links:
+                if s_link and s_link not in seen_links:
+                    state.setdefault("links", []).append(s_link)
+                    seen_links.add(s_link)
 
     if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
         state.setdefault("recent_topics", []).append(synthesis.topic)

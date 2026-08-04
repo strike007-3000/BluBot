@@ -41,6 +41,9 @@ class Article:
     consensus_synergy: Optional[bool] = False
     source_url: Optional[str] = None
     source_id: Optional[str] = None
+    cluster_id: Optional[str] = None
+    supporting_sources: Optional[List[str]] = None
+    supporting_links: Optional[List[str]] = None
 
 @dataclass(frozen=True)
 class CurationResult:

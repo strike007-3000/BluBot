@@ -46,25 +46,108 @@ def test_strip_markdown_cleanliness():
 
 @pytest.mark.asyncio
 async def test_fetch_news_synergy_and_deduplication(mock_httpx_client, mocker):
-    """Verify that duplicate stories get a synergy bonus and are ranked correctly."""
-    # Mocking fetch_single_feed to return specific items
-    item_a = {"title": "Story A", "link": "https://site1.com/a", "summary": "...", "source": "Site 1", "score": 10}
-    item_b = {"title": "Story A", "link": "https://site1.com/a", "summary": "...", "source": "Site 2", "score": 10} # Duplicate link
-    item_c = {"title": "Story C", "link": "https://site2.com/c", "summary": "...", "source": "Site 2", "score": 15}
+    """Verify that cross-source duplicate stories get a synergy bonus and are ranked correctly."""
+    # Mocking fetch_single_feed to return specific items with different publisher domains
+    item_a = {"title": "Llama 4 Release Announced", "link": "https://site1.com/a", "summary": "...", "source": "Site 1", "source_id": "site1", "score": 10}
+    item_b = {"title": "Llama 4 Release Details", "link": "https://site2.com/b", "summary": "...", "source": "Site 2", "source_id": "site2", "score": 10} # Corroborating domain
+    item_c = {"title": "Story C Unrelated Release", "link": "https://site3.com/c", "summary": "...", "source": "Site 3", "source_id": "site3", "score": 15}
     
-    # Patching fetch_single_feed instead of full fetch_news to avoid network
     mocker.patch("src.curator.fetch_single_feed", side_effect=[[item_a], [item_b], [item_c]])
-    
-    # We need to mock RSS_FEEDS to have 3 entries for our side_effect
     mocker.patch("src.curator.RSS_FEEDS", ["f1", "f2", "f3"])
     
     top_news = await fetch_news(mock_httpx_client)
     
     # Item A should be first because it gets SYNERGY_BONUS (10 + SYNERGY_BONUS = 25 > 15)
-    assert len(top_news) == 2 # Deduplicated
-    assert top_news[0]["title"] == "Story A"
-    assert top_news[1]["title"] == "Story C"
+    assert len(top_news) == 2 # Clustered
+    assert "Llama 4" in top_news[0]["title"]
+    assert top_news[1]["title"] == "Story C Unrelated Release"
     assert top_news[0]["score"] == 10 + SYNERGY_BONUS
+    assert top_news[0]["supporting_sources"] == ["Site 2"]
+
+from src.curator import normalize_headline, calculate_title_similarity, cluster_articles
+
+def test_headline_normalization():
+    tokens1, ver1 = normalize_headline("OpenAI Announces GPT-4.5 Turbo Release | TechCrunch")
+    assert ver1 == {"4.5"}
+    assert "gpt-4.5" in tokens1 or "gpt" in tokens1
+    assert "techcrunch" not in tokens1
+
+    # Verify hyphenated product versions like GPT-5 are preserved and not stripped as suffix
+    tokens_hyphen, ver_hyphen = normalize_headline("OpenAI releases GPT-5")
+    assert ver_hyphen == {"5"}
+    assert "gpt-5" in tokens_hyphen or "gpt" in tokens_hyphen
+
+def test_title_similarity_matching():
+    # Same announcement with different titles
+    t1, v1 = normalize_headline("Meta Unveils Llama 4 Open Model")
+    t2, v2 = normalize_headline("Meta Launches Llama 4 for Open Source")
+    assert calculate_title_similarity(t1, v1, t2, v2) is True
+
+    # Conflicting version numbers block merge
+    t3, v3 = normalize_headline("Meta Releases Llama 4.0")
+    t4, v4 = normalize_headline("Meta Releases Llama 4.5")
+    assert calculate_title_similarity(t3, v3, t4, v4) is False
+
+    # Short generic titles do not cluster
+    t5, v5 = normalize_headline("AI News")
+    t6, v6 = normalize_headline("AI Update")
+    assert calculate_title_similarity(t5, v5, t6, v6) is False
+
+def test_cluster_articles_corroboration():
+    # Same publisher domain multiple articles -> no consensus bonus
+    raw_same_domain = [
+        {"title": "Claude 4 Released by Anthropic", "link": "https://anthropic.com/post1", "source": "Anthropic", "source_id": "anthropic", "score": 20},
+        {"title": "Claude 4 Release Details", "link": "https://anthropic.com/post2", "source": "Anthropic", "source_id": "anthropic", "score": 15}
+    ]
+    clusters_same = cluster_articles(raw_same_domain)
+    assert len(clusters_same) == 1
+    assert clusters_same[0]["consensus_synergy"] is False
+    assert clusters_same[0]["supporting_sources"] == ["Anthropic"]
+    assert clusters_same[0]["score"] == 20
+
+    # Cross-domain corroboration -> earns bonus and official source is lead
+    raw_multi_domain = [
+        {"title": "Claude 4 Released by Anthropic", "link": "https://techcrunch.com/claude", "source": "TechCrunch", "source_id": "techcrunch_ai", "score": 12},
+        {"title": "Claude 4 Technical Breakthrough", "link": "https://anthropic.com/claude4", "source": "Anthropic", "source_id": "openai_news", "score": 30} # Official tier source
+    ]
+    clusters_multi = cluster_articles(raw_multi_domain)
+    assert len(clusters_multi) == 1
+    assert clusters_multi[0]["link"] == "https://anthropic.com/claude4"
+    assert clusters_multi[0]["consensus_synergy"] is True
+    assert clusters_multi[0]["score"] == 30 + SYNERGY_BONUS
+
+@pytest.mark.asyncio
+async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
+    from bot import persistence_stage
+    from src.models import Article, CurationResult, SynthesisResult
+    from src.settings import Settings
+    
+    mock_settings = Settings(gemini_key="mock", is_dry_run=False)
+    monkeypatch.setattr("bot.settings", mock_settings)
+    
+    mock_load = mocker.patch("bot.load_seen_articles", return_value={"links": [], "recent_topics": []})
+    mock_save = mocker.patch("bot.save_seen_articles")
+    
+    article = Article(
+        title="Lead Article",
+        link="https://lead.com/1",
+        summary="...",
+        published="2026-08-04T00:00:00Z",
+        source="Lead",
+        supporting_links=["https://supporting1.com/a", "https://supporting2.com/b"]
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(content="Summary", lead_link="https://lead.com/1", topic="General")
+    
+    await persistence_stage(curation, synthesis)
+    
+    mock_save.assert_called_once()
+    saved_data = mock_save.call_args[0][0]
+    assert "https://lead.com/1" in saved_data["links"]
+    assert "https://supporting1.com/a" in saved_data["links"]
+    assert "https://supporting2.com/b" in saved_data["links"]
+
+
 
 from src.curator import supports_thinking, prune_gemini_model_priority_async, summarize_news
 from src.config import GEMINI_MODEL_PRIORITY
