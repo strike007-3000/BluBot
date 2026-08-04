@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.marktechpost.com/2026/06/26/cursor-study-finds-reward-hacking-inflates-coding-agent-benchmark-scores-on-swe-bench-pro/",
-    "https://techcrunch.com/2026/06/27/softbanks-ceo-isnt-the-only-one-with-questions-about-elon-musks-orbital-data-center-hype/",
-    "https://openai.com/index/mapping-ai-jobs-transition-eu",
-    "https://arxiv.org/abs/2606.27448",
-    "https://arxiv.org/abs/2606.27609",
-    "https://arxiv.org/abs/2606.27681",
-    "https://arxiv.org/abs/2606.27721",
-    "https://arxiv.org/abs/2606.27739",
     "https://arxiv.org/abs/2606.27866",
     "https://arxiv.org/abs/2606.27997",
     "https://arxiv.org/abs/2606.28179",
@@ -499,7 +491,15 @@
     "https://openai.com/index/apple-is-getting-this-wrong",
     "https://simonwillison.net/2026/Aug/3/david-crawshaw/#atom-everything",
     "https://simonwillison.net/2026/Aug/3/devtools-must-be-open-source-exedev/#atom-everything",
-    "https://www.marktechpost.com/2026/08/04/reflex-open-sources-xy-a-rust-backed-super-fast-python-charting-library-that-keeps-100-million-point-charts-interactive/"
+    "https://www.marktechpost.com/2026/08/04/reflex-open-sources-xy-a-rust-backed-super-fast-python-charting-library-that-keeps-100-million-point-charts-interactive/",
+    "https://huggingface.co/blog/LiquidAI/lfm2-5-2-6b",
+    "https://the-decoder.com/silicon-valleys-rift-over-open-source-pushes-back-contemplated-white-house-bans-on-chinese-ai/",
+    "https://arxiv.org/abs/2608.00106",
+    "https://arxiv.org/abs/2608.00107",
+    "https://arxiv.org/abs/2608.00135",
+    "https://arxiv.org/abs/2608.00152",
+    "https://arxiv.org/abs/2608.00316",
+    "https://arxiv.org/abs/2608.00320"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 791,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 792,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "research_lab",
     "journalism",
     "enterprise",
@@ -523,10 +522,10 @@
     "practitioner",
     "academic",
     "journalism",
-    "practitioner"
+    "practitioner",
+    "research_lab"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
@@ -535,6 +534,7 @@
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION"
   ]
 }
