@@ -53,7 +53,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **24-Hour Lookback Filters**: Strict timestamp boundaries filter out notifications/comments older than 24 hours to prevent scanning entire profile histories.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
     - **Conversational Quality & Persona**: System prompts are highly tailored to speak in a natural, peer-like mentor/analyst voice, stripping robotic introductory pre-ambles and hashtags.
-- **Breakthrough Scoring Engine v5 (Elite Signal Processing)**: 
+- **Breakthrough Scoring Engine v5 (Elite Signal Processing)**:
     - **Stable-ID Curation Registry (8-Tier, 45 Feeds)**:
         
         | Source Category | Base Score | Notes / Source Tiers |
@@ -176,7 +176,9 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
 
 ## 🗒️ Updates & History
 
-- **v3.18.0 (Current)**: **Grounded Briefings, Watchlists, Story Clustering, and Feed Expansion**.
+- **v3.18.1 (Current)**: **Python 3.13 Dependency Lock Fix**.
+    - 🐍 **CI Compatibility**: Regenerated the dependency lock for Python 3.13, removing obsolete compatibility packages that cannot be installed on the project runtime.
+- **v3.18.0**: **Grounded Briefings, Watchlists, Story Clustering, and Feed Expansion**.
     - 📊 **`/brief` Command (PR 3b)**: New Telegram command generates **7-day executive briefings** for any topic. Fetches articles with `days_lookback=7`, clusters corroborated stories across publisher domains, and synthesizes a Gemini-powered analytical report. Delivered to Telegram using `smart_split` with the 4096-character Telegram limit—**no max_chunks cap**, so lengthy briefings are delivered in full. Bypasses Gemini API in dry-run mode.
     - 📌 **Topic Watchlists (PR 3a)**: Persistent `/watch`, `/unwatch`, and `/watches` commands with structured watchlist entries (topic, display name, keywords, timestamps). Watchlisted topics receive a bounded `+3` to `+8` scoring boost via word-boundary regex matching against article titles and summaries. Capped at 10 active watches.
     - 🧬 **Cross-Source Story Clustering (PR 1)**: Title normalization engine with headline similarity and multi-domain corroboration. Stories from ≥2 distinct publisher domains are clustered together and the lead article receives a `+15` Consensus Synergy bonus. Supporting source names and links are tracked for transparency.
@@ -278,7 +280,7 @@ BluBot implements a **3-Tier State Persistence** system to ensure it never "forg
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.18.0 features a dual-layer testing strategy with **93 automated tests** across 11 test modules:
+BluBot v3.18.1 features a dual-layer testing strategy with **93 automated tests** across 11 test modules:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:
