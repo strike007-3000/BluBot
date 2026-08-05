@@ -508,13 +508,13 @@
     "k and v cache quantization",
     "Token-maxxing: The Wrong Metric for AI Adoption",
     "spain wins FIFA World Cup 2026",
-    "Hugging Face cyber attack by OpenAI"
+    "Hugging Face cyber attack by OpenAI",
+    "Strategy"
   ],
-  "total_posts_curated": 795,
+  "total_posts_curated": 796,
   "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "enterprise",
     "practitioner",
     "academic",
@@ -523,10 +523,10 @@
     "research_lab",
     "open_source",
     "practitioner",
-    "journalism"
+    "journalism",
+    "unknown"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
@@ -535,7 +535,8 @@
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "ENTERPRISE_ROI"
   ],
   "watch_topics": []
 }
