@@ -1,18 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.28406",
-    "https://arxiv.org/abs/2606.28433",
-    "https://arxiv.org/abs/2606.28467",
-    "https://arxiv.org/abs/2606.28661",
-    "https://arxiv.org/abs/2606.28751",
-    "https://arxiv.org/abs/2606.28925",
-    "https://arxiv.org/abs/2606.29158",
-    "https://arxiv.org/abs/2606.29164",
-    "https://huggingface.co/blog/Dharma-AI/why-specialization-is-inevitable",
-    "https://huggingface.co/blog/eee-community-evals",
-    "https://arxiv.org/abs/2606.29196",
-    "https://arxiv.org/abs/2606.29243",
-    "https://arxiv.org/abs/2606.29459",
     "https://arxiv.org/abs/2606.29465",
     "https://arxiv.org/abs/2606.29476",
     "https://arxiv.org/abs/2606.29522",
@@ -499,7 +486,20 @@
     "https://arxiv.org/abs/2601.22002",
     "https://semiengineering.com/chip-industry-technical-paper-roundup-aug-4/",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F2308ea5fbdaafabb9e4d5ff77fdff09d2fb48ccc",
-    "https://github.com/ollama/ollama/releases/tag/v0.32.6-rc0"
+    "https://github.com/ollama/ollama/releases/tag/v0.32.6-rc0",
+    "https://simonwillison.net/2026/Aug/4/new-release-of-llm/#atom-everything",
+    "https://simonwillison.net/2026/Aug/4/llm-anthropic/#atom-everything",
+    "https://www.marktechpost.com/2026/08/05/nvidia-alpamayo-2-super-open-vla-model-autonomous-driving/",
+    "https://siliconangle.com/2026/08/04/white-house-ai-firms-keep-safety-framework-talks-private/",
+    "https://www.wired.com/story/the-white-house-is-keeping-its-ai-cybersecurity-framework-secret/",
+    "https://siliconangle.com/2026/08/03/white-house-invites-ai-companies-review-new-ai-safety-framework/",
+    "https://www.marktechpost.com/2026/08/04/copilotkit-open-sources-channels-sdk/",
+    "https://arxiv.org/abs/2608.03589",
+    "https://arxiv.org/abs/2608.02869",
+    "https://arxiv.org/abs/2607.03798",
+    "https://arxiv.org/abs/2608.02877",
+    "https://arxiv.org/abs/2608.03223",
+    "https://arxiv.org/abs/2608.02951"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 793,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 794,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "enterprise",
     "research_lab",
     "enterprise",
@@ -523,10 +522,10 @@
     "journalism",
     "practitioner",
     "research_lab",
-    "open_source"
+    "open_source",
+    "practitioner"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "ENTERPRISE_ROI",
@@ -535,7 +534,8 @@
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "QUESTION_FIRST"
   ],
   "watch_topics": []
 }
