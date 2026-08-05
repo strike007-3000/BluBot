@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.29465",
-    "https://arxiv.org/abs/2606.29476",
-    "https://arxiv.org/abs/2606.29522",
-    "https://huggingface.co/blog/ibm-research/scarfbench",
-    "https://the-decoder.com/openai-paper-reveals-three-gpt-5-6-pro-models-breaking-with-single-top-tier-strategy/",
-    "https://openai.com/index/introducing-genebench-pro",
-    "https://arxiv.org/abs/2606.30702",
-    "https://arxiv.org/abs/2606.30789",
     "https://arxiv.org/abs/2606.30842",
     "https://arxiv.org/abs/2606.31048",
     "https://arxiv.org/abs/2606.31154",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2607.03798",
     "https://arxiv.org/abs/2608.02877",
     "https://arxiv.org/abs/2608.03223",
-    "https://arxiv.org/abs/2608.02951"
+    "https://arxiv.org/abs/2608.02951",
+    "https://spectrum.ieee.org/ai-scientist-research-paper-format",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F42613dd7f0774ecfdef189dc69768e720ec3b5e9",
+    "https://arxiv.org/abs/2608.02989",
+    "https://arxiv.org/abs/2608.03259",
+    "https://arxiv.org/abs/2608.03263",
+    "https://arxiv.org/abs/2608.03291",
+    "https://arxiv.org/abs/2608.03391",
+    "https://arxiv.org/abs/2608.03401"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -510,11 +510,10 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI"
   ],
-  "total_posts_curated": 794,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 795,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "research_lab",
     "enterprise",
     "practitioner",
@@ -523,10 +522,10 @@
     "practitioner",
     "research_lab",
     "open_source",
-    "practitioner"
+    "practitioner",
+    "journalism"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
@@ -535,7 +534,8 @@
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "STRATEGIC_CONTRAST"
   ],
   "watch_topics": []
 }
