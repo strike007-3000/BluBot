@@ -1,14 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.32026",
-    "https://arxiv.org/abs/2607.00267",
-    "https://arxiv.org/abs/2607.00276",
-    "https://arxiv.org/abs/2607.00431",
-    "https://arxiv.org/abs/2607.00464",
-    "https://arxiv.org/abs/2607.00477",
-    "https://arxiv.org/abs/2607.00531",
-    "https://arxiv.org/abs/2607.00908",
-    "https://arxiv.org/abs/2607.00917",
     "https://machinelearningmastery.com/context-vs-memory-engineering-in-agentic-ai-systems/",
     "https://arxiv.org/abs/2607.01022",
     "https://arxiv.org/abs/2607.01083",
@@ -499,7 +490,16 @@
     "https://arxiv.org/abs/2608.04043",
     "https://arxiv.org/abs/2608.04084",
     "https://arxiv.org/abs/2608.04401",
-    "https://arxiv.org/abs/2608.04407"
+    "https://arxiv.org/abs/2608.04407",
+    "https://machinelearningmastery.com/designing-ai-agents-that-can-self-correct/",
+    "https://www.normaltech.ai/p/ai-agents-cant-yet-do-open-ended",
+    "https://huggingface.co/blog/baseten",
+    "https://the-decoder.com/the-company-that-made-open-weights-mainstream-now-competes-on-discounts/",
+    "https://techcrunch.com/2026/08/06/google-maps-adds-agentic-features-including-food-ordering-and-hotel-bookings/",
+    "https://the-decoder.com/openai-developer-warns-the-tireless-eagle-eyes-of-a-million-models-are-coming-for-your-exposed-api-keys-and-crypto-wallets/",
+    "https://arxiv.org/abs/2608.04613",
+    "https://arxiv.org/abs/2608.04702",
+    "https://arxiv.org/abs/2608.04706"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -511,11 +511,10 @@
     "Hugging Face cyber attack by OpenAI",
     "Strategy"
   ],
-  "total_posts_curated": 797,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 798,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "practitioner",
     "academic",
     "journalism",
     "practitioner",
@@ -524,10 +523,10 @@
     "practitioner",
     "journalism",
     "unknown",
-    "practitioner"
+    "practitioner",
+    "academic"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
@@ -536,7 +535,8 @@
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "RISK_VERIFICATION"
   ],
   "watch_topics": []
 }
