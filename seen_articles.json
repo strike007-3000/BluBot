@@ -1,15 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2606.30842",
-    "https://arxiv.org/abs/2606.31048",
-    "https://arxiv.org/abs/2606.31154",
-    "https://huggingface.co/blog/cerebras-gemma4-voice-ai",
-    "https://arxiv.org/abs/2606.31191",
-    "https://arxiv.org/abs/2606.31484",
-    "https://arxiv.org/abs/2606.31650",
-    "https://arxiv.org/abs/2606.31748",
-    "https://arxiv.org/abs/2606.31779",
-    "https://arxiv.org/abs/2606.32017",
     "https://arxiv.org/abs/2606.32026",
     "https://arxiv.org/abs/2607.00267",
     "https://arxiv.org/abs/2607.00276",
@@ -499,7 +489,17 @@
     "https://arxiv.org/abs/2608.03263",
     "https://arxiv.org/abs/2608.03291",
     "https://arxiv.org/abs/2608.03391",
-    "https://arxiv.org/abs/2608.03401"
+    "https://arxiv.org/abs/2608.03401",
+    "https://simonwillison.net/2026/Aug/5/muse-code-and-muse-spark-12/#atom-everything",
+    "https://www.marktechpost.com/2026/08/05/meta-superintelligence-labs-releases-muse-code/",
+    "https://www.wired.com/story/jeff-dean-google-discovery-loop-startup/",
+    "https://techcrunch.com/2026/08/05/jeff-dean-and-other-top-ai-researchers-are-leaving-google-to-launch-their-own-startup/",
+    "https://semiengineering.com/the-autonomous-chip-to-system-engineer-has-arrived/",
+    "https://arxiv.org/abs/2608.04013",
+    "https://arxiv.org/abs/2608.04043",
+    "https://arxiv.org/abs/2608.04084",
+    "https://arxiv.org/abs/2608.04401",
+    "https://arxiv.org/abs/2608.04407"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -511,11 +511,10 @@
     "Hugging Face cyber attack by OpenAI",
     "Strategy"
   ],
-  "total_posts_curated": 796,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 797,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "practitioner",
     "academic",
     "journalism",
@@ -524,19 +523,20 @@
     "open_source",
     "practitioner",
     "journalism",
-    "unknown"
+    "unknown",
+    "practitioner"
   ],
   "recent_styles": [
+    "PRACTICAL_WORKFLOW",
+    "RISK_VERIFICATION",
+    "STRATEGIC_CONTRAST",
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION",
+    "PRACTICAL_WORKFLOW",
+    "QUESTION_FIRST",
+    "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
-    "PRACTICAL_WORKFLOW",
-    "RISK_VERIFICATION",
-    "STRATEGIC_CONTRAST",
-    "QUESTION_FIRST",
-    "RISK_VERIFICATION",
-    "PRACTICAL_WORKFLOW",
-    "QUESTION_FIRST",
-    "STRATEGIC_CONTRAST",
-    "ENTERPRISE_ROI"
+    "PRACTICAL_WORKFLOW"
   ],
   "watch_topics": []
 }
