@@ -1,17 +1,5 @@
 {
   "links": [
-    "https://machinelearningmastery.com/context-vs-memory-engineering-in-agentic-ai-systems/",
-    "https://arxiv.org/abs/2607.01022",
-    "https://arxiv.org/abs/2607.01083",
-    "https://arxiv.org/abs/2607.01181",
-    "https://arxiv.org/abs/2607.01225",
-    "https://arxiv.org/abs/2607.00027",
-    "https://arxiv.org/abs/2607.00191",
-    "https://arxiv.org/abs/2607.00293",
-    "https://arxiv.org/abs/2607.01283",
-    "https://arxiv.org/abs/2607.01311",
-    "https://arxiv.org/abs/2607.01417",
-    "https://arxiv.org/abs/2607.01444",
     "https://arxiv.org/abs/2607.01487",
     "https://arxiv.org/abs/2607.01490",
     "https://arxiv.org/abs/2607.01537",
@@ -499,7 +487,19 @@
     "https://the-decoder.com/openai-developer-warns-the-tireless-eagle-eyes-of-a-million-models-are-coming-for-your-exposed-api-keys-and-crypto-wallets/",
     "https://arxiv.org/abs/2608.04613",
     "https://arxiv.org/abs/2608.04702",
-    "https://arxiv.org/abs/2608.04706"
+    "https://arxiv.org/abs/2608.04706",
+    "https://openai.com/index/improving-gpt-5-6-sol-in-chatgpt",
+    "https://the-decoder.com/openai-improves-gpt-5-6-sol-in-chatgpt-and-restricts-free-users-to-its-weakest-model/",
+    "https://deepmind.google/blog/weathernext-ai-model-achieves-breakthrough-in-forecasting-cyclones/",
+    "https://aws.amazon.com/blogs/machine-learning/control-agent-behaviors-and-cost-beyond-a-single-action-new-capabilities-in-amazon-bedrock-agentcore/",
+    "https://aws.amazon.com/blogs/machine-learning/agent-skills-for-automated-reasoning-policies-in-amazon-bedrock/",
+    "https://aws.amazon.com/blogs/machine-learning/securing-ai-agents-with-temporal-policies-in-amazon-bedrock-agentcore/",
+    "https://aws.amazon.com/blogs/machine-learning/run-production-ai-agents-in-n8n-with-amazon-bedrock-agentcore-harness/",
+    "https://aws.amazon.com/blogs/machine-learning/building-an-agentic-app-deployer-with-amazon-bedrock-and-aws-lambda/",
+    "https://aws.amazon.com/blogs/machine-learning/configure-rate-limits-for-ai-traffic-on-agentcore-gateway/",
+    "https://techcrunch.com/2026/08/06/openai-brings-unlimited-chatgpt-text-chats-to-free-users/",
+    "https://www.theverge.com/ai-artificial-intelligence/976239/openai-chatgpt-free-go-text-chats",
+    "https://aws.amazon.com/blogs/machine-learning/build-visibility-for-codex-on-amazon-bedrock-with-opentelemetry-and-amazon-cloudwatch/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -511,11 +511,10 @@
     "Hugging Face cyber attack by OpenAI",
     "Strategy"
   ],
-  "total_posts_curated": 798,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 799,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "academic",
     "journalism",
     "practitioner",
     "research_lab",
@@ -524,10 +523,10 @@
     "journalism",
     "unknown",
     "practitioner",
-    "academic"
+    "academic",
+    "research_lab"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
@@ -536,7 +535,8 @@
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "QUESTION_FIRST"
   ],
   "watch_topics": []
 }
