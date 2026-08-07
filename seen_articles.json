@@ -1,6 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.02088",
     "https://arxiv.org/abs/2607.02182",
     "https://arxiv.org/abs/2607.02203",
     "https://arxiv.org/abs/2607.02390",
@@ -499,7 +498,8 @@
     "https://arxiv.org/abs/2608.05242",
     "https://arxiv.org/abs/2608.05371",
     "https://arxiv.org/abs/2608.05660",
-    "https://arxiv.org/abs/2608.05702"
+    "https://arxiv.org/abs/2608.05702",
+    "https://www.wired.com/story/this-chatbot-is-just-a-random-guy-lol/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -509,13 +509,13 @@
     "Token-maxxing: The Wrong Metric for AI Adoption",
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI",
-    "Strategy"
+    "Strategy",
+    "ChatTJB new Chatbot is just a guy"
   ],
-  "total_posts_curated": 800,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 801,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "practitioner",
     "research_lab",
     "open_source",
     "practitioner",
@@ -524,10 +524,10 @@
     "practitioner",
     "academic",
     "research_lab",
-    "research_lab"
+    "research_lab",
+    "journalism"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
@@ -536,7 +536,8 @@
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "RISK_VERIFICATION"
   ],
   "watch_topics": []
 }
