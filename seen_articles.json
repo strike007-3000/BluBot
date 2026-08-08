@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.latent.space/p/aiewf-daily-dispatch-locomotives",
-    "https://www.apple.com/newsroom/2026/06/apple-creator-studio-gets-smarter-faster-and-more-connected/",
-    "https://www.apple.com/newsroom/2026/05/detroits-rising-developers-are-supported-by-the-apple-developer-academy/",
-    "https://the-decoder.com/ai-search-agents-dont-fail-at-searching-they-fail-at-asking-the-right-questions-when-queries-get-ambiguous/",
-    "https://www.marktechpost.com/2026/07/05/llamaindex-legal-kb-agentic-retrieval-over-index-v2-with-retrieve-find-read-and-grep-tools/",
-    "https://www.marktechpost.com/2026/07/04/qwens-former-lead-on-what-hybrid-thinking-got-wrong-and-why-he-now-backs-agents/",
-    "https://www.marktechpost.com/2026/07/04/nvidia-horizon-a-hands-free-agent-that-evolves-git-worktrees-and-hits-100-rtl-benchmark-completion/",
-    "https://techcrunch.com/2026/07/04/what-is-mistral-ai-everything-to-know-about-the-openai-competitor/",
     "https://www.apple.com/newsroom/2026/05/cherokee-language-learners-bridge-generations-with-ipad-and-mac/",
     "https://www.apple.com/newsroom/2026/05/after-the-whistle-with-brendan-hunt-and-rebecca-lowe-returns/",
     "https://www.apple.com/newsroom/2026/05/apple-tv-to-air-first-major-live-pro-sports-event-shot-on-iphone-17-pro/",
@@ -499,7 +491,15 @@
     "https://the-decoder.com/openai-flags-its-new-astra-model-as-potentially-reaching-the-highest-cybersecurity-risk-level-for-the-first-time/",
     "https://aws.amazon.com/blogs/machine-learning/determining-playoff-clinching-scenarios-in-the-nhl-using-constraint-programming/",
     "https://openai.com/index/responding-next-frontier-critical-cyber-capabilities",
-    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F3e36cdbf38d7e56d78e618ec9dd7f4171905599a"
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F3e36cdbf38d7e56d78e618ec9dd7f4171905599a",
+    "https://www.marktechpost.com/2026/08/08/pokee-ai-releases-pokee-isaac-28b-a-10m-token-context-agentic-model-built-to-run-inside-the-customer-boundary/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F0754e4e6825173b45e6e8ed91ac37cce4b307156",
+    "https://the-decoder.com/xais-imagine-image-2-0-lands-just-behind-openais-gpt-image-2-in-arena-benchmarks/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F80a802e49932d20c6b2539dc6cab6cc8d0dd04cc",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F58766245fc08f235d8959f6e533e9bc7adbd223a",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F83192d1daccbcc0e22dfc5e5f4469b9afe0cca19",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F6830baae658edc0574998c77148c21a1e2e33118",
+    "https://www.servethehome.com/deltas-gocool-150-goes-big-to-enable-150kw-liquid-to-air-cooling-for-asrock-racks-vr-nvl72/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -512,11 +512,10 @@
     "Strategy",
     "ChatTJB new Chatbot is just a guy"
   ],
-  "total_posts_curated": 802,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 803,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "open_source",
     "practitioner",
     "journalism",
     "unknown",
@@ -525,10 +524,10 @@
     "research_lab",
     "research_lab",
     "journalism",
-    "practitioner"
+    "practitioner",
+    "journalism"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
@@ -537,7 +536,8 @@
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "QUESTION_FIRST"
   ],
   "watch_topics": []
 }
