@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.02182",
-    "https://arxiv.org/abs/2607.02203",
-    "https://arxiv.org/abs/2607.02390",
-    "https://the-decoder.com/mistrals-open-source-leanstral-1-5-aces-formal-math-benchmarks-and-catches-real-bugs-in-code/",
-    "https://www.latent.space/p/the-website-of-the-future",
-    "https://www.marktechpost.com/2026/07/03/mistral-ai-releases-leanstral-1-5-an-apache-2-0-lean-4-code-agent-model-solving-587-of-672-putnambench-problems/",
-    "https://the-decoder.com/uks-ai-security-institute-finds-standard-benchmarks-systematically-underestimate-what-ai-agents-can-actually-do/",
-    "https://www.aiacceleratorinstitute.com/how-to-control-ai-agents-before-they-control-you-2/",
     "https://www.latent.space/p/aiewf-daily-dispatch-locomotives",
     "https://www.apple.com/newsroom/2026/06/apple-creator-studio-gets-smarter-faster-and-more-connected/",
     "https://www.apple.com/newsroom/2026/05/detroits-rising-developers-are-supported-by-the-apple-developer-academy/",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2608.05371",
     "https://arxiv.org/abs/2608.05660",
     "https://arxiv.org/abs/2608.05702",
-    "https://www.wired.com/story/this-chatbot-is-just-a-random-guy-lol/"
+    "https://www.wired.com/story/this-chatbot-is-just-a-random-guy-lol/",
+    "https://simonwillison.net/2026/Aug/7/moonlight-mayhem/#atom-everything",
+    "https://aws.amazon.com/blogs/machine-learning/how-cohere-health-digitizes-clinical-policies-using-amazon-bedrock-agentcore/",
+    "https://aws.amazon.com/blogs/machine-learning/how-trends-automates-root-cause-analysis-with-amazon-bedrock/",
+    "https://huggingface.co/blog/allenai/tutormoments",
+    "https://the-decoder.com/openai-flags-its-new-astra-model-as-potentially-reaching-the-highest-cybersecurity-risk-level-for-the-first-time/",
+    "https://aws.amazon.com/blogs/machine-learning/determining-playoff-clinching-scenarios-in-the-nhl-using-constraint-programming/",
+    "https://openai.com/index/responding-next-frontier-critical-cyber-capabilities",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F3e36cdbf38d7e56d78e618ec9dd7f4171905599a"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -512,11 +512,10 @@
     "Strategy",
     "ChatTJB new Chatbot is just a guy"
   ],
-  "total_posts_curated": 801,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 802,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "open_source",
     "practitioner",
     "journalism",
@@ -525,10 +524,10 @@
     "academic",
     "research_lab",
     "research_lab",
-    "journalism"
+    "journalism",
+    "practitioner"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
@@ -537,7 +536,8 @@
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "PRACTICAL_WORKFLOW"
   ],
   "watch_topics": []
 }

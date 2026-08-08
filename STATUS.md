@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-08-07 | 🔍 Afternoon Deep Dive (Intercept) (ChatTJB new Chatbot is just a guy) |
+| **Broadcaster** | Operational | 2026-08-08 | 🚀 Morning Intelligence (General) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
