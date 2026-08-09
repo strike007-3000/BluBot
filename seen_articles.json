@@ -1,14 +1,5 @@
 {
   "links": [
-    "https://www.apple.com/newsroom/2026/05/cherokee-language-learners-bridge-generations-with-ipad-and-mac/",
-    "https://www.apple.com/newsroom/2026/05/after-the-whistle-with-brendan-hunt-and-rebecca-lowe-returns/",
-    "https://www.apple.com/newsroom/2026/05/apple-tv-to-air-first-major-live-pro-sports-event-shot-on-iphone-17-pro/",
-    "https://huggingface.co/blog/lerobot-release-v060",
-    "https://huggingface.co/blog/revamped-kernels",
-    "https://the-decoder.com/jadepuffer-is-the-first-agentic-ransomware-operation-and-it-exposes-old-security-sins-at-machine-speed/",
-    "https://www.marktechpost.com/2026/07/05/sakana-ai-launches-sakana-translate/",
-    "https://www.marktechpost.com/2026/07/05/training-gemma-3-for-structured-mathematical-reasoning-with-tunix-grpo-lora-adapters-and-gsm8k-rewards/",
-    "https://www.marktechpost.com/2026/07/05/meituan-releases-longcat-2-0-a-1-6t-parameter-open-moe-model-with-native-1m-context-and-longcat-sparse-attention/",
     "https://the-decoder.com/baidus-unlimited-ocr-processes-dozens-of-document-pages-in-one-pass-by-treating-memory-like-human-forgetting/",
     "https://www.apple.com/newsroom/2026/05/the-app-store-stopped-over-2-point-2-billion-usd-in-fraudulent-transactions-in-2025/",
     "https://huggingface.co/blog/Photoroom/prx-part4-data",
@@ -499,7 +490,16 @@
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F58766245fc08f235d8959f6e533e9bc7adbd223a",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F83192d1daccbcc0e22dfc5e5f4469b9afe0cca19",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F6830baae658edc0574998c77148c21a1e2e33118",
-    "https://www.servethehome.com/deltas-gocool-150-goes-big-to-enable-150kw-liquid-to-air-cooling-for-asrock-racks-vr-nvl72/"
+    "https://www.servethehome.com/deltas-gocool-150-goes-big-to-enable-150kw-liquid-to-air-cooling-for-asrock-racks-vr-nvl72/",
+    "https://simonwillison.net/2026/Aug/8/auto-mode/#atom-everything",
+    "https://the-decoder.com/anthropic-sets-claude-code-to-auto-mode-by-default-to-protect-developers-from-bad-approvals/",
+    "https://github.com/pytorch/pytorch/releases/tag/ciflow%2Fxpu%2F192490",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fbbcda55d6a3ef9bcc063f82991ac5ec6b133b294",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F85a3be7492910c09ba825d8127d9edf70c7b80bc",
+    "https://github.com/pytorch/pytorch/releases/tag/ciflow%2Fvllm%2F179400",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F9f8c31cf638329aa4e01c01896cbe5ee0f4f9230",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fe5309d9ebfe48d64c4552168baf4d433967cd3b1",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Feda033870f055bcfe2b219e70931459f389869f1"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -512,11 +512,10 @@
     "Strategy",
     "ChatTJB new Chatbot is just a guy"
   ],
-  "total_posts_curated": 803,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 804,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "practitioner",
     "journalism",
     "unknown",
     "practitioner",
@@ -525,10 +524,10 @@
     "research_lab",
     "journalism",
     "practitioner",
-    "journalism"
+    "journalism",
+    "practitioner"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
@@ -537,7 +536,8 @@
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "PRACTICAL_WORKFLOW"
   ],
   "watch_topics": []
 }
