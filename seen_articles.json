@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://the-decoder.com/baidus-unlimited-ocr-processes-dozens-of-document-pages-in-one-pass-by-treating-memory-like-human-forgetting/",
-    "https://www.apple.com/newsroom/2026/05/the-app-store-stopped-over-2-point-2-billion-usd-in-fraudulent-transactions-in-2025/",
-    "https://huggingface.co/blog/Photoroom/prx-part4-data",
-    "https://jack-clark.net/2026/07/06/import-ai-464-fables-writes-gpu-kernels-ai-automation-and-analog-computation/",
-    "https://machinelearningmastery.com/the-complete-guide-to-tool-selection-in-ai-agents/",
-    "https://spectrum.ieee.org/small-language-models-ai-pharmaceuticals",
-    "https://techcrunch.com/2026/07/06/microsoft-lays-off-nearly-5000-employees-across-xbox-commercial-sales/",
-    "https://www.aiacceleratorinstitute.com/shifting-your-integration-architecture/",
     "https://www.aiacceleratorinstitute.com/thanks-for-registering-3/",
     "https://techcrunch.com/2026/07/06/station-f-ramps-up-as-a-launchpad-for-europes-hottest-ai-startups/",
     "https://arxiv.org/abs/2607.02586",
@@ -499,7 +491,15 @@
     "https://github.com/pytorch/pytorch/releases/tag/ciflow%2Fvllm%2F179400",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F9f8c31cf638329aa4e01c01896cbe5ee0f4f9230",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fe5309d9ebfe48d64c4552168baf4d433967cd3b1",
-    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Feda033870f055bcfe2b219e70931459f389869f1"
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Feda033870f055bcfe2b219e70931459f389869f1",
+    "https://arxiv.org/abs/2608.06563",
+    "https://arxiv.org/abs/2608.06564",
+    "https://arxiv.org/abs/2608.06706",
+    "https://arxiv.org/abs/2608.06741",
+    "https://arxiv.org/abs/2608.06772",
+    "https://arxiv.org/abs/2608.06834",
+    "https://arxiv.org/abs/2608.07029",
+    "https://arxiv.org/abs/2608.07301"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -512,11 +512,10 @@
     "Strategy",
     "ChatTJB new Chatbot is just a guy"
   ],
-  "total_posts_curated": 804,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 805,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "unknown",
     "practitioner",
     "academic",
@@ -525,10 +524,10 @@
     "journalism",
     "practitioner",
     "journalism",
-    "practitioner"
+    "practitioner",
+    "academic"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
@@ -537,7 +536,8 @@
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "STRATEGIC_CONTRAST"
   ],
   "watch_topics": []
 }
