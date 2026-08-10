@@ -1,14 +1,5 @@
 {
   "links": [
-    "https://www.aiacceleratorinstitute.com/thanks-for-registering-3/",
-    "https://techcrunch.com/2026/07/06/station-f-ramps-up-as-a-launchpad-for-europes-hottest-ai-startups/",
-    "https://arxiv.org/abs/2607.02586",
-    "https://arxiv.org/abs/2607.02623",
-    "https://arxiv.org/abs/2607.02869",
-    "https://arxiv.org/abs/2607.02944",
-    "https://arxiv.org/abs/2607.03065",
-    "https://arxiv.org/abs/2607.03126",
-    "https://arxiv.org/abs/2607.03198",
     "https://arxiv.org/abs/2607.03426",
     "https://huggingface.co/blog/microsoft/foundry-managed-compute",
     "https://arxiv.org/abs/2607.03441",
@@ -499,7 +490,16 @@
     "https://arxiv.org/abs/2608.06772",
     "https://arxiv.org/abs/2608.06834",
     "https://arxiv.org/abs/2608.07029",
-    "https://arxiv.org/abs/2608.07301"
+    "https://arxiv.org/abs/2608.07301",
+    "https://openai.com/index/model-ml",
+    "https://huggingface.co/blog/muse-glimmer",
+    "https://github.com/huggingface/transformers/releases/tag/v5.15.0",
+    "https://openai.com/index/responsible-ai-infrastructure-texas",
+    "https://huggingface.co/blog/MultiverseComputingCAI/efficient-knowledge-distillation",
+    "https://the-decoder.com/openai-acquires-nextslide-to-bring-ai-generated-presentations-into-chatgpt/",
+    "https://techcrunch.com/2026/08/08/openai-acquires-presentation-startup-nextslide/",
+    "https://www.technologyreview.com/2026/08/10/1141384/ai-agents-for-science/",
+    "https://www.marktechpost.com/2026/08/09/bytedance-seed-introduces-seedrealtime-a-native-audio-visual-full-duplex-llm-that-watches-listens-and-speaks-in-one-model/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -512,11 +512,10 @@
     "Strategy",
     "ChatTJB new Chatbot is just a guy"
   ],
-  "total_posts_curated": 805,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 806,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "unknown",
     "practitioner",
     "academic",
     "research_lab",
@@ -525,10 +524,10 @@
     "practitioner",
     "journalism",
     "practitioner",
-    "academic"
+    "academic",
+    "research_lab"
   ],
   "recent_styles": [
-    "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
@@ -537,7 +536,8 @@
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "PRACTICAL_WORKFLOW",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "RISK_VERIFICATION"
   ],
   "watch_topics": []
 }
