@@ -510,13 +510,13 @@
     "spain wins FIFA World Cup 2026",
     "Hugging Face cyber attack by OpenAI",
     "Strategy",
-    "ChatTJB new Chatbot is just a guy"
+    "ChatTJB new Chatbot is just a guy",
+    "kyutai pocket TTS"
   ],
-  "total_posts_curated": 808,
+  "total_posts_curated": 809,
   "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "research_lab",
     "journalism",
     "practitioner",
@@ -525,10 +525,10 @@
     "academic",
     "research_lab",
     "research_lab",
-    "journalism"
+    "journalism",
+    "unknown"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
@@ -537,7 +537,8 @@
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "ENTERPRISE_ROI"
   ],
   "watch_topics": []
 }
