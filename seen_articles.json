@@ -1,14 +1,5 @@
 {
   "links": [
-    "https://the-decoder.com/openais-gpt-5-6-launches-thursday-after-a-delay-forced-by-the-u-s-government/",
-    "https://arxiv.org/abs/2607.05436",
-    "https://arxiv.org/abs/2607.05483",
-    "https://arxiv.org/abs/2607.05541",
-    "https://arxiv.org/abs/2607.05683",
-    "https://arxiv.org/abs/2607.06079",
-    "https://arxiv.org/abs/2607.05649",
-    "https://arxiv.org/abs/2607.05663",
-    "https://arxiv.org/abs/2607.05758",
     "https://arxiv.org/abs/2607.05861",
     "https://arxiv.org/abs/2607.06124",
     "https://arxiv.org/abs/2607.06150",
@@ -499,7 +490,16 @@
     "https://www.theverge.com/tech/977395/meta-mark-zuckerberg-superintelligent-ai-ramble",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F73db3ed028d1970636e20268f99f7727bc342772",
     "https://github.com/ollama/ollama/releases/tag/v0.32.8",
-    "https://aws.amazon.com/blogs/machine-learning/run-interactive-ides-on-amazon-eks-with-sagemaker-ai-to-power-up-your-ai-workflows/"
+    "https://aws.amazon.com/blogs/machine-learning/run-interactive-ides-on-amazon-eks-with-sagemaker-ai-to-power-up-your-ai-workflows/",
+    "https://the-decoder.com/openai-introduces-125-premium-seats-for-chatgpt-business-as-agentic-ai-burns-through-more-tokens/",
+    "https://openai.com/index/premium-seats-chatgpt-business",
+    "https://github.com/ollama/ollama/releases/tag/v0.32.9",
+    "https://the-decoder.com/anthropics-planned-mega-ipo-faces-investor-skepticism-over-chinese-rivals-and-political-headwinds/",
+    "https://huggingface.co/blog/ibm-research/altk-evolve-sldd",
+    "https://www.wired.com/story/a-new-trick-reveals-ai-models-inner-thoughts/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F884470b7e3b92dd5188ebe68b2b06831609f171f",
+    "https://github.com/vllm-project/vllm/releases/tag/v0.27.1",
+    "https://arxiv.org/abs/2608.07535"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -512,11 +512,10 @@
     "Strategy",
     "ChatTJB new Chatbot is just a guy"
   ],
-  "total_posts_curated": 807,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 808,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "academic",
     "research_lab",
     "research_lab",
     "journalism",
@@ -525,10 +524,10 @@
     "practitioner",
     "academic",
     "research_lab",
-    "research_lab"
+    "research_lab",
+    "journalism"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
@@ -537,7 +536,8 @@
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "STRATEGIC_CONTRAST"
   ],
   "watch_topics": []
 }
