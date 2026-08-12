@@ -1,15 +1,5 @@
 {
   "links": [
-    "https://www.marktechpost.com/2026/07/08/spacexai-releases-grok-4-5/",
-    "https://arxiv.org/abs/2607.06601",
-    "https://arxiv.org/abs/2607.06625",
-    "https://arxiv.org/abs/2607.06640",
-    "https://arxiv.org/abs/2607.06648",
-    "https://arxiv.org/abs/2607.06839",
-    "https://arxiv.org/abs/2607.06855",
-    "https://arxiv.org/abs/2607.06973",
-    "https://arxiv.org/abs/2607.06987",
-    "https://arxiv.org/abs/2607.07066",
     "https://arxiv.org/abs/2607.07103",
     "https://arxiv.org/abs/2607.07178",
     "https://openai.com/index/gpt-5-6-preferred-model-microsoft-365-copilot",
@@ -499,7 +489,17 @@
     "https://arxiv.org/abs/2608.10289",
     "https://arxiv.org/abs/2412.09486",
     "https://arxiv.org/abs/2608.10039",
-    "https://arxiv.org/abs/2608.10042"
+    "https://arxiv.org/abs/2608.10042",
+    "https://deepmind.google/blog/putting-sign-language-ai-into-users-hands/",
+    "https://openai.com/index/how-enterprises-put-ai-to-work",
+    "https://huggingface.co/blog/LiquidAI/lfm2-5-vl-3b",
+    "https://the-decoder.com/openai-launches-chatgpt-desktop-app-for-linux/",
+    "https://techcrunch.com/2026/08/11/openai-launches-chatgpt-desktop-app-for-linux/",
+    "https://machinelearningmastery.com/retrieval-vs-memory-in-agentic-ai-systems/",
+    "https://www.aiacceleratorinstitute.com/agentic-observability-virtual-summit/",
+    "https://www.aiacceleratorinstitute.com/data-infrastructure-summit-virtual-summit-may-2026/",
+    "https://aws.amazon.com/blogs/machine-learning/how-oneadvanced-deployed-over-50-ai-agents-on-uk-sovereign-aws/",
+    "https://aws.amazon.com/blogs/machine-learning/pay-with-confidence-how-solv-labs-built-verifiable-auditable-agent-payments-on-amazon-bedrock-agentcore-payments/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 810,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 811,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "practitioner",
     "journalism",
     "practitioner",
@@ -526,10 +525,10 @@
     "research_lab",
     "journalism",
     "unknown",
-    "enterprise"
+    "enterprise",
+    "research_lab"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "PRACTICAL_WORKFLOW",
@@ -538,7 +537,8 @@
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "RISK_VERIFICATION"
   ],
   "watch_topics": []
 }
