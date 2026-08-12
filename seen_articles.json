@@ -1,16 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.05861",
-    "https://arxiv.org/abs/2607.06124",
-    "https://arxiv.org/abs/2607.06150",
-    "https://arxiv.org/abs/2607.06484",
-    "https://arxiv.org/abs/2311.07461",
-    "https://arxiv.org/abs/2502.15631",
-    "https://arxiv.org/abs/2510.16165",
-    "https://blogs.nvidia.com/blog/nemotron-langchain-agents-open-stack/",
-    "https://openai.com/index/separating-signal-from-noise-coding-evaluations",
-    "https://www.latent.space/p/ainews-spacexai-launches-grok-45",
-    "https://the-decoder.com/grok-4-5-is-so-cheap-compared-to-fable-5-and-gpt-5-5-that-benchmark-gaps-may-not-matter-much/",
     "https://www.marktechpost.com/2026/07/08/spacexai-releases-grok-4-5/",
     "https://arxiv.org/abs/2607.06601",
     "https://arxiv.org/abs/2607.06625",
@@ -499,7 +488,18 @@
     "https://www.wired.com/story/a-new-trick-reveals-ai-models-inner-thoughts/",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F884470b7e3b92dd5188ebe68b2b06831609f171f",
     "https://github.com/vllm-project/vllm/releases/tag/v0.27.1",
-    "https://arxiv.org/abs/2608.07535"
+    "https://arxiv.org/abs/2608.07535",
+    "https://aws.amazon.com/blogs/machine-learning/accelerate-cyber-defense-with-openai-and-aws-daybreak-red-daybreak-blue-now-available-to-eligible-customers-on-amazon-bedrock/",
+    "https://openai.com/index/daybreak-models-are-now-available-on-aws",
+    "https://www.latent.space/p/ainews-how-to-steal-a-reasoning-trace",
+    "https://www.microsoft.com/en-us/research/blog/introducing-care-x-towards-clinically-useful-radiology-vlms-with-auxiliary-supervision-reward-aligned-learning-and-tool-augmented-measurement/",
+    "https://simonwillison.net/2026/Aug/11/stealing-reasoning-traces/#atom-everything",
+    "https://www.marktechpost.com/2026/08/11/nvidia-ai-releases-nemotron-3-5-lightning-and-nemo-switchyard/",
+    "https://arxiv.org/abs/2608.10007",
+    "https://arxiv.org/abs/2608.10289",
+    "https://arxiv.org/abs/2412.09486",
+    "https://arxiv.org/abs/2608.10039",
+    "https://arxiv.org/abs/2608.10042"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 809,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 810,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "journalism",
     "practitioner",
     "journalism",
@@ -526,10 +525,10 @@
     "research_lab",
     "research_lab",
     "journalism",
-    "unknown"
+    "unknown",
+    "enterprise"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
     "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
@@ -538,7 +537,8 @@
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "PRACTICAL_WORKFLOW"
   ],
   "watch_topics": []
 }
