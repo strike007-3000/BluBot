@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.07951",
-    "https://arxiv.org/abs/2607.08056",
-    "https://arxiv.org/abs/2607.08059",
-    "https://arxiv.org/abs/2607.08312",
-    "https://arxiv.org/abs/2607.08331",
-    "https://arxiv.org/abs/2607.08373",
-    "https://arxiv.org/abs/2607.08522",
-    "https://the-decoder.com/openais-gpt-5-6-sol-autonomously-post-trained-the-smaller-luna-model-with-a-fairly-underspecified-prompt/",
     "https://the-decoder.com/openai-staffer-maps-out-which-of-gpt-5-6-sols-five-reasoning-levels-fits-which-task-complexity/",
     "https://www.latent.space/p/ainews-not-much-happened-today-f5c",
     "https://the-decoder.com/gpt-5-6-sol-nearly-matches-fable-5-on-aggregated-benchmarks-at-one-third-the-cost/",
@@ -499,7 +491,15 @@
     "https://semiengineering.com/what-self-verifying-means-in-agentic-eda-workflows-and-why-it-matters/",
     "https://semiengineering.com/from-tokens-to-tasks-why-agentic-ai-changes-the-infrastructure-conversation/",
     "https://siliconangle.com/2026/08/12/vibe-coding-startup-lovable-doubles-valuation-13-3b-400m-raise/",
-    "https://techcrunch.com/2026/08/12/lovable-confirms-new-13-3b-valuation-raises-another-400m/"
+    "https://techcrunch.com/2026/08/12/lovable-confirms-new-13-3b-valuation-raises-another-400m/",
+    "https://www.aiacceleratorinstitute.com/nobody-wants-another-chatbot-7-interface-architectures-worth-building/",
+    "https://arxiv.org/abs/2608.11327",
+    "https://arxiv.org/abs/2608.11375",
+    "https://arxiv.org/abs/2608.11423",
+    "https://arxiv.org/abs/2608.11691",
+    "https://arxiv.org/abs/2608.11785",
+    "https://arxiv.org/abs/2608.11790",
+    "https://arxiv.org/abs/2608.11829"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 812,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 813,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "practitioner",
     "academic",
     "research_lab",
@@ -526,10 +525,10 @@
     "unknown",
     "enterprise",
     "research_lab",
+    "journalism",
     "journalism"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
@@ -538,7 +537,8 @@
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "STRATEGIC_CONTRAST"
   ],
   "watch_topics": []
 }
