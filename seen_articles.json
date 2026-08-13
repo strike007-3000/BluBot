@@ -1,16 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.07103",
-    "https://arxiv.org/abs/2607.07178",
-    "https://openai.com/index/gpt-5-6-preferred-model-microsoft-365-copilot",
-    "https://openai.com/index/gpt-5-6",
-    "https://openai.com/index/bio-bug-bounty",
-    "https://openai.com/index/deutsche-telekom",
-    "https://huggingface.co/blog/torch-attention-profile",
-    "https://arxiv.org/abs/2607.07740",
-    "https://arxiv.org/abs/2607.07748",
-    "https://arxiv.org/abs/2607.07763",
-    "https://arxiv.org/abs/2607.07907",
     "https://arxiv.org/abs/2607.07951",
     "https://arxiv.org/abs/2607.08056",
     "https://arxiv.org/abs/2607.08059",
@@ -499,7 +488,18 @@
     "https://www.aiacceleratorinstitute.com/agentic-observability-virtual-summit/",
     "https://www.aiacceleratorinstitute.com/data-infrastructure-summit-virtual-summit-may-2026/",
     "https://aws.amazon.com/blogs/machine-learning/how-oneadvanced-deployed-over-50-ai-agents-on-uk-sovereign-aws/",
-    "https://aws.amazon.com/blogs/machine-learning/pay-with-confidence-how-solv-labs-built-verifiable-auditable-agent-payments-on-amazon-bedrock-agentcore-payments/"
+    "https://aws.amazon.com/blogs/machine-learning/pay-with-confidence-how-solv-labs-built-verifiable-auditable-agent-payments-on-amazon-bedrock-agentcore-payments/",
+    "https://siliconangle.com/2026/08/12/spacexai-releases-flagship-grok-4-6-model-advanced-reasoning-capabilities/",
+    "https://www.latent.space/p/ainews-spacexai-grok-46-and-grok",
+    "https://the-decoder.com/spacexais-grok-4-6-matches-openais-best-model-and-undercuts-it-on-price/",
+    "https://huggingface.co/blog/allenai/olmoearth-embeddings",
+    "https://www.microsoft.com/en-us/research/blog/mindtopo-reveals-vlms-spatial-reasoning-abilities/",
+    "https://simonwillison.net/2026/Aug/12/deepseek-v4-pro-0813/",
+    "https://semiengineering.com/ddr5-9600-rdimms-raising-the-performance-benchmark-for-server-memory/",
+    "https://semiengineering.com/what-self-verifying-means-in-agentic-eda-workflows-and-why-it-matters/",
+    "https://semiengineering.com/from-tokens-to-tasks-why-agentic-ai-changes-the-infrastructure-conversation/",
+    "https://siliconangle.com/2026/08/12/vibe-coding-startup-lovable-doubles-valuation-13-3b-400m-raise/",
+    "https://techcrunch.com/2026/08/12/lovable-confirms-new-13-3b-valuation-raises-another-400m/"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 811,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 812,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "practitioner",
     "journalism",
     "practitioner",
     "academic",
@@ -526,10 +525,10 @@
     "journalism",
     "unknown",
     "enterprise",
-    "research_lab"
+    "research_lab",
+    "journalism"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "QUESTION_FIRST",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
@@ -538,7 +537,8 @@
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "QUESTION_FIRST"
   ],
   "watch_topics": []
 }
