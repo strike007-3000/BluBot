@@ -1,15 +1,5 @@
 {
   "links": [
-    "https://the-decoder.com/openai-staffer-maps-out-which-of-gpt-5-6-sols-five-reasoning-levels-fits-which-task-complexity/",
-    "https://www.latent.space/p/ainews-not-much-happened-today-f5c",
-    "https://the-decoder.com/gpt-5-6-sol-nearly-matches-fable-5-on-aggregated-benchmarks-at-one-third-the-cost/",
-    "https://www.microsoft.com/en-us/research/blog/aurora-1-5-extending-open-foundation-models-for-weather-and-earth-system-applications/",
-    "https://machinelearningmastery.com/choosing-the-right-ai-agent-memory-strategy-a-decision-tree-approach/",
-    "https://openai.com/index/chatgpt-for-your-most-ambitious-work",
-    "https://techcrunch.com/podcast/open-source-ai-matters-more-than-ever-according-to-hugging-faces-clem-delangue/",
-    "https://the-decoder.com/ai-agents-win-at-slay-the-spire-2-after-researchers-replace-growing-chat-logs-with-structured-memory/",
-    "https://the-decoder.com/openais-gpt-5-6-sol-ultra-reportedly-solves-a-50-year-old-math-problem-in-under-an-hour/",
-    "https://the-decoder.com/chinas-orca-world-model-matches-specialized-robotics-systems-without-ever-seeing-a-single-action-label/",
     "https://www.apple.com/newsroom/2026/07/apple-and-major-league-baseball-announce-august-friday-night-baseball-schedule/",
     "https://www.apple.com/newsroom/2026/07/apple-scores-record-89-emmy-award-nominations/",
     "https://www.apple.com/newsroom/2026/07/apple-to-increase-spend-with-broadcom-to-produce-billions-more-us-chips/",
@@ -499,7 +489,17 @@
     "https://arxiv.org/abs/2608.11691",
     "https://arxiv.org/abs/2608.11785",
     "https://arxiv.org/abs/2608.11790",
-    "https://arxiv.org/abs/2608.11829"
+    "https://arxiv.org/abs/2608.11829",
+    "https://deepmind.google/blog/introducing-gemini-3-7-flash/",
+    "https://www.latent.space/p/ainews-gemini-37-flash-brings-gdm",
+    "https://openai.com/index/previewing-ultrafast",
+    "https://techcrunch.com/2026/08/13/openai-introduces-ultrafast-a-new-mode-that-makes-gpt-5-6-sol-work-at-14x-the-speed/",
+    "https://github.com/ollama/ollama/releases/tag/v0.32.11",
+    "https://the-decoder.com/gemini-3-7-flash-lands-with-coding-gains-and-undercuts-its-three-week-old-predecessors-price-by-50/",
+    "https://simonwillison.net/2026/Aug/13/llm-gemini/",
+    "https://www.cbinsights.com/research/newsletter-august-13-2026/",
+    "https://huggingface.co/blog/amazon/strands-lerobot-streaming-data-loop",
+    "https://arxiv.org/abs/2608.12419"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 813,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 814,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "practitioner",
     "academic",
     "research_lab",
     "research_lab",
@@ -526,10 +525,10 @@
     "enterprise",
     "research_lab",
     "journalism",
-    "journalism"
+    "journalism",
+    "research_lab"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
@@ -538,7 +537,8 @@
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "RISK_VERIFICATION"
   ],
   "watch_topics": []
 }
