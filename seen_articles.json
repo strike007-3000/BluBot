@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://www.apple.com/newsroom/2026/07/apple-and-major-league-baseball-announce-august-friday-night-baseball-schedule/",
-    "https://www.apple.com/newsroom/2026/07/apple-scores-record-89-emmy-award-nominations/",
-    "https://www.apple.com/newsroom/2026/07/apple-to-increase-spend-with-broadcom-to-produce-billions-more-us-chips/",
-    "https://www.apple.com/newsroom/2026/06/apple-and-major-league-baseball-announce-july-friday-night-baseball-schedule/",
-    "https://www.apple.com/newsroom/2026/06/mini-football-legends-family-feud-pocket-and-seven-more-hits-join-apple-arcade/",
-    "https://arxiv.org/abs/2607.08778",
-    "https://arxiv.org/abs/2607.08780",
-    "https://arxiv.org/abs/2607.08782",
     "https://arxiv.org/abs/2607.08784",
     "https://arxiv.org/abs/2607.08940",
     "https://arxiv.org/abs/2607.08960",
@@ -499,7 +491,15 @@
     "https://simonwillison.net/2026/Aug/13/llm-gemini/",
     "https://www.cbinsights.com/research/newsletter-august-13-2026/",
     "https://huggingface.co/blog/amazon/strands-lerobot-streaming-data-loop",
-    "https://arxiv.org/abs/2608.12419"
+    "https://arxiv.org/abs/2608.12419",
+    "https://www.marktechpost.com/2026/08/13/google-ai-just-released-gemini-3-7-flash/",
+    "https://www.marktechpost.com/2026/08/12/spacexai-releases-grok-4-6/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F65366750d9c5be0f451caef1ef3795b1ce1e73de",
+    "https://the-decoder.com/zhipu-ai-releases-glm-5-3-claims-its-the-strongest-open-weights-coding-model/",
+    "https://arxiv.org/abs/2608.12436",
+    "https://arxiv.org/abs/2608.12489",
+    "https://arxiv.org/abs/2608.12564",
+    "https://arxiv.org/abs/2608.12805"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 814,
-  "last_dialect": "SAGE",
+  "total_posts_curated": 815,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "academic",
     "research_lab",
     "research_lab",
     "journalism",
@@ -526,10 +525,10 @@
     "research_lab",
     "journalism",
     "journalism",
-    "research_lab"
+    "research_lab",
+    "journalism"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
@@ -538,7 +537,8 @@
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "QUESTION_FIRST"
   ],
   "watch_topics": []
 }
