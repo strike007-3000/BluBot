@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.08784",
-    "https://arxiv.org/abs/2607.08940",
-    "https://arxiv.org/abs/2607.08960",
-    "https://arxiv.org/abs/2607.09084",
-    "https://arxiv.org/abs/2607.09232",
-    "https://arxiv.org/abs/2607.09236",
-    "https://arxiv.org/abs/2607.09375",
-    "https://arxiv.org/abs/2607.09404",
     "https://arxiv.org/abs/2607.09456",
     "https://arxiv.org/abs/2607.09528",
     "https://arxiv.org/abs/2607.08681",
@@ -499,7 +491,15 @@
     "https://arxiv.org/abs/2608.12436",
     "https://arxiv.org/abs/2608.12489",
     "https://arxiv.org/abs/2608.12564",
-    "https://arxiv.org/abs/2608.12805"
+    "https://arxiv.org/abs/2608.12805",
+    "https://github.com/ollama/ollama/releases/tag/v0.32.12",
+    "https://aws.amazon.com/blogs/machine-learning/building-agentic-workflows-with-sagemaker-ai-and-bedrock-agentcore/",
+    "https://simonwillison.net/2026/Aug/15/sighting-391300422/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F53126a784b3327da0a681a42d1613420967af2a2",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F77b2f6092b1254dc9bbbf5e827c881063907ee42",
+    "https://aws.amazon.com/blogs/machine-learning/custom-reward-functions-for-multi-turn-reinforcement-learning-with-amazon-nova-forge/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F9d4b247751531438d45ca34f6a994268a51d8bce",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F159a07dd4b7e3b234926fb6aaee8a0784b63bc67"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 815,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 816,
+  "last_dialect": "PHILOSOPHICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "research_lab",
     "journalism",
     "unknown",
@@ -526,10 +525,10 @@
     "journalism",
     "journalism",
     "research_lab",
-    "journalism"
+    "journalism",
+    "open_source"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
@@ -538,7 +537,8 @@
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "PRACTICAL_WORKFLOW"
   ],
   "watch_topics": []
 }
