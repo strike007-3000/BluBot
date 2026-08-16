@@ -1,14 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.09456",
-    "https://arxiv.org/abs/2607.09528",
-    "https://arxiv.org/abs/2607.08681",
-    "https://arxiv.org/abs/2607.08775",
-    "https://arxiv.org/abs/2607.08894",
-    "https://arxiv.org/abs/2607.09682",
-    "https://arxiv.org/abs/2607.09686",
-    "https://arxiv.org/abs/2607.09693",
-    "https://arxiv.org/abs/2607.09704",
     "https://arxiv.org/abs/2607.09711",
     "https://arxiv.org/abs/2607.09982",
     "https://arxiv.org/abs/2607.10128",
@@ -499,7 +490,16 @@
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F77b2f6092b1254dc9bbbf5e827c881063907ee42",
     "https://aws.amazon.com/blogs/machine-learning/custom-reward-functions-for-multi-turn-reinforcement-learning-with-amazon-nova-forge/",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F9d4b247751531438d45ca34f6a994268a51d8bce",
-    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F159a07dd4b7e3b234926fb6aaee8a0784b63bc67"
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F159a07dd4b7e3b234926fb6aaee8a0784b63bc67",
+    "https://the-decoder.com/optima-tackles-ai-benchmarkings-biggest-flaw-by-letting-users-test-models-against-their-own-data/",
+    "https://techcrunch.com/2026/08/15/woman-claims-her-stepfather-used-grok-to-transform-childhood-photo-into-explicit-imagery/",
+    "https://www.washingtonpost.com/technology/2026/08/15/woman-alleges-grok-made-thousands-sexual-abuse-images-childhood-snap/",
+    "https://www.latent.space/p/flue-2",
+    "https://simonwillison.net/2026/Aug/15/cors-chat/",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F8f988c9c6b3586efbc00a981d9d8cac11f26bcdb",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2F35b14a9f2e0ea67680929967f505f6a723cb3381",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fe376a2f789afb49286006eb6562c34eda2d08664",
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fd09ac90eb44775245c96dd9668de96da9044fd5f"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 816,
-  "last_dialect": "PHILOSOPHICAL",
+  "total_posts_curated": 817,
+  "last_dialect": "CONCISE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "journalism",
     "unknown",
     "enterprise",
@@ -526,10 +525,10 @@
     "journalism",
     "research_lab",
     "journalism",
-    "open_source"
+    "open_source",
+    "journalism"
   ],
   "recent_styles": [
-    "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
@@ -538,7 +537,8 @@
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
-    "PRACTICAL_WORKFLOW"
+    "PRACTICAL_WORKFLOW",
+    "STRATEGIC_CONTRAST"
   ],
   "watch_topics": []
 }
