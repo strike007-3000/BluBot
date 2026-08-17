@@ -1,14 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.10203",
-    "https://arxiv.org/abs/2607.10362",
-    "https://arxiv.org/abs/2607.10481",
-    "https://arxiv.org/abs/2607.10582",
-    "https://huggingface.co/blog/kv-cache-quantization",
-    "https://aws.amazon.com/blogs/machine-learning/multi-agent-social-intelligence-with-strands-agents-and-amazon-bedrock/",
-    "https://aws.amazon.com/blogs/machine-learning/accelerating-software-delivery-with-agentic-qa-automation-using-amazon-nova-act-part-2/",
-    "https://openai.com/index/managing-ai-investments-in-agentic-era",
-    "https://aws.amazon.com/blogs/machine-learning/openai-gpt-5-6-sol-terra-and-luna-are-now-generally-available-on-amazon-bedrock/",
     "https://techcrunch.com/2026/07/14/openai-researcher-miles-wang-in-talks-to-launch-ai-drug-discovery-startup-valued-at-2b/",
     "https://arxiv.org/abs/2607.11928",
     "https://arxiv.org/abs/2607.11964",
@@ -499,7 +490,16 @@
     "https://arxiv.org/abs/2608.13799",
     "https://arxiv.org/abs/2608.13911",
     "https://arxiv.org/abs/2608.14114",
-    "https://arxiv.org/abs/2608.14198"
+    "https://arxiv.org/abs/2608.14198",
+    "https://the-decoder.com/ai-video-market-has-bounced-back-from-soras-false-start/",
+    "https://openai.com/index/the-defenders-window",
+    "https://openai.com/index/openai-joins-ports-pike-project",
+    "https://openai.com/index/new-policy-ideas-for-the-intelligence-age",
+    "https://www.theverge.com/ai-artificial-intelligence/980869/anthropic-claude-watermarks-synthid-text-system",
+    "https://techcrunch.com/2026/08/15/anthropic-shares-more-details-about-how-claudes-new-watermarks-will-work/",
+    "https://arxiv.org/abs/2608.14228",
+    "https://arxiv.org/abs/2608.14385",
+    "https://arxiv.org/abs/2608.14420"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 818,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 819,
+  "last_dialect": "ANALYTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "unknown",
     "enterprise",
     "research_lab",
     "journalism",
@@ -526,10 +525,10 @@
     "journalism",
     "open_source",
     "journalism",
-    "practitioner"
+    "practitioner",
+    "journalism"
   ],
   "recent_styles": [
-    "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
@@ -538,7 +537,8 @@
     "QUESTION_FIRST",
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
-    "QUESTION_FIRST"
+    "QUESTION_FIRST",
+    "RISK_VERIFICATION"
   ],
   "watch_topics": []
 }
