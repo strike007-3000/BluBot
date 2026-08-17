@@ -1,13 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.09711",
-    "https://arxiv.org/abs/2607.09982",
-    "https://arxiv.org/abs/2607.10128",
-    "https://arxiv.org/abs/2607.10139",
-    "https://openai.com/academy/codex-for-work/how-sales-teams-use-codex",
-    "https://openai.com/academy/codex-for-work/how-data-science-teams-use-codex",
-    "https://arxiv.org/abs/2607.10169",
-    "https://arxiv.org/abs/2607.10190",
     "https://arxiv.org/abs/2607.10203",
     "https://arxiv.org/abs/2607.10362",
     "https://arxiv.org/abs/2607.10481",
@@ -499,7 +491,15 @@
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F8f988c9c6b3586efbc00a981d9d8cac11f26bcdb",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2F35b14a9f2e0ea67680929967f505f6a723cb3381",
     "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fe376a2f789afb49286006eb6562c34eda2d08664",
-    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fd09ac90eb44775245c96dd9668de96da9044fd5f"
+    "https://github.com/pytorch/pytorch/releases/tag/trunk%2Fd09ac90eb44775245c96dd9668de96da9044fd5f",
+    "https://simonwillison.net/2026/Aug/16/qwen-38-27b/",
+    "https://arxiv.org/abs/2608.13566",
+    "https://arxiv.org/abs/2608.13721",
+    "https://arxiv.org/abs/2608.13790",
+    "https://arxiv.org/abs/2608.13799",
+    "https://arxiv.org/abs/2608.13911",
+    "https://arxiv.org/abs/2608.14114",
+    "https://arxiv.org/abs/2608.14198"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 817,
-  "last_dialect": "CONCISE",
+  "total_posts_curated": 818,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "journalism",
     "unknown",
     "enterprise",
     "research_lab",
@@ -526,10 +525,10 @@
     "research_lab",
     "journalism",
     "open_source",
-    "journalism"
+    "journalism",
+    "practitioner"
   ],
   "recent_styles": [
-    "STRATEGIC_CONTRAST",
     "ENTERPRISE_ROI",
     "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
@@ -538,7 +537,8 @@
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "PRACTICAL_WORKFLOW",
-    "STRATEGIC_CONTRAST"
+    "STRATEGIC_CONTRAST",
+    "QUESTION_FIRST"
   ],
   "watch_topics": []
 }
