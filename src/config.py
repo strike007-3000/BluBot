@@ -52,11 +52,13 @@ NVIDIA_MODEL_ID = "stabilityai/stable-diffusion-3-medium"
 NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-3-medium"
 
 GEMINI_MODEL_PRIORITY = [
+    "models/gemini-2.5-flash-lite",
+    "models/gemini-2.5-flash",
+    "models/gemini-2.5-pro",
     "models/gemini-3.1-flash-lite-preview",
     "models/gemma-4-31b-it",
     "models/gemma-4-26b-a4b-it",
     "models/gemma-3-27b-it",
-    "models/gemini-2.5-flash-lite",
 ]
 BLUESKY_LIMIT = 300
 MASTODON_LIMIT = 500
