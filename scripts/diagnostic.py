@@ -258,9 +258,22 @@ async def test_gist_diagnostics():
     print(f"DIAGNOSTIC: GIST PERSISTENCE TEST")
     print(f"{'='*20}")
 
-    if not settings.gist_id or not settings.gist_token:
-        print("❌ Gist Status: Gist not configured (GIST_ID or GIST_TOKEN missing).")
+    gist_id = settings.gist_id
+    gist_token = settings.gist_token
+
+    if not gist_id or not gist_token:
+        print("⚠️ GIST_ID or GIST_TOKEN not found in environment.")
+        if not gist_id:
+            gist_id = input("Enter GIST_ID: ").strip()
+        if not gist_token:
+            gist_token = input("Enter GIST_TOKEN (GitHub PAT): ").strip()
+
+    if not gist_id or not gist_token:
+        print("❌ Gist Status: Gist credentials not provided.")
         return
+
+    object.__setattr__(settings, "gist_id", gist_id)
+    object.__setattr__(settings, "gist_token", gist_token)
 
     print("✅ Gist Status: Configured.")
     print("Testing read access on production state file (seen_articles.json)...")
