@@ -532,7 +532,13 @@ def save_seen_articles(data: dict, is_reservation: bool = False) -> Tuple[bool, 
         gist_success = True
         if settings.gist_id and settings.gist_token:
             gist_success = _save_gist_state("seen_articles.json", state)
-            if not gist_success:
+            if gist_success:
+                state["unsynced_gist"] = False
+                if is_reservation:
+                    SafeLogger.info(f"Authoritative Gist pending reservation saved (revision {state['revision']}).")
+                else:
+                    SafeLogger.info(f"Authoritative Gist settlement saved (revision {state['revision']}).")
+            else:
                 SafeLogger.error("Failed to push state to GitHub Gist.")
 
         if is_reservation and settings.gist_id and settings.gist_token and not gist_success:
