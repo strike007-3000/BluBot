@@ -288,19 +288,145 @@ def _merge_publication_states(state1: dict, state2: dict) -> dict:
 
     return merged
 
+_FP_STOPWORDS = {
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with",
+    "by", "from", "up", "about", "into", "over", "after", "is", "are", "was", "were",
+    "be", "been", "being", "have", "has", "had", "do", "does", "did", "new", "how",
+    "why", "what", "via", "says", "said", "using", "first"
+}
+
+_FP_PUBLISHER_SUFFIX_RE = re.compile(r'\s+[\-\|\:\•]\s+([A-Za-z0-9\s]+)$')
+_FP_VERSION_RE = re.compile(r'\b(v?\d+(?:\.\d+)+[a-z]?)\b', re.IGNORECASE)
+
+def compute_story_fingerprint(title: str) -> str:
+    """
+    Computes a normalized semantic story fingerprint from a headline.
+    Strips publisher suffixes, non-version numbers (prices, dates), and stopwords,
+    preserving version tokens (e.g., v3.7, v3.6) for version boundary checks.
+    """
+    if not title or not isinstance(title, str):
+        return ""
+
+    cleaned = title.strip()
+    match = _FP_PUBLISHER_SUFFIX_RE.search(cleaned)
+    if match:
+        cleaned = cleaned[:match.start()].strip()
+
+    versions = set()
+    for v in _FP_VERSION_RE.findall(cleaned):
+        v_norm = v.lower()
+        if not v_norm.startswith('v'):
+            v_norm = f"v{v_norm}"
+        versions.add(v_norm)
+
+    words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
+    tokens = set()
+    for w in words:
+        w_clean = w.strip(".-")
+        if not w_clean or w_clean in _FP_STOPWORDS or len(w_clean) < 2:
+            continue
+
+        if _FP_VERSION_RE.match(w_clean):
+            v_norm = w_clean.lower()
+            if not v_norm.startswith('v'):
+                v_norm = f"v{v_norm}"
+            tokens.add(v_norm)
+            continue
+
+        if re.match(r'^\d+(\.\d+)?$', w_clean):
+            continue
+
+        tokens.add(w_clean)
+
+    tokens.update(versions)
+    return " ".join(sorted(tokens))
+
+def are_story_fingerprints_similar(fp1: str, fp2: str) -> bool:
+    """
+    Compares two story fingerprints conservatively.
+    Enforces strict version boundary matching: if version tokens (e.g. v3.6 vs v3.7) differ, returns False.
+    Returns True if Jaccard similarity >= 0.45 or 3+ tokens match.
+    """
+    if not fp1 or not fp2:
+        return False
+
+    t1 = set(fp1.split())
+    t2 = set(fp2.split())
+
+    if len(t1) < 2 or len(t2) < 2:
+        return False
+
+    v1 = {t for t in t1 if t.startswith('v') and re.match(r'^v\d+(\.\d+)+', t)}
+    v2 = {t for t in t2 if t.startswith('v') and re.match(r'^v\d+(\.\d+)+', t)}
+
+    if v1 and v2 and v1 != v2:
+        return False
+
+    intersection = t1 & t2
+    union = t1 | t2
+    if not union:
+        return False
+
+    jaccard = len(intersection) / len(union)
+    return jaccard >= 0.45 or len(intersection) >= 3
+
+def is_story_semantic_duplicate(title: str, state: dict) -> bool:
+    """Checks if candidate title is semantically equivalent to any story in state."""
+    if not title or not isinstance(title, str):
+        return False
+
+    candidate_fp = compute_story_fingerprint(title)
+    if not candidate_fp:
+        return False
+
+    for st in state.get("recent_stories", []):
+        if isinstance(st, dict):
+            st_title = st.get("title", "")
+            st_fp = st.get("fingerprint") or compute_story_fingerprint(st_title)
+            if st_fp and (st_fp == candidate_fp or are_story_fingerprints_similar(candidate_fp, st_fp)):
+                return True
+
+    for ps in state.get("pending_stories", []):
+        if isinstance(ps, dict):
+            ps_title = ps.get("title", "")
+            ps_fp = ps.get("fingerprint") or compute_story_fingerprint(ps_title)
+            if ps_fp and (ps_fp == candidate_fp or are_story_fingerprints_similar(candidate_fp, ps_fp)):
+                return True
+
+    return False
+
 def filter_and_update_pending_stories(state: dict, now_utc: Optional[datetime] = None) -> Set[str]:
     """
     Transitions pending stories older than 24 hours to 'uncertain' stage.
+    Prunes recent_stories older than 14 days and caps recent_stories/links at 500 entries.
     Returns a set of canonical URLs for all active 'pending', 'uncertain', and 'published' stories.
     """
     if now_utc is None:
         now_utc = datetime.now(timezone.utc)
 
     seen_urls = set()
-    
+    cutoff_14d = now_utc - timedelta(days=14)
+
+    fresh_recent = []
     for st in state.get("recent_stories", []):
         if isinstance(st, dict) and st.get("url"):
-            seen_urls.add(normalize_url(st["url"]))
+            pub_at_str = st.get("published_at")
+            keep = True
+            if pub_at_str:
+                try:
+                    pub_dt = datetime.fromisoformat(pub_at_str)
+                    if pub_dt < cutoff_14d:
+                        keep = False
+                except Exception:
+                    pass
+            if keep:
+                fresh_recent.append(st)
+                seen_urls.add(normalize_url(st["url"]))
+
+    state["recent_stories"] = fresh_recent[-500:]
+
+    if isinstance(state.get("links"), list):
+        state["links"] = state["links"][-500:]
 
     pending_list = state.get("pending_stories", [])
     for ps in pending_list:
