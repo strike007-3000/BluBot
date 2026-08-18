@@ -65,6 +65,31 @@ def test_validate_gemini_model_priority_pruning(monkeypatch):
     GEMINI_MODEL_PRIORITY.clear()
     GEMINI_MODEL_PRIORITY.extend(original_priority)
 
+def test_exact_gemini_model_priority_order():
+    """Verify GEMINI_MODEL_PRIORITY matches the exact approved list and excludes preview endpoints."""
+    from src.config import GEMINI_MODEL_PRIORITY
+
+    expected_priority = [
+        "models/gemini-3.7-flash",
+        "models/gemini-3.5-flash-lite",
+        "models/gemini-3.6-flash",
+        "models/gemini-3.1-flash-lite",
+        "models/gemma-4-31b-it",
+        "models/gemma-4-26b-a4b-it",
+        "models/gemma-3-27b-it",
+        "models/gemini-2.5-flash-lite",
+    ]
+
+    assert GEMINI_MODEL_PRIORITY == expected_priority
+
+    unapproved = [
+        "models/gemini-3.1-flash-lite-preview",
+        "models/gemini-2.5-flash",
+        "models/gemini-2.5-pro"
+    ]
+    for model in unapproved:
+        assert model not in GEMINI_MODEL_PRIORITY
+
 def test_get_version(tmp_path):
     from src.config import get_version
     import src.config
