@@ -1,16 +1,5 @@
 {
   "links": [
-    "https://techcrunch.com/2026/07/14/openai-researcher-miles-wang-in-talks-to-launch-ai-drug-discovery-startup-valued-at-2b/",
-    "https://arxiv.org/abs/2607.11928",
-    "https://arxiv.org/abs/2607.11964",
-    "https://arxiv.org/abs/2607.12067",
-    "https://huggingface.co/blog/real-world-voiceeq",
-    "https://simonwillison.net/2026/Jul/15/claude-web-fetch-exfiltration/#atom-everything",
-    "https://arxiv.org/abs/2607.12111",
-    "https://arxiv.org/abs/2607.12122",
-    "https://arxiv.org/abs/2607.12267",
-    "https://arxiv.org/abs/2607.12523",
-    "https://arxiv.org/abs/2607.12650",
     "https://arxiv.org/abs/2607.12771",
     "https://www.latent.space/p/ainews-thinkys-inkling-975b-a41b",
     "https://aws.amazon.com/blogs/machine-learning/agentic-vision-building-visual-intelligence-with-amazon-bedrock-and-mcp-servers/",
@@ -499,7 +488,18 @@
     "https://techcrunch.com/2026/08/15/anthropic-shares-more-details-about-how-claudes-new-watermarks-will-work/",
     "https://arxiv.org/abs/2608.14228",
     "https://arxiv.org/abs/2608.14385",
-    "https://arxiv.org/abs/2608.14420"
+    "https://arxiv.org/abs/2608.14420",
+    "https://aws.amazon.com/blogs/machine-learning/nvidia-nemotron-3-5-lightning-now-available-in-amazon-sagemaker-jumpstart/",
+    "https://aws.amazon.com/blogs/machine-learning/build-openclaw-agents-that-transact-with-amazon-bedrock-agentcore-payments/",
+    "https://www.together.ai/blog/deepseek-v4-pro-0813-vs-gpt-5-6-sol-on-deepswe-cost-coding-and-routing",
+    "https://www.latent.space/p/ainews-stripe-buys-openrouter-for",
+    "https://techcrunch.com/2026/08/16/stripe-will-reportedly-acquire-ai-gateway-startup-openrouter-for-7b/",
+    "https://simonwillison.net/2026/Aug/17/we-tracked-a-shipment-of-rare-books-it-ended-at-an-amazon-ai-tra/",
+    "https://the-decoder.com/airtag-reveals-how-amazon-destroys-rare-books-for-ai-training/",
+    "https://www.404media.co/we-tracked-a-shipment-of-rare-books-it-ended-at-an-amazon-ai-training-facility/",
+    "https://huggingface.co/blog/Dharma-AI/gpu-management-pt2",
+    "https://arxiv.org/abs/2608.14563",
+    "https://arxiv.org/abs/2608.14620"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 819,
-  "last_dialect": "ANALYTICAL",
+  "total_posts_curated": 820,
+  "last_dialect": "PRACTICAL",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "enterprise",
     "research_lab",
     "journalism",
     "journalism",
@@ -526,10 +525,10 @@
     "open_source",
     "journalism",
     "practitioner",
-    "journalism"
+    "journalism",
+    "enterprise"
   ],
   "recent_styles": [
-    "PRACTICAL_WORKFLOW",
     "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
@@ -538,7 +537,8 @@
     "PRACTICAL_WORKFLOW",
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
-    "RISK_VERIFICATION"
+    "RISK_VERIFICATION",
+    "ENTERPRISE_ROI"
   ],
   "watch_topics": []
 }
