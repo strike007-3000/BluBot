@@ -26,11 +26,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Restore persistence state
-        run: |
-          git fetch origin automated/state || echo "automated/state branch not found"
-          git checkout origin/automated/state -- seen_articles.json || echo "seen_articles.json not found in state branch"
-
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
