@@ -123,37 +123,35 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🛡️ Resilience Architecture
 
-BluBot implements a **3-Tier State Persistence** system to ensure it never "forgets" which articles it has curated, even if local storage is wiped (e.g., in ephemeral CI environments).
+BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarantee state durability and prevent duplicate posts across ephemeral CI environments.
 
 ```
 [Load Sequence]
-(Start) ──► [Tier 1: Read seen_articles.json (FileLocked)] ──(Success)──► (Load Done)
+(Start) ──► [Check GIST_ID & GIST_TOKEN] ──(Configured)──► [Pull Remote Gist State]
+                  │                                                │
+           (Not Configured)                              (Revision Comparison)
+                  ▼                                                ▼
+     [Tier 1: Local primary file] ◄──────── (Local Revision > Gist) ┘
                   │
-               (Corrupt / Missing)
+          (Corrupt/Missing)
                   ▼
-            [Tier 2: Read seen_articles.json.bak] ──────────(Success)──► (Load Done)
+     [Tier 2: Local backup .bak]
                   │
-               (Corrupt / Missing)
+          (Corrupt/Missing)
                   ▼
-            [Tier 3: Pull GitHub Gist (GIST_ID)] ──────────(Success)──► (Load Done)
-                  │
-               (Missing Credentials / Fail)
-                  ▼
-            [Fallback: Empty Default State] ───────────────────────────► (Load Done)
+     [Fallback: Sanitized Schema v2 Default]
 
-[Save Sequence]
-(Save State) ──► [Rotate: seen_articles.json to .bak]
-                       ▼
-                 [Write: temporary file seen_articles.json.tmp]
-                       ▼
-                 [Atomic Rename: .tmp to seen_articles.json]
-                       ▼
-                 [Remote Gist Sync: PATCH seen_articles.json to Gist]
+[Two-Phase Broadcast Sequence]
+(Pre-Broadcast)  ──► Write Pending Story Reservation to Gist/Local State ──► Abort if Gist Write Fails
+(Broadcast)      ──► Execute Multi-Platform Broadcast
+(Post-Broadcast) ──► If any platform succeeds: Transition Reservation to 'published'
+                 ──► If all platforms fail: Clear Pending Reservation & Exit Nonzero
 ```
 
-1.  **Tier 1: Atomic Local Storage**: Primary state is saved using atomic writes (writing to `.tmp` first, then renaming) under advisory `FileLock` to prevent data corruption.
-2.  **Tier 2: Automatic Local Backups**: On every save, the previous state is rotated to `seen_articles.json.bak`. If the primary file is corrupted, BluBot automatically restores from this backup.
-3.  **Tier 3: Remote Gist Synchronization**: If `GIST_ID` and `GIST_TOKEN` are configured, BluBot pulls the state from a private GitHub Gist on startup and pushes updates back after each run. This acts as a "cloud memory" for the bot across ephemeral runner environments.
+1. **Gist-Authoritative Runtime State**: When `GIST_ID` and `GIST_TOKEN` are set, GitHub Gist is loaded as the primary state source. State comparison uses `schema_version: 2`, `revision`, and `updated_at` timestamps to ensure stale local or branch data never overwrites newer Gist state.
+2. **Two-Phase Pre-Broadcast Reservation Protocol**: Before publishing, BluBot writes a `pending_stories` reservation to Gist and local state. If Gist reservation fails, publication is aborted. If broadcast succeeds, status transitions to `published`. If broadcast fails, pending reservation is cleared.
+3. **Local Primary & Backup Rotation**: Saves perform atomic writes (`.tmp` -> `seen_articles.json`) and rotate previous valid state to `.bak` under advisory `FileLock`. If Gist write fails during post-broadcast settlement, state is saved locally with `unsynced_gist: true` for recovery.
+
 
 
 ## 📂 Project Structure

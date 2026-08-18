@@ -809,6 +809,49 @@ async def main():
                 media=final_media
             )
 
+        # 2.8 Pre-Broadcast Lead Resolution & Reservation Contract
+        if not synthesis.lead_link:
+            SafeLogger.error("Synthesis lead_link is missing or ambiguous. Aborting execution before broadcast.")
+            sys.exit(1)
+
+        from src.utils import normalize_url, load_seen_articles, save_seen_articles
+        canonical_lead = normalize_url(synthesis.lead_link)
+        matched_article = None
+        for art in curation.top_articles:
+            if art.link and normalize_url(art.link) == canonical_lead:
+                matched_article = art
+                break
+
+        if not matched_article:
+            if canonical_lead:
+                from src.models import Article
+                matched_article = Article(
+                    title=getattr(synthesis, 'topic', 'Published Article'),
+                    link=synthesis.lead_link,
+                    summary='',
+                    published=datetime.now(timezone.utc).isoformat(),
+                    source='Synthesis Lead'
+                )
+            else:
+                SafeLogger.error(f"Lead link '{synthesis.lead_link}' could not be unambiguously resolved. Aborting broadcast.")
+                sys.exit(1)
+
+        # Write pending reservation before broadcast
+        state = await asyncio.to_thread(load_seen_articles)
+        pending_entry = {
+            "url": canonical_lead,
+            "title": matched_article.title,
+            "stage": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        state.setdefault("pending_stories", []).append(pending_entry)
+        res_ok = await asyncio.to_thread(save_seen_articles, state, is_reservation=True)
+        if settings.gist_id and settings.gist_token and not res_ok:
+            SafeLogger.error("CRITICAL: Authoritative Gist pending reservation failed. Aborting publication.")
+            # Roll back memory state
+            state["pending_stories"].pop()
+            sys.exit(1)
+
         # 3. Broadcast
         SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")
         results, bsky_client = await broadcast_stage(client, synthesis)
@@ -818,13 +861,72 @@ async def main():
             else:
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
 
-        # 4. Interaction (Mention Replies)
+        # 3.5 Immediate Post-Broadcast Settlement
+        any_success = any(res.success for res in results)
+        
+        # Remove pending entry regardless of outcome
+        state["pending_stories"] = [ps for ps in state.get("pending_stories", []) if ps.get("url") != canonical_lead]
+        
+        if any_success:
+            pub_entry = {
+                "url": canonical_lead,
+                "title": matched_article.title,
+                "supporting_links": [normalize_url(sl) for sl in (matched_article.supporting_links or []) if sl],
+                "stage": "published",
+                "published_at": datetime.now(timezone.utc).isoformat()
+            }
+            state.setdefault("recent_stories", []).append(pub_entry)
+            state.setdefault("links", [])
+            if canonical_lead not in state["links"]:
+                state["links"].append(canonical_lead)
+            for sl in pub_entry["supporting_links"]:
+                if sl not in state["links"]:
+                    state["links"].append(sl)
+
+            if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
+                state.setdefault("recent_topics", []).append(synthesis.topic)
+
+            from src.config import FEED_CATEGORY_MAP
+            published_category = FEED_CATEGORY_MAP.get(matched_article.source_id, "unknown")
+            state.setdefault("recent_categories", []).append(published_category)
+            state["recent_categories"] = state["recent_categories"][-10:]
+
+            if synthesis.writing_style:
+                state.setdefault("recent_styles", []).append(synthesis.writing_style)
+                state["recent_styles"] = state["recent_styles"][-10:]
+
+            state["total_posts_curated"] = state.get("total_posts_curated", 0) + 1
+            state["last_dialect"] = curation.last_dialect
+            state["links"] = state["links"][-500:]
+            state["recent_topics"] = state["recent_topics"][-20:]
+
+            settle_ok = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+            if settings.gist_id and settings.gist_token and not settle_ok:
+                SafeLogger.error("Post-broadcast settlement failed to sync to Gist. Local recovery state written.")
+                sys.exit(1)
+        else:
+            await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+            SafeLogger.error("All broadcast targets failed. Pending reservation cleared.")
+            sys.exit(1)
+
+        # 4. Post-Persistence Nonessential Tasks
+        today_date = datetime.now(timezone.utc).date()
+        if "start_date" not in state:
+            state["start_date"] = "2026-03-31"
+        try:
+            from datetime import date
+            start_dt = date.fromisoformat(state["start_date"])
+            active_day = (today_date - start_dt).days + 1
+        except Exception:
+            active_day = 68
+
+        await update_status_dashboard(curation.session_name, synthesis.topic)
+        await update_social_profiles(bsky_client, settings.mastodon_token, active_day, synthesis.topic)
+
         if settings.enable_interactions and not settings.is_dry_run:
             interaction_res = await interaction_stage(bsky_client, client, context)
             SafeLogger.info(f"Interaction Session Complete: {len(interaction_res.replied_ids)} replies sent.")
 
-        # 5. Persistence
-        await persistence_stage(curation, synthesis, bsky_client)
 
 if __name__ == "__main__":
     try:

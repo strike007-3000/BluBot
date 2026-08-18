@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Optional, List
+from typing import Optional, List, Set
 import asyncio
 import functools
 import random
@@ -11,7 +11,7 @@ import socket
 import ipaddress
 from contextlib import contextmanager
 from bs4 import BeautifulSoup
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = 10_000_000  # Prevent decompression bomb DoS attacks
@@ -195,81 +195,240 @@ def save_seen_interactions(interacted_ids: List[str]):
     except Exception as e:
         SafeLogger.error(f"Failed to save interactions: {e}")
 
-def load_seen_articles():
-    """3-Tier Resilience: Local -> Backup -> Gist -> Default."""
-    default_state = {
-        "links": [],
-        "recent_topics": [],
-        "last_dialect": None,
-        "total_posts_curated": 0,
-        "recent_categories": [],
-        "recent_styles": [],
-        "watch_topics": []
-    }
+LEGACY_DEFAULT_UPDATED_AT = "1970-01-01T00:00:00Z"
+
+def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
+    """
+    Pure and idempotent function to validate and migrate seen_articles schema.
+    Never reads the system clock or increments revision.
+    Assigns sentinel '1970-01-01T00:00:00Z' if updated_at is missing in legacy state.
+    """
+    if not isinstance(data, dict):
+        data = {}
+        
+    state = dict(data)
     
+    schema_version = state.get("schema_version", 1)
+    try:
+        schema_version = int(schema_version)
+    except (ValueError, TypeError):
+        schema_version = 2
+    state["schema_version"] = max(schema_version, 2)
+    
+    revision = state.get("revision", 1)
+    try:
+        state["revision"] = int(revision)
+    except (ValueError, TypeError):
+        state["revision"] = 1
+        
+    updated_at = state.get("updated_at")
+    if not isinstance(updated_at, str) or not updated_at:
+        state["updated_at"] = LEGACY_DEFAULT_UPDATED_AT
+    else:
+        state["updated_at"] = updated_at
+
+    state["unsynced_gist"] = bool(state.get("unsynced_gist", False))
+
+    for list_key in ("links", "recent_topics", "recent_categories", "recent_styles", "watch_topics", "recent_stories", "pending_stories"):
+        val = state.get(list_key)
+        if not isinstance(val, list):
+            state[list_key] = []
+
+    try:
+        state["total_posts_curated"] = int(state.get("total_posts_curated", 0))
+    except (ValueError, TypeError):
+        state["total_posts_curated"] = 0
+
+    if not isinstance(state.get("last_dialect"), str):
+        state["last_dialect"] = None
+        
+    if not isinstance(state.get("start_date"), str) or not state.get("start_date"):
+        state["start_date"] = "2026-03-31"
+
+    return state
+
+def _merge_publication_states(state1: dict, state2: dict) -> dict:
+    """
+    Deterministically merges two state dictionaries with equal revisions.
+    Uses canonical identity and timestamp order for publication collections.
+    Uses state1's watch_topics (remote state) to avoid resurrecting deleted watch topics.
+    """
+    merged = sanitize_and_migrate_state(state1)
+    
+    seen_links = set(merged.get("links", []))
+    for link in state2.get("links", []):
+        if isinstance(link, str) and link and link not in seen_links:
+            merged["links"].append(link)
+            seen_links.add(link)
+            
+    story_map = {}
+    for st in merged.get("recent_stories", []):
+        if isinstance(st, dict) and "url" in st:
+            story_map[st["url"]] = st
+    for st in state2.get("recent_stories", []):
+        if isinstance(st, dict) and "url" in st:
+            if st["url"] not in story_map:
+                story_map[st["url"]] = st
+    merged["recent_stories"] = sorted(story_map.values(), key=lambda x: str(x.get("published_at", "")))
+
+    pending_map = {}
+    for ps in merged.get("pending_stories", []):
+        if isinstance(ps, dict) and "url" in ps:
+            pending_map[ps["url"]] = ps
+    for ps in state2.get("pending_stories", []):
+        if isinstance(ps, dict) and "url" in ps:
+            if ps["url"] not in pending_map:
+                pending_map[ps["url"]] = ps
+    merged["pending_stories"] = sorted(pending_map.values(), key=lambda x: str(x.get("created_at", "")))
+
+    merged["watch_topics"] = state1.get("watch_topics", [])
+    
+    if str(state2.get("updated_at", "")) > str(merged.get("updated_at", "")):
+        merged["updated_at"] = state2.get("updated_at")
+
+    return merged
+
+def filter_and_update_pending_stories(state: dict, now_utc: Optional[datetime] = None) -> Set[str]:
+    """
+    Transitions pending stories older than 24 hours to 'uncertain' stage.
+    Returns a set of canonical URLs for all active 'pending', 'uncertain', and 'published' stories.
+    """
+    if now_utc is None:
+        now_utc = datetime.now(timezone.utc)
+
+    seen_urls = set()
+    
+    for st in state.get("recent_stories", []):
+        if isinstance(st, dict) and st.get("url"):
+            seen_urls.add(normalize_url(st["url"]))
+
+    pending_list = state.get("pending_stories", [])
+    for ps in pending_list:
+        if isinstance(ps, dict) and ps.get("url"):
+            norm_u = normalize_url(ps["url"])
+            created_str = ps.get("created_at")
+            if created_str and ps.get("stage") == "pending":
+                try:
+                    created_dt = datetime.fromisoformat(created_str)
+                    if (now_utc - created_dt) > timedelta(hours=24):
+                        ps["stage"] = "uncertain"
+                except Exception:
+                    ps["stage"] = "uncertain"
+            seen_urls.add(norm_u)
+
+    return seen_urls
+
+def load_seen_articles() -> dict:
+    """
+    Gist-Authoritative loading with revision tracking and local fallback.
+    Loading state passes through sanitize_and_migrate_state and NEVER
+    increments revision or changes updated_at.
+    """
     with FileLock(SEEN_FILE_PATH):
-        # Tier 1: Local primary
+        gist_state = None
+        if settings.gist_id and settings.gist_token:
+            gist_raw = _load_gist_state("seen_articles.json")
+            if isinstance(gist_raw, dict):
+                gist_state = sanitize_and_migrate_state(gist_raw)
+                SafeLogger.info(f"Loaded Gist state (revision {gist_state['revision']}).")
+
+        local_state = None
         if os.path.exists(SEEN_FILE_PATH):
             try:
-                state = load_json_state(SEEN_FILE_PATH)
-                # Ensure new keys are present
-                if "recent_categories" not in state:
-                    state["recent_categories"] = []
-                if "recent_styles" not in state:
-                    state["recent_styles"] = []
-                if "watch_topics" not in state:
-                    state["watch_topics"] = []
-                return state
-            except (json.JSONDecodeError, IOError) as e:
-                SafeLogger.warn(f"Local seen articles file corrupted: {e}. Trying backup...")
+                local_raw = load_json_state(SEEN_FILE_PATH)
+                if isinstance(local_raw, dict):
+                    local_state = sanitize_and_migrate_state(local_raw)
+            except Exception as e:
+                SafeLogger.warn(f"Primary local seen articles corrupted: {e}")
 
-        # Tier 2: Local backup (.bak)
-        bak_path = f"{SEEN_FILE_PATH}.bak"
-        if os.path.exists(bak_path):
+        if not local_state:
+            bak_path = f"{SEEN_FILE_PATH}.bak"
+            if os.path.exists(bak_path):
+                try:
+                    bak_raw = load_json_state(bak_path)
+                    if isinstance(bak_raw, dict):
+                        local_state = sanitize_and_migrate_state(bak_raw)
+                except Exception:
+                    SafeLogger.warn("Backup local seen articles corrupted as well.")
+
+        if gist_state and local_state:
+            if gist_state["revision"] > local_state["revision"]:
+                selected_state = gist_state
+            elif local_state["revision"] > gist_state["revision"]:
+                selected_state = local_state
+                SafeLogger.info(f"Local state revision ({local_state['revision']}) is higher than Gist revision ({gist_state['revision']}). Using local.")
+            else:
+                if gist_state == local_state:
+                    selected_state = gist_state
+                else:
+                    SafeLogger.info("Gist and local state have equal revision but different content. Merging deterministically...")
+                    selected_state = _merge_publication_states(gist_state, local_state)
+
             try:
-                state = load_json_state(bak_path)
-                if "recent_categories" not in state:
-                    state["recent_categories"] = []
-                if "recent_styles" not in state:
-                    state["recent_styles"] = []
-                return state
-            except (json.JSONDecodeError, IOError):
-                SafeLogger.warn("Local backup corrupted as well.")
+                temp_path = f"{SEEN_FILE_PATH}.tmp"
+                save_json_state(temp_path, selected_state, indent=2)
+                os.replace(temp_path, SEEN_FILE_PATH)
+            except Exception as e:
+                SafeLogger.warn(f"Failed to sync primary local file on load: {e}")
 
-        # Tier 3: Remote Gist
-        gist_data = _load_gist_state("seen_articles.json")
-        if gist_data:
-            SafeLogger.info("Restored seen articles from GitHub Gist.")
-            if "recent_categories" not in gist_data:
-                gist_data["recent_categories"] = []
-            if "recent_styles" not in gist_data:
-                gist_data["recent_styles"] = []
-            return gist_data
-            
-        return default_state
+            return selected_state
 
-def save_seen_articles(data):
-    """3-Tier Persistence: Atomic Write -> Backup Commit -> Remote Sync."""
-    if "total_posts_curated" not in data:
-        data["total_posts_curated"] = 0
-    try:
-        with FileLock(SEEN_FILE_PATH):
-            # 1. Local Backup Rotation
+        if gist_state:
+            try:
+                temp_path = f"{SEEN_FILE_PATH}.tmp"
+                save_json_state(temp_path, gist_state, indent=2)
+                os.replace(temp_path, SEEN_FILE_PATH)
+            except Exception as e:
+                SafeLogger.warn(f"Failed to sync local file from Gist: {e}")
+            return gist_state
+
+        if local_state:
+            return local_state
+
+        return sanitize_and_migrate_state({})
+
+def save_seen_articles(data: dict, is_reservation: bool = False) -> bool:
+    """
+    Persists state with revision incrementing and updated_at assignment.
+    Pre-broadcast reservation failure: memory rollback, leaves primary and .bak untouched, returns False.
+    Post-broadcast settlement failure: rotates primary into .bak, writes primary with unsynced_gist: True, returns False.
+    """
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Skip mutating state persistence.")
+        return True
+
+    state = sanitize_and_migrate_state(data)
+    state["revision"] += 1
+    state["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    with FileLock(SEEN_FILE_PATH):
+        gist_success = True
+        if settings.gist_id and settings.gist_token:
+            gist_success = _save_gist_state("seen_articles.json", state)
+            if not gist_success:
+                SafeLogger.error("Failed to push state to GitHub Gist.")
+
+        if is_reservation and settings.gist_id and settings.gist_token and not gist_success:
+            SafeLogger.error("Authoritative Gist pending reservation failed. Rolling back reservation write.")
+            return False
+
+        if not gist_success:
+            state["unsynced_gist"] = True
+
+        try:
             if os.path.exists(SEEN_FILE_PATH):
                 bak_path = f"{SEEN_FILE_PATH}.bak"
                 os.replace(SEEN_FILE_PATH, bak_path)
-            
-            # 2. Atomic Primary Write
+
             temp_path = f"{SEEN_FILE_PATH}.tmp"
-            save_json_state(temp_path, data, indent=2)
+            save_json_state(temp_path, state, indent=2)
             os.replace(temp_path, SEEN_FILE_PATH)
-            
-            # 3. Remote Synchronization (Gist)
-            if settings.gist_id and settings.gist_token:
-                _save_gist_state("seen_articles.json", data)
-                
-    except Exception as e:
-        SafeLogger.error(f"Critical error in state persistence: {e}")
+        except Exception as e:
+            SafeLogger.error(f"Failed writing local primary state file: {e}")
+            return False
+
+        return gist_success
+
 
 def normalize_url(url: str, base_url: Optional[str] = None) -> str:
     """

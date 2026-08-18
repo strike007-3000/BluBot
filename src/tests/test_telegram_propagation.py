@@ -57,7 +57,8 @@ async def test_telegram_approval_image_url_propagation_changed(monkeypatch, mock
     )
 
     # Mock stage after approval to capture the synthesis passed to it
-    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([], None))
+    from src.models import BroadcastResult
+    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([BroadcastResult("Bluesky", True)], None))
     mocker.patch("bot.persistence_stage", new_callable=AsyncMock)
 
     # Mock client and genai
@@ -123,7 +124,8 @@ async def test_telegram_approval_image_url_propagation_unchanged(monkeypatch, mo
         ))
     )
 
-    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([], None))
+    from src.models import BroadcastResult
+    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([BroadcastResult("Bluesky", True)], None))
     mocker.patch("bot.persistence_stage", new_callable=AsyncMock)
 
     mocker.patch("google.genai.Client")

@@ -194,14 +194,14 @@ Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly wha
 To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
 
 ### The Recovery Sequence
-1. **Primary Local**: Fast loading from `seen_articles.json` with advisory `FileLock`.
-2. **Local Backup**: On every run, the previous state is saved to `.bak`. If the primary is corrupted, the bot auto-restores from this file.
-3. **Remote Gist (The Cloud Memory)**: Syncs state with a private GitHub Gist. This allows the bot to maintain "Seen Articles" across different CI/CD runners without incurring Git merge conflicts.
+1. **Remote Gist (Gist-Authoritative Cloud Memory)**: Syncs state with a private GitHub Gist using `schema_version: 2` revision tracking and updated timestamps.
+2. **Two-Phase Pre-Broadcast Reservation Protocol**: Writes a `pending_stories` reservation to Gist/local state before broadcasting, aborting publication if Gist reservation fails, and transitioning to `published` upon success.
+3. **Primary Local & Backup Rotation**: Saves perform atomic writes (`.tmp` -> `seen_articles.json`) and rotate previous valid state to `.bak` under advisory `FileLock`. If Gist write fails during settlement, local recovery state is saved with `unsynced_gist: true`.
 
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.18.3 maintains a professional **Automated Test Suite** powered by `pytest` with **94 tests** across 11 modules.
+BluBot v3.19.0 maintains a professional **Automated Test Suite** powered by `pytest` with **99 tests** across 12 modules.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
