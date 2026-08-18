@@ -1,14 +1,5 @@
 {
   "links": [
-    "https://arxiv.org/abs/2607.12771",
-    "https://www.latent.space/p/ainews-thinkys-inkling-975b-a41b",
-    "https://aws.amazon.com/blogs/machine-learning/agentic-vision-building-visual-intelligence-with-amazon-bedrock-and-mcp-servers/",
-    "https://simonwillison.net/2026/Jul/15/grok-build/#atom-everything",
-    "https://the-decoder.com/gpt-5-6-sol-reportedly-disproves-a-30-year-old-statistics-conjecture-in-90-minutes-after-humans-couldnt-crack-it/",
-    "https://siliconangle.com/2026/07/15/agentic-inference-reshapes-ai-infrastructure-raise-summit-raisesummit/",
-    "https://arxiv.org/abs/2607.13120",
-    "https://arxiv.org/abs/2607.13274",
-    "https://arxiv.org/abs/2607.13389",
     "https://the-decoder.com/gemma-4-gets-a-stealth-update-that-fixes-tool-calling-bugs-and-truncated-responses-under-the-same-name/",
     "https://huggingface.co/blog/Dharma-AI/newer-models-same-advantages",
     "https://techcrunch.com/2026/07/16/why-ami-labs-alexandre-lebrun-wont-call-his-ai-agi-or-superintelligence/",
@@ -499,7 +490,16 @@
     "https://www.404media.co/we-tracked-a-shipment-of-rare-books-it-ended-at-an-amazon-ai-training-facility/",
     "https://huggingface.co/blog/Dharma-AI/gpu-management-pt2",
     "https://arxiv.org/abs/2608.14563",
-    "https://arxiv.org/abs/2608.14620"
+    "https://arxiv.org/abs/2608.14620",
+    "https://openai.com/index/chatgpt-for-teens",
+    "https://the-decoder.com/openai-launches-a-chatgpt-version-built-for-teens/",
+    "https://openai.com/index/partnering-with-codeai",
+    "https://www.marktechpost.com/2026/08/18/meet-sam-sovereign-agent-mesh-a-zero-config-zero-trust-p2p-network-for-ai-agents/",
+    "https://siliconangle.com/2026/08/18/nlpatent-rebrands-as-clerq-launches-agentic-patent-research-workflows/",
+    "https://arxiv.org/abs/2608.14646",
+    "https://arxiv.org/abs/2608.14655",
+    "https://arxiv.org/abs/2608.14747",
+    "https://arxiv.org/abs/2608.14773"
   ],
   "recent_topics": [
     "Cursor acquisition by SpaceX concerning",
@@ -513,11 +513,10 @@
     "ChatTJB new Chatbot is just a guy",
     "kyutai pocket TTS"
   ],
-  "total_posts_curated": 820,
-  "last_dialect": "PRACTICAL",
+  "total_posts_curated": 821,
+  "last_dialect": "SAGE",
   "start_date": "2026-03-31",
   "recent_categories": [
-    "research_lab",
     "journalism",
     "journalism",
     "research_lab",
@@ -526,10 +525,10 @@
     "journalism",
     "practitioner",
     "journalism",
-    "enterprise"
+    "enterprise",
+    "research_lab"
   ],
   "recent_styles": [
-    "RISK_VERIFICATION",
     "QUESTION_FIRST",
     "STRATEGIC_CONTRAST",
     "RISK_VERIFICATION",
@@ -538,7 +537,8 @@
     "STRATEGIC_CONTRAST",
     "QUESTION_FIRST",
     "RISK_VERIFICATION",
-    "ENTERPRISE_ROI"
+    "ENTERPRISE_ROI",
+    "STRATEGIC_CONTRAST"
   ],
   "watch_topics": []
 }
