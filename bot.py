@@ -22,7 +22,7 @@ from src.utils import (
     load_seen_articles, save_seen_articles, SafeLogger, 
     load_session_string, save_session_string, get_link_metadata,
     load_seen_interactions, save_seen_interactions, human_delay,
-    is_safe_url
+    is_safe_url, normalize_url
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 
@@ -133,6 +133,10 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
 async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
     seen_data = await asyncio.to_thread(load_seen_articles)
+    from src.utils import filter_and_update_pending_stories
+    suppressed_urls = filter_and_update_pending_stories(seen_data)
+    combined_seen_links = list(set(seen_data.get("links", [])) | suppressed_urls)
+
     context = get_temporal_context()
 
     from src.feed_vanguard import VanguardManager
@@ -146,7 +150,7 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
     # If a telegram_topic is requested, bypass default top-8 limit to filter the full candidate list
     raw_news = await fetch_news(
         client, 
-        seen_data["links"], 
+        combined_seen_links, 
         seen_data["recent_topics"], 
         feed_list=active_feeds, 
         limit=None if telegram_topic else 8,
@@ -522,108 +526,160 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
 
     # Bluesky Session Hardening
     bsky_client = AsyncClient(request=AsyncRequest(timeout=30.0))
-    try:
-        cached_session = await asyncio.to_thread(load_session_string)
-        if cached_session:
-            SafeLogger.info("Restoring cached Bluesky session...")
-            await bsky_client.login(session_string=cached_session)
-        else:
-            SafeLogger.info("Initiating new Bluesky login...")
-            await bsky_client.login(settings.bsky_handle, settings.bsky_password)
-        session_str = bsky_client.export_session_string()
-        await asyncio.to_thread(save_session_string, session_str)
-    except Exception as e:
-        SafeLogger.error(f"Bluesky auth failed: {e}")
+    if settings.bsky_handle and settings.bsky_password:
+        try:
+            cached_session = await asyncio.to_thread(load_session_string)
+            if cached_session:
+                SafeLogger.info("Restoring cached Bluesky session...")
+                await bsky_client.login(session_string=cached_session)
+            else:
+                SafeLogger.info("Initiating new Bluesky login...")
+                await bsky_client.login(settings.bsky_handle, settings.bsky_password)
+            session_str = bsky_client.export_session_string()
+            await asyncio.to_thread(save_session_string, session_str)
+        except Exception as e:
+            SafeLogger.error(f"Bluesky auth failed: {e}")
+            bsky_client = None
+    else:
         bsky_client = None
 
-    tasks = [
-        ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.media)) if bsky_client else None,
-        ("Mastodon", post_to_mastodon(synthesis.content, synthesis.media)),
-        ("Threads", post_to_threads(client, synthesis.content, synthesis.media))
-    ]
-    
-    active = [t for t in tasks if t]
-    results = await asyncio.gather(*[t[1] for t in active], return_exceptions=True)
+    tasks = []
+    if bsky_client and settings.bsky_handle:
+        tasks.append(("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.media)))
+    if settings.mastodon_token and settings.mastodon_base_url:
+        tasks.append(("Mastodon", post_to_mastodon(synthesis.content, synthesis.media)))
+    if settings.threads_token and settings.threads_user_id:
+        tasks.append(("Threads", post_to_threads(client, synthesis.content, synthesis.media)))
+
+    if not tasks:
+        SafeLogger.error("No configured broadcast targets available!")
+        return [BroadcastResult(platform="None", success=False, error="No configured targets")], bsky_client
+
+    results = await asyncio.gather(*[t[1] for t in tasks], return_exceptions=True)
     
     report = []
-    for (name, _), res in zip(active, results):
+    for (name, _), res in zip(tasks, results):
         if isinstance(res, Exception):
             report.append(BroadcastResult(platform=name, success=False, error=str(res)))
+        elif res is False:
+            report.append(BroadcastResult(platform=name, success=False, error="Platform skipped or failed internally"))
         else:
             report.append(BroadcastResult(platform=name, success=True))
     return report, bsky_client
 
-async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
-    """Stage 4: State Synchronization."""
-    if settings.is_dry_run:
-        SafeLogger.info("DRY RUN: Skip state persistence updates.")
-        return
+async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisResult) -> Tuple[dict, Article]:
+    """Resolves lead article and writes pending reservation to state."""
+    import hashlib
+    canonical_lead = None
+    matched_article = None
 
-    # Load fresh state to ensure we have the latest counter
-    state = await asyncio.to_thread(load_seen_articles)
-    
-    seen_links = set(state.get("links", []))
-    for article in curation.top_articles[:10]:
-        if article.link and article.link not in seen_links:
-            state.setdefault("links", []).append(article.link)
-            seen_links.add(article.link)
-        if article.supporting_links:
-            for s_link in article.supporting_links:
-                if s_link and s_link not in seen_links:
-                    state.setdefault("links", []).append(s_link)
-                    seen_links.add(s_link)
-
-    if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
-        state.setdefault("recent_topics", []).append(synthesis.topic)
-
-    published_category = "unknown"
     if synthesis.lead_link:
-        for article in curation.top_articles:
-            if article.link == synthesis.lead_link:
-                from src.config import FEED_CATEGORY_MAP
-                published_category = FEED_CATEGORY_MAP.get(article.source_id, "unknown")
+        canonical_lead = normalize_url(synthesis.lead_link)
+        for art in curation.top_articles:
+            if art.link and normalize_url(art.link) == canonical_lead:
+                matched_article = art
                 break
-    elif curation.top_articles:
+
+        if not matched_article:
+            SafeLogger.error(f"Lead link '{synthesis.lead_link}' could not be unambiguously resolved to a candidate article in curation. Aborting broadcast.")
+            sys.exit(1)
+    else:
+        # Linkless fallback path (e.g. mentor insight or topic fallback synthesis)
+        content_hash = hashlib.sha256((synthesis.content or "").encode('utf-8')).hexdigest()[:16]
+        canonical_lead = f"generated:{content_hash}"
+        matched_article = Article(
+            title=getattr(synthesis, 'topic', 'Generated Insight'),
+            link=canonical_lead,
+            summary=(synthesis.content or "")[:100],
+            published=datetime.now(timezone.utc).isoformat(),
+            source="Synthesis Engine"
+        )
+
+    state = await asyncio.to_thread(load_seen_articles)
+    pending_entry = {
+        "url": canonical_lead,
+        "title": matched_article.title,
+        "stage": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    state.setdefault("pending_stories", []).append(pending_entry)
+    
+    res_ok, updated_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=True)
+    if not res_ok:
+        SafeLogger.error("CRITICAL: Authoritative pending reservation failed on configured state storage. Aborting publication.")
+        sys.exit(1)
+
+    return updated_state, matched_article
+
+async def settle_persistence_stage(
+    state: dict, 
+    curation: CurationResult, 
+    synthesis: SynthesisResult, 
+    matched_article: Article, 
+    results: List[BroadcastResult]
+) -> dict:
+    """Settles pending reservation to published (if any broadcast target succeeded) or retains as uncertain (if all failed)."""
+    canonical_lead = normalize_url(synthesis.lead_link) if synthesis.lead_link else matched_article.link
+    any_success = any(res.success for res in results)
+
+    if any_success:
+        state["pending_stories"] = [ps for ps in state.get("pending_stories", []) if ps.get("url") != canonical_lead]
+        pub_entry = {
+            "url": canonical_lead,
+            "title": matched_article.title,
+            "supporting_links": [normalize_url(sl) for sl in (matched_article.supporting_links or []) if sl],
+            "stage": "published",
+            "published_at": datetime.now(timezone.utc).isoformat()
+        }
+        state.setdefault("recent_stories", []).append(pub_entry)
+        state.setdefault("links", [])
+        if canonical_lead not in state["links"]:
+            state["links"].append(canonical_lead)
+        for sl in pub_entry["supporting_links"]:
+            if sl not in state["links"]:
+                state["links"].append(sl)
+
+        if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
+            state.setdefault("recent_topics", []).append(synthesis.topic)
+
         from src.config import FEED_CATEGORY_MAP
-        published_category = FEED_CATEGORY_MAP.get(curation.top_articles[0].source_id, "unknown")
+        published_category = FEED_CATEGORY_MAP.get(matched_article.source_id, "unknown")
+        state.setdefault("recent_categories", []).append(published_category)
+        state["recent_categories"] = state["recent_categories"][-10:]
 
-    state.setdefault("recent_categories", []).append(published_category)
-    state["recent_categories"] = state["recent_categories"][-10:]
+        if synthesis.writing_style:
+            state.setdefault("recent_styles", []).append(synthesis.writing_style)
+            state["recent_styles"] = state["recent_styles"][-10:]
 
-    if synthesis.writing_style:
-        state.setdefault("recent_styles", []).append(synthesis.writing_style)
-        state["recent_styles"] = state["recent_styles"][-10:]
+        state["total_posts_curated"] = state.get("total_posts_curated", 0) + 1
+        state["last_dialect"] = curation.last_dialect
+        state["links"] = state["links"][-500:]
+        state["recent_topics"] = state["recent_topics"][-20:]
 
-    # Update stats
-    today_date = datetime.now(timezone.utc).date()
-    if "start_date" not in state:
-        state["start_date"] = "2026-03-31"
-    
-    try:
-        from datetime import date
-        start_dt = date.fromisoformat(state["start_date"])
-        active_day = (today_date - start_dt).days + 1
-    except Exception:
-        active_day = 68  # Fallback
+        settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+        if not settle_ok:
+            SafeLogger.error("Post-broadcast settlement failed to save on configured state storage.")
+            sys.exit(1)
+        return final_state
+    else:
+        # Ambiguous Failure path: Retain reservation with stage='uncertain' so duplicate protection remains active
+        for ps in state.get("pending_stories", []):
+            if ps.get("url") == canonical_lead:
+                ps["stage"] = "uncertain"
+                ps["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-    # Increment total posts by 1 (actual synthesized post broadcast)
-    state["total_posts_curated"] = state.get("total_posts_curated", 0) + 1
-    state["last_dialect"] = curation.last_dialect
-    
-    # Cap history to prevent state bloat (Tier 1 constraint)
-    state["links"] = state["links"][-500:]
-    state["recent_topics"] = state["recent_topics"][-20:]
+        settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+        SafeLogger.error("All broadcast targets failed or encountered errors. Pending reservation transitioned to uncertain state.")
+        sys.exit(1)
 
-    await asyncio.to_thread(save_seen_articles, state)
-    await update_status_dashboard(curation.session_name, synthesis.topic)
-
-    # Dynamic Bio Update
-    await update_social_profiles(
-        client_bsky, 
-        settings.mastodon_token, 
-        active_day,
-        synthesis.topic
-    )
+async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
+    """Legacy compatibility helper delegating to reserve_pending_stage and settle_persistence_stage."""
+    from dataclasses import replace
+    if not synthesis.lead_link and curation.top_articles:
+        synthesis = replace(synthesis, lead_link=curation.top_articles[0].link)
+    state, matched = await reserve_pending_stage(curation, synthesis)
+    dummy_results = [BroadcastResult(platform="Bluesky", success=True)]
+    return await settle_persistence_stage(state, curation, synthesis, matched, dummy_results)
 
 async def interaction_stage(bsky_client, http_client, session_context: dict) -> InteractionResult:
     """Handles social interactions (mentions/replies) with humanized engagement."""
@@ -809,6 +865,9 @@ async def main():
                 media=final_media
             )
 
+        # 2.8 Pre-Broadcast Lead Resolution & Reservation Contract
+        state, matched_article = await reserve_pending_stage(curation, synthesis)
+
         # 3. Broadcast
         SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")
         results, bsky_client = await broadcast_stage(client, synthesis)
@@ -818,13 +877,27 @@ async def main():
             else:
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
 
-        # 4. Interaction (Mention Replies)
+        # 3.5 Immediate Post-Broadcast Settlement
+        state = await settle_persistence_stage(state, curation, synthesis, matched_article, results)
+
+        # 4. Post-Persistence Nonessential Tasks
+        today_date = datetime.now(timezone.utc).date()
+        if "start_date" not in state:
+            state["start_date"] = "2026-03-31"
+        try:
+            from datetime import date
+            start_dt = date.fromisoformat(state["start_date"])
+            active_day = (today_date - start_dt).days + 1
+        except Exception:
+            active_day = 68
+
+        await update_status_dashboard(curation.session_name, synthesis.topic)
+        await update_social_profiles(bsky_client, settings.mastodon_token, active_day, synthesis.topic)
+
         if settings.enable_interactions and not settings.is_dry_run:
             interaction_res = await interaction_stage(bsky_client, client, context)
             SafeLogger.info(f"Interaction Session Complete: {len(interaction_res.replied_ids)} replies sent.")
 
-        # 5. Persistence
-        await persistence_stage(curation, synthesis, bsky_client)
 
 if __name__ == "__main__":
     try:

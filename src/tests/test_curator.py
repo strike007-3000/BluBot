@@ -55,7 +55,8 @@ async def test_fetch_single_feed_atom_updated_fallback(mock_httpx_client, mocker
     mock_entry.title = "v0.26.0 Release"
     mock_entry.summary = "Release notes"
     del mock_entry.published_parsed  # Absent in Atom releases
-    mock_entry.updated_parsed = (2026, 8, 4, 12, 0, 0, 1, 216, 0)
+    recent_dt = now_utc - timedelta(hours=5)
+    mock_entry.updated_parsed = recent_dt.utctimetuple()
     
     mock_feed = mocker.MagicMock()
     mock_feed.entries = [mock_entry]
@@ -69,7 +70,7 @@ async def test_fetch_single_feed_atom_updated_fallback(mock_httpx_client, mocker
     
     items = await fetch_single_feed(mock_httpx_client, "https://github.com/vllm-project/vllm/releases.atom", now_utc - timedelta(days=2), now_utc, [], [])
     assert len(items) == 1
-    assert items[0]["published"].startswith("2026-08-04T12:00:00")
+    assert items[0]["published"].startswith(recent_dt.strftime("%Y-%m-%d"))
 
 @pytest.mark.asyncio
 async def test_fetch_news_synergy_and_deduplication(mock_httpx_client, mocker):
@@ -153,7 +154,7 @@ async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
     monkeypatch.setattr("bot.settings", mock_settings)
     
     mock_load = mocker.patch("bot.load_seen_articles", return_value={"links": [], "recent_topics": []})
-    mock_save = mocker.patch("bot.save_seen_articles")
+    mock_save = mocker.patch("bot.save_seen_articles", side_effect=lambda data, **kw: (True, data))
     
     article = Article(
         title="Lead Article",
@@ -168,7 +169,7 @@ async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
     
     await persistence_stage(curation, synthesis)
     
-    mock_save.assert_called_once()
+    assert mock_save.call_count == 2
     saved_data = mock_save.call_args[0][0]
     assert "https://lead.com/1" in saved_data["links"]
     assert "https://supporting1.com/a" in saved_data["links"]

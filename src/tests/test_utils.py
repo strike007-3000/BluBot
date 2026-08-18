@@ -175,3 +175,118 @@ def test_seen_interactions_persistence(tmp_path):
         assert load_seen_interactions() == ids
     finally:
         src.utils.INTERACTIONS_STATE_PATH = original_path
+
+def test_sanitize_and_migrate_state_pureness():
+    from src.utils import sanitize_and_migrate_state, LEGACY_DEFAULT_UPDATED_AT
+    # 1. Empty input
+    state = sanitize_and_migrate_state({})
+    assert state["schema_version"] == 2
+    assert state["revision"] == 1
+    assert state["updated_at"] == LEGACY_DEFAULT_UPDATED_AT
+    assert state["unsynced_gist"] is False
+    assert state["links"] == []
+    assert state["pending_stories"] == []
+
+    # 2. Idempotence test
+    state2 = sanitize_and_migrate_state(state)
+    assert state2 == state
+
+    # 3. Preserves existing valid updated_at
+    custom_time = "2026-08-18T19:00:00Z"
+    state3 = sanitize_and_migrate_state({"updated_at": custom_time, "revision": 5})
+    assert state3["updated_at"] == custom_time
+    assert state3["revision"] == 5
+
+def test_pending_stories_uncertain_transition():
+    from src.utils import filter_and_update_pending_stories
+    from datetime import datetime, timezone, timedelta
+
+    now = datetime.now(timezone.utc)
+    old_time = (now - timedelta(hours=25)).isoformat()
+    recent_time = (now - timedelta(minutes=30)).isoformat()
+
+    state = {
+        "recent_stories": [{"url": "https://example.com/pub1"}],
+        "pending_stories": [
+            {"url": "https://example.com/pending-old", "created_at": old_time, "stage": "pending"},
+            {"url": "https://example.com/pending-recent", "created_at": recent_time, "stage": "pending"}
+        ]
+    }
+
+    seen_urls = filter_and_update_pending_stories(state, now_utc=now)
+
+    # Verify old pending transitioned to uncertain
+    assert state["pending_stories"][0]["stage"] == "uncertain"
+    assert state["pending_stories"][1]["stage"] == "pending"
+
+    # All URLs included in duplicate suppression set
+    assert "https://example.com/pub1" in seen_urls
+    assert "https://example.com/pending-old" in seen_urls
+    assert "https://example.com/pending-recent" in seen_urls
+
+def test_gist_reconciliation_and_fallback(tmp_path, mocker):
+    import src.utils
+    from src.utils import load_seen_articles, save_seen_articles
+    from src.settings import settings
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "gist_id", "test_gist_id")
+    object.__setattr__(settings, "gist_token", "test_token")
+    object.__setattr__(settings, "is_dry_run", False)
+
+    # Mock Gist return lower revision than local
+    mocker.patch("src.utils._load_gist_state", return_value={
+        "schema_version": 2, "revision": 2, "updated_at": "2026-08-18T10:00:00Z",
+        "links": ["https://example.com/gist-only"]
+    })
+
+    # Save local state with revision 5
+    src.utils.save_json_state(test_file, {
+        "schema_version": 2, "revision": 5, "updated_at": "2026-08-18T12:00:00Z",
+        "links": ["https://example.com/local-only"]
+    })
+
+    loaded = load_seen_articles()
+    assert loaded["revision"] == 5
+    assert "https://example.com/local-only" in loaded["links"]
+
+    # Test Gist save failure handling during reservation
+    mocker.patch("src.utils._save_gist_state", return_value=False)
+    res_ok, _ = save_seen_articles({"revision": 5, "pending_stories": []}, is_reservation=True)
+    assert res_ok is False
+
+def test_gist_success_local_write_failure_returns_false(mocker, tmp_path):
+    """Verify that if Gist write succeeds but local atomic write fails, save_seen_articles returns False."""
+    import src.utils
+    from src.utils import save_seen_articles
+    from src.settings import settings
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", "test_id")
+    object.__setattr__(settings, "gist_token", "test_token")
+
+    mocker.patch("src.utils._save_gist_state", return_value=True)
+    mocker.patch("src.utils.save_json_state", side_effect=IOError("Disk write error"))
+
+    ok, state = save_seen_articles({"revision": 5, "pending_stories": []}, is_reservation=False)
+    assert ok is False
+    assert state["revision"] == 6
+
+def test_dry_run_makes_no_state_writes(mocker):
+    """Verify that dry-run returns True immediately without making Gist or local disk writes."""
+    import src.utils
+    from src.utils import save_seen_articles
+    from src.settings import settings
+
+    object.__setattr__(settings, "is_dry_run", True)
+    mock_gist = mocker.patch("src.utils._save_gist_state")
+    mock_local = mocker.patch("src.utils.save_json_state")
+
+    data = {"revision": 5, "pending_stories": []}
+    ok, state = save_seen_articles(data, is_reservation=True)
+    assert ok is True
+    assert state == data
+    mock_gist.assert_not_called()
+    mock_local.assert_not_called()
+

@@ -248,6 +248,80 @@ async def test_image_generation():
             if fn:
                 await fn(prompt)
 
+async def test_gist_diagnostics():
+    import uuid
+    import httpx
+    from src.settings import settings
+    from src.utils import _load_gist_state, _save_gist_state
+
+    print(f"\n{'='*20}")
+    print(f"DIAGNOSTIC: GIST PERSISTENCE TEST")
+    print(f"{'='*20}")
+
+    gist_id = settings.gist_id
+    gist_token = settings.gist_token
+
+    if not gist_id or not gist_token:
+        print("⚠️ GIST_ID or GIST_TOKEN not found in environment.")
+        if not gist_id:
+            gist_id = input("Enter GIST_ID: ").strip()
+        if not gist_token:
+            gist_token = input("Enter GIST_TOKEN (GitHub PAT): ").strip()
+
+    if not gist_id or not gist_token:
+        print("❌ Gist Status: Gist credentials not provided.")
+        return
+
+    object.__setattr__(settings, "gist_id", gist_id)
+    object.__setattr__(settings, "gist_token", gist_token)
+
+    print("✅ Gist Status: Configured.")
+    print("Testing read access on production state file (seen_articles.json)...")
+    prod_state = _load_gist_state("seen_articles.json")
+    if prod_state is None:
+        print("⚠️ Production Gist file read: Unavailable or invalid.")
+    else:
+        rev = prod_state.get("revision", "N/A")
+        ver = prod_state.get("schema_version", "N/A")
+        print(f"✅ Production Gist file read successful. (schema_version={ver}, revision={rev})")
+
+    test_uuid = str(uuid.uuid4())
+    test_filename = f"_diag_{test_uuid}.json"
+    test_payload = {
+        "diagnostic": True,
+        "uuid": test_uuid,
+        "timestamp": "2026-08-18T19:00:00Z"
+    }
+
+    print(f"\nInitiating safe write test with temporary file: {test_filename}")
+    try:
+        write_ok = _save_gist_state(test_filename, test_payload)
+        if not write_ok:
+            print("❌ Write Test: Failed to write test payload to Gist.")
+            return
+
+        print("✅ Write Test: Success. Testing read-back...")
+        read_payload = _load_gist_state(test_filename)
+        if read_payload == test_payload:
+            print("✅ Read-back Test: Success. Content matches exactly.")
+        else:
+            print("❌ Read-back Test: Failed. Content mismatch.")
+    finally:
+        print(f"Cleaning up temporary file {test_filename} from Gist...")
+        try:
+            url = f"https://api.github.com/gists/{settings.gist_id}"
+            headers = {
+                "Authorization": f"token {settings.gist_token}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+            payload = {"files": {test_filename: None}}
+            with httpx.Client(timeout=10.0) as client:
+                resp = client.patch(url, headers=headers, json=payload)
+                resp.raise_for_status()
+                print("✅ Cleanup Test: Success. Temporary file removed.")
+        except Exception as e:
+            print(f"❌ CLEANUP FAILURE: Failed to remove temporary file {test_filename} from Gist ({e}). Residual filename remains: {test_filename}")
+
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
@@ -256,13 +330,13 @@ async def main():
     print("1. Quick Diagnostic (Scoring Breakdown)")
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
     print("3. Live Image Generation Test (Pollinations, Hugging Face, & Gemini Imagen)")
+    print("4. Gist State Diagnostics (Opt-in Read/Write Test)")
     
     try:
-        choice = input("\nEnter choice (1-3) or 'q' to quit: ").strip().lower()
+        choice = input("\nEnter choice (1-4) or 'q' to quit: ").strip().lower()
         if choice == "1":
             await test_scoring()
         elif choice == "2":
-            # Prompt for Gemini key since full dry run needs it
             gemini_key = os.getenv("GEMINI_KEY")
             if not gemini_key:
                 print("\n--- GEMINI_KEY not found ---")
@@ -274,14 +348,16 @@ async def main():
                 await test_full_dry_run()
         elif choice == "3":
             await test_image_generation()
+        elif choice == "4":
+            await test_gist_diagnostics()
         elif choice == "q":
             print("Exiting.")
         else:
             print("Defaulting to Scoring Breakdown.")
             await test_scoring()
     except EOFError:
-        # Handle non-interactive environments
         await test_scoring()
+
 
 if __name__ == "__main__":
     try:

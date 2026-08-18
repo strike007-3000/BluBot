@@ -26,7 +26,8 @@ async def test_telegram_approval_image_url_propagation_changed(monkeypatch, mock
     mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
     mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=None)
     
-    curation_mock = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
+    from src.models import Article
+    curation_mock = CurationResult(top_articles=[Article(title="Lead", link="https://example.com", summary="", published="", source="")], seen_links=[], recent_topics=[])
     mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation_mock)
 
     from src.models import MediaAsset, MediaSource
@@ -57,7 +58,8 @@ async def test_telegram_approval_image_url_propagation_changed(monkeypatch, mock
     )
 
     # Mock stage after approval to capture the synthesis passed to it
-    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([], None))
+    from src.models import BroadcastResult
+    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([BroadcastResult("Bluesky", True)], None))
     mocker.patch("bot.persistence_stage", new_callable=AsyncMock)
 
     # Mock client and genai
@@ -93,7 +95,8 @@ async def test_telegram_approval_image_url_propagation_unchanged(monkeypatch, mo
     mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
     mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=None)
     
-    curation_mock = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
+    from src.models import Article
+    curation_mock = CurationResult(top_articles=[Article(title="Lead", link="https://example.com", summary="", published="", source="")], seen_links=[], recent_topics=[])
     mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation_mock)
 
     from src.models import MediaAsset, MediaSource
@@ -123,7 +126,8 @@ async def test_telegram_approval_image_url_propagation_unchanged(monkeypatch, mo
         ))
     )
 
-    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([], None))
+    from src.models import BroadcastResult
+    broadcast_mock = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([BroadcastResult("Bluesky", True)], None))
     mocker.patch("bot.persistence_stage", new_callable=AsyncMock)
 
     mocker.patch("google.genai.Client")

@@ -138,9 +138,14 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         response = await client.get(url, timeout=10)
         feed = await asyncio.to_thread(feedparser.parse, response.content)
         items = []
+        from src.utils import normalize_url
+        normalized_seen_links = {normalize_url(sl) for sl in seen_links if sl}
         for entry in feed.entries:
             link = getattr(entry, 'link', None)
-            if not link or link in seen_links:
+            if not link:
+                continue
+            canonical_link = normalize_url(link)
+            if link in seen_links or canonical_link in normalized_seen_links:
                 continue
                 
             pub_date = None
