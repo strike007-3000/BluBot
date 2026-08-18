@@ -154,7 +154,7 @@ async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
     monkeypatch.setattr("bot.settings", mock_settings)
     
     mock_load = mocker.patch("bot.load_seen_articles", return_value={"links": [], "recent_topics": []})
-    mock_save = mocker.patch("bot.save_seen_articles")
+    mock_save = mocker.patch("bot.save_seen_articles", side_effect=lambda data, **kw: (True, data))
     
     article = Article(
         title="Lead Article",
@@ -169,7 +169,7 @@ async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
     
     await persistence_stage(curation, synthesis)
     
-    mock_save.assert_called_once()
+    assert mock_save.call_count == 2
     saved_data = mock_save.call_args[0][0]
     assert "https://lead.com/1" in saved_data["links"]
     assert "https://supporting1.com/a" in saved_data["links"]

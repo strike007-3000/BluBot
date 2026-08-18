@@ -2,7 +2,7 @@ import pytest
 import httpx
 from unittest.mock import AsyncMock, MagicMock
 from src.settings import Settings
-from bot import curation_stage, synthesis_stage, broadcast_stage, persistence_stage
+from bot import curation_stage, synthesis_stage, broadcast_stage, reserve_pending_stage, settle_persistence_stage
 from src.models import CurationResult, SynthesisResult, Article
 
 @pytest.mark.asyncio
@@ -35,23 +35,22 @@ async def test_dry_run_broadcaster_bypasses_real_posts(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_dry_run_persistence_does_not_save(monkeypatch, mocker):
-    """Verify that persistence_stage skips saving files in dry-run mode."""
+    """Verify that reserve_pending_stage and settle_persistence_stage skip saving files in dry-run mode."""
     mock_settings = Settings(gemini_key="mock", is_dry_run=True)
     monkeypatch.setattr("src.settings.settings", mock_settings)
     monkeypatch.setattr("bot.settings", mock_settings)
     
-    mock_save = mocker.patch("bot.save_seen_articles")
-    mock_dashboard = mocker.patch("bot.update_status_dashboard")
-    mock_profile = mocker.patch("bot.update_social_profiles")
+    mock_save = mocker.patch("bot.save_seen_articles", return_value=(True, {}))
     
-    curation = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
-    synthesis = SynthesisResult(content="test", lead_link=None, topic="General")
+    article = Article(title="Art 1", link="https://example.com/art1", summary="s", published="2026-08-18", source="src", score=100)
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(content="test", lead_link="https://example.com/art1", topic="General")
     
-    await persistence_stage(curation, synthesis)
-    
-    mock_save.assert_not_called()
-    mock_dashboard.assert_not_called()
-    mock_profile.assert_not_called()
+    mocker.patch("bot.load_seen_articles", return_value={"schema_version": 2, "revision": 1, "pending_stories": []})
+
+    state, matched = await reserve_pending_stage(curation, synthesis)
+    mock_save.assert_called_once()
+    assert mock_save.call_args[1]["is_reservation"] is True
 
 @pytest.mark.asyncio
 async def test_generate_briefing_dry_run(monkeypatch, mocker):

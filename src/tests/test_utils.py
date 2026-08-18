@@ -253,6 +253,40 @@ def test_gist_reconciliation_and_fallback(tmp_path, mocker):
 
     # Test Gist save failure handling during reservation
     mocker.patch("src.utils._save_gist_state", return_value=False)
-    res_ok = save_seen_articles({"revision": 5, "pending_stories": []}, is_reservation=True)
+    res_ok, _ = save_seen_articles({"revision": 5, "pending_stories": []}, is_reservation=True)
     assert res_ok is False
+
+def test_gist_success_local_write_failure_returns_false(mocker, tmp_path):
+    """Verify that if Gist write succeeds but local atomic write fails, save_seen_articles returns False."""
+    import src.utils
+    from src.utils import save_seen_articles
+    from src.settings import settings
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", "test_id")
+    object.__setattr__(settings, "gist_token", "test_token")
+
+    mocker.patch("src.utils._save_gist_state", return_value=True)
+    mocker.patch("src.utils.save_json_state", side_effect=IOError("Disk write error"))
+
+    ok, state = save_seen_articles({"revision": 5, "pending_stories": []}, is_reservation=False)
+    assert ok is False
+    assert state["revision"] == 6
+
+def test_dry_run_makes_no_state_writes(mocker):
+    """Verify that dry-run returns True immediately without making Gist or local disk writes."""
+    import src.utils
+    from src.utils import save_seen_articles
+    from src.settings import settings
+
+    object.__setattr__(settings, "is_dry_run", True)
+    mock_gist = mocker.patch("src.utils._save_gist_state")
+    mock_local = mocker.patch("src.utils.save_json_state")
+
+    data = {"revision": 5, "pending_stories": []}
+    ok, state = save_seen_articles(data, is_reservation=True)
+    assert ok is True
+    assert state == data
+    mock_gist.assert_not_called()
+    mock_local.assert_not_called()
 

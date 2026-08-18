@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Tuple
 import asyncio
 import functools
 import random
@@ -387,15 +387,16 @@ def load_seen_articles() -> dict:
 
         return sanitize_and_migrate_state({})
 
-def save_seen_articles(data: dict, is_reservation: bool = False) -> bool:
+def save_seen_articles(data: dict, is_reservation: bool = False) -> Tuple[bool, dict]:
     """
     Persists state with revision incrementing and updated_at assignment.
-    Pre-broadcast reservation failure: memory rollback, leaves primary and .bak untouched, returns False.
-    Post-broadcast settlement failure: rotates primary into .bak, writes primary with unsynced_gist: True, returns False.
+    Returns (success_flag, updated_state).
+    Pre-broadcast reservation failure: memory rollback, leaves primary and .bak untouched, returns (False, data).
+    Post-broadcast settlement failure: rotates primary into .bak, writes primary with unsynced_gist: True, returns (False, state).
     """
     if settings.is_dry_run:
         SafeLogger.info("DRY RUN: Skip mutating state persistence.")
-        return True
+        return True, data
 
     state = sanitize_and_migrate_state(data)
     state["revision"] += 1
@@ -410,11 +411,12 @@ def save_seen_articles(data: dict, is_reservation: bool = False) -> bool:
 
         if is_reservation and settings.gist_id and settings.gist_token and not gist_success:
             SafeLogger.error("Authoritative Gist pending reservation failed. Rolling back reservation write.")
-            return False
+            return False, data
 
         if not gist_success:
             state["unsynced_gist"] = True
 
+        local_success = True
         try:
             if os.path.exists(SEEN_FILE_PATH):
                 bak_path = f"{SEEN_FILE_PATH}.bak"
@@ -425,9 +427,10 @@ def save_seen_articles(data: dict, is_reservation: bool = False) -> bool:
             os.replace(temp_path, SEEN_FILE_PATH)
         except Exception as e:
             SafeLogger.error(f"Failed writing local primary state file: {e}")
-            return False
+            local_success = False
 
-        return gist_success
+        overall_success = gist_success and local_success
+        return overall_success, state
 
 
 def normalize_url(url: str, base_url: Optional[str] = None) -> str:
