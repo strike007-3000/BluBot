@@ -322,6 +322,67 @@ async def test_gist_diagnostics():
         except Exception as e:
             print(f"❌ CLEANUP FAILURE: Failed to remove temporary file {test_filename} from Gist ({e}). Residual filename remains: {test_filename}")
 
+async def test_gemini_model_discovery_and_multimodal_checks():
+    import base64
+    from google import genai
+    from google.genai import types
+    from src.config import GEMINI_MODEL_PRIORITY
+
+    print(f"\n{'='*20}")
+    print("DIAGNOSTIC: GEMINI MODEL DISCOVERY & MULTI-MODEL TEST")
+    print(f"{'='*20}")
+
+    key = os.getenv("GEMINI_KEY") or os.getenv("GEMINI_API_KEY")
+    if not key:
+        key = input("Enter Gemini API Key: ").strip()
+
+    if not key:
+        print("❌ No API key provided. Skipping Gemini model diagnostics.")
+        return
+
+    try:
+        client = genai.Client(api_key=key)
+        print("\nQuerying client.models.list()...")
+        available_models = [m.name for m in client.models.list()]
+        available_set = set(m.lower() for m in available_models)
+
+        print("\nChecking approved GEMINI_MODEL_PRIORITY order:")
+        top_4_checked = []
+        for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY, 1):
+            norm_id = model_id.lower()
+            is_avail = norm_id in available_set or any(norm_id in m for m in available_set)
+            status_icon = "✅ Available" if is_avail else "❌ Unavailable to API key"
+            print(f"  {idx}. {model_id} → {status_icon}")
+            if is_avail and len(top_4_checked) < 4:
+                top_4_checked.append(model_id)
+
+        print(f"\nTesting Top Available Models (Text + PNG Image Input):")
+        # 1x1 valid PNG bytes
+        png_1x1_bytes = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+        image_part = types.Part.from_bytes(data=png_1x1_bytes, mime_type="image/png")
+
+        for m_id in top_4_checked:
+            print(f"\n--- Testing {m_id} ---")
+            # Text check
+            try:
+                txt_resp = client.models.generate_content(model=m_id, contents="Say hello in 3 words")
+                print(f"  Text Generation: ✅ Success ('{(txt_resp.text or '').strip()}')")
+            except Exception as e:
+                print(f"  Text Generation: ❌ Failed ({e})")
+
+            # Multimodal image check
+            try:
+                img_resp = client.models.generate_content(
+                    model=m_id,
+                    contents=["Describe this image briefly for alt-text", image_part]
+                )
+                print(f"  Multimodal Image Input: ✅ Success ('{(img_resp.text or '').strip()[:60]}...')")
+            except Exception as e:
+                print(f"  Multimodal Image Input: ❌ Failed ({e})")
+
+    except Exception as e:
+        print(f"❌ Gemini model discovery failed: {e}")
+
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
@@ -331,9 +392,10 @@ async def main():
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
     print("3. Live Image Generation Test (Pollinations, Hugging Face, & Gemini Imagen)")
     print("4. Gist State Diagnostics (Opt-in Read/Write Test)")
+    print("5. Gemini Model Discovery & Multi-Model Test (Text + PNG Image Input)")
     
     try:
-        choice = input("\nEnter choice (1-4) or 'q' to quit: ").strip().lower()
+        choice = input("\nEnter choice (1-5) or 'q' to quit: ").strip().lower()
         if choice == "1":
             await test_scoring()
         elif choice == "2":
@@ -350,6 +412,8 @@ async def main():
             await test_image_generation()
         elif choice == "4":
             await test_gist_diagnostics()
+        elif choice == "5":
+            await test_gemini_model_discovery_and_multimodal_checks()
         elif choice == "q":
             print("Exiting.")
         else:
