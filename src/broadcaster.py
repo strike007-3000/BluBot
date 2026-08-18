@@ -222,9 +222,13 @@ async def post_to_threads(client, text, media=None):
             if root_post_id:
                 data["reply_to_id"] = root_post_id
                 
-            res = await client.post(base_url, data=data, timeout=20)
-            res.raise_for_status()
-            container_id = res.json().get("id")
+            try:
+                res = await client.post(base_url, data=data, timeout=20)
+                res.raise_for_status()
+                container_id = res.json().get("id")
+            except httpx.HTTPStatusError as e:
+                SafeLogger.warn(f"Threads container creation failed: HTTP {e.response.status_code} - {e.response.text}")
+                raise e
 
         # Wait for media processing
         for _ in range(3):
@@ -234,8 +238,12 @@ async def post_to_threads(client, text, media=None):
             await asyncio.sleep(2)
 
         # Publish
-        publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": settings.threads_token}, timeout=20)
-        publish_res.raise_for_status()
+        try:
+            publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": settings.threads_token}, timeout=20)
+            publish_res.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            SafeLogger.warn(f"Threads publication failed: HTTP {e.response.status_code} - {e.response.text}")
+            raise e
         
         # Capture the FIRST post ID as the root for all subsequent replies
         if i == 0:

@@ -405,6 +405,24 @@ async def test_generate_nvidia_missing_key(monkeypatch):
     assert res is None
 
 @pytest.mark.asyncio
+async def test_generate_nvidia_404_immediate_fallback(monkeypatch):
+    """Verify HTTP 404 from NVIDIA NIM returns None immediately without retrying."""
+    import httpx
+    from src.settings import Settings
+    mock_settings = Settings(gemini_key="mock", nvidia_key="nv-token", image_provider="nvidia")
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    mock_response = MagicMock()
+    mock_response.status_code = 404
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    res = await generate_nvidia_image("Test Prompt", mock_client)
+    assert res is None
+    # Verify post was called only once (no retries spent on 404!)
+    assert mock_client.post.call_count == 1
+
+@pytest.mark.asyncio
 async def test_generate_pollinations_works_without_key(monkeypatch):
     """Pollinations free API works without any API key."""
     from src.settings import Settings

@@ -832,6 +832,9 @@ async def generate_nvidia_image(
         # 45 seconds timeout
         timeout = httpx.Timeout(45.0, connect=10.0)
         response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=timeout)
+        if response.status_code == 404:
+            SafeLogger.warn("NVIDIA NIM API endpoint returned HTTP 404 (Not Found). Deterministic error, skipping retries and falling back immediately.")
+            return None
         response.raise_for_status()
         result = response.json()
 
@@ -841,8 +844,18 @@ async def generate_nvidia_image(
                 SafeLogger.warn("NVIDIA NIM returned invalid image bytes")
                 return None
             return img_bytes
+    except (httpx.TimeoutException, httpx.RequestError) as e:
+        SafeLogger.warn(f"NVIDIA NIM network/timeout error: {e}")
+        raise e
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            SafeLogger.warn("NVIDIA NIM API endpoint returned HTTP 404 (Not Found). Deterministic error, skipping retries and falling back immediately.")
+            return None
+        SafeLogger.warn(f"NVIDIA NIM HTTP error {e.response.status_code}: {e}")
+        raise e
     except Exception as e:
         SafeLogger.warn(f"NVIDIA NIM failed: {e}")
+        return None
     return None
 
 IMAGE_PROVIDER_CHAINS = {
