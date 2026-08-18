@@ -13,6 +13,7 @@ async def test_linkless_fallback_synthesis_creates_reservation_key(mocker):
     curation = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
     synthesis = SynthesisResult(content="Linkless Mentor Insight", lead_link=None, topic="General")
 
+    mocker.patch("bot.load_seen_articles", return_value={"pending_stories": []})
     mocker.patch("bot.save_seen_articles", side_effect=lambda data, **kw: (True, data))
     state, matched = await reserve_pending_stage(curation, synthesis)
 

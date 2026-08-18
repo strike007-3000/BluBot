@@ -290,3 +290,71 @@ def test_dry_run_makes_no_state_writes(mocker):
     mock_gist.assert_not_called()
     mock_local.assert_not_called()
 
+def test_compute_story_fingerprint_normalizes_headlines():
+    """Verify fingerprinting strips publisher suffixes, prices, and stopwords while preserving version tokens."""
+    from src.utils import compute_story_fingerprint
+
+    t1 = "Anthropic Releases Claude 3.7 Sonnet for $0.75/1M Tokens - TechCrunch"
+    fp1 = compute_story_fingerprint(t1)
+    assert "techcrunch" not in fp1
+    assert "0.75" not in fp1
+    assert "v3.7" in fp1
+    assert "anthropic" in fp1
+    assert "sonnet" in fp1
+
+def test_story_fingerprint_version_boundary_enforcement():
+    """Verify version boundary check: v3.6 vs v3.7 returns False, v3.7 vs v3.7 returns True."""
+    from src.utils import compute_story_fingerprint, are_story_fingerprints_similar
+
+    fp_36 = compute_story_fingerprint("Anthropic Launches Claude 3.6 Sonnet - VentureBeat")
+    fp_37 = compute_story_fingerprint("Anthropic Releases Claude 3.7 Sonnet - TechCrunch")
+    fp_37_alt = compute_story_fingerprint("Anthropic Announces New Claude 3.7 Sonnet Model - Wired")
+
+    # Version mismatch (3.6 vs 3.7) -> False
+    assert are_story_fingerprints_similar(fp_36, fp_37) is False
+
+    # Version match (3.7 vs 3.7) with token overlap -> True
+    assert are_story_fingerprints_similar(fp_37, fp_37_alt) is True
+
+def test_is_story_semantic_duplicate():
+    """Verify is_story_semantic_duplicate detects semantic duplicates in recent_stories and pending_stories."""
+    from src.utils import is_story_semantic_duplicate, compute_story_fingerprint
+
+    state = {
+        "recent_stories": [
+            {
+                "url": "https://example.com/claude37",
+                "title": "Anthropic Releases Claude 3.7 Sonnet",
+                "fingerprint": compute_story_fingerprint("Anthropic Releases Claude 3.7 Sonnet")
+            }
+        ],
+        "pending_stories": []
+    }
+
+    assert is_story_semantic_duplicate("Anthropic Announces New Claude 3.7 Sonnet Model", state) is True
+    assert is_story_semantic_duplicate("OpenAI Launches GPT-4.5 Turbo", state) is False
+
+def test_recent_stories_14day_retention_and_500_entry_capping():
+    """Verify filter_and_update_pending_stories prunes recent_stories > 14 days old and caps arrays to 500 entries."""
+    from src.utils import filter_and_update_pending_stories
+    from datetime import datetime, timezone, timedelta
+
+    now = datetime(2026, 8, 18, 12, 0, 0, tzinfo=timezone.utc)
+    old_date = (now - timedelta(days=15)).isoformat()
+    recent_date = (now - timedelta(days=2)).isoformat()
+
+    state = {
+        "recent_stories": [
+            {"url": "https://example.com/old", "title": "Old Story", "published_at": old_date},
+            {"url": "https://example.com/fresh", "title": "Fresh Story", "published_at": recent_date}
+        ],
+        "pending_stories": [],
+        "links": [f"https://example.com/link{i}" for i in range(600)]
+    }
+
+    filter_and_update_pending_stories(state, now_utc=now)
+
+    assert len(state["recent_stories"]) == 1
+    assert state["recent_stories"][0]["url"] == "https://example.com/fresh"
+    assert len(state["links"]) == 500
+
