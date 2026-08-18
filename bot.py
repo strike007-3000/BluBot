@@ -22,7 +22,7 @@ from src.utils import (
     load_seen_articles, save_seen_articles, SafeLogger, 
     load_session_string, save_session_string, get_link_metadata,
     load_seen_interactions, save_seen_interactions, human_delay,
-    is_safe_url, normalize_url
+    is_safe_url, normalize_url, compute_story_fingerprint
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight, 

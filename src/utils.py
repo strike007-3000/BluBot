@@ -296,7 +296,7 @@ _FP_STOPWORDS = {
 }
 
 _FP_PUBLISHER_SUFFIX_RE = re.compile(r'\s+[\-\|\:\•]\s+([A-Za-z0-9\s]+)$')
-_FP_VERSION_RE = re.compile(r'\b(v?\d+(?:\.\d+)+[a-z]?)\b', re.IGNORECASE)
+_FP_VERSION_RE = re.compile(r'(?:v\d+(?:\.\d+)*|(?<![\$\d])\b[1-9]\d*\.\d+(?:\.\d+)*[a-z]?\b)', re.IGNORECASE)
 
 def compute_story_fingerprint(title: str) -> str:
     """
