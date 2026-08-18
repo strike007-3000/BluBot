@@ -83,32 +83,6 @@ jobs:
           path: bluesky_session.txt
           key: bsky-session-${{ github.run_id }}
 
-      - name: Save recovery seen_articles.json to automated/state
-        if: always()
-        run: |
-          if [ -f seen_articles.json ]; then
-            python -m json.tool seen_articles.json > /dev/null 2>&1 || { echo "seen_articles.json is invalid JSON; skipping recovery commit"; exit 0; }
-            mkdir -p /tmp/state
-            cp seen_articles.json /tmp/state/
-            git clone --depth 1 --branch automated/state https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git state-branch || {
-              mkdir state-branch
-              cd state-branch
-              git init
-              git checkout -b automated/state
-              git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-              cd ..
-            }
-            cd state-branch
-            git config user.name "GitHub Action Bot"
-            git config user.email "actions@github.com"
-            cp /tmp/state/seen_articles.json .
-            git add seen_articles.json
-            if ! git diff --cached --quiet; then
-              git commit -m "chore: update recovery state [skip ci]"
-              git push origin automated/state
-            fi
-          fi
-
       - name: Commit STATUS.md to automated/state
         if: success()
         run: |
