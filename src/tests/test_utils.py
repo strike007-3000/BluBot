@@ -358,3 +358,75 @@ def test_recent_stories_14day_retention_and_500_entry_capping():
     assert state["recent_stories"][0]["url"] == "https://example.com/fresh"
     assert len(state["links"]) == 500
 
+def test_missing_local_state_with_valid_gist(mocker):
+    """Verify that when local file is missing, valid Gist state is loaded cleanly."""
+    from src.utils import load_seen_articles
+    from src.settings import settings
+
+    object.__setattr__(settings, "gist_id", "test_id")
+    object.__setattr__(settings, "gist_token", "test_token")
+
+    mocker.patch("src.utils._load_gist_state", return_value={"schema_version": 2, "revision": 10, "links": []})
+    mocker.patch("os.path.exists", return_value=False)
+    mocker.patch("src.utils.save_json_state")
+    mocker.patch("os.replace")
+
+    state = load_seen_articles()
+    assert state["revision"] == 10
+
+def test_missing_local_state_without_gist(mocker):
+    """Verify that when local file and Gist are missing/unconfigured, default schema-v2 state is initialized."""
+    from src.utils import load_seen_articles
+    from src.settings import settings
+
+    object.__setattr__(settings, "gist_id", "")
+    object.__setattr__(settings, "gist_token", "")
+
+    mocker.patch("os.path.exists", return_value=False)
+
+    state = load_seen_articles()
+    assert state["schema_version"] == 2
+    assert state["revision"] == 1
+
+def test_configured_unavailable_gist_aborts_reservation(mocker):
+    """Verify that when Gist is configured but save fails during reservation, save_seen_articles returns False."""
+    from src.utils import save_seen_articles
+    from src.settings import settings
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", "test_id")
+    object.__setattr__(settings, "gist_token", "test_token")
+
+    mocker.patch("src.utils._save_gist_state", return_value=False)
+
+    ok, state = save_seen_articles({"revision": 5, "pending_stories": []}, is_reservation=True)
+    assert ok is False
+
+def test_successful_gist_sync_clears_unsynced_gist(mocker, tmp_path):
+    """Verify that when Gist save succeeds, unsynced_gist is explicitly set to False."""
+    import src.utils
+    from src.utils import save_seen_articles
+    from src.settings import settings
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", "test_id")
+    object.__setattr__(settings, "gist_token", "test_token")
+
+    mocker.patch("src.utils._save_gist_state", return_value=True)
+
+    input_state = {"revision": 5, "unsynced_gist": True, "pending_stories": []}
+    ok, state = save_seen_articles(input_state, is_reservation=False)
+
+    assert ok is True
+    assert state["unsynced_gist"] is False
+    assert state["revision"] == 6
+
+def test_no_tracked_runtime_state_files():
+    """Verify that seen_articles.json is not tracked in the git repository index."""
+    import subprocess
+    res = subprocess.run(["git", "ls-files", "seen_articles.json"], capture_output=True, text=True)
+    assert res.stdout.strip() == ""
+
