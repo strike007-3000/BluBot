@@ -526,53 +526,74 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
 
     # Bluesky Session Hardening
     bsky_client = AsyncClient(request=AsyncRequest(timeout=30.0))
-    try:
-        cached_session = await asyncio.to_thread(load_session_string)
-        if cached_session:
-            SafeLogger.info("Restoring cached Bluesky session...")
-            await bsky_client.login(session_string=cached_session)
-        else:
-            SafeLogger.info("Initiating new Bluesky login...")
-            await bsky_client.login(settings.bsky_handle, settings.bsky_password)
-        session_str = bsky_client.export_session_string()
-        await asyncio.to_thread(save_session_string, session_str)
-    except Exception as e:
-        SafeLogger.error(f"Bluesky auth failed: {e}")
+    if settings.bsky_handle and settings.bsky_password:
+        try:
+            cached_session = await asyncio.to_thread(load_session_string)
+            if cached_session:
+                SafeLogger.info("Restoring cached Bluesky session...")
+                await bsky_client.login(session_string=cached_session)
+            else:
+                SafeLogger.info("Initiating new Bluesky login...")
+                await bsky_client.login(settings.bsky_handle, settings.bsky_password)
+            session_str = bsky_client.export_session_string()
+            await asyncio.to_thread(save_session_string, session_str)
+        except Exception as e:
+            SafeLogger.error(f"Bluesky auth failed: {e}")
+            bsky_client = None
+    else:
         bsky_client = None
 
-    tasks = [
-        ("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.media)) if bsky_client else None,
-        ("Mastodon", post_to_mastodon(synthesis.content, synthesis.media)),
-        ("Threads", post_to_threads(client, synthesis.content, synthesis.media))
-    ]
-    
-    active = [t for t in tasks if t]
-    results = await asyncio.gather(*[t[1] for t in active], return_exceptions=True)
+    tasks = []
+    if bsky_client and settings.bsky_handle:
+        tasks.append(("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.media)))
+    if settings.mastodon_token and settings.mastodon_base_url:
+        tasks.append(("Mastodon", post_to_mastodon(synthesis.content, synthesis.media)))
+    if settings.threads_token and settings.threads_user_id:
+        tasks.append(("Threads", post_to_threads(client, synthesis.content, synthesis.media)))
+
+    if not tasks:
+        SafeLogger.error("No configured broadcast targets available!")
+        return [BroadcastResult(platform="None", success=False, error="No configured targets")], bsky_client
+
+    results = await asyncio.gather(*[t[1] for t in tasks], return_exceptions=True)
     
     report = []
-    for (name, _), res in zip(active, results):
+    for (name, _), res in zip(tasks, results):
         if isinstance(res, Exception):
             report.append(BroadcastResult(platform=name, success=False, error=str(res)))
+        elif res is False:
+            report.append(BroadcastResult(platform=name, success=False, error="Platform skipped or failed internally"))
         else:
             report.append(BroadcastResult(platform=name, success=True))
     return report, bsky_client
 
 async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisResult) -> Tuple[dict, Article]:
     """Resolves lead article and writes pending reservation to state."""
-    if not synthesis.lead_link:
-        SafeLogger.error("Synthesis lead_link is missing or ambiguous. Aborting execution before broadcast.")
-        sys.exit(1)
-
-    canonical_lead = normalize_url(synthesis.lead_link)
+    import hashlib
+    canonical_lead = None
     matched_article = None
-    for art in curation.top_articles:
-        if art.link and normalize_url(art.link) == canonical_lead:
-            matched_article = art
-            break
 
-    if not matched_article:
-        SafeLogger.error(f"Lead link '{synthesis.lead_link}' could not be unambiguously resolved to a candidate article in curation. Aborting broadcast.")
-        sys.exit(1)
+    if synthesis.lead_link:
+        canonical_lead = normalize_url(synthesis.lead_link)
+        for art in curation.top_articles:
+            if art.link and normalize_url(art.link) == canonical_lead:
+                matched_article = art
+                break
+
+        if not matched_article:
+            SafeLogger.error(f"Lead link '{synthesis.lead_link}' could not be unambiguously resolved to a candidate article in curation. Aborting broadcast.")
+            sys.exit(1)
+    else:
+        # Linkless fallback path (e.g. mentor insight or topic fallback synthesis)
+        content_hash = hashlib.sha256((synthesis.content or "").encode('utf-8')).hexdigest()[:16]
+        canonical_lead = f"generated:{content_hash}"
+        matched_article = Article(
+            title=getattr(synthesis, 'topic', 'Generated Insight'),
+            link=canonical_lead,
+            summary=(synthesis.content or "")[:100],
+            published=datetime.now(timezone.utc).isoformat(),
+            source="Synthesis Engine"
+        )
 
     state = await asyncio.to_thread(load_seen_articles)
     pending_entry = {
@@ -584,8 +605,8 @@ async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisRe
     state.setdefault("pending_stories", []).append(pending_entry)
     
     res_ok, updated_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=True)
-    if settings.gist_id and settings.gist_token and not res_ok:
-        SafeLogger.error("CRITICAL: Authoritative Gist pending reservation failed. Aborting publication.")
+    if not res_ok:
+        SafeLogger.error("CRITICAL: Authoritative pending reservation failed on configured state storage. Aborting publication.")
         sys.exit(1)
 
     return updated_state, matched_article
@@ -597,13 +618,12 @@ async def settle_persistence_stage(
     matched_article: Article, 
     results: List[BroadcastResult]
 ) -> dict:
-    """Settles pending reservation to published (if any broadcast target succeeded) or clears it (if all failed)."""
-    canonical_lead = normalize_url(synthesis.lead_link)
+    """Settles pending reservation to published (if any broadcast target succeeded) or retains as uncertain (if all failed)."""
+    canonical_lead = normalize_url(synthesis.lead_link) if synthesis.lead_link else matched_article.link
     any_success = any(res.success for res in results)
 
-    state["pending_stories"] = [ps for ps in state.get("pending_stories", []) if ps.get("url") != canonical_lead]
-
     if any_success:
+        state["pending_stories"] = [ps for ps in state.get("pending_stories", []) if ps.get("url") != canonical_lead]
         pub_entry = {
             "url": canonical_lead,
             "title": matched_article.title,
@@ -637,13 +657,19 @@ async def settle_persistence_stage(
         state["recent_topics"] = state["recent_topics"][-20:]
 
         settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
-        if settings.gist_id and settings.gist_token and not settle_ok:
-            SafeLogger.error("Post-broadcast settlement failed to sync to Gist. Local recovery state written.")
+        if not settle_ok:
+            SafeLogger.error("Post-broadcast settlement failed to save on configured state storage.")
             sys.exit(1)
         return final_state
     else:
+        # Ambiguous Failure path: Retain reservation with stage='uncertain' so duplicate protection remains active
+        for ps in state.get("pending_stories", []):
+            if ps.get("url") == canonical_lead:
+                ps["stage"] = "uncertain"
+                ps["updated_at"] = datetime.now(timezone.utc).isoformat()
+
         settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
-        SafeLogger.error("All broadcast targets failed. Pending reservation cleared.")
+        SafeLogger.error("All broadcast targets failed or encountered errors. Pending reservation transitioned to uncertain state.")
         sys.exit(1)
 
 async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
@@ -651,8 +677,6 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     from dataclasses import replace
     if not synthesis.lead_link and curation.top_articles:
         synthesis = replace(synthesis, lead_link=curation.top_articles[0].link)
-    if not synthesis.lead_link:
-        return
     state, matched = await reserve_pending_stage(curation, synthesis)
     dummy_results = [BroadcastResult(platform="Bluesky", success=True)]
     return await settle_persistence_stage(state, curation, synthesis, matched, dummy_results)

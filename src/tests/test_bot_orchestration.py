@@ -5,31 +5,20 @@ from src.models import Article, CurationResult, SynthesisResult
 from src.settings import settings
 
 @pytest.mark.asyncio
-async def test_lead_article_resolution_missing_lead_aborts(mocker):
-    """Verify bot aborts before broadcast if synthesis lead_link is missing."""
+async def test_linkless_fallback_synthesis_creates_reservation_key(mocker):
+    """Verify linkless synthesis (lead_link=None) generates a deterministic reservation key and proceeds."""
     import bot
+    from bot import reserve_pending_stage
 
-    curation = CurationResult(
-        top_articles=[Article(title="Art 1", link="https://example.com/art1", summary="s", published="2026-08-18", source="src", score=100)],
-        seen_links=[],
-        recent_topics=[],
-        session_name="test_session"
-    )
-    synthesis = SynthesisResult(
-        content="Test content",
-        lead_link=None, # Missing lead link
-        topic="AI"
-    )
+    curation = CurationResult(top_articles=[], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(content="Linkless Mentor Insight", lead_link=None, topic="General")
 
-    mocker.patch("sys.exit", side_effect=SystemExit(1))
-    mocker.patch("bot.check_for_telegram_topic", return_value=(None, None))
-    mocker.patch("bot.curation_stage", return_value=curation)
-    mocker.patch("bot.synthesis_stage", return_value=(synthesis, curation))
-    mocker.patch("bot.media_strategy_stage", return_value=None)
+    mocker.patch("bot.save_seen_articles", side_effect=lambda data, **kw: (True, data))
+    state, matched = await reserve_pending_stage(curation, synthesis)
 
-    with pytest.raises(SystemExit) as exc_info:
-        await bot.main()
-    assert exc_info.value.code == 1
+    assert matched.link.startswith("generated:")
+    assert len(state["pending_stories"]) == 1
+    assert state["pending_stories"][0]["url"].startswith("generated:")
 
 @pytest.mark.asyncio
 async def test_reservation_failure_aborts_broadcast(mocker):
@@ -131,8 +120,8 @@ async def test_reservation_and_settlement_revision_advancement(mocker, tmp_path)
     assert final_state["recent_stories"][0]["stage"] == "published"
 
 @pytest.mark.asyncio
-async def test_all_broadcast_targets_fail_clears_reservation(mocker, tmp_path):
-    """Verify that if all broadcast targets fail, reservation is cleared and sys.exit(1) is called."""
+async def test_all_broadcast_targets_fail_retains_uncertain_reservation(mocker, tmp_path):
+    """Verify that if all broadcast targets fail, reservation is retained with stage='uncertain' and sys.exit(1) is called."""
     import src.utils
     from bot import reserve_pending_stage, settle_persistence_stage
     from src.models import BroadcastResult
@@ -154,6 +143,8 @@ async def test_all_broadcast_targets_fail_clears_reservation(mocker, tmp_path):
         await settle_persistence_stage(reserved_state, curation, synthesis, matched, all_failed)
 
     assert exc_info.value.code == 1
+    assert len(reserved_state["pending_stories"]) == 1
+    assert reserved_state["pending_stories"][0]["stage"] == "uncertain"
 
 @pytest.mark.asyncio
 async def test_pending_and_uncertain_stories_suppressed_in_curation(mocker, tmp_path):
