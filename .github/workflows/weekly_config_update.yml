@@ -34,7 +34,7 @@ jobs:
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
           BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
           BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
-          IMAGE_PROVIDER: nvidia
+          IMAGE_PROVIDER: huggingface
           LOG_FORMAT: pretty
         run: python scripts/update_config_keywords.py
 

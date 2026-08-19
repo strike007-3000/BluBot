@@ -16,6 +16,7 @@ from src.config import (
     TOPIC_MAP, CURATOR_SYSTEM_INSTRUCTION, MENTOR_SYSTEM_INSTRUCTION,
     INTERACTIVE_REPLY_INSTRUCTION,
     SAGE_DESIGNER_INSTRUCTION, SECONDARY_TOPICS, GEMINI_MODEL_PRIORITY,
+    normalize_gemini_model_id,
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
     MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
@@ -364,14 +365,13 @@ async def prune_gemini_model_priority_async(genai_client):
         return
     try:
         SafeLogger.info("Gemini Model Discovery: Querying available models from API...")
-        available_models = []
+        available_models = set()
         async for m in await genai_client.aio.models.list():
-            available_models.append(m.name)
+            available_models.add(normalize_gemini_model_id(m.name))
             
         pruned = []
         for model_id in GEMINI_MODEL_PRIORITY:
-            norm_id = model_id.lower()
-            if any(norm_id in m.lower() or m.lower() in norm_id for m in available_models):
+            if normalize_gemini_model_id(model_id) in available_models:
                 pruned.append(model_id)
                 
         if pruned:
@@ -832,8 +832,8 @@ async def generate_nvidia_image(
         # 45 seconds timeout
         timeout = httpx.Timeout(45.0, connect=10.0)
         response = await client.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, timeout=timeout)
-        if response.status_code == 404:
-            SafeLogger.warn("NVIDIA NIM API endpoint returned HTTP 404 (Not Found). Deterministic error, skipping retries and falling back immediately.")
+        if 400 <= response.status_code < 500 and response.status_code not in {408, 429}:
+            SafeLogger.warn(f"NVIDIA NIM returned permanent HTTP {response.status_code}. Skipping retries and falling back immediately.")
             return None
         response.raise_for_status()
         result = response.json()
@@ -848,8 +848,8 @@ async def generate_nvidia_image(
         SafeLogger.warn(f"NVIDIA NIM network/timeout error: {e}")
         raise e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
-            SafeLogger.warn("NVIDIA NIM API endpoint returned HTTP 404 (Not Found). Deterministic error, skipping retries and falling back immediately.")
+        if 400 <= e.response.status_code < 500 and e.response.status_code not in {408, 429}:
+            SafeLogger.warn(f"NVIDIA NIM returned permanent HTTP {e.response.status_code}. Skipping retries and falling back immediately.")
             return None
         SafeLogger.warn(f"NVIDIA NIM HTTP error {e.response.status_code}: {e}")
         raise e

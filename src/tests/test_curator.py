@@ -226,6 +226,33 @@ async def test_prune_gemini_model_priority_async(monkeypatch):
     GEMINI_MODEL_PRIORITY.extend(original_priority)
 
 @pytest.mark.asyncio
+async def test_async_model_pruning_does_not_match_preview_alias(monkeypatch):
+    from src.settings import Settings
+    monkeypatch.setattr("src.curator.settings", Settings(gemini_key="mock", is_dry_run=False))
+    monkeypatch.setenv("CI", "false")
+    original_priority = list(GEMINI_MODEL_PRIORITY)
+
+    class AsyncListMock:
+        def __aiter__(self):
+            return self
+        async def __anext__(self):
+            if hasattr(self, "done"):
+                raise StopAsyncIteration
+            self.done = True
+            model = MagicMock()
+            model.name = "models/gemini-3.1-flash-lite-preview"
+            return model
+
+    mock_client = MagicMock()
+    mock_client.aio.models.list = AsyncMock(return_value=AsyncListMock())
+    await prune_gemini_model_priority_async(mock_client)
+
+    # No exact approved model was returned, so the safety behavior keeps defaults.
+    assert GEMINI_MODEL_PRIORITY == original_priority
+    GEMINI_MODEL_PRIORITY.clear()
+    GEMINI_MODEL_PRIORITY.extend(original_priority)
+
+@pytest.mark.asyncio
 async def test_summarize_news_with_thinking_budget(monkeypatch):
     """Verify that summarize_news includes thinking_config when supported by the model."""
     monkeypatch.setenv("CI", "true")
@@ -421,6 +448,39 @@ async def test_generate_nvidia_404_immediate_fallback(monkeypatch):
     assert res is None
     # Verify post was called only once (no retries spent on 404!)
     assert mock_client.post.call_count == 1
+
+@pytest.mark.asyncio
+async def test_generate_nvidia_permanent_4xx_immediate_fallback(monkeypatch):
+    """Permanent NVIDIA client errors must not spend the retry budget."""
+    from src.settings import Settings
+    mock_settings = Settings(gemini_key="mock", nvidia_key="nv-token", image_provider="nvidia")
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    mock_response = MagicMock()
+    mock_response.status_code = 422
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    assert await generate_nvidia_image("Test Prompt", mock_client) is None
+    assert mock_client.post.call_count == 1
+
+@pytest.mark.asyncio
+async def test_generate_nvidia_429_retains_retries(monkeypatch):
+    """Rate limits remain retryable after permanent 4xx errors are bypassed."""
+    import httpx
+    from src.settings import Settings
+    mock_settings = Settings(gemini_key="mock", nvidia_key="nv-token", image_provider="nvidia")
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+    monkeypatch.setattr("src.utils.asyncio.sleep", AsyncMock())
+
+    request = httpx.Request("POST", "https://ai.api.nvidia.com/test")
+    response = httpx.Response(429, request=request)
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=response)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await generate_nvidia_image("Test Prompt", mock_client)
+    assert mock_client.post.call_count == 3
 
 @pytest.mark.asyncio
 async def test_generate_pollinations_works_without_key(monkeypatch):
@@ -737,4 +797,3 @@ async def test_generate_imagen_multimodal_mode(monkeypatch):
     res = await generate_imagen_image(mock_client, "test prompt")
     assert res == b"MultimodalImagenBytes"
     mock_client.aio.models.generate_content.assert_called_once()
-

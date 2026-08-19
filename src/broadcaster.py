@@ -1,4 +1,5 @@
 import asyncio
+import httpx
 import re
 from datetime import datetime, timezone, timedelta
 from mastodon import Mastodon
@@ -228,6 +229,8 @@ async def post_to_threads(client, text, media=None):
                 container_id = res.json().get("id")
             except httpx.HTTPStatusError as e:
                 SafeLogger.warn(f"Threads container creation failed: HTTP {e.response.status_code} - {e.response.text}")
+                if 400 <= e.response.status_code < 500 and e.response.status_code not in {408, 429}:
+                    e.skip_backoff_retry = True
                 raise e
 
         # Wait for media processing
@@ -243,6 +246,8 @@ async def post_to_threads(client, text, media=None):
             publish_res.raise_for_status()
         except httpx.HTTPStatusError as e:
             SafeLogger.warn(f"Threads publication failed: HTTP {e.response.status_code} - {e.response.text}")
+            if 400 <= e.response.status_code < 500 and e.response.status_code not in {408, 429}:
+                e.skip_backoff_retry = True
             raise e
         
         # Capture the FIRST post ID as the root for all subsequent replies
