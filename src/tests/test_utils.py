@@ -415,7 +415,11 @@ def test_successful_gist_sync_clears_unsynced_gist(mocker, tmp_path):
     object.__setattr__(settings, "gist_id", "test_id")
     object.__setattr__(settings, "gist_token", "test_token")
 
-    mocker.patch("src.utils._save_gist_state", return_value=True)
+    uploaded_state = {}
+    def capture_gist_payload(_filename, payload):
+        uploaded_state.update(payload)
+        return True
+    mocker.patch("src.utils._save_gist_state", side_effect=capture_gist_payload)
 
     input_state = {"revision": 5, "unsynced_gist": True, "pending_stories": []}
     ok, state = save_seen_articles(input_state, is_reservation=False)
@@ -423,10 +427,10 @@ def test_successful_gist_sync_clears_unsynced_gist(mocker, tmp_path):
     assert ok is True
     assert state["unsynced_gist"] is False
     assert state["revision"] == 6
+    assert uploaded_state["unsynced_gist"] is False
 
 def test_no_tracked_runtime_state_files():
     """Verify that seen_articles.json is not tracked in the git repository index."""
     import subprocess
     res = subprocess.run(["git", "ls-files", "seen_articles.json"], capture_output=True, text=True)
     assert res.stdout.strip() == ""
-

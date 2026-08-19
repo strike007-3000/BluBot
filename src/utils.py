@@ -531,9 +531,11 @@ def save_seen_articles(data: dict, is_reservation: bool = False) -> Tuple[bool, 
     with FileLock(SEEN_FILE_PATH):
         gist_success = True
         if settings.gist_id and settings.gist_token:
+            # A successful upload is authoritative, so clear the recovery marker
+            # in the payload before serializing it to Gist.
+            state["unsynced_gist"] = False
             gist_success = _save_gist_state("seen_articles.json", state)
             if gist_success:
-                state["unsynced_gist"] = False
                 if is_reservation:
                     SafeLogger.info(f"Authoritative Gist pending reservation saved (revision {state['revision']}).")
                 else:

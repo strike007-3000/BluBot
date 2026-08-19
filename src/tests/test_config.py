@@ -1,5 +1,6 @@
 import pytest
 import os
+from unittest.mock import MagicMock, patch
 from src.config import validate_config, validate_gemini_model_priority
 
 def test_validate_config_dry_run_injection():
@@ -45,7 +46,6 @@ def test_validate_gemini_model_priority_pruning(monkeypatch):
     from src.config import GEMINI_MODEL_PRIORITY
     original_priority = list(GEMINI_MODEL_PRIORITY)
     
-    from unittest.mock import MagicMock, patch
     mock_client = MagicMock()
     m1 = MagicMock()
     m1.name = "models/gemma-4-31b-it"
@@ -62,6 +62,28 @@ def test_validate_gemini_model_priority_pruning(monkeypatch):
     assert "models/gemini-3.1-flash-lite-preview" not in GEMINI_MODEL_PRIORITY
     
     # Restore original priority list for other tests
+    GEMINI_MODEL_PRIORITY.clear()
+    GEMINI_MODEL_PRIORITY.extend(original_priority)
+
+def test_validate_gemini_model_priority_does_not_match_preview_alias(monkeypatch):
+    """A preview API ID must not keep the similarly named stable model active."""
+    monkeypatch.setenv("CI", "false")
+    monkeypatch.setenv("GEMINI_KEY", "test_key")
+
+    from src.config import GEMINI_MODEL_PRIORITY
+    original_priority = list(GEMINI_MODEL_PRIORITY)
+    mock_client = MagicMock()
+    preview = MagicMock()
+    preview.name = "models/gemini-3.1-flash-lite-preview"
+    fallback = MagicMock()
+    fallback.name = "gemini-2.5-flash-lite"
+    mock_client.models.list.return_value = [preview, fallback]
+
+    with patch("google.genai.Client", return_value=mock_client):
+        assert validate_gemini_model_priority() is True
+
+    assert "models/gemini-3.1-flash-lite" not in GEMINI_MODEL_PRIORITY
+    assert GEMINI_MODEL_PRIORITY == ["models/gemini-2.5-flash-lite"]
     GEMINI_MODEL_PRIORITY.clear()
     GEMINI_MODEL_PRIORITY.extend(original_priority)
 

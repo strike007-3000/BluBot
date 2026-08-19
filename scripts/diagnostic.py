@@ -326,7 +326,7 @@ async def test_gemini_model_discovery_and_multimodal_checks():
     import base64
     from google import genai
     from google.genai import types
-    from src.config import GEMINI_MODEL_PRIORITY
+    from src.config import GEMINI_MODEL_PRIORITY, normalize_gemini_model_id
 
     print(f"\n{'='*20}")
     print("DIAGNOSTIC: GEMINI MODEL DISCOVERY & MULTI-MODEL TEST")
@@ -344,13 +344,12 @@ async def test_gemini_model_discovery_and_multimodal_checks():
         client = genai.Client(api_key=key)
         print("\nQuerying client.models.list()...")
         available_models = [m.name for m in client.models.list()]
-        available_set = set(m.lower() for m in available_models)
+        available_set = {normalize_gemini_model_id(m) for m in available_models}
 
         print("\nChecking approved GEMINI_MODEL_PRIORITY order:")
         top_4_checked = []
         for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY, 1):
-            norm_id = model_id.lower()
-            is_avail = norm_id in available_set or any(norm_id in m for m in available_set)
+            is_avail = normalize_gemini_model_id(model_id) in available_set
             status_icon = "✅ Available" if is_avail else "❌ Unavailable to API key"
             print(f"  {idx}. {model_id} → {status_icon}")
             if is_avail and len(top_4_checked) < 4:

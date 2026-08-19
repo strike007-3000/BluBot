@@ -9,7 +9,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 ## 🚀 Key Features
 
 - **Sage Intelligence v3 (Self-Healing AI)**: 
-    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.1-flash-lite-preview`** → **`gemma-4-31b-it`** → **`gemma-4-26b-a4b-it`** → **`gemma-3-27b-it`** → **`gemini-2.5-flash-lite`**) if the primary provider is saturated or fails validation.
+    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.7-flash`** → **`gemini-3.5-flash-lite`** → **`gemini-3.6-flash`** → **`gemini-3.1-flash-lite`** → **`gemma-4-31b-it`** → **`gemma-4-26b-a4b-it`** → **`gemma-3-27b-it`** → **`gemini-2.5-flash-lite`**) if the primary provider is saturated or fails validation.
     - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
@@ -174,7 +174,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
-- **v3.18.3 (Current)**: **Node 24 Actions Compatibility**.
+- **v3.21.2 (Current)**: **Merged Review Corrections**.
+    - ☁️ **Gist Recovery**: Clears `unsynced_gist` in the authoritative payload before a successful recovery upload.
+    - 🧠 **Exact Model Discovery**: Matches normalized Gemini model IDs exactly, preventing preview endpoints from impersonating stable models.
+    - 🛡️ **Provider Failures**: Stops retrying permanent Threads and NVIDIA 4xx errors while retaining retries for transient failures, and removes the deprecated NVIDIA endpoint from scheduled-run priority.
+- **v3.18.3**: **Node 24 Actions Compatibility**.
     - ⚙️ **CI Maintenance**: Upgraded checkout, Python setup, and cache actions used by the scheduled and test workflows to Node 24-compatible major versions.
 - **v3.18.2**: **Synthesis Context Fix**.
     - 🧠 **Pipeline Reliability**: Removed a truncated duplicate `synthesis_stage` declaration and restored temporal context initialization in the active synthesis path, preventing scheduled runs from failing before summarization or fallback generation.

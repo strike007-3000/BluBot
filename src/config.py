@@ -272,6 +272,10 @@ def validate_config():
     from .settings import Settings
     return Settings.from_env().validate()
 
+def normalize_gemini_model_id(model_id: str) -> str:
+    """Normalize a Gemini API model name for exact discovery matching."""
+    return model_id.strip().lower().removeprefix("models/")
+
 def validate_gemini_model_priority():
     """Legacy wrapper for Gemini model self-discovery."""
     if os.getenv("CI", "false").lower() == "true":
@@ -285,13 +289,12 @@ def validate_gemini_model_priority():
         client = genai.Client(api_key=key)
         # List models synchronously
         SafeLogger.info("Gemini Validation: Querying available models from API...")
-        available = [m.name for m in client.models.list()]
+        available = {normalize_gemini_model_id(m.name) for m in client.models.list()}
         
         # Prune prioritised list in-place
         pruned = []
         for model_id in GEMINI_MODEL_PRIORITY:
-            norm_id = model_id.lower()
-            if any(norm_id in m.lower() or m.lower() in norm_id for m in available):
+            if normalize_gemini_model_id(model_id) in available:
                 pruned.append(model_id)
                 
         if pruned:

@@ -201,7 +201,7 @@ To ensure the Sage never "forgets" even in ephemeral runner environments, we use
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.21.1 maintains a professional **Automated Test Suite** powered by `pytest` with **116 tests** across 12 modules.
+BluBot v3.21.2 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for exact Gemini discovery, Gist recovery state, permanent provider errors, and Threads failures.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.

@@ -256,6 +256,49 @@ async def test_threads_broadcaster_scenarios(monkeypatch, mocker):
     assert "image_url" not in payload
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("failure_stage,status_code", [("container", 400), ("publish", 422)])
+async def test_threads_permanent_4xx_is_not_retried(monkeypatch, failure_stage, status_code):
+    mock_settings = Settings(gemini_key="mock", is_dry_run=False, threads_user_id="test", threads_token="test")
+    monkeypatch.setattr("src.broadcaster.settings", mock_settings)
+
+    request = httpx.Request("POST", "https://graph.threads.net/v1.0/test/threads")
+    response = httpx.Response(status_code, request=request, text="permanent failure")
+    error = httpx.HTTPStatusError("permanent failure", request=request, response=response)
+    container_res = MagicMock(status_code=200)
+    container_res.json.return_value = {"id": "container123"}
+    status_res = MagicMock(status_code=200)
+    status_res.json.return_value = {"status": "FINISHED"}
+
+    client = MagicMock()
+    client.get = AsyncMock(return_value=status_res)
+    if failure_stage == "container":
+        client.post = AsyncMock(side_effect=error)
+    else:
+        client.post = AsyncMock(side_effect=[container_res, error])
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await post_to_threads(client, "Text content")
+
+    expected_calls = 1 if failure_stage == "container" else 2
+    assert client.post.call_count == expected_calls
+
+@pytest.mark.asyncio
+async def test_threads_429_retains_retries(monkeypatch):
+    mock_settings = Settings(gemini_key="mock", is_dry_run=False, threads_user_id="test", threads_token="test")
+    monkeypatch.setattr("src.broadcaster.settings", mock_settings)
+    monkeypatch.setattr("src.utils.asyncio.sleep", AsyncMock())
+
+    request = httpx.Request("POST", "https://graph.threads.net/v1.0/test/threads")
+    response = httpx.Response(429, request=request, text="rate limited")
+    error = httpx.HTTPStatusError("rate limited", request=request, response=response)
+    client = MagicMock()
+    client.post = AsyncMock(side_effect=error)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await post_to_threads(client, "Text content")
+    assert client.post.call_count == 3
+
+@pytest.mark.asyncio
 async def test_mastodon_broadcaster_scenarios(monkeypatch, mocker):
     mock_settings = Settings(gemini_key="mock", is_dry_run=False, mastodon_token="test", mastodon_base_url="https://mastodon.social")
     monkeypatch.setattr("src.broadcaster.settings", mock_settings)
