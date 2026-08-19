@@ -5,6 +5,7 @@ __pycache__/
 venv/
 .pytest_cache/
 .vscode/
+.v3code/
 .idea/
 bluesky_session.txt
 DOCUMENTATION_COMPARISON.md
