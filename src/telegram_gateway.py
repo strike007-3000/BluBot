@@ -58,14 +58,14 @@ async def send_draft_for_approval(
 ) -> Tuple[Optional[str], Optional[MediaAsset]]:
     """
     Sends the generated post draft and image to Telegram for approval.
-    Waits up to settings.telegram_timeout_minutes (default 5) for user callback or text reply.
-    If the timeout expires, defaults to the current text and media asset, and posts.
+    Waits for user callback or text reply. A timeout of 0 waits indefinitely.
+    A positive timeout rejects the draft when it expires; it never auto-publishes.
     Returns a Tuple: (approved_text, approved_media).
     Returns (None, None) if rejected.
     """
     if not settings.telegram_bot_token or not settings.telegram_user_id:
-        SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
-        return text, media
+        SafeLogger.error("Telegram: Missing bot token or user ID. Rejecting draft.")
+        return None, None
 
     # Do not request approval in dry-run mode
     if settings.is_dry_run:
@@ -122,8 +122,11 @@ async def send_draft_for_approval(
         waiting_for_feedback = False
         feedback_prompt_id = None
 
-        SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval or edits...")
-        while (time.monotonic() - start_time) < timeout_seconds:
+        if timeout_seconds > 0:
+            SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval or edits...")
+        else:
+            SafeLogger.info("Telegram: Waiting for approval with no automatic timeout.")
+        while timeout_seconds <= 0 or (time.monotonic() - start_time) < timeout_seconds:
             try:
                 updates = await bot.get_updates(offset=offset, timeout=1)
                 for update in updates:
@@ -283,7 +286,7 @@ async def send_draft_for_approval(
                             
                             try:
                                 from src.config import CURATOR_SYSTEM_INSTRUCTION
-                                from google.genai import types
+                                from src.llm import generate_text
                                 from src.curator import strip_markdown
                                 
                                 rewrite_prompt = (
@@ -293,15 +296,10 @@ async def send_draft_for_approval(
                                     f"Follow all system instructions for style, tone, and length constraints."
                                 )
                                 
-                                response = await genai_client.aio.models.generate_content(
-                                    model=settings.gemini_model,
-                                    contents=rewrite_prompt,
-                                    config=types.GenerateContentConfig(
-                                        system_instruction=CURATOR_SYSTEM_INSTRUCTION,
-                                        temperature=0.7
-                                    )
-                                )
-                                new_text = strip_markdown(response.text.strip())
+                                new_text = strip_markdown(await generate_text(
+                                    CURATOR_SYSTEM_INSTRUCTION,
+                                    rewrite_prompt,
+                                ))
 
                                 # Update the sent message preview
                                 original_has_media = media is not None and media.image_bytes is not None
@@ -397,14 +395,13 @@ async def send_draft_for_approval(
 
             await asyncio.sleep(poll_interval)
 
-        # Timeout occurred: auto-post
-        SafeLogger.info("Telegram: Approval timeout expired. Automatically publishing draft.")
-        await bot.send_message(chat_id=chat_id, text="🕒 Timeout expired. Automatically publishing draft.")
-        return text, media
+        SafeLogger.info("Telegram: Approval timeout expired. Draft rejected without publication.")
+        await bot.send_message(chat_id=chat_id, text="🕒 Время согласования истекло. Черновик не опубликован.")
+        return None, None
 
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
-        return text, media  # Fallback to current text and media to maintain robustness_bytes, image_alt_text  # Fallback to current text and images to maintain robustness
+        return None, None
 
 def process_authorized_command(text: str) -> Optional[dict]:
     """

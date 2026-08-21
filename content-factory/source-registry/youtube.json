@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "youtube": {
+    "seed_queries": [
+      "Claude Code",
+      "OpenAI Codex",
+      "AI agents MCP",
+      "n8n automation",
+      "Gemini 2.5 release"
+    ],
+    "regions": [
+      "RU",
+      "UA",
+      "US",
+      "DE",
+      "IN",
+      "BR"
+    ],
+    "language_hints": [
+      "ru",
+      "en"
+    ],
+    "default_filters": {
+      "min_views": 250,
+      "min_duration_seconds": 90,
+      "max_age_days": 30,
+      "max_items_per_query": 8
+    },
+    "commentary_notes": {
+      "ru_focus": "собираем каналы и видео с русскими текстовыми маркерами + дефолтный фильтр на аудиторию ru",
+      "all_languages": "для роста объема расширяем на любые языки, включая EN/ES/PT/DE"
+    }
+  }
+}
