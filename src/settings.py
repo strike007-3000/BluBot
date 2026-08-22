@@ -8,7 +8,11 @@ from dotenv import load_dotenv
 class Settings:
     """Centralized, typed configuration for BluBot."""
     # API Credentials
-    gemini_key: str
+    gemini_key: str = ""
+    llm_provider: str = "codex"
+    llm_fallback_providers: str = "claude,gemini"
+    codex_model: Optional[str] = None
+    claude_model: Optional[str] = None
     nvidia_key: Optional[str] = None
     bsky_handle: str = ""
     bsky_password: str = ""
@@ -31,6 +35,20 @@ class Settings:
     huggingface_api_key: Optional[str] = None
     huggingface_image_model: str = ""
     enable_image_gen: bool = True
+    youtube_api_key: Optional[str] = None
+    youtube_region_codes: List[str] = field(default_factory=lambda: ["US", "RU", "UA"])
+    youtube_language_hints: List[str] = field(default_factory=lambda: ["ru", "en"])
+    youtube_seed_queries: List[str] = field(default_factory=lambda: [
+        "Claude Code",
+        "OpenAI Codex",
+        "AI agents MCP",
+        "n8n automation",
+    ])
+    enable_hybrid_auto_posting: bool = True
+    min_post_score_for_auto: int = 80
+    max_auto_posts_per_day: int = 1
+    min_post_interval_minutes: int = 30
+    auto_queue_ttl_hours: int = 24
     enable_bio_management: bool = True
     enable_interactions: bool = True
     enable_bsky_comment_replies: bool = True
@@ -40,7 +58,8 @@ class Settings:
     # Telegram Integration Config
     telegram_bot_token: Optional[str] = None
     telegram_user_id: Optional[str] = None
-    telegram_timeout_minutes: int = 5
+    telegram_channel_id: Optional[str] = None
+    telegram_timeout_minutes: int = 0
     enable_telegram_approval: bool = False
     
     # Platform Hashtag Controls
@@ -79,9 +98,22 @@ class Settings:
         # Core validation logic moved from config.py
         settings_dict = {
             "gemini_key": os.getenv("GEMINI_KEY", ""),
-            "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "true").lower() == "true",
+            "llm_provider": os.getenv("LLM_PROVIDER", "codex").lower(),
+            "llm_fallback_providers": os.getenv("LLM_FALLBACK_PROVIDERS", "claude,gemini").lower(),
+            "codex_model": os.getenv("CODEX_MODEL"),
+            "claude_model": os.getenv("CLAUDE_MODEL"),
+            "enable_image_gen": os.getenv("ENABLE_IMAGE_GEN", "false").lower() == "true",
             "enable_bio_management": os.getenv("ENABLE_BIO_MGMT", "true").lower() == "true",
             "enable_interactions": os.getenv("ENABLE_INTERACTIONS", "true").lower() == "true",
+            "youtube_api_key": os.getenv("YOUTUBE_API_KEY"),
+            "youtube_region_codes": [r.strip() for r in os.getenv("YOUTUBE_REGION_CODES", "US,RU,UA").split(",") if r.strip()],
+            "youtube_language_hints": [h.strip() for h in os.getenv("YOUTUBE_LANGUAGE_HINTS", "ru,en").split(",") if h.strip()],
+            "youtube_seed_queries": [q.strip() for q in os.getenv("YOUTUBE_SEED_QUERIES", "Claude Code,OpenAI Codex,AI agents MCP,n8n automation").split(",") if q.strip()],
+            "enable_hybrid_auto_posting": os.getenv("ENABLE_HYBRID_AUTO_POSTING", "true").lower() == "true",
+            "min_post_score_for_auto": int(os.getenv("MIN_POST_SCORE_FOR_AUTO", "80")) if os.getenv("MIN_POST_SCORE_FOR_AUTO", "80").strip().isdigit() else 80,
+            "max_auto_posts_per_day": int(os.getenv("MAX_AUTO_POSTS_PER_DAY", "1")) if os.getenv("MAX_AUTO_POSTS_PER_DAY", "1").strip().isdigit() else 1,
+            "min_post_interval_minutes": int(os.getenv("MIN_POST_INTERVAL_MINUTES", "30")) if os.getenv("MIN_POST_INTERVAL_MINUTES", "30").strip().isdigit() else 30,
+            "auto_queue_ttl_hours": int(os.getenv("AUTO_QUEUE_TTL_HOURS", "24")) if os.getenv("AUTO_QUEUE_TTL_HOURS", "24").strip().isdigit() else 24,
             "enable_bsky_comment_replies": os.getenv("ENABLE_BSKY_COMMENT_REPLIES", "true").lower() == "true",
             "enable_mastodon_comment_replies": os.getenv("ENABLE_MASTODON_COMMENT_REPLIES", "false").lower() == "true",
             "enable_threads_comment_replies": os.getenv("ENABLE_THREADS_COMMENT_REPLIES", "false").lower() == "true",
@@ -110,7 +142,8 @@ class Settings:
             # Telegram configuration
             "telegram_bot_token": os.getenv("TELEGRAM_BOT_TOKEN"),
             "telegram_user_id": os.getenv("TELEGRAM_USER_ID"),
-            "telegram_timeout_minutes": int(os.getenv("TELEGRAM_TIMEOUT_MINUTES", "5")),
+            "telegram_channel_id": os.getenv("TELEGRAM_CHANNEL_ID"),
+            "telegram_timeout_minutes": int(os.getenv("TELEGRAM_TIMEOUT_MINUTES", "0")),
             "enable_telegram_approval": os.getenv("ENABLE_TELEGRAM_APPROVAL", "true").lower() == "true",
 
             # Hashtags configuration
@@ -151,12 +184,27 @@ class Settings:
         if self.is_dry_run:
             return True
 
-        if not self.gemini_key:
-            SafeLogger.error("Settings: Missing GEMINI_KEY.")
+        supported_providers = {"codex", "claude", "gemini"}
+        if self.llm_provider not in supported_providers:
+            SafeLogger.error(f"Settings: Unsupported LLM_PROVIDER '{self.llm_provider}'.")
             return False
-            
-        if not self.bsky_handle or not self.bsky_password:
-            SafeLogger.error("Settings: Missing Bluesky credentials.")
+
+        if self.llm_provider == "gemini" and not self.gemini_key:
+            SafeLogger.error("Settings: GEMINI_KEY is required when LLM_PROVIDER=gemini.")
+            return False
+
+        if self.enable_telegram_approval and (
+            not self.telegram_bot_token or not self.telegram_user_id
+        ):
+            SafeLogger.error("Settings: Telegram approval requires TELEGRAM_BOT_TOKEN and TELEGRAM_USER_ID.")
+            return False
+
+        if not self.telegram_channel_id and not (
+            self.bsky_handle
+            or (self.mastodon_token and self.mastodon_base_url)
+            or (self.threads_token and self.threads_user_id)
+        ):
+            SafeLogger.error("Settings: Configure TELEGRAM_CHANNEL_ID or another broadcast target.")
             return False
             
         return True

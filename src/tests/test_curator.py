@@ -253,43 +253,23 @@ async def test_async_model_pruning_does_not_match_preview_alias(monkeypatch):
     GEMINI_MODEL_PRIORITY.extend(original_priority)
 
 @pytest.mark.asyncio
-async def test_summarize_news_with_thinking_budget(monkeypatch):
-    """Verify that summarize_news includes thinking_config when supported by the model."""
-    monkeypatch.setenv("CI", "true")
-    
-    # Force GEMINI_MODEL_PRIORITY to only contain a model supporting thinking
-    original_priority = list(GEMINI_MODEL_PRIORITY)
-    GEMINI_MODEL_PRIORITY.clear()
-    GEMINI_MODEL_PRIORITY.append("models/gemini-2.5-flash")
-    
-    # Mock client and response
-    mock_client = MagicMock()
-    mock_response = AsyncMock()
-    mock_response.text = "TOPIC: LLMs\nBODY: This is the news brief."
-    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
-    
-    # Patch genai.Client and settings singleton
-    with patch("google.genai.Client", return_value=mock_client), \
-         patch("src.curator.settings") as mock_settings:
-        mock_settings.gemini_key = "test_key"
-        mock_settings.thinking_budget = 500
-        mock_settings.is_dry_run = False
-        
-        # We need some dummy news items
-        news_items = [{"title": "Important AI Breakthrough", "link": "https://openai.com/1", "source": "OpenAI", "score": 100}]
-        context = {"day": "Monday", "session": "Morning"}
-        await summarize_news(news_items, context)
-        
-    # Verify generate_content was called with thinking_config containing the budget
-    args, kwargs = mock_client.aio.models.generate_content.call_args
-    config = kwargs.get("config")
-    assert config is not None
-    assert config.thinking_config is not None
-    assert config.thinking_config.thinking_budget == 500
-    
-    # Restore
-    GEMINI_MODEL_PRIORITY.clear()
-    GEMINI_MODEL_PRIORITY.extend(original_priority)
+async def test_summarize_news_uses_shared_llm_provider(monkeypatch, mocker):
+    mock_settings = MagicMock(is_dry_run=False)
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+    mock_generate = mocker.patch(
+        "src.llm.generate_text",
+        new_callable=AsyncMock,
+        return_value="TOPIC: Codex/OpenAI\nBODY: Это достаточно длинный проверочный текст о практическом обновлении Codex.",
+    )
+
+    news_items = [{"title": "Important AI Breakthrough", "link": "https://openai.com/1", "source": "OpenAI", "score": 100}]
+    context = {"day": "Monday", "session": "Morning"}
+    summary, link, topic, _, _ = await summarize_news(news_items, context)
+
+    assert topic == "Codex/OpenAI"
+    assert link == "https://openai.com/1"
+    assert "Codex" in summary
+    mock_generate.assert_awaited_once()
 
 def test_registry_validation():
     from src.config import SOURCE_REGISTRY

@@ -11,6 +11,47 @@ from src.utils import (
 )
 from src.settings import settings
 from src.config import VERSION
+
+
+async def post_to_telegram_channel(text, link=None, media=None):
+    """Publish an approved post to the configured Telegram channel."""
+    from telegram import Bot
+
+    if not settings.telegram_bot_token or not settings.telegram_channel_id:
+        return False
+
+    bot = Bot(token=settings.telegram_bot_token)
+    final_text = text.strip()
+    if link and link not in final_text:
+        final_text = f"{final_text}\n\nИсточник: {link}"
+
+    if media and media.image_bytes:
+        # Telegram photo captions are limited, so preserve the full post as text when needed.
+        if len(final_text) <= 1024:
+            message = await bot.send_photo(
+                chat_id=settings.telegram_channel_id,
+                photo=media.image_bytes,
+                caption=final_text,
+            )
+        else:
+            await bot.send_photo(
+                chat_id=settings.telegram_channel_id,
+                photo=media.image_bytes,
+            )
+            message = await bot.send_message(
+                chat_id=settings.telegram_channel_id,
+                text=final_text,
+                disable_web_page_preview=False,
+            )
+    else:
+        message = await bot.send_message(
+            chat_id=settings.telegram_channel_id,
+            text=final_text,
+            disable_web_page_preview=False,
+        )
+    return bool(message)
+
+
 def clean_hashtags_if_needed(text: str, enabled: bool) -> str:
     """Helper to strip or format hashtags based on platform settings."""
     if not enabled:

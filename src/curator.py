@@ -384,17 +384,15 @@ async def prune_gemini_model_priority_async(genai_client):
         SafeLogger.warn(f"Gemini Model Discovery: API call failed ({e}). Falling back to configured defaults.")
 
 async def summarize_news(news_items, context, mode="Curator", last_dialect=None, writing_style=None):
-    """Synthesizes news with full Failover Loop and randomized Dialect adaptation."""
+    """Synthesizes news through the configured subscription-aware provider chain."""
     if not news_items: return None, None, "General", False, None
     
     if settings.is_dry_run:
         SafeLogger.info("Dry run: Bypassing Gemini synthesis call.")
         return "Mock Dry-Run Post Summary: BluBot is operating correctly in dry-run mode. #AI #News", news_items[0]['link'], "Dry Run Curation", False, "ANALYTICAL"
 
-    # Professional Architecture: Use settings singleton
-    client = genai.Client(api_key=settings.gemini_key)
-    
-    from .config import CURATOR_SYSTEM_INSTRUCTION, PERSONA_DIALECTS
+    from .config import CURATOR_SYSTEM_INSTRUCTION, CONTENT_RADAR_INSTRUCTION, PERSONA_DIALECTS
+    from .llm import generate_text
     import random
     
     # Select Dialect (ensure variety)
@@ -415,7 +413,10 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
     
     # Combine instructions
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
-    combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
+    combined_instruction = (
+        f"{base_instruction}\n\n{CONTENT_RADAR_INSTRUCTION}"
+        f"\n\nSTYLE OVERRIDE: {dialect_instruction}"
+    )
     
     if writing_style:
         from .config import WRITING_STYLES
@@ -435,97 +436,32 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
 
     user_prompt = f"Day: {context['day']}, Session: {context['session']}, Mode: {mode}\nNews Data:\n{news_text}"
     
-    for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
-        for attempt in range(1, MODEL_ATTEMPT_RETRIES + 1):
-            try:
-                SafeLogger.info(f"Synthesizing via {model_id} (Attempt {attempt})...")
-                
-                # Dynamic GenerateContentConfig args
-                config_args = {
-                    "temperature": 0.7
-                }
-                
-                # Check for system_instruction support
-                if "gemma" not in model_id.lower():
-                    config_args["system_instruction"] = combined_instruction
-                
-                # Apply thinking config if supported
-                if supports_thinking(model_id):
-                    budget = settings.thinking_budget if settings.thinking_budget is not None else 1024
-                    config_args["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
-                
-                contents = f"{combined_instruction}\n\nUSER INPUT:\n{user_prompt}" if "gemma" in model_id.lower() else user_prompt
-                
-                response = await client.aio.models.generate_content(
-                    model=model_id, contents=contents,
-                    config=types.GenerateContentConfig(**config_args)
-                )
-                
-                raw_text = response.text.strip()
-                topic = "General"
-                summary = raw_text
-                
-                if "TOPIC:" in raw_text and "BODY:" in raw_text:
-                    parts = raw_text.split("BODY:", 1)
-                    topic = parts[0].replace("TOPIC:", "").strip()
-                    summary = parts[1].strip()
-                
-                if len(summary) > 60:
-                    return strip_markdown(summary), news_items[0]['link'], topic, (idx > 0), current_dialect
-                    
-            except Exception as e:
-                SafeLogger.warn(f"Model {model_id} attempt {attempt} failed: {e}")
-                
-                # Infrastructure Resilience: Add delay for 503 errors to allow service to recover
-                if "503" in str(e) or "UNAVAILABLE" in str(e).upper():
-                    SafeLogger.info(f"Service spike detected. Cooling down for 2s...")
-                    await asyncio.sleep(2)
-                    
-                if attempt == MODEL_ATTEMPT_RETRIES and idx == len(GEMINI_MODEL_PRIORITY) - 1:
-                    raise e
-    return None, None, "General", False, None
+    raw_text = await generate_text(combined_instruction, user_prompt)
+    topic = "General"
+    summary = raw_text
+    if "TOPIC:" in raw_text and "BODY:" in raw_text:
+        parts = raw_text.split("BODY:", 1)
+        topic = parts[0].replace("TOPIC:", "").strip()
+        summary = parts[1].strip()
+    if len(summary) <= 60:
+        raise ValueError("LLM synthesis response is too short")
+    return strip_markdown(summary), news_items[0]['link'], topic, False, current_dialect
 
 async def generate_mentor_insight(context):
     if settings.is_dry_run:
         SafeLogger.info("Dry run: Bypassing Gemini mentor insight call.")
         return "Mock Dry-Run Mentor Insight: Focus on strategic scaling in dry-run mode. #Strategy", None, "Strategy", False
 
-    key = os.getenv("GEMINI_KEY")
-    client = genai.Client(api_key=key)
+    from .llm import generate_text
     topic = SECONDARY_TOPICS[0]
-    
-    for model_id in GEMINI_MODEL_PRIORITY:
-        try:
-            SafeLogger.info(f"Generating Mentor Insight via {model_id}...")
-            
-            config_args = {
-                "temperature": 0.8
-            }
-            
-            # Check for system_instruction support
-            if "gemma" not in model_id.lower():
-                config_args["system_instruction"] = MENTOR_SYSTEM_INSTRUCTION
-            
-            # Apply thinking config if supported
-            if supports_thinking(model_id):
-                budget = settings.thinking_budget if settings.thinking_budget is not None else 1024
-                config_args["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
-                
-            contents = f"{MENTOR_SYSTEM_INSTRUCTION}\n\nTopic: {topic}" if "gemma" in model_id.lower() else f"Topic: {topic}"
-            
-            response = await client.aio.models.generate_content(
-                model=model_id, 
-                contents=contents,
-                config=types.GenerateContentConfig(**config_args)
-            )
-            summary = response.text.strip()
-            if "BODY:" in summary:
-                summary = summary.split("BODY:", 1)[1].strip()
-
-            return strip_markdown(summary), None, "Strategy", (model_id != GEMINI_MODEL_PRIORITY[0])
-        except Exception as e:
-            SafeLogger.warn(f"Mentor Fallback failed on {model_id}: {e}")
-    return None, None, "Strategy", False
+    try:
+        summary = await generate_text(MENTOR_SYSTEM_INSTRUCTION, f"Topic: {topic}")
+        if "BODY:" in summary:
+            summary = summary.split("BODY:", 1)[1].strip()
+        return strip_markdown(summary), None, "Strategy", False
+    except Exception as e:
+        SafeLogger.warn(f"Mentor generation failed: {e}")
+        return None, None, "Strategy", False
 
 def get_temporal_context():
     """Enhanced Temporal Awareness for v3.7.0 (High Resolution + Manual Intercept)."""
@@ -635,6 +571,8 @@ def validate_opengraph_image(image_bytes: bytes, image_url: str) -> ImageValidat
 
 async def generate_image_alt_text(image_bytes: bytes, prompt: str) -> str:
     """Generates screen-reader-friendly alt text for the generated image using Gemini Vision."""
+    if not settings.gemini_key:
+        return f"Иллюстрация к новости: {prompt}"
     try:
         # Use settings singleton for key
         client = genai.Client(api_key=settings.gemini_key)

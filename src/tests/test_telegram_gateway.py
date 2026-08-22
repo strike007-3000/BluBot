@@ -323,22 +323,48 @@ async def test_send_draft_for_approval_regenerate_text(monkeypatch, mocker):
         return []
     mock_bot_instance.get_updates = AsyncMock(side_effect=mock_get_updates)
     
-    # Mock Gemini Client
-    mock_genai = MagicMock()
-    mock_genai.aio = MagicMock()
-    mock_genai.aio.models = MagicMock()
-    mock_response = MagicMock()
-    mock_response.text = "Mocked regenerated short text draft"
-    mock_genai.aio.models.generate_content = AsyncMock(return_value=mock_response)
+    mock_generate = mocker.patch(
+        "src.llm.generate_text",
+        new_callable=AsyncMock,
+        return_value="Mocked regenerated short text draft",
+    )
     
     text, media = await send_draft_for_approval(
         text="Original draft text",
-        genai_client=mock_genai
+        genai_client=MagicMock()
     )
     
     assert text == "Mocked regenerated short text draft"
     assert media is None
-    mock_genai.aio.models.generate_content.assert_called()
+    mock_generate.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_send_draft_timeout_rejects_instead_of_publishing(monkeypatch, mocker):
+    mock_settings = Settings(
+        telegram_bot_token="123:abc",
+        telegram_user_id="98765",
+        telegram_timeout_minutes=1,
+        is_dry_run=False,
+    )
+    monkeypatch.setattr("src.telegram_gateway.settings", mock_settings)
+
+    mock_bot = MagicMock()
+    sent_msg = MagicMock(message_id=999)
+    mock_bot.send_message = AsyncMock(return_value=sent_msg)
+    mock_bot.get_updates = AsyncMock(return_value=[])
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot)
+    clock = iter([0, 61])
+    mocker.patch("src.telegram_gateway.time.monotonic", side_effect=lambda: next(clock, 61))
+
+    text, media = await send_draft_for_approval("Never auto publish")
+
+    assert text is None
+    assert media is None
+    mock_bot.send_message.assert_any_call(
+        chat_id="98765",
+        text="🕒 Время согласования истекло. Черновик не опубликован.",
+    )
 
 @pytest.mark.asyncio
 async def test_send_draft_for_approval_regenerate_image_success(monkeypatch, mocker):
@@ -519,5 +545,3 @@ async def test_send_draft_for_approval_regenerate_image_failure(monkeypatch, moc
         text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.",
         reply_to_message_id=mocker.ANY
     )
-
-

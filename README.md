@@ -1,6 +1,24 @@
-# 👨‍🔧 BluBot: Elite AI News Curator
+# AI Content Radar
 
-Automated AI news curator that fetches updates twice daily, synthesizes them using **Sage Intelligence (Multi-Model Failover)**, and broadcasts insightfully to **Bluesky**, **Mastodon**, and **Threads**—all running entirely for free on **GitHub Actions**.
+Russian-language AI news and content-research pipeline focused on Codex/OpenAI,
+Claude/Claude Code, n8n, agents, MCP, useful repositories, and applied research.
+Codex SDK is the default text engine and Claude Agent SDK is the fallback. The
+publication gate auto-posts only high-confidence material within strict daily
+limits; everything else requires explicit Telegram approval.
+
+## Subscription-backed model access
+
+- `LLM_PROVIDER=codex` uses the official `openai-codex` Python SDK and the local
+  ChatGPT/Codex sign-in. No OpenAI Platform API key is required.
+- `LLM_PROVIDER=claude` uses the official Claude Agent SDK. For unattended runs,
+  authenticate the machine with a Claude subscription OAuth token.
+- `gemini` remains an optional paid/free-tier fallback and for image-specific tasks.
+- SDK calls run directly from Python; the service does not parse terminal output.
+
+Copy `.env.example` to `.env`, configure Telegram, then run `python bot.py` from
+the project virtual environment.
+
+YouTube discovery scaffolding is prepared in `src/youtube_discovery.py`, and architecture notes for scaling the whole factory are placed in `content-factory/`.
 
 ## 📊 System Status
 
@@ -8,8 +26,8 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 
 ## 🚀 Key Features
 
-- **Sage Intelligence v3 (Self-Healing AI)**: 
-    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.7-flash`** → **`gemini-3.5-flash-lite`** → **`gemini-3.6-flash`** → **`gemini-3.1-flash-lite`** → **`gemma-4-31b-it`** → **`gemma-4-26b-a4b-it`** → **`gemma-3-27b-it`** → **`gemini-2.5-flash-lite`**) if the primary provider is saturated or fails validation.
+- **Subscription-aware AI analysis**:
+    - **Provider failover**: Codex SDK → Claude Agent SDK → optional Gemini.
     - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
@@ -95,9 +113,13 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 | Secret Name | Required | Description |
 |-------------|----------|-------------|
-| `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
-| `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky App Password |
-| `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
+| `LLM_PROVIDER` | **Yes** | `codex` (default), `claude`, or `gemini` |
+| `LLM_FALLBACK_PROVIDERS` | No | Comma-separated fallback order; default `claude,gemini` |
+| `CODEX_MODEL` | No | Optional Codex model override; omit to use the account default |
+| `CLAUDE_MODEL` | No | Optional Claude model override; omit to use the account default |
+| `BSKY_HANDLE` | No | Legacy optional Bluesky handle |
+| `BSKY_APP_PASSWORD` | No | Legacy optional Bluesky App Password |
+| `GEMINI_KEY` | No | Optional Gemini fallback and vision key |
 | `POLLINATIONS_API_KEY` | No | Deprecated — Pollinations free API requires no key |
 | `HUGGINGFACE_API_KEY` | **Yes** | Hugging Face token with **Inference** permissions |
 | `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
@@ -113,10 +135,16 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `ENABLE_BSKY_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
-| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token (supports commands: `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, `/brief`). See [Telegram Command Reference](#-telegram-command-reference) below. |
-| `TELEGRAM_USER_ID` | No | (Optional) Your numeric Telegram User ID (for authentication) |
-| `TELEGRAM_TIMEOUT_MINUTES` | No | (Optional) Telegram polling timeout in minutes (default: `5`) |
-| `ENABLE_TELEGRAM_APPROVAL` | No | (Optional) Toggle Telegram draft approval (default: `true` if bot token set) |
+| `TELEGRAM_BOT_TOKEN` | **Yes** | Bot token used for approval and channel publishing |
+| `TELEGRAM_USER_ID` | **Yes** | Numeric ID of the only user allowed to approve drafts |
+| `TELEGRAM_CHANNEL_ID` | **Yes** | Destination channel ID or `@channel_username` |
+| `TELEGRAM_TIMEOUT_MINUTES` | No | `0` waits indefinitely; a positive timeout rejects without publishing |
+| `ENABLE_TELEGRAM_APPROVAL` | No | Approval is enabled by default |
+| `ENABLE_HYBRID_AUTO_POSTING` | No | Auto-publish high-confidence posts and send the rest for approval (default: `true`) |
+| `MIN_POST_SCORE_FOR_AUTO` | No | Minimum lead-article score for auto-publishing (default: `80`) |
+| `MAX_AUTO_POSTS_PER_DAY` | No | Daily auto-publish cap; `0` disables the cap (default: `1`) |
+| `MIN_POST_INTERVAL_MINUTES` | No | Minimum interval between auto-posts (default: `30`) |
+| `AUTO_QUEUE_TTL_HOURS` | No | Reset stale auto-post counter state after this many hours (default: `24`) |
 | `ENABLE_HASHTAGS_BSKY` | No | (Optional) Enable/disable hashtags on Bluesky (default: `false` — hashtags stripped to keep Bluesky posts clean) |
 | `ENABLE_HASHTAGS_MASTODON` | No | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
 | `ENABLE_HASHTAGS_THREADS` | No | (Optional) Enable/disable hashtags on Threads (default: `true`) |
@@ -174,7 +202,16 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
-- **v3.21.2 (Current)**: **Merged Review Corrections**.
+- **v3.23.0 (Current)**: **Hybrid Publication Gate**.
+    - 🚦 **Auto/Approval Routing**: High-scoring lead stories can publish automatically; all other drafts go to Telegram approval.
+    - 🛡️ **Rate Guardrails**: Added a daily auto-post cap, minimum interval, and persistent successful-post counters.
+    - 🧪 **Deterministic Coverage**: Added decision-gate, persistence, settings, and isolated YouTube configuration tests.
+- **v3.22.1**: **Content Factory Expansion**.
+    - 🧱 **Architecture Layer for Scale**: Added `content-factory/` with pipeline and source registry docs for a structured rollout (RSS + YouTube + approval + observability).
+    - 🎬 **YouTube Discovery Layer**: Added `src/youtube_discovery.py` with language-aware video discovery, view/min-duration filters, Russian-facing heuristics, and normalized candidate projection ready for future curation stage integration.
+    - ⚙️ **Configurable YouTube Inputs**: Added environment-driven YouTube settings (`YOUTUBE_API_KEY`, regions, language hints, seed queries).
+    - 🧪 **Test Coverage**: Added `src/tests/test_youtube_discovery.py` for language heuristics and fetch flow.
+- **v3.21.2**: **Merged Review Corrections**.
     - ☁️ **Gist Recovery**: Clears `unsynced_gist` in the authoritative payload before a successful recovery upload.
     - 🧠 **Exact Model Discovery**: Matches normalized Gemini model IDs exactly, preventing preview endpoints from impersonating stable models.
     - 🛡️ **Provider Failures**: Stops retrying permanent Threads and NVIDIA 4xx errors while retaining retries for transient failures, and removes the deprecated NVIDIA endpoint from scheduled-run priority.

@@ -9,7 +9,7 @@ import asyncio
 import httpx
 import logging
 from datetime import datetime, timezone
-from typing import List, Tuple, Any, Optional
+from typing import List, Tuple, Any, Optional, Literal
 
 # Elite Architecture Imports
 from src.settings import settings
@@ -31,7 +31,7 @@ from src.curator import (
     generate_image_alt_text, strip_markdown
 )
 from src.broadcaster import (
-    post_to_bluesky, post_to_mastodon, post_to_threads,
+    post_to_bluesky, post_to_mastodon, post_to_threads, post_to_telegram_channel,
     update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions,
     fetch_threads_replies
 )
@@ -45,6 +45,123 @@ from src.config import (
 from google.genai import types
 from google import genai
 from atproto import AsyncClient, AsyncRequest, models
+
+PostMode = Literal["auto", "human"]
+AUTO_POST_STATE_KEY = "auto_post_state"
+
+
+def _to_iso_datetime(value: Optional[datetime]) -> Optional[str]:
+    if value is None:
+        return None
+    return value.astimezone(timezone.utc).isoformat()
+
+
+def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except Exception:
+        return None
+
+
+def _current_auto_post_state(state: dict, now_utc: Optional[datetime] = None) -> Tuple[int, Optional[datetime]]:
+    """Reads today's successful auto-post count and last successful auto-post timestamp."""
+    now_utc = now_utc or datetime.now(timezone.utc)
+    today = now_utc.date().isoformat()
+
+    if not isinstance(state, dict):
+        return 0, None
+
+    raw_state = state.get(AUTO_POST_STATE_KEY, {})
+    if not isinstance(raw_state, dict):
+        return 0, None
+
+    state_day = str(raw_state.get("day", ""))
+    if state_day != today:
+        return 0, _parse_iso_datetime(raw_state.get("last_posted_at"))
+
+    raw_count = raw_state.get("count", 0)
+    try:
+        count = int(raw_count)
+    except Exception:
+        count = 0
+
+    ttl_hours = max(int(settings.auto_queue_ttl_hours), 0)
+    last_posted_at = _parse_iso_datetime(raw_state.get("last_posted_at"))
+    if ttl_hours > 0 and last_posted_at and (now_utc - last_posted_at).total_seconds() > (ttl_hours * 3600):
+        return 0, last_posted_at
+
+    return count, last_posted_at
+
+
+def _signal_score_from_curation(curation: CurationResult) -> int:
+    if not curation.top_articles:
+        return 0
+    score = curation.top_articles[0].score
+    return int(score) if isinstance(score, (int, float)) else 0
+
+
+def decide_publication_mode(
+    curation: CurationResult,
+    state: dict,
+    *,
+    now_utc: Optional[datetime] = None
+) -> PostMode:
+    """Hybrid mode gate: AUTO when score is high and limits are available."""
+    if not settings.enable_telegram_approval:
+        return "auto"
+
+    if not settings.enable_hybrid_auto_posting:
+        return "human"
+
+    signal_score = _signal_score_from_curation(curation)
+    if signal_score < int(settings.min_post_score_for_auto):
+        return "human"
+
+    now_utc = now_utc or datetime.now(timezone.utc)
+    count_today, last_posted_at = _current_auto_post_state(state, now_utc=now_utc)
+
+    max_posts = int(getattr(settings, "max_auto_posts_per_day", 1))
+    if max_posts > 0 and count_today >= max_posts:
+        return "human"
+
+    min_interval = int(getattr(settings, "min_post_interval_minutes", 0))
+    if min_interval > 0 and last_posted_at:
+        elapsed_minutes = (now_utc - last_posted_at).total_seconds() / 60
+        if elapsed_minutes < min_interval:
+            return "human"
+
+    return "auto"
+
+
+def _advance_auto_post_state(state: dict, now_utc: Optional[datetime] = None) -> dict:
+    """Mutates and returns state with today's auto-post counters advanced by 1."""
+    now_utc = now_utc or datetime.now(timezone.utc)
+    today = now_utc.date().isoformat()
+
+    raw_state = state.get(AUTO_POST_STATE_KEY)
+    if not isinstance(raw_state, dict):
+        raw_state = {}
+
+    raw_state_day = str(raw_state.get("day", ""))
+    try:
+        today_count = int(raw_state.get("count", 0))
+    except Exception:
+        today_count = 0
+
+    if raw_state_day != today:
+        today_count = 0
+
+    raw_state["day"] = today
+    raw_state["count"] = today_count + 1
+    raw_state["last_posted_at"] = _to_iso_datetime(now_utc)
+
+    state[AUTO_POST_STATE_KEY] = raw_state
+    return state
 
 def _update_status_dashboard_sync(session_name: str, topic: str):
     """Synchronous implementation of STATUS.md update to be offloaded to thread."""
@@ -246,12 +363,8 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
     
     try:
         from src.config import CURATOR_SYSTEM_INSTRUCTION
-        response = await genai_client.aio.models.generate_content(
-            model=settings.gemini_model,
-            contents=prompt,
-            config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.5)
-        )
-        briefing_text = response.text.strip()
+        from src.llm import generate_text
+        briefing_text = await generate_text(CURATOR_SYSTEM_INSTRUCTION, prompt)
         header = f"📊 *7-Day Executive Briefing: {topic}*\n\n"
         return header + briefing_text
     except Exception as e:
@@ -313,12 +426,8 @@ async def synthesis_stage(
                 "do NOT write as if it has already occurred or is an established fact. Frame it hypothetically (e.g., 'If Cursor were to be acquired...'). "
                 "Do not state unverified assumptions as facts."
             )
-            response = await genai_client.aio.models.generate_content(
-                model=settings.gemini_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.7)
-            )
-            summary = strip_markdown(response.text.strip())
+            from src.llm import generate_text
+            summary = strip_markdown(await generate_text(CURATOR_SYSTEM_INSTRUCTION, prompt))
             lead_link = None
             topic = telegram_topic
         except Exception as e:
@@ -420,8 +529,10 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
                         image_bytes = og_bytes
                         public_url = og_url
                         source = MediaSource.OPENGRAPH
-                        # Generate alt text for OpenGraph image
-                        alt_text = await generate_image_alt_text(og_bytes, f"OpenGraph image for {synthesis.topic}")
+                        alt_text = await generate_image_alt_text(
+                            og_bytes,
+                            f"OpenGraph image for {synthesis.topic}",
+                        )
                     else:
                         SafeLogger.info(f"OpenGraph validation failed: {validation_res.reason}. Falling back to AI Image generation.")
                 elif og_url and is_safe_url(og_url):
@@ -552,6 +663,12 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
         tasks.append(("Mastodon", post_to_mastodon(synthesis.content, synthesis.media)))
     if settings.threads_token and settings.threads_user_id:
         tasks.append(("Threads", post_to_threads(client, synthesis.content, synthesis.media)))
+    if settings.telegram_bot_token and settings.telegram_channel_id:
+        tasks.append(("Telegram", post_to_telegram_channel(
+            synthesis.content,
+            synthesis.lead_link,
+            synthesis.media,
+        )))
 
     if not tasks:
         SafeLogger.error("No configured broadcast targets available!")
@@ -620,13 +737,17 @@ async def settle_persistence_stage(
     curation: CurationResult, 
     synthesis: SynthesisResult, 
     matched_article: Article, 
-    results: List[BroadcastResult]
+    results: List[BroadcastResult],
+    post_mode: PostMode = "human",
 ) -> dict:
     """Settles pending reservation to published (if any broadcast target succeeded) or retains as uncertain (if all failed)."""
     canonical_lead = normalize_url(synthesis.lead_link) if synthesis.lead_link else matched_article.link
     any_success = any(res.success for res in results)
 
     if any_success:
+        if post_mode == "auto" and not settings.is_dry_run:
+            _advance_auto_post_state(state)
+
         state["pending_stories"] = [ps for ps in state.get("pending_stories", []) if ps.get("url") != canonical_lead]
         pub_entry = {
             "url": canonical_lead,
@@ -806,10 +927,11 @@ async def main():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
     async with httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=30) as client:
-        genai_client = genai.Client(api_key=settings.gemini_key)
-        
-        # Prune models dynamically at startup based on API limits
-        await prune_gemini_model_priority_async(genai_client)
+        genai_client = genai.Client(api_key=settings.gemini_key) if settings.gemini_key else None
+
+        # Gemini remains optional and is only needed for Gemini text fallback or image generation.
+        if genai_client:
+            await prune_gemini_model_priority_async(genai_client)
         
         # Check for on-demand Telegram topic or brief intercept
         res = await check_for_telegram_topic()
@@ -846,13 +968,21 @@ async def main():
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
 
+        # 2.1 Publication Mode (hybrid auto/approval)
+        decision_state = await asyncio.to_thread(load_seen_articles)
+        post_mode = decide_publication_mode(curation, decision_state)
+        if post_mode == "auto":
+            SafeLogger.info("Decision Gate: High-confidence post approved for auto-publish.")
+        else:
+            SafeLogger.info("Decision Gate: Routing through Telegram approval.")
+
         # 2.2 Media Strategy Decision
         media = await media_strategy_stage(client, genai_client, synthesis, curation)
         from dataclasses import replace
         synthesis = replace(synthesis, media=media)
 
         # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
-        if settings.enable_telegram_approval and not settings.is_dry_run:
+        if post_mode == "human" and settings.enable_telegram_approval and not settings.is_dry_run:
             final_content, final_media = await send_draft_for_approval(
                 text=synthesis.content,
                 media=synthesis.media,
@@ -883,7 +1013,7 @@ async def main():
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
 
         # 3.5 Immediate Post-Broadcast Settlement
-        state = await settle_persistence_stage(state, curation, synthesis, matched_article, results)
+        state = await settle_persistence_stage(state, curation, synthesis, matched_article, results, post_mode=post_mode)
 
         # 4. Post-Persistence Nonessential Tasks
         today_date = datetime.now(timezone.utc).date()
