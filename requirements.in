@@ -3,11 +3,11 @@
 # to generate the Python 3.13 runtime lockfile.
 
 atproto>=0.0.69
-google-genai>=2.16.0
+google-genai>=2.18.1
 feedparser>=6.0.14
 python-dotenv>=1.2.1
 requests==2.34.2
-Mastodon.py>=2.2.1
+Mastodon.py>=2.2.2
 beautifulsoup4>=4.15.0
 httpx>=0.28.0
 Pillow==12.3.0
