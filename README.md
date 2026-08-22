@@ -174,7 +174,9 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
-- **v3.21.2 (Current)**: **Merged Review Corrections**.
+- **v3.21.3 (Current)**: **Local Tool Metadata Hygiene**.
+    - 🧹 **Repository Hygiene**: Ignores `.v3code/` workspace metadata so local editor state cannot appear in Git changes.
+- **v3.21.2**: **Merged Review Corrections**.
     - ☁️ **Gist Recovery**: Clears `unsynced_gist` in the authoritative payload before a successful recovery upload.
     - 🧠 **Exact Model Discovery**: Matches normalized Gemini model IDs exactly, preventing preview endpoints from impersonating stable models.
     - 🛡️ **Provider Failures**: Stops retrying permanent Threads and NVIDIA 4xx errors while retaining retries for transient failures, and removes the deprecated NVIDIA endpoint from scheduled-run priority.

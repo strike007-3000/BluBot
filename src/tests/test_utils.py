@@ -434,3 +434,13 @@ def test_no_tracked_runtime_state_files():
     import subprocess
     res = subprocess.run(["git", "ls-files", "seen_articles.json"], capture_output=True, text=True)
     assert res.stdout.strip() == ""
+
+def test_v3code_workspace_metadata_is_ignored():
+    """Local .v3code workspace metadata must not pollute Git status."""
+    import subprocess
+    res = subprocess.run(
+        ["git", "check-ignore", ".v3code/workspace-id"],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0
