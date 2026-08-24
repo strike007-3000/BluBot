@@ -2,12 +2,12 @@
 # Use 'uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt'
 # to generate the Python 3.13 runtime lockfile.
 
-atproto>=0.0.69
-google-genai>=2.16.0
+atproto>=0.0.71
+google-genai>=2.19.0
 feedparser>=6.0.14
-python-dotenv>=1.2.1
+python-dotenv>=1.2.3
 requests==2.34.2
-Mastodon.py>=2.2.1
+Mastodon.py>=2.2.2
 beautifulsoup4>=4.15.0
 httpx>=0.28.0
 Pillow==12.3.0
