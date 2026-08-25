@@ -8,9 +8,10 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 
 ## 🚀 Key Features
 
-- **Sage Intelligence v3 (Self-Healing AI)**: 
-    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.7-flash`** → **`gemini-3.5-flash-lite`** → **`gemini-3.6-flash`** → **`gemini-3.1-flash-lite`** → **`gemma-4-31b-it`** → **`gemma-4-26b-a4b-it`** → **`gemma-3-27b-it`** → **`gemini-2.5-flash-lite`**) if the primary provider is saturated or fails validation.
-    - **Self-Healing Loop**: Automatically corrects common AI output issues (e.g., missing hashtags) and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
+- **Sage Intelligence v3 (Self-Healing AI)**:
+    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.5-flash-lite`** → **`gemini-3.7-flash`** → **`gemini-3.6-flash`** → **`gemini-2.5-flash-lite`**) with immediate status-aware rotation (503, 429, 400, 404) and local deterministic topic derivation.
+    - **Task-Specific Routing**: Dedicated multimodal models (`gemini-3.5-flash-lite`, `gemini-2.5-flash-lite`) for screen-reader alt-text with MIME detection and neutral local fallback; `gemini-3.5-flash-lite` for visual prompt generation and briefings.
+    - **Self-Healing Loop**: Automatically corrects common AI output issues and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
     - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **🖼️ Unified Media Strategy Stage**:
@@ -30,14 +31,14 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **🥁 Thread Rhythm**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
     - **🤖 Dynamic Bio Management**: Profiles now showcase an active day streak and the currently tracked topic (e.g., "AI signal, zero noise. Day 68. | Currently tracking: On-device agents").
     - **🛡️ Supply Chain Hardening**: Migrated to `pip-tools` with cryptographic hashes.
-    - **📡 Feed Vanguard**: Automated RSS resilience engine that audits sources for health, silencing broken feeds with exponential backoff.
+    - **📡 Feed Vanguard**: Single-fetch RSS resilience engine with authoritative Gist state persistence (`feed_vanguard.json`), eliminating duplicate network passes and silencing broken feeds with exponential backoff.
     - **Typed Pipeline Stages**: Immutable stages powered by frozen `dataclasses` and a typed `Settings` singleton.
     - **Advisory File Locking**: Cross-platform `FileLock` for state persistence, preventing race conditions during concurrent CI/local runs.
-- **🛡️ Industrial Stabilization**: 
+- **🛡️ Industrial Stabilization**:
     - **Universal RGB Defense**: Image mode detection and conversion engine that prevents "Black/White Box" artifacts from non-standard (ArXiv) thumbnails.
     - **Resilient Rebase Logic**: Automated conflict resolution for `README.md` dashboards (using `git checkout --ours`) ensuring 100% state persistence uptime.
     - **Smart Truncation**: Word-boundary-aware trimming for Mastodon and Threads to prevent mid-word cutoffs.
-- **Fortress Hardening**: 
+- **Fortress Hardening**:
     - **Non-Blocking I/O**: Offloads all disk persistence, social bio updates, status telemetry updates, and feed vanguard state saving to background worker threads via `asyncio.to_thread`.
     - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield against decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
     - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) and uses safe lookups to survive malformed feed entries.
@@ -55,7 +56,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Conversational Quality & Persona**: System prompts are highly tailored to speak in a natural, peer-like mentor/analyst voice, stripping robotic introductory pre-ambles and hashtags.
 - **Breakthrough Scoring Engine v5 (Elite Signal Processing)**:
     - **Stable-ID Curation Registry (8-Tier, 45 Feeds)**:
-        
+
         | Source Category | Base Score | Notes / Source Tiers |
         | :--- | :--- | :--- |
         | **Research Labs** | `+30` | OpenAI, DeepMind, HuggingFace |

@@ -8,6 +8,7 @@ if "--dry-run" in sys.argv:
 import asyncio
 import httpx
 import logging
+import time
 from datetime import datetime, timezone
 from typing import List, Tuple, Any, Optional
 
@@ -19,13 +20,13 @@ from src.models import (
     InteractionNote, InteractionResult, MediaAsset, MediaSource
 )
 from src.utils import (
-    load_seen_articles, save_seen_articles, SafeLogger, 
+    load_seen_articles, save_seen_articles, SafeLogger,
     load_session_string, save_session_string, get_link_metadata,
     load_seen_interactions, save_seen_interactions, human_delay,
     is_safe_url, normalize_url, compute_story_fingerprint
 )
 from src.curator import (
-    fetch_news, summarize_news, generate_mentor_insight, 
+    fetch_news, summarize_news, generate_mentor_insight,
     get_temporal_context, generate_visual_prompt, generate_ai_image,
     generate_interactive_reply, prune_gemini_model_priority_async,
     generate_image_alt_text, strip_markdown
@@ -51,7 +52,7 @@ def _update_status_dashboard_sync(session_name: str, topic: str):
     try:
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         icon = "🚀" if "Morning" in session_name else "🔍"
-        
+
         # Initialize if missing
         if not os.path.exists(STATUS_FILE_PATH):
             content = [
@@ -68,7 +69,7 @@ def _update_status_dashboard_sync(session_name: str, topic: str):
 
         with open(STATUS_FILE_PATH, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        
+
         new_lines = []
         for line in lines:
             if "| **Broadcaster** |" in line:
@@ -77,7 +78,7 @@ def _update_status_dashboard_sync(session_name: str, topic: str):
                 new_lines.append(f"| **Signal Strength** | Elite (Natural) | -- | -- |\n")
             else:
                 new_lines.append(line)
-        
+
         with open(STATUS_FILE_PATH, "w", encoding="utf-8") as f:
             f.writelines(new_lines)
     except Exception as e:
@@ -94,21 +95,21 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
     import re
     # Normalize and extract keywords from the topic, ignoring common stopwords
     stopwords = {
-        "why", "how", "what", "who", "where", "when", "did", "could", "would", "should", 
-        "does", "is", "was", "were", "are", "be", "been", "a", "an", "the", "and", "or", 
-        "but", "if", "for", "on", "about", "to", "in", "of", "with", "at", "by", "from", 
+        "why", "how", "what", "who", "where", "when", "did", "could", "would", "should",
+        "does", "is", "was", "were", "are", "be", "been", "a", "an", "the", "and", "or",
+        "but", "if", "for", "on", "about", "to", "in", "of", "with", "at", "by", "from",
         "concerning", "about", "discuss", "write", "post"
     }
     words = re.findall(r'\b\w+\b', topic.lower())
     keywords = [w for w in words if w not in stopwords and len(w) > 2]
-    
+
     if not keywords:
         return False
-        
+
     title_lower = title.lower()
     summary_lower = summary.lower()
     target_words = set(re.findall(r'\b\w+\b', f"{title_lower} {summary_lower}"))
-    
+
     for kw in keywords:
         # Generate valid inflection candidates for each keyword
         candidates = {kw}
@@ -117,17 +118,17 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
             candidates.update({kw + 's', kw + 'd', root + 'ing', root + 'ition', root + 'itions'})
         else:
             candidates.update({kw + 's', kw + 'ed', kw + 'ing', kw + 'ion', kw + 'ions'})
-            
+
         # Specific mappings for common terms
         if kw == 'acquire':
             candidates.update({'acquisition', 'acquisitions'})
         elif kw == 'acquisition':
             candidates.update({'acquire', 'acquires', 'acquired', 'acquiring'})
-            
+
         # If none of the candidates exist as a full word in the target text, it's not a match
         if not (candidates & target_words):
             return False
-            
+
     return True
 
 async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
@@ -140,23 +141,21 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
     context = get_temporal_context()
 
     from src.feed_vanguard import VanguardManager
-    vanguard = VanguardManager()
-    
-    # Pre-flight: Refresh blacklist based on current health
-    SafeLogger.info("Vanguard: Running pre-flight RSS health check...")
-    await vanguard.audit_and_update(client)
+    vanguard = await asyncio.to_thread(VanguardManager)
     active_feeds = vanguard.get_active_feeds()
-    
+
     # If a telegram_topic is requested, bypass default top-8 limit to filter the full candidate list
-    raw_news = await fetch_news(
-        client, 
-        combined_seen_links, 
-        seen_data["recent_topics"], 
-        feed_list=active_feeds, 
+    raw_news, feed_outcomes = await fetch_news(
+        client,
+        combined_seen_links,
+        seen_data["recent_topics"],
+        feed_list=active_feeds,
         limit=None if telegram_topic else 8,
         recent_categories=seen_data.get("recent_categories", []),
         watch_topics=seen_data.get("watch_topics", [])
     )
+    await asyncio.to_thread(vanguard.apply_feed_outcomes, feed_outcomes)
+
     all_articles = [Article(**item) for item in raw_news]
     from src.utils import is_story_semantic_duplicate
     all_articles = [art for art in all_articles if not is_story_semantic_duplicate(art.title, seen_data)]
@@ -167,7 +166,7 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
         for a in all_articles:
             if article_matches_topic(a.title, a.summary, telegram_topic):
                 matching_articles.append(a)
-        
+
         if matching_articles:
             SafeLogger.info(f"Curation Stage: Found {len(matching_articles)} matching articles in RSS feeds.")
             articles = matching_articles
@@ -184,7 +183,7 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
             )]
     else:
         articles = all_articles
-    
+
     return CurationResult(
         top_articles=articles,
         seen_links=seen_data["links"],
@@ -199,13 +198,12 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
     """Generates a grounded 7-day topic briefing using multi-source story clustering."""
     SafeLogger.info(f"Briefing Engine: Fetching 7-day RSS articles for topic: '{topic}'")
     seen_data = await asyncio.to_thread(load_seen_articles)
-    
+
     from src.feed_vanguard import VanguardManager
-    vanguard = VanguardManager()
-    await vanguard.audit_and_update(client)
+    vanguard = await asyncio.to_thread(VanguardManager)
     active_feeds = vanguard.get_active_feeds()
-    
-    raw_news = await fetch_news(
+
+    raw_news, feed_outcomes = await fetch_news(
         client,
         seen_links=[],  # Do not filter out previously seen articles for historical 7-day briefings
         recent_topics=seen_data.get("recent_topics", []),
@@ -215,23 +213,24 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
         watch_topics=seen_data.get("watch_topics", []),
         days_lookback=7
     )
+    await asyncio.to_thread(vanguard.apply_feed_outcomes, feed_outcomes)
     all_articles = [Article(**item) for item in raw_news]
     matching_articles = [a for a in all_articles if article_matches_topic(a.title, a.summary, topic)]
-    
+
     if not matching_articles:
         return f"🔍 *7-Day Briefing for '{topic}'*\n\nNo articles matching this topic were found in RSS feeds over the past 7 days."
-        
+
     article_bullets = []
     for idx, a in enumerate(matching_articles[:15]):
         corrob_str = f" [Corroborated by: {', '.join(a.supporting_sources)}]" if a.supporting_sources else ""
         article_bullets.append(f"{idx+1}. **{a.title}** ({a.source}){corrob_str}\n   Summary: {a.summary}\n   URL: {a.link}")
-        
+
     articles_text = "\n\n".join(article_bullets)
 
     if settings.is_dry_run:
         SafeLogger.info("DRY RUN: Bypassing Gemini briefing synthesis.")
         return f"📊 *7-Day Executive Briefing: {topic} (DRY RUN)*\n\n**Executive Summary**\nThis is a mock executive briefing compiled under dry-run mode.\n\n**Key Developments**\n- Mock Development 1: Detailed mock description citation [Mock Source](https://example.com).\n\nSource articles analyzed:\n{articles_text}"
-    
+
     prompt = (
         f"Generate a comprehensive, analytical executive briefing for the topic: '{topic}'.\n\n"
         f"Grounded Source Articles (Past 7 Days):\n{articles_text}\n\n"
@@ -243,7 +242,7 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
         "5. If corroboration exists across multiple sources, explicitly highlight the consensus.\n"
         "6. Do not include hashtags or robotic introductory preambles."
     )
-    
+
     try:
         from src.config import CURATOR_SYSTEM_INSTRUCTION
         response = await genai_client.aio.models.generate_content(
@@ -259,29 +258,29 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
         return f"⚠️ Failed to generate briefing for *{topic}*: {e}"
 
 async def synthesis_stage(
-    client: httpx.AsyncClient, 
-    genai_client: genai.Client, 
-    curation: CurationResult, 
+    client: httpx.AsyncClient,
+    genai_client: genai.Client,
+    curation: CurationResult,
     telegram_topic: Optional[str] = None
 ) -> Tuple[SynthesisResult, CurationResult]:
     """Stage 2: Synthesize Raw News into an Elite Tech Insight Post."""
     context = get_temporal_context()
     news_count = len(curation.top_articles)
     SafeLogger.info(f"Synthesis Stage: Processing {news_count} curated articles.")
-    
+
     summary, lead_link, topic, is_failover = None, None, "General", False
-    
+
     # Choose writing style from styles compatible with selected content
     from src.config import FEED_CATEGORY_MAP, STYLE_COMPATIBILITY, ALL_STYLES
     lead_article = curation.top_articles[0] if curation.top_articles else None
     lead_category = "unknown"
     if lead_article:
         lead_category = FEED_CATEGORY_MAP.get(lead_article.source_id, "unknown")
-    
+
     compatible_styles = STYLE_COMPATIBILITY.get(lead_category, ALL_STYLES)
     if not compatible_styles:
         compatible_styles = ALL_STYLES
-        
+
     recent_styles = curation.recent_styles or []
     last_indices = {}
     for style in compatible_styles:
@@ -290,10 +289,10 @@ async def synthesis_stage(
         except ValueError:
             idx = -1
         last_indices[style] = idx
-        
+
     sorted_styles = sorted(compatible_styles, key=lambda s: last_indices[s])
     chosen_style = sorted_styles[0]
-    
+
     has_only_synthetic = all(a.source == "Telegram Intercept" for a in curation.top_articles)
     use_scratch_synthesis = telegram_topic and (news_count == 0 or has_only_synthetic)
 
@@ -359,9 +358,9 @@ async def synthesis_stage(
 
 
     return SynthesisResult(
-        content=summary, 
-        lead_link=lead_link, 
-        topic=topic, 
+        content=summary,
+        lead_link=lead_link,
+        topic=topic,
         is_failover=is_failover,
         media=None,
         writing_style=chosen_style
@@ -374,24 +373,24 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
     from src.utils import get_image_mime, SafeLogger
     from PIL import Image
     import io
-    
+
     # Defaults and info for logging
     lead_link = synthesis.lead_link
     has_lead_link = lead_link is not None
-    
+
     # Extract category for prompts
     category = "unknown"
     lead_article = curation.top_articles[0] if curation.top_articles else None
     if lead_article:
         from src.config import FEED_CATEGORY_MAP
         category = FEED_CATEGORY_MAP.get(lead_article.source_id, "unknown")
-        
+
     validation_res = None
     image_bytes = None
     public_url = None
     source = None
     alt_text = None
-    
+
     if settings.is_dry_run:
         SafeLogger.info("DRY RUN: Constructing mock MediaAsset.")
         return MediaAsset(
@@ -412,7 +411,7 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
             if meta:
                 og_url = meta.get('image_url')
                 og_bytes = meta.get('image')
-                
+
                 if og_bytes:
                     # Validate OpenGraph image
                     validation_res = validate_opengraph_image(og_bytes, og_url or "")
@@ -421,7 +420,14 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
                         public_url = og_url
                         source = MediaSource.OPENGRAPH
                         # Generate alt text for OpenGraph image
-                        alt_text = await generate_image_alt_text(og_bytes, f"OpenGraph image for {synthesis.topic}")
+                        lead_title = lead_article.title if lead_article else ""
+                        alt_text = await generate_image_alt_text(
+                            og_bytes,
+                            prompt="",
+                            article_title=lead_title,
+                            category=category,
+                            topic=synthesis.topic
+                        )
                     else:
                         SafeLogger.info(f"OpenGraph validation failed: {validation_res.reason}. Falling back to AI Image generation.")
                 elif og_url and is_safe_url(og_url):
@@ -429,28 +435,35 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
                     public_url = og_url
         except Exception as e:
             SafeLogger.warn(f"Failed to fetch metadata or validate OpenGraph: {e}")
-    
+
     # 2. Lead link but invalid/missing OpenGraph image OR No lead link -> generate illustration if enabled
     if not source and settings.enable_image_gen:
         try:
             # Generate visual prompt (passing category)
             visual_prompt = await generate_visual_prompt(genai_client, synthesis.content, synthesis.topic, category)
-            
+
             # Generate AI image based on configured provider
             gen_bytes = await generate_ai_image(client, genai_client, visual_prompt)
             if gen_bytes:
                 image_bytes = gen_bytes
                 public_url = None
                 source = MediaSource.GENERATED
-                
+
                 # Generate alt text for generated image
-                alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {synthesis.topic}"
-                alt_text = await generate_image_alt_text(gen_bytes, alt_prompt)
+                lead_title = lead_article.title if lead_article else ""
+                alt_prompt = visual_prompt if visual_prompt else f"Image representing {synthesis.topic}"
+                alt_text = await generate_image_alt_text(
+                    gen_bytes,
+                    prompt=alt_prompt,
+                    article_title=lead_title,
+                    category=category,
+                    topic=synthesis.topic
+                )
             else:
                 SafeLogger.warn(f"AI image generation ({settings.image_provider}) returned no bytes.")
         except Exception as e:
             SafeLogger.warn(f"AI image generation failed: {e}")
-            
+
     # 3. Fallback/Final Asset Construction
     if not source and public_url:
         source = MediaSource.OPENGRAPH
@@ -464,7 +477,7 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
                 width, height = img.size
             except Exception:
                 pass
-            
+
         media = MediaAsset(
             source=source,
             image_bytes=image_bytes,
@@ -477,7 +490,7 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
         )
     else:
         media = None
-        
+
     # 4. Structured Logging (Step 8 & 6 refinements)
     log_lines = [
         "Media Strategy",
@@ -487,30 +500,31 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
     ]
     if validation_res and not validation_res.valid:
         log_lines.append(f"  Reason: {validation_res.reason}")
-        
-    log_lines.append(f"AI: {'Generated' if source == MediaSource.GENERATED else 'Skipped' if source == MediaSource.OPENGRAPH else 'Failed' if settings.enable_image_gen else 'Disabled'}")
-    
+
+    ai_status = 'Generated' if source == MediaSource.GENERATED else 'Not needed' if source == MediaSource.OPENGRAPH else 'Failed' if settings.enable_image_gen else 'Disabled'
+    log_lines.append(f"AI: {ai_status}")
+
     # dimensions, MIME type, and byte size
     if media:
         log_lines.append(f"Dimensions: {media.width}x{media.height}")
         log_lines.append(f"MIME type: {media.mime_type}")
         byte_size_str = f"{len(media.image_bytes)} bytes" if media.image_bytes else "None"
         log_lines.append(f"Byte size: {byte_size_str}")
-    
+
     # intended delivery modes
     bsky_mode = "External card" if has_lead_link else "Image embed" if media else "Text only"
     mast_mode = "Uploaded media" if media else "Text only"
     threads_mode = "Hosted image" if (media and media.public_url) else "Text only"
-    
+
     log_lines.append(f"Bluesky: {bsky_mode}")
     log_lines.append(f"Mastodon: {mast_mode}")
     log_lines.append(f"Threads: {threads_mode}")
-    
+
     if not media:
         log_lines.append("Text-only Fallback: Yes")
-        
+
     SafeLogger.info("\n".join(log_lines))
-    
+
     return media
 
 async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> Tuple[List[BroadcastResult], Any]:
@@ -558,7 +572,7 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
         return [BroadcastResult(platform="None", success=False, error="No configured targets")], bsky_client
 
     results = await asyncio.gather(*[t[1] for t in tasks], return_exceptions=True)
-    
+
     report = []
     for (name, _), res in zip(tasks, results):
         if isinstance(res, Exception):
@@ -607,7 +621,7 @@ async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisRe
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     state.setdefault("pending_stories", []).append(pending_entry)
-    
+
     res_ok, updated_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=True)
     if not res_ok:
         SafeLogger.error("CRITICAL: Authoritative pending reservation failed on configured state storage. Aborting publication.")
@@ -616,10 +630,10 @@ async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisRe
     return updated_state, matched_article
 
 async def settle_persistence_stage(
-    state: dict, 
-    curation: CurationResult, 
-    synthesis: SynthesisResult, 
-    matched_article: Article, 
+    state: dict,
+    curation: CurationResult,
+    synthesis: SynthesisResult,
+    matched_article: Article,
     results: List[BroadcastResult]
 ) -> dict:
     """Settles pending reservation to published (if any broadcast target succeeded) or retains as uncertain (if all failed)."""
@@ -692,55 +706,55 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
     seen_ids = await asyncio.to_thread(load_seen_interactions)
     replied_ids = []
     errors = []
-    
+
     # 1. Fetch mentions
     bsky_mentions = await fetch_bluesky_mentions(bsky_client)
     mastodon_mentions = await fetch_mastodon_mentions()
-    
+
     # 2. Fetch Threads replies
     threads_replies = []
     if settings.enable_threads_comment_replies:
         threads_replies = await fetch_threads_replies(http_client)
-        
+
     all_mentions = bsky_mentions + mastodon_mentions + threads_replies
-    
+
     # Filter and prioritize
     unseen = [m for m in all_mentions if m.id not in seen_ids]
     SafeLogger.info(f"Found {len(unseen)} new mentions/comments to process.")
-    
+
     import random
     for mention in unseen[:INTERACTION_LIMIT]:
         # Differentiate replies from direct mentions
         is_reply = mention.root_uri is not None and mention.root_uri != mention.id
         reply_prob = COMMENT_REPLY_PROB if is_reply else MENTION_REPLY_PROB
-        
+
         # Probabilistic engagement (Humanization)
         if random.random() > reply_prob:
             SafeLogger.info(f"Decision: Skipping reply to @{mention.author} on {mention.platform} (Engagement Roll).")
             seen_ids.append(mention.id)
             continue
-            
+
         try:
             SafeLogger.info(f"Generating reply for @{mention.author} on {mention.platform}...")
             reply_text = await generate_interactive_reply(mention.text, mention.author, session_context)
-            
+
             if not reply_text:
                 continue
-                
+
             # Human Delay before interaction
             await human_delay(10, 30)
-            
+
             if mention.platform == "bluesky" and bsky_client:
                 # Bluesky Reply with Threading
                 parent_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.uri, cid=mention.cid)
                 root_ref = models.ComAtprotoRepoStrongRef.Main(uri=mention.root_uri, cid=mention.root_cid) if mention.root_uri else parent_ref
-                
+
                 reply_ref = models.AppBskyFeedPost.ReplyRef(parent=parent_ref, root=root_ref)
                 await bsky_client.send_post(text=reply_text, reply_to=reply_ref)
-                
+
                 if AUTO_LIKE_INTERACTIONS:
                     await bsky_client.like(mention.uri, mention.cid)
-                    
+
             elif mention.platform == "mastodon":
                 # Mastodon Reply
                 from mastodon import Mastodon
@@ -748,12 +762,12 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
                 await asyncio.to_thread(m.status_post, reply_text, in_reply_to_id=mention.id)
                 if AUTO_LIKE_INTERACTIONS:
                     await asyncio.to_thread(m.status_favourite, mention.id)
-                    
+
             elif mention.platform == "threads":
                 # Threads Reply
                 base_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
                 publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
-                
+
                 res = await http_client.post(base_url, data={
                     "media_type": "TEXT",
                     "text": reply_text,
@@ -762,26 +776,26 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
                 }, timeout=20)
                 res.raise_for_status()
                 container_id = res.json().get("id")
-                
+
                 for _ in range(3):
                     status_res = await http_client.get(
-                        f"https://graph.threads.net/v1.0/{container_id}", 
+                        f"https://graph.threads.net/v1.0/{container_id}",
                         params={"fields": "status", "access_token": settings.threads_token}
                     )
                     if status_res.status_code == 200 and status_res.json().get("status") == "FINISHED":
                         break
                     await asyncio.sleep(2)
-                
+
                 publish_res = await http_client.post(publish_url, data={
                     "creation_id": container_id,
                     "access_token": settings.threads_token
                 }, timeout=20)
                 publish_res.raise_for_status()
-            
+
             replied_ids.append(mention.id)
             seen_ids.append(mention.id)
             SafeLogger.info(f"Successfully replied to @{mention.author} on {mention.platform}!")
-            
+
         except Exception as e:
             SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
             errors.append(str(e))
@@ -807,10 +821,10 @@ async def main():
     }
     async with httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=30) as client:
         genai_client = genai.Client(api_key=settings.gemini_key)
-        
+
         # Prune models dynamically at startup based on API limits
         await prune_gemini_model_priority_async(genai_client)
-        
+
         # Check for on-demand Telegram topic or brief intercept
         res = await check_for_telegram_topic()
         if isinstance(res, tuple):
@@ -836,20 +850,28 @@ async def main():
                 SafeLogger.info(f"Briefing Output:\n{briefing}")
             return
 
+        t_start = time.monotonic()
+
         # 1. Curation
+        t0 = time.monotonic()
         curation = await curation_stage(client, telegram_topic=telegram_topic)
-        
+        SafeLogger.info(f"Curation Stage: Completed in {time.monotonic() - t0:.2f}s ({len(curation.top_articles)} candidates).")
+
         # 2. Synthesis
+        t0 = time.monotonic()
         context = get_temporal_context()
         synthesis, curation = await synthesis_stage(client, genai_client, curation, telegram_topic=telegram_topic)
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
+        SafeLogger.info(f"Synthesis Stage: Completed in {time.monotonic() - t0:.2f}s.")
 
         # 2.2 Media Strategy Decision
+        t0 = time.monotonic()
         media = await media_strategy_stage(client, genai_client, synthesis, curation)
         from dataclasses import replace
         synthesis = replace(synthesis, media=media)
+        SafeLogger.info(f"Media Stage: Completed in {time.monotonic() - t0:.2f}s.")
 
         # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
         if settings.enable_telegram_approval and not settings.is_dry_run:
@@ -863,17 +885,20 @@ async def main():
             if final_content is None:
                 SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
                 return
-            
+
             synthesis = replace(
                 synthesis,
                 content=final_content,
                 media=final_media
             )
+        else:
+            SafeLogger.info("Telegram: Approval disabled or dry-run bypassed.")
 
         # 2.8 Pre-Broadcast Lead Resolution & Reservation Contract
         state, matched_article = await reserve_pending_stage(curation, synthesis)
 
         # 3. Broadcast
+        t0 = time.monotonic()
         SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")
         results, bsky_client = await broadcast_stage(client, synthesis)
         for res in results:
@@ -881,9 +906,11 @@ async def main():
                 SafeLogger.info(f"{res.platform} broadcast successful.")
             else:
                 SafeLogger.error(f"{res.platform} broadcast failed: {res.error}")
+        SafeLogger.info(f"Broadcast Stage: Completed in {time.monotonic() - t0:.2f}s.")
 
         # 3.5 Immediate Post-Broadcast Settlement
         state = await settle_persistence_stage(state, curation, synthesis, matched_article, results)
+        SafeLogger.info(f"Total Pipeline Duration: {time.monotonic() - t_start:.2f}s.")
 
         # 4. Post-Persistence Nonessential Tasks
         today_date = datetime.now(timezone.utc).date()

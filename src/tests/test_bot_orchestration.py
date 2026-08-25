@@ -50,7 +50,7 @@ async def test_reservation_failure_aborts_broadcast(mocker):
         mocker.patch("bot.media_strategy_stage", return_value=None)
         mocker.patch("bot.load_seen_articles", return_value={"revision": 1, "pending_stories": []})
         mocker.patch("bot.save_seen_articles", return_value=(False, {}))
-        
+
         mock_broadcast = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock)
 
         with pytest.raises(SystemExit) as exc_info:
@@ -167,11 +167,11 @@ async def test_pending_and_uncertain_stories_suppressed_in_curation(mocker, tmp_
     src.utils.save_json_state(test_file, pending_state)
 
     mock_vanguard = mocker.MagicMock()
-    mock_vanguard.audit_and_update = AsyncMock()
+    mock_vanguard.apply_feed_outcomes = MagicMock(return_value=True)
     mock_vanguard.get_active_feeds.return_value = ["https://feed.com/rss"]
     mocker.patch("src.feed_vanguard.VanguardManager", return_value=mock_vanguard)
 
-    mock_fetch = mocker.patch("bot.fetch_news", new_callable=AsyncMock, return_value=[])
+    mock_fetch = mocker.patch("bot.fetch_news", new_callable=AsyncMock, return_value=([], []))
 
     mock_client = AsyncMock()
     await bot.curation_stage(mock_client)

@@ -6,7 +6,7 @@ from src.config import BASE_TIER_1, SIGNAL_BOOST, MOMENTUM_BOOST, SYNERGY_BONUS
 def test_calculate_relevance_score_factors():
     """Verify that different scoring factors are correctly applied."""
     now_utc = datetime.now(timezone.utc)
-    
+
     # 1. Tier 1 Research Lab
     item_tier1 = {
         "title": "New Model Release",
@@ -16,7 +16,7 @@ def test_calculate_relevance_score_factors():
     }
     score_tier1 = calculate_relevance_score(item_tier1, now_utc, now_utc)
     assert score_tier1 >= 30
-    
+
     # 2. Keyword Boost
     item_signal = {
         "title": "Autonomous Agent SOTA",
@@ -26,7 +26,7 @@ def test_calculate_relevance_score_factors():
     }
     score_signal = calculate_relevance_score(item_signal, now_utc, now_utc)
     assert score_signal >= SIGNAL_BOOST
-    
+
     # 3. Momentum Product
     item_momentum = {
         "title": "GPT-5 First Look",
@@ -49,7 +49,7 @@ async def test_fetch_single_feed_atom_updated_fallback(mock_httpx_client, mocker
     """Verify Atom updated_parsed is used when published_parsed is absent."""
     from src.curator import fetch_single_feed
     now_utc = datetime.now(timezone.utc)
-    
+
     mock_entry = mocker.MagicMock()
     mock_entry.link = "https://github.com/vllm-project/vllm/releases/tag/v0.26.0"
     mock_entry.title = "v0.26.0 Release"
@@ -57,18 +57,21 @@ async def test_fetch_single_feed_atom_updated_fallback(mock_httpx_client, mocker
     del mock_entry.published_parsed  # Absent in Atom releases
     recent_dt = now_utc - timedelta(hours=5)
     mock_entry.updated_parsed = recent_dt.utctimetuple()
-    
+
     mock_feed = mocker.MagicMock()
     mock_feed.entries = [mock_entry]
     mock_feed.feed = mocker.MagicMock(title="vLLM Releases")
-    
+
     mocker.patch("feedparser.parse", return_value=mock_feed)
-    
+
     mock_resp = mocker.MagicMock()
+    mock_resp.status_code = 200
     mock_resp.content = b"<atom feed>"
     mock_httpx_client.get = mocker.AsyncMock(return_value=mock_resp)
-    
-    items = await fetch_single_feed(mock_httpx_client, "https://github.com/vllm-project/vllm/releases.atom", now_utc - timedelta(days=2), now_utc, [], [])
+
+    url, items, is_healthy, err = await fetch_single_feed(mock_httpx_client, "https://github.com/vllm-project/vllm/releases.atom", now_utc - timedelta(days=2), now_utc, [], [])
+    assert is_healthy is True
+    assert err is None
     assert len(items) == 1
     assert items[0]["published"].startswith(recent_dt.strftime("%Y-%m-%d"))
 
@@ -79,12 +82,18 @@ async def test_fetch_news_synergy_and_deduplication(mock_httpx_client, mocker):
     item_a = {"title": "Llama 4 Release Announced", "link": "https://site1.com/a", "summary": "...", "source": "Site 1", "source_id": "site1", "score": 10}
     item_b = {"title": "Llama 4 Release Details", "link": "https://site2.com/b", "summary": "...", "source": "Site 2", "source_id": "site2", "score": 10} # Corroborating domain
     item_c = {"title": "Story C Unrelated Release", "link": "https://site3.com/c", "summary": "...", "source": "Site 3", "source_id": "site3", "score": 15}
-    
-    mocker.patch("src.curator.fetch_single_feed", side_effect=[[item_a], [item_b], [item_c]])
+
+    mocker.patch("src.curator.fetch_single_feed", side_effect=[
+        ("f1", [item_a], True, None),
+        ("f2", [item_b], True, None),
+        ("f3", [item_c], True, None)
+    ])
     mocker.patch("src.curator.RSS_FEEDS", ["f1", "f2", "f3"])
-    
-    top_news = await fetch_news(mock_httpx_client)
-    
+
+    top_news, feed_outcomes = await fetch_news(mock_httpx_client)
+    assert len(feed_outcomes) == 3
+    assert all(healthy for _, healthy, _ in feed_outcomes)
+
     # Item A should be first because it gets SYNERGY_BONUS (10 + SYNERGY_BONUS = 25 > 15)
     assert len(top_news) == 2 # Clustered
     assert "Llama 4" in top_news[0]["title"]
@@ -149,13 +158,13 @@ async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
     from bot import persistence_stage
     from src.models import Article, CurationResult, SynthesisResult
     from src.settings import Settings
-    
+
     mock_settings = Settings(gemini_key="mock", is_dry_run=False)
     monkeypatch.setattr("bot.settings", mock_settings)
-    
+
     mock_load = mocker.patch("bot.load_seen_articles", return_value={"links": [], "recent_topics": []})
     mock_save = mocker.patch("bot.save_seen_articles", side_effect=lambda data, **kw: (True, data))
-    
+
     article = Article(
         title="Lead Article",
         link="https://lead.com/1",
@@ -166,9 +175,9 @@ async def test_persistence_stage_saves_supporting_links(mocker, monkeypatch):
     )
     curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
     synthesis = SynthesisResult(content="Summary", lead_link="https://lead.com/1", topic="General")
-    
+
     await persistence_stage(curation, synthesis)
-    
+
     assert mock_save.call_count == 2
     saved_data = mock_save.call_args[0][0]
     assert "https://lead.com/1" in saved_data["links"]
@@ -193,7 +202,7 @@ async def test_prune_gemini_model_priority_async(monkeypatch):
     monkeypatch.setattr("src.curator.settings", Settings(gemini_key="mock", is_dry_run=False))
     monkeypatch.setenv("CI", "false")
     original_priority = list(GEMINI_MODEL_PRIORITY)
-    
+
     # Mock list models async generator
     class AsyncListMock:
         def __init__(self, models):
@@ -209,18 +218,18 @@ async def test_prune_gemini_model_priority_async(monkeypatch):
 
     mock_client = MagicMock()
     m1 = MagicMock()
-    m1.name = "models/gemma-4-31b-it"
+    m1.name = "models/gemini-3.5-flash-lite"
     m2 = MagicMock()
     m2.name = "models/gemini-2.5-flash-lite"
     mock_model_list = [m1, m2]
     mock_client.aio.models.list = AsyncMock(return_value=AsyncListMock(mock_model_list))
-    
+
     await prune_gemini_model_priority_async(mock_client)
-    
-    assert "models/gemma-4-31b-it" in GEMINI_MODEL_PRIORITY
+
+    assert "models/gemini-3.5-flash-lite" in GEMINI_MODEL_PRIORITY
     assert "models/gemini-2.5-flash-lite" in GEMINI_MODEL_PRIORITY
-    assert "models/gemini-3.1-flash-lite-preview" not in GEMINI_MODEL_PRIORITY
-    
+    assert "models/gemini-3.7-flash" not in GEMINI_MODEL_PRIORITY
+
     # Restore
     GEMINI_MODEL_PRIORITY.clear()
     GEMINI_MODEL_PRIORITY.extend(original_priority)
@@ -256,53 +265,53 @@ async def test_async_model_pruning_does_not_match_preview_alias(monkeypatch):
 async def test_summarize_news_with_thinking_budget(monkeypatch):
     """Verify that summarize_news includes thinking_config when supported by the model."""
     monkeypatch.setenv("CI", "true")
-    
+
     # Force GEMINI_MODEL_PRIORITY to only contain a model supporting thinking
     original_priority = list(GEMINI_MODEL_PRIORITY)
     GEMINI_MODEL_PRIORITY.clear()
     GEMINI_MODEL_PRIORITY.append("models/gemini-2.5-flash")
-    
+
     # Mock client and response
     mock_client = MagicMock()
     mock_response = AsyncMock()
     mock_response.text = "TOPIC: LLMs\nBODY: This is the news brief."
     mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
-    
+
     # Patch genai.Client and settings singleton
     with patch("google.genai.Client", return_value=mock_client), \
          patch("src.curator.settings") as mock_settings:
         mock_settings.gemini_key = "test_key"
         mock_settings.thinking_budget = 500
         mock_settings.is_dry_run = False
-        
+
         # We need some dummy news items
         news_items = [{"title": "Important AI Breakthrough", "link": "https://openai.com/1", "source": "OpenAI", "score": 100}]
         context = {"day": "Monday", "session": "Morning"}
         await summarize_news(news_items, context)
-        
+
     # Verify generate_content was called with thinking_config containing the budget
     args, kwargs = mock_client.aio.models.generate_content.call_args
     config = kwargs.get("config")
     assert config is not None
     assert config.thinking_config is not None
     assert config.thinking_config.thinking_budget == 500
-    
+
     # Restore
     GEMINI_MODEL_PRIORITY.clear()
     GEMINI_MODEL_PRIORITY.extend(original_priority)
 
 def test_registry_validation():
     from src.config import SOURCE_REGISTRY
-    
+
     allowed_categories = {
         "research_lab", "enterprise", "practitioner", "open_source",
         "infrastructure", "business", "journalism", "academic", "critical"
     }
     allowed_qualities = {"official", "community", "academic", "journalism", "opinion"}
-    
+
     ids = set()
     urls = set()
-    
+
     for source in SOURCE_REGISTRY:
         # Check required fields
         assert "id" in source
@@ -311,13 +320,13 @@ def test_registry_validation():
         assert "category" in source
         assert "quality" in source
         assert "base_score" in source
-        
+
         # Check duplicate IDs and URLs
         assert source["id"] not in ids, f"Duplicate ID: {source['id']}"
         assert source["url"] not in urls, f"Duplicate URL: {source['url']}"
         ids.add(source["id"])
         urls.add(source["url"])
-        
+
         # Check allowed category and quality values
         assert source["category"] in allowed_categories, f"Invalid category: {source['category']}"
         assert source["quality"] in allowed_qualities, f"Invalid quality: {source['quality']}"
@@ -397,11 +406,11 @@ async def test_generate_nvidia_success(monkeypatch):
     monkeypatch.setattr("src.curator.settings", mock_settings)
 
     valid_bytes = create_valid_test_image_bytes()
-    
+
     # NVIDIA NIM returns base64 string in JSON {"image": "..."}
     import base64
     encoded = base64.b64encode(valid_bytes).decode("utf-8")
-    
+
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json = MagicMock(return_value={"image": encoded})
@@ -575,7 +584,7 @@ async def test_dispatcher_pollinations_success_stops_chain(monkeypatch, mocker):
     monkeypatch.setattr("src.curator.settings", mock_settings)
 
     valid_bytes = create_valid_test_image_bytes()
-    
+
     # Mock the functions inside curator using mocker.patch
     mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
         "pollinations": AsyncMock(return_value=valid_bytes),
@@ -619,7 +628,7 @@ async def test_dispatcher_explicit_imagen_provider(monkeypatch, mocker):
     monkeypatch.setattr("src.curator.settings", mock_settings)
 
     mock_imagen = mocker.patch("src.curator.generate_imagen_image", return_value=b"ImagenBytes")
-    
+
     mock_client = AsyncMock()
     mock_genai = MagicMock()
     res = await generate_ai_image(mock_client, mock_genai, "Test Prompt")
@@ -757,17 +766,17 @@ async def test_huggingface_url_uses_correct_domain(monkeypatch):
 async def test_generate_imagen_legacy_mode(monkeypatch):
     """Verify legacy imagen- model uses generate_images API."""
     monkeypatch.setattr("src.config.IMAGEN_MODEL", "imagen-4.0-generate-001")
-    
+
     mock_response = MagicMock()
     mock_image = MagicMock()
     mock_image.image_bytes = b"LegacyImagenBytes"
     mock_response.generated_images = [MagicMock(image=mock_image)]
-    
+
     mock_client = MagicMock()
     mock_client.aio = MagicMock()
     mock_client.aio.models = MagicMock()
     mock_client.aio.models.generate_images = AsyncMock(return_value=mock_response)
-    
+
     from src.curator import generate_imagen_image
     res = await generate_imagen_image(mock_client, "test prompt")
     assert res == b"LegacyImagenBytes"
@@ -778,21 +787,21 @@ async def test_generate_imagen_legacy_mode(monkeypatch):
 async def test_generate_imagen_multimodal_mode(monkeypatch):
     """Verify gemini-3.1-flash-image model uses generate_content API with image response modality."""
     monkeypatch.setattr("src.config.IMAGEN_MODEL", "gemini-3.1-flash-image")
-    
+
     mock_part = MagicMock()
     mock_part.inline_data = MagicMock(data=b"MultimodalImagenBytes")
-    
+
     mock_candidate = MagicMock()
     mock_candidate.content.parts = [mock_part]
-    
+
     mock_response = MagicMock()
     mock_response.candidates = [mock_candidate]
-    
+
     mock_client = MagicMock()
     mock_client.aio = MagicMock()
     mock_client.aio.models = MagicMock()
     mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
-    
+
     from src.curator import generate_imagen_image
     res = await generate_imagen_image(mock_client, "test prompt")
     assert res == b"MultimodalImagenBytes"

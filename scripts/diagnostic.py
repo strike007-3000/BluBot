@@ -19,12 +19,12 @@ async def test_scoring():
     print(f"\n{'='*20}")
     print(f"DIAGNOSTIC: SCORING ENGINE (v{VERSION})")
     print(f"{'='*20}")
-    
+
     import httpx
     async with httpx.AsyncClient() as client:
         # Fetch all candidate items without limit to analyze overall source contributions
-        all_candidates = await fetch_news(client, limit=None)
-    
+        all_candidates, _ = await fetch_news(client, limit=None)
+
     if not all_candidates:
         print("No news items found. Check RSS feeds or internet connection.")
         return
@@ -93,10 +93,10 @@ async def test_full_dry_run():
     print(f"\n{'='*20}")
     print(f"FULL PIPELINE DRY RUN (v{VERSION})")
     print(f"{'='*20}")
-    
+
     os.environ["DEBUG"] = "true"
     import bot
-    
+
     # Unified Mocking Strategy (Aligned with pytest suite)
     with patch("bot.AsyncClient") as mock_client_class:
         mock_instance = mock_client_class.return_value
@@ -104,12 +104,12 @@ async def test_full_dry_run():
         mock_instance.send_post = AsyncMock(return_value=True)
         mock_instance.upload_blob = AsyncMock()
         mock_instance.export_session_string = MagicMock(return_value="mock_session_str")
-        
+
         with patch("bot.post_to_mastodon", new_callable=AsyncMock), \
              patch("bot.post_to_threads", new_callable=AsyncMock), \
              patch("bot.update_live_status", new_callable=AsyncMock), \
              patch("bot.save_seen_articles"):
-            
+
             print(f"Executing full bot orchestration (Offline Mode - {IMAGE_PROVIDER} Image Gen)...")
             await bot.main()
             print(f"\n{'='*20}\nDRY RUN COMPLETE (v{VERSION})\n{'='*20}")
@@ -385,14 +385,14 @@ async def test_gemini_model_discovery_and_multimodal_checks():
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
-    
+
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
     print("3. Live Image Generation Test (Pollinations, Hugging Face, & Gemini Imagen)")
     print("4. Gist State Diagnostics (Opt-in Read/Write Test)")
     print("5. Gemini Model Discovery & Multi-Model Test (Text + PNG Image Input)")
-    
+
     try:
         choice = input("\nEnter choice (1-5) or 'q' to quit: ").strip().lower()
         if choice == "1":

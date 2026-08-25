@@ -16,9 +16,9 @@ from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = 10_000_000  # Prevent decompression bomb DoS attacks
 from .config import (
-    MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE, 
+    MAX_API_RETRIES, BACKOFF_FACTOR, JITTER_RANGE,
     SEEN_FILE_PATH, SESSION_FILE_PATH, GENERIC_IMAGE_PATTERNS,
-    INTERACTIONS_STATE_PATH
+    INTERACTIONS_STATE_PATH, VANGUARD_STATE_PATH
 )
 
 from .logger import SafeLogger
@@ -56,10 +56,10 @@ def retry_with_backoff(func):
                 if retries == MAX_API_RETRIES:
                     SafeLogger.error(f"Ultimate failure in {func.__name__} after {MAX_API_RETRIES} attempts: {e}")
                     raise e
-                
+
                 # Calculate sleep with jitter
                 wait_time = (BACKOFF_FACTOR ** retries) + random.uniform(0, JITTER_RANGE)
-                
+
                 # Expert Review Fix: Better logging for rate limits
                 err_msg = str(e).lower()
                 if "rate limit" in err_msg or "429" in err_msg:
@@ -74,7 +74,7 @@ def retry_with_backoff(func):
                     raise e
                 else:
                     SafeLogger.warn(f"Retry {retries}/{MAX_API_RETRIES} for {func.__name__} in {wait_time:.2f}s... (Error: {str(e)[:100]})")
-                
+
                 await asyncio.sleep(wait_time)
     return wrapper
 
@@ -123,11 +123,11 @@ class FileLock:
         except Exception:
             pass
 
-def _load_gist_state(filename: str) -> Optional[dict]:
-    """Helper to pull state from a private GitHub Gist."""
+def _load_gist_state_with_status(filename: str) -> Tuple[str, Optional[dict]]:
+    """Helper to pull state from a private GitHub Gist with status categorization."""
     if not settings.gist_id or not settings.gist_token:
-        return None
-    
+        return "NOT_CONFIGURED", None
+
     try:
         url = f"https://api.github.com/gists/{settings.gist_id}"
         headers = {
@@ -138,18 +138,32 @@ def _load_gist_state(filename: str) -> Optional[dict]:
             resp = client.get(url, headers=headers)
             resp.raise_for_status()
             files = resp.json().get("files", {})
-            if filename in files:
-                content = files[filename].get("content")
-                return json.loads(content) if content else None
+            if filename not in files:
+                return "NOT_FOUND", None
+            content = files[filename].get("content")
+            if not content:
+                return "NOT_FOUND", None
+            try:
+                parsed = json.loads(content)
+                if isinstance(parsed, dict):
+                    return "FOUND", parsed
+                return "CORRUPT", None
+            except Exception:
+                return "CORRUPT", None
     except Exception as e:
-        SafeLogger.warn(f"Failed to load state from Gist: {e}")
-    return None
+        SafeLogger.warn(f"Failed to load state from Gist ({filename}): {e}")
+        return "NETWORK_ERROR", None
+
+def _load_gist_state(filename: str) -> Optional[dict]:
+    """Helper to pull state from a private GitHub Gist (preserves dict | None signature)."""
+    _, data = _load_gist_state_with_status(filename)
+    return data
 
 def _save_gist_state(filename: str, data: dict) -> bool:
     """Helper to push state to a private GitHub Gist."""
     if not settings.gist_id or not settings.gist_token:
         return False
-        
+
     try:
         url = f"https://api.github.com/gists/{settings.gist_id}"
         headers = {
@@ -166,8 +180,91 @@ def _save_gist_state(filename: str, data: dict) -> bool:
             resp.raise_for_status()
             return True
     except Exception as e:
-        SafeLogger.error(f"Failed to save state to Gist: {e}")
+        SafeLogger.error(f"Failed to save state to Gist ({filename}): {e}")
         return False
+
+def load_vanguard_state() -> dict:
+    """
+    Loads feed health state from authoritative GitHub Gist (feed_vanguard.json)
+    with local cache fallback and synchronization.
+    """
+    local_state = {}
+    if os.path.exists(VANGUARD_STATE_PATH):
+        try:
+            with FileLock(VANGUARD_STATE_PATH):
+                raw = load_json_state(VANGUARD_STATE_PATH)
+                if isinstance(raw, dict):
+                    local_state = raw
+        except Exception as e:
+            SafeLogger.warn(f"Vanguard: Local state cache corrupted: {e}")
+
+    if settings.gist_id and settings.gist_token:
+        status, gist_data = _load_gist_state_with_status("feed_vanguard.json")
+        if status == "FOUND" and isinstance(gist_data, dict):
+            SafeLogger.info("Vanguard: Loaded authoritative feed-health state from GitHub Gist.")
+            try:
+                with FileLock(VANGUARD_STATE_PATH):
+                    temp_path = f"{VANGUARD_STATE_PATH}.tmp"
+                    save_json_state(temp_path, gist_data, indent=2)
+                    os.replace(temp_path, VANGUARD_STATE_PATH)
+            except Exception as e:
+                SafeLogger.warn(f"Vanguard: Failed to cache Gist state locally: {e}")
+            return gist_data
+        elif status == "NOT_FOUND":
+            SafeLogger.info("Vanguard: Clean initial run; feed_vanguard.json not found on Gist. Using local baseline.")
+            return local_state
+        elif status == "CORRUPT":
+            SafeLogger.warn("Vanguard: Gist feed_vanguard.json corrupted; falling back to local cache.")
+            return local_state
+        else:
+            SafeLogger.warn("Vanguard: Gist request failed; cross-run persistence is degraded, falling back to local cache.")
+            if isinstance(local_state, dict):
+                local_state["_gist_read_degraded"] = True
+            return local_state
+
+    return local_state
+
+def save_vanguard_state(state: dict) -> bool:
+    """
+    Persists feed health state to authoritative GitHub Gist (feed_vanguard.json)
+    and atomic local cache.
+    """
+    if settings.is_dry_run:
+        SafeLogger.info("DRY RUN: Skipping Vanguard state persistence.")
+        return True
+
+    # Strip transient metadata flag if present before saving
+    is_degraded = False
+    clean_state = dict(state)
+    if clean_state.pop("_gist_read_degraded", None):
+        is_degraded = True
+
+    local_ok = True
+    try:
+        with FileLock(VANGUARD_STATE_PATH):
+            temp_path = f"{VANGUARD_STATE_PATH}.tmp"
+            save_json_state(temp_path, clean_state, indent=2)
+            os.replace(temp_path, VANGUARD_STATE_PATH)
+    except Exception as e:
+        local_ok = False
+        SafeLogger.warn(f"Vanguard: Failed to write local cache: {e}")
+
+    if settings.gist_id and settings.gist_token:
+        if is_degraded:
+            SafeLogger.warn("Vanguard: Initial Gist read was degraded; skipping remote state overwrite to preserve remote data.")
+            return False
+
+        gist_ok = _save_gist_state("feed_vanguard.json", clean_state)
+        if gist_ok:
+            SafeLogger.info("Vanguard: Authoritative Gist feed-health state saved.")
+            if not local_ok:
+                SafeLogger.warn("Vanguard: Warning: Local recovery cache write failed, but remote Gist save succeeded.")
+            return True
+        else:
+            SafeLogger.error("Vanguard: Failed to save feed-health state to GitHub Gist; cross-run persistence is unsynchronized.")
+            return False
+
+    return local_ok
 
 def load_json_state(file_path: str):
     """Helper to load JSON data from a file path."""
@@ -205,22 +302,22 @@ def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
     """
     if not isinstance(data, dict):
         data = {}
-        
+
     state = dict(data)
-    
+
     schema_version = state.get("schema_version", 1)
     try:
         schema_version = int(schema_version)
     except (ValueError, TypeError):
         schema_version = 2
     state["schema_version"] = max(schema_version, 2)
-    
+
     revision = state.get("revision", 1)
     try:
         state["revision"] = int(revision)
     except (ValueError, TypeError):
         state["revision"] = 1
-        
+
     updated_at = state.get("updated_at")
     if not isinstance(updated_at, str) or not updated_at:
         state["updated_at"] = LEGACY_DEFAULT_UPDATED_AT
@@ -241,7 +338,7 @@ def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
 
     if not isinstance(state.get("last_dialect"), str):
         state["last_dialect"] = None
-        
+
     if not isinstance(state.get("start_date"), str) or not state.get("start_date"):
         state["start_date"] = "2026-03-31"
 
@@ -254,13 +351,13 @@ def _merge_publication_states(state1: dict, state2: dict) -> dict:
     Uses state1's watch_topics (remote state) to avoid resurrecting deleted watch topics.
     """
     merged = sanitize_and_migrate_state(state1)
-    
+
     seen_links = set(merged.get("links", []))
     for link in state2.get("links", []):
         if isinstance(link, str) and link and link not in seen_links:
             merged["links"].append(link)
             seen_links.add(link)
-            
+
     story_map = {}
     for st in merged.get("recent_stories", []):
         if isinstance(st, dict) and "url" in st:
@@ -282,7 +379,7 @@ def _merge_publication_states(state1: dict, state2: dict) -> dict:
     merged["pending_stories"] = sorted(pending_map.values(), key=lambda x: str(x.get("created_at", "")))
 
     merged["watch_topics"] = state1.get("watch_topics", [])
-    
+
     if str(state2.get("updated_at", "")) > str(merged.get("updated_at", "")):
         merged["updated_at"] = state2.get("updated_at")
 
@@ -574,37 +671,37 @@ def normalize_url(url: str, base_url: Optional[str] = None) -> str:
     """
     if not url:
         return ""
-    
+
     # 1. Handle protocol-relative URLs (e.g., //example.com)
     if url.strip().startswith("//"):
         # Assume https as the modern standard for protocol-relative links
         url = "https:" + url.strip()
-    
+
     # 2. Resolve relative URLs against a base if provided
     if base_url and not urlparse(url).scheme:
         url = urljoin(base_url, url)
-        
+
     try:
         parsed = urlparse(url)
         if not parsed.scheme or not parsed.netloc:
             return url
-            
+
         # 3. Standardize components
         scheme = parsed.scheme.lower()
         netloc = parsed.netloc.lower()
         path = parsed.path if parsed.path else "/"
-        
+
         # 4. Strip tracking query parameters
         query_params = parse_qs(parsed.query)
         tracking_prefixes = ('utm_', 'ref', 'fbclid', 'gclid', '_ga', 'mc_cid', 'mc_eid')
         tracking_exact = ('s', 'igsh', 'feature')
-        
+
         clean_params = {
-            k: v for k, v in query_params.items() 
-            if not k.lower().startswith(tracking_prefixes) 
+            k: v for k, v in query_params.items()
+            if not k.lower().startswith(tracking_prefixes)
             and k.lower() not in tracking_exact
         }
-        
+
         # 5. Reconstruct without fragments (#)
         normalized = urlunparse((
             scheme,
@@ -614,7 +711,7 @@ def normalize_url(url: str, base_url: Optional[str] = None) -> str:
             urlencode(clean_params, doseq=True),
             "" # Fragment is stripped
         ))
-        
+
         return normalized
     except Exception:
         return url
@@ -652,15 +749,15 @@ def is_safe_url(url: str) -> bool:
         parsed = urlparse(url)
         if parsed.scheme not in ('http', 'https'):
             return False
-            
+
         hostname = parsed.hostname
         if not hostname or hostname.lower() == 'localhost':
             return False
-            
+
         ips = _resolve_public_ip_candidates(hostname)
         if not ips:
             return False
-            
+
         return True
     except Exception:
         return False
@@ -678,13 +775,13 @@ def _resolver_pinned_to_ips(hostname: str, allowed_ips: List[str]):
     def guarded_getaddrinfo(host: str, *args, **kwargs):
         if str(host).lower() != canonical_hostname:
             return original_getaddrinfo(host, *args, **kwargs)
-        
+
         current = original_getaddrinfo(host, *args, **kwargs)
         current_ips = {entry[4][0] for entry in current}
-        
+
         if current_ips - allowed_set:
             raise socket.gaierror(f"SSRF Prevention: Resolver returned unexpected address for {host}")
-        
+
         return [entry for entry in current if entry[4][0] in allowed_set]
 
     socket.getaddrinfo = guarded_getaddrinfo
@@ -697,46 +794,46 @@ async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, he
     """Fetches a URL while validating every hop in the redirect chain."""
     current_url = url
     initial_scheme = urlparse(url).scheme
-    
+
     for _ in range(max_redirects + 1):
         parsed = urlparse(current_url)
         if parsed.scheme not in ('http', 'https'):
             SafeLogger.warn(f"SSRF Prevention: Blocked non-HTTP scheme: {parsed.scheme}", "unsafe_url_blocked")
             return None
-            
+
         hostname = parsed.hostname
         if not hostname or hostname.lower() == 'localhost':
             SafeLogger.warn(f"SSRF Prevention: Blocked local hostname: {hostname}", "unsafe_url_blocked")
             return None
-            
+
         ips = _resolve_public_ip_candidates(hostname)
         if not ips:
             SafeLogger.warn(f"SSRF Prevention: Blocked non-public or unresolvable host: {hostname}", "unsafe_url_blocked")
             return None
-            
+
         try:
             with _resolver_pinned_to_ips(hostname, ips):
                 response = await client.get(current_url, timeout=timeout, follow_redirects=False, headers=headers)
         except Exception as e:
             SafeLogger.warn(f"Request blocked by safety guards: {e}", "unsafe_url_blocked")
             return None
-            
+
         if response.is_redirect:
             location = response.headers.get("location")
             if not location:
                 return response
             next_url = urljoin(current_url, location)
-            
+
             # Prevent scheme downgrade (https -> http)
             if initial_scheme == 'https' and urlparse(next_url).scheme == 'http':
                 SafeLogger.warn("SSRF Prevention: Blocked downgrade redirect", "unsafe_url_blocked")
                 return None
-                
+
             current_url = next_url
             continue
-            
+
         return response
-    
+
     return None
 
 async def get_link_metadata(client, url):
@@ -746,18 +843,18 @@ async def get_link_metadata(client, url):
         resp = await get_with_safe_redirects(client, url, timeout=15, headers=headers)
         if resp is None or resp.status_code != 200:
             return None
-        
+
         soup = BeautifulSoup(resp.text, "html.parser")
-        
+
         # Meta Priority Matrix
         title = soup.find("meta", property="og:title")
         desc = soup.find("meta", property="og:description")
         image = soup.find("meta", property="og:image")
-        
+
         # Expert Review Fix: Sanitize image URLs for platform limits
         img_url = image["content"] if image else None
         image_data = None
-        
+
         if img_url:
             # P1 Badge: Use robust normalization for images (handles // and relative)
             img_url = normalize_url(img_url, base_url=url)
@@ -790,21 +887,21 @@ def compress_image(image_bytes, max_size_kb=900):
     """Losslessly then lossily compresses image to stay within platform limits (e.g., Bluesky 1MB)."""
     try:
         img = Image.open(io.BytesIO(image_bytes))
-        
+
         # Defensive Architecture: Force RGB for all platform-compatible JPEGs
         if img.mode != "RGB":
             img = img.convert("RGB")
-            
+
         output = io.BytesIO()
         img.save(output, format="JPEG", quality=85, optimize=True)
-        
+
         # Iterative Quality Downscaling
         quality = 80
         while output.tell() > max_size_kb * 1024 and quality > 30:
             output = io.BytesIO()
             img.save(output, format="JPEG", quality=quality, optimize=True)
             quality -= 10
-            
+
         return output.getvalue()
     except Exception as e:
         SafeLogger.error(f"Image compression critical failure: {e}")
@@ -829,23 +926,23 @@ def smart_truncate(text, max_chars, suffix='...'):
     """Truncates text at word boundaries within the limit, appending a suffix."""
     if not text or len(text) <= max_chars:
         return text
-    
+
     # Reserve space for the suffix
     limit = max_chars - len(suffix)
     truncated = text[:limit]
-    
+
     # Backtrack to the last whitespace to avoid mid-word cutoff
     last_space = truncated.rfind(' ')
     if last_space != -1:
         truncated = truncated[:last_space]
-        
+
     return f"{truncated.rstrip()}{suffix}"
 
 def smart_split(text, limit, max_chunks=None):
     """Splits text into chunks within the limit, prioritizing paragraph and sentence boundaries."""
     if not text:
         return []
-        
+
     # If the text has double-newlines, it is explicitly structured as paragraphs/posts by the model.
     # We should split by \n\n first if present, then process each paragraph.
     if "\n\n" in text:
@@ -871,14 +968,14 @@ def smart_split(text, limit, max_chunks=None):
                 if not last.endswith("..."):
                     final_chunks[-1] = last.rstrip() + "..."
         return final_chunks
-        
+
     # Expert Review: If text fits in one part, return immediately
     if len(text) <= limit:
         return [text]
-    
+
     chunks = []
     remaining = text
-    
+
     while remaining:
         # Check if we've hit the thread cap
         if max_chunks and len(chunks) >= max_chunks:
@@ -892,7 +989,7 @@ def smart_split(text, limit, max_chunks=None):
         if len(remaining) <= limit:
             chunks.append(remaining)
             break
-            
+
         # 1. Try splitting at paragraphs
         idx = remaining.rfind('\n\n', 0, limit)
         # 2. Try splitting at sentences
@@ -903,14 +1000,14 @@ def smart_split(text, limit, max_chunks=None):
         # 3. Try splitting at words
         if idx == -1:
             idx = remaining.rfind(' ', 0, limit)
-            
+
         # 4. Hard cut if no boundaries found (unlikely)
         if idx == -1:
             idx = limit
-            
+
         chunk = remaining[:idx].strip()
         if chunk:
             chunks.append(chunk)
         remaining = remaining[idx:].strip()
-        
+
     return chunks

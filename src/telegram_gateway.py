@@ -128,11 +128,11 @@ async def send_draft_for_approval(
                 updates = await bot.get_updates(offset=offset, timeout=1)
                 for update in updates:
                     offset = update.update_id + 1
-                    
+
                     # Handle callback query (Approve/Reject/Regen buttons)
                     if update.callback_query:
                         query = update.callback_query
-                        
+
                         # Validate sender matches settings.telegram_user_id
                         if str(query.from_user.id) != str(chat_id):
                             SafeLogger.warn(f"Telegram: Unauthorized interaction from user ID: {query.from_user.id}")
@@ -167,29 +167,27 @@ async def send_draft_for_approval(
                                     await bot.send_message(chat_id=chat_id, text="⚠️ API clients are missing; image regeneration not possible.")
                                     await query.answer()
                                     continue
-                                
+
                                 status_msg = await bot.send_message(chat_id=chat_id, text=f"🎨 Regenerating image card using {settings.image_provider.upper()}...")
                                 await query.answer("Regenerating image...")
-                                
+
                                 try:
-                                    from src.curator import generate_visual_prompt, generate_ai_image, generate_image_alt_text
+                                    from src.curator import generate_visual_prompt, generate_ai_image, generate_image_alt_text, validate_image_bytes
                                     from PIL import Image
                                     import io
                                     from src.utils import get_image_mime
-                                    
+
                                     # 1. Generate new visual prompt
                                     visual_prompt = await generate_visual_prompt(genai_client, text, topic)
-                                    
+
                                     # 2. Generate AI image
                                     new_image_data = await generate_ai_image(client, genai_client, visual_prompt)
-                                    
-                                    from src.curator import validate_image_bytes
 
                                     if new_image_data and validate_image_bytes(new_image_data):
                                         # 3. Generate image alt text
                                         alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
-                                        new_alt_text = await generate_image_alt_text(new_image_data, alt_prompt)
-                                        
+                                        new_alt_text = await generate_image_alt_text(new_image_data, prompt=alt_prompt, topic=topic)
+
                                         # Get dimensions and mime
                                         mime_type = get_image_mime(new_image_data)
                                         width, height = None, None
@@ -198,7 +196,7 @@ async def send_draft_for_approval(
                                             width, height = img.size
                                         except Exception:
                                             pass
-                                            
+
                                         # Construct new MediaAsset
                                         new_media = MediaAsset(
                                             source=MediaSource.GENERATED,
@@ -210,7 +208,7 @@ async def send_draft_for_approval(
                                             alt_text=new_alt_text,
                                             attribution_url=media.attribution_url if media else None
                                         )
-                                        
+
                                         # 4. Update preview message media
                                         original_has_media = media is not None and media.image_bytes is not None
                                         if sent_message and original_has_media:
@@ -249,7 +247,7 @@ async def send_draft_for_approval(
                     # Handle incoming text messages (direct edits, replies, or feedback)
                     elif update.message and update.message.text:
                         msg = update.message
-                        
+
                         # Validate sender matches settings.telegram_user_id
                         if str(msg.from_user.id) != str(chat_id):
                             continue
@@ -280,19 +278,19 @@ async def send_draft_for_approval(
                                 feedback = "Refine the wording and present the insight from a slightly different perspective."
 
                             status_msg = await bot.send_message(chat_id=chat_id, text="🔄 Regenerating text draft...", reply_to_message_id=msg.message_id)
-                            
+
                             try:
                                 from src.config import CURATOR_SYSTEM_INSTRUCTION
                                 from google.genai import types
                                 from src.curator import strip_markdown
-                                
+
                                 rewrite_prompt = (
                                     f"You are a professional editor. Please rewrite the following technical post draft based on the user's feedback.\n\n"
                                     f"Current Draft:\n\"\"\"\n{text}\n\"\"\"\n\n"
                                     f"User Feedback: {feedback}\n\n"
                                     f"Follow all system instructions for style, tone, and length constraints."
                                 )
-                                
+
                                 response = await genai_client.aio.models.generate_content(
                                     model=settings.gemini_model,
                                     contents=rewrite_prompt,
@@ -321,7 +319,7 @@ async def send_draft_for_approval(
                                         reply_markup=reply_markup,
                                         parse_mode="Markdown"
                                     )
-                                
+
                                 text = new_text
                                 SafeLogger.info(f"Telegram: Text regenerated to: {text}")
                                 await bot.send_message(chat_id=chat_id, text="📝 Draft text updated successfully!", reply_to_message_id=msg.message_id)
@@ -414,9 +412,9 @@ def process_authorized_command(text: str) -> Optional[dict]:
     """
     if not text:
         return None
-        
+
     cmd_text = text.strip()
-    
+
     if cmd_text.startswith("/brief "):
         topic = cmd_text.replace("/brief ", "", 1).strip()
         if not topic or len(topic) > 100 or "http://" in topic or "https://" in topic:
@@ -432,18 +430,18 @@ def process_authorized_command(text: str) -> Optional[dict]:
         raw_topic = cmd_text.replace("/watch ", "", 1).strip()
         if not raw_topic or len(raw_topic) > 100 or "http://" in raw_topic or "https://" in raw_topic:
             return {"action": "watch_invalid", "response": "⚠️ Invalid watch topic. Provide a clean topic string under 100 characters."}
-            
+
         norm_topic = raw_topic.lower()
         from src.utils import load_seen_articles, save_seen_articles
         state = load_seen_articles()
         watches = state.get("watch_topics", [])
-        
+
         if len(watches) >= 10:
             return {"action": "watch_limit", "response": "⚠️ Maximum of 10 watch topics reached. Remove one using /unwatch first."}
-            
+
         if any((w.get("topic") if isinstance(w, dict) else str(w).lower()) == norm_topic for w in watches):
             return {"action": "watch_exists", "response": f"📌 Topic *{raw_topic}* is already in your watchlist."}
-            
+
         new_entry = {
             "topic": norm_topic,
             "display_name": raw_topic,
@@ -455,31 +453,31 @@ def process_authorized_command(text: str) -> Optional[dict]:
         state["watch_topics"] = watches
         save_seen_articles(state)
         return {"action": "watch_added", "topic": raw_topic, "response": f"✅ Added *{raw_topic}* to watchlist ({len(watches)}/10 topics active)."}
-        
+
     elif cmd_text.startswith("/unwatch "):
         raw_topic = cmd_text.replace("/unwatch ", "", 1).strip().lower()
         from src.utils import load_seen_articles, save_seen_articles
         state = load_seen_articles()
         watches = state.get("watch_topics", [])
-        
+
         initial_len = len(watches)
         updated_watches = [w for w in watches if (w.get("topic") if isinstance(w, dict) else str(w).lower()) != raw_topic]
-        
+
         if len(updated_watches) == initial_len:
             return {"action": "unwatch_not_found", "response": f"🔍 Topic *{raw_topic}* not found in your watchlist."}
-            
+
         state["watch_topics"] = updated_watches
         save_seen_articles(state)
         return {"action": "unwatch_removed", "topic": raw_topic, "response": f"🗑️ Removed *{raw_topic}* from watchlist ({len(updated_watches)}/10 remaining)."}
-        
+
     elif cmd_text == "/watches" or cmd_text.startswith("/watches "):
         from src.utils import load_seen_articles
         state = load_seen_articles()
         watches = state.get("watch_topics", [])
-        
+
         if not watches:
             return {"action": "watches_list", "response": "📋 Your topic watchlist is empty. Add topics using `/watch <topic>`."}
-            
+
         lines = ["📋 *Active Topic Watchlist:*"]
         for idx, w in enumerate(watches):
             name = w.get("display_name", w.get("topic", "Unknown")) if isinstance(w, dict) else str(w)
@@ -487,7 +485,7 @@ def process_authorized_command(text: str) -> Optional[dict]:
             suffix = f" (added {date_str})" if date_str else ""
             lines.append(f"{idx+1}. *{name}*{suffix}")
         return {"action": "watches_list", "response": "\n".join(lines)}
-        
+
     return None
 
 async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
@@ -501,7 +499,7 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
     import os
     import json
     import time
-    
+
     # 1. Check pending_topic.json first
     topic_to_use = None
     if os.path.exists(PENDING_TOPIC_FILE_PATH):
@@ -536,7 +534,7 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
     try:
         bot = Bot(token=settings.telegram_bot_token)
         chat_id = settings.telegram_user_id
-        
+
         updates = await bot.get_updates(limit=50)
         if not updates:
             return (None, None)
@@ -556,10 +554,10 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
                             await bot.get_updates(offset=update.update_id + 1, limit=1)
                         except Exception as e:
                             SafeLogger.warn(f"Telegram: Failed to acknowledge updates: {e}")
-                            
+
                         if result.get("response"):
                             await bot.send_message(chat_id=chat_id, text=result["response"])
-                            
+
                         if result.get("action") in ("topic", "brief"):
                             return (result.get("action"), result.get("topic"))
                         else:

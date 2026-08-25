@@ -1,0 +1,9 @@
+{
+  "https://example.com/feed.xml": {
+    "fail_count": 2,
+    "last_error": "HTTP 404",
+    "last_seen": "2026-08-25T12:00:00.000000+00:00",
+    "retry_at": "2026-08-25T13:00:00.000000+00:00",
+    "status": "PENALIZED"
+  }
+}
