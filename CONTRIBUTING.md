@@ -7,7 +7,7 @@ BluBot is not just a bot; it's an **Impact-Aware Intelligence**. Our goal is to 
 
 ## 🧱 Architectural Guardrails
 1.  **Asynchronous First**: All network operations must use `asyncio` and `httpx`. No blocking calls in the main pipeline.
-2.  **Staged Pipeline (v3.18.3)**: Core logic follows a linear, staged flow (**Curation → Synthesis → Broadcast → Persistence**). Always pass state via frozen dataclasses from `src/models.py`. The Telegram gateway supports an early-exit `/brief` path that bypasses the standard pipeline.
+2.  **Staged Pipeline**: Core logic follows a linear, staged flow (**Curation → Synthesis → Broadcast → Persistence**). Always pass state via frozen dataclasses from `src/models.py`. The Telegram gateway supports an early-exit `/brief` path that bypasses the standard pipeline.
 3.  **Absolute Imports**: To ensure test isolation and consistency, always use absolute imports starting with `src.` (e.g., `from src.utils import ...`). No relative imports.
 4.  **Typed Settings**: Centralized configuration belongs in `src/settings.py` via the `Settings` singleton. Never use loose `os.getenv` in business logic.
 5.  **The Fortress (Security)**: All logging must pass through `src/logger.py:SafeLogger`. Use `FileLock` for state persistence and ensuring atomic writes. 
@@ -15,7 +15,7 @@ BluBot is not just a bot; it's an **Impact-Aware Intelligence**. Our goal is to 
 ## ⚖️ "Signal Verification" for AI-Assisted Code
 We welcome the use of AI coding assistants (like Gemini, Claude, or GPT), but with a **hard requirement for manual verification**:
 - **Audit All Dependencies**: AI assistants may occasionally "hallucinate" package names or suggest insecure/deprecated versions. You MUST manually verify that every `import` and `requirement` is current and safe.
-- **Dependency Locking**: Never add a package to `requirements.txt` without pinning it to a safe version.
+- **Dependency Locking**: Add reviewed direct dependencies to `requirements.in`, then regenerate `requirements.txt` with the documented `uv` command. Never edit the generated lockfile by hand.
 - **Logic Sanity Checks**: Ensure AI-generated regex or parsing logic is ReDoS-safe and handles malformed data gracefully.
 
 ## 🚀 The PR Workflow

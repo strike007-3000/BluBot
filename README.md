@@ -30,7 +30,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - *Thread Limits*: Enforces a strict `MAX_THREAD_PARTS=2` constraint to avoid feed fatigue, trailing summaries with `...` when truncated.
     - **🥁 Thread Rhythm**: Randomized 10-30s pauses between posts to simulate human narration and prevent burst-spam detection.
     - **🤖 Dynamic Bio Management**: Profiles now showcase an active day streak and the currently tracked topic (e.g., "AI signal, zero noise. Day 68. | Currently tracking: On-device agents").
-    - **🛡️ Supply Chain Hardening**: Migrated to `pip-tools` with cryptographic hashes.
+    - **🛡️ Supply Chain Hardening**: Uses a Python 3.13 lockfile generated from the reviewed direct dependencies in `requirements.in` with `uv`.
     - **📡 Feed Vanguard**: Single-fetch RSS resilience engine with authoritative Gist state persistence (`feed_vanguard.json`), eliminating duplicate network passes and silencing broken feeds with exponential backoff.
     - **Typed Pipeline Stages**: Immutable stages powered by frozen `dataclasses` and a typed `Settings` singleton.
     - **Advisory File Locking**: Cross-platform `FileLock` for state persistence, preventing race conditions during concurrent CI/local runs.
@@ -175,7 +175,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
-- **v3.22.1 (Current)**: **Interaction Boundary Hardening**.
+- **v3.22.2 (Current)**: **Cryptography Security Update**.
+    - 🔒 **Advisory Remediation**: Upgraded `cryptography` to `>=50.0.0,<51`, resolving CVE-2026-69247, CVE-2026-69248, and CVE-2026-69249 while remaining compatible with `atproto` 0.0.71.
+    - 🤖 **Dependabot Recovery**: Removed the obsolete `cryptography>=47` ignore rule so future compatible security updates are proposed normally.
+    - 📚 **Documentation Alignment**: Updated dependency and security guidance to match the supported runtime constraint.
+- **v3.22.1**: **Interaction Boundary Hardening**.
     - 💬 **Reply Limits**: Enforces platform-safe interaction reply lengths before publishing, including a conservative Bluesky grapheme safety margin.
     - 🧹 **Cleaner AI Calls**: Disables unused automatic function calling for tool-free synthesis and reply generation.
     - 🩵 **Bounded Failures**: Keeps interaction errors concise instead of logging complete provider responses and headers.
@@ -297,7 +301,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.22.1 features a dual-layer testing strategy with over 130 automated tests:
+BluBot v3.22.2 features a dual-layer testing strategy with over 130 automated tests:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:
