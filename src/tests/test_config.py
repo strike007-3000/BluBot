@@ -1,7 +1,10 @@
 import pytest
 import os
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from src.config import validate_config, validate_gemini_model_priority
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 def test_validate_config_dry_run_injection():
     """Verify that missing config variables are injected with mocks in DRY_RUN mode."""
@@ -132,3 +135,12 @@ def test_get_version(tmp_path):
         assert get_version() == "Unknown"
     finally:
         src.config.VERSION_FILE_PATH = original_path
+
+
+def test_cryptography_security_floor_and_dependabot_updates():
+    """Keep the patched dependency floor visible to the resolver and Dependabot."""
+    requirements = (PROJECT_ROOT / "requirements.in").read_text(encoding="utf-8")
+    dependabot = (PROJECT_ROOT / ".github" / "dependabot.yml").read_text(encoding="utf-8")
+
+    assert "cryptography>=50.0.0,<51" in requirements
+    assert 'dependency-name: "cryptography"' not in dependabot

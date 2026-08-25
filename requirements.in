@@ -1,4 +1,4 @@
-# BluBot Source Dependencies (v3.18.3)
+# BluBot Source Dependencies (v3.22.2)
 # Use 'uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt'
 # to generate the Python 3.13 runtime lockfile.
 
@@ -14,12 +14,8 @@ Pillow==12.3.0
 python-telegram-bot[ext]>=21.0
 
 # Security Hardening (Specific Transitive Pins)
-# SECURITY-NOTE: cryptography is currently constrained by atproto's dependency cap (<47).
-# The fixed cryptography version is >=48.0.1/50.0.0. Dependabot cannot resolve the upgrade
-# until atproto relaxes its cryptography constraint. We are accepting the risk temporarily
-# because the bot runs as a short-lived GitHub Actions job and is not a persistent
-# public web service. Revisit this when atproto releases a compatible version.
-cryptography>=46.0.7,<47
+# atproto 0.0.71 supports cryptography <51; 50.0.0 fixes the active advisories.
+cryptography>=50.0.0,<51
 urllib3==2.7.0
 anyio==4.14.2
 zipp==4.1.0

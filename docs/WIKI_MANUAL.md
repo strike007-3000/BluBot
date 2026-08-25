@@ -15,14 +15,14 @@ The Sage looks for **Product Shifts** (real code) and **Technical Gems** (resear
 
 BluBot uses elite hardening to protect its environment and secrets.
 
-### Dependency Locking (pip-tools)
-To prevent supply-chain attacks via unvetted transitive dependencies, BluBot uses **`pip-tools`**.
+### Dependency Locking (`uv`)
+To prevent supply-chain attacks via unvetted transitive dependencies, BluBot generates a Python 3.13 lockfile with **`uv`**.
 - `requirements.in`: The source file where you list high-level libraries.
-- `requirements.txt`: The **lockfile** (generated) containing specific versions and cryptographic hashes.
+- `requirements.txt`: The generated lockfile containing resolved versions.
 
 **How to update dependencies:**
 1. Add the new library to `requirements.in`.
-2. Run: `pip-compile requirements.in --generate-hashes`.
+2. Run: `uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt`.
 3. Commit both files.
 
 ### SSRF Protection
@@ -201,7 +201,7 @@ To ensure the Sage never "forgets" even in ephemeral runner environments, we use
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.22.1 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for repository hygiene, exact Gemini discovery, Gist recovery state, platform-safe interaction replies, permanent provider errors, and Threads failures.
+BluBot v3.22.2 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for repository hygiene, exact Gemini discovery, Gist recovery state, platform-safe interaction replies, permanent provider errors, and Threads failures.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
