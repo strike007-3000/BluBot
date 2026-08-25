@@ -110,10 +110,15 @@ def test_vanguard_gist_authoritative_persistence(tmp_path):
                 with open(cache_file, "r") as f:
                     assert json.load(f) == gist_state
 
-            # 2. Network error on Gist load falls back to existing local cache
+            # 2. Network error on Gist load falls back to existing local cache and sets degraded flag
             with patch("src.utils._load_gist_state_with_status", return_value=("NETWORK_ERROR", None)):
                 loaded_fallback = load_vanguard_state()
-                assert loaded_fallback == gist_state
+                assert loaded_fallback.get("_gist_read_degraded") is True
+                # Attempting to save state resulting from degraded read skips remote overwrite
+                with patch("src.utils._save_gist_state") as mock_save_gist:
+                    save_res = save_vanguard_state(loaded_fallback)
+                    assert save_res is False
+                    mock_save_gist.assert_not_called()
 
             # 3. Gist save failure returns False and logs cross-run unsynchronized
             with patch("src.utils._save_gist_state", return_value=False):

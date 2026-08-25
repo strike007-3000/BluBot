@@ -229,6 +229,31 @@ async def test_fetch_single_feed_error_handling_and_zero_article_health(mock_htt
     assert err is None
     assert items == [] # 0 new items, but feed is healthy!
 
+    # 4. Valid feed with one malformed entry (e.g. invalid date) and one valid entry -> HEALTHY
+    bad_entry = mocker.MagicMock()
+    bad_entry.link = "https://bad.com/article1"
+    bad_entry.title = "Bad Entry"
+    bad_entry.published_parsed = "invalid_timestamp" # Will cause error in calendar.timegm
+
+    good_entry = mocker.MagicMock()
+    good_entry.link = "https://good.com/article2"
+    good_entry.title = "Good Entry"
+    good_entry.summary = "Good summary"
+    good_dt = now_utc - timedelta(hours=1)
+    good_entry.published_parsed = good_dt.utctimetuple()
+
+    mock_feed_mixed = mocker.MagicMock()
+    mock_feed_mixed.entries = [bad_entry, good_entry]
+    mock_feed_mixed.bozo = 0
+    mock_feed_mixed.feed = mocker.MagicMock(title="Mixed Feed")
+    mocker.patch("feedparser.parse", return_value=mock_feed_mixed)
+
+    url, items, is_healthy, err = await fetch_single_feed(mock_httpx_client, "https://mixed.com/feed", now_utc - timedelta(days=2), now_utc, [], [])
+    assert is_healthy is True
+    assert err is None
+    assert len(items) == 1
+    assert items[0]["link"] == "https://good.com/article2"
+
 def test_curator_has_single_summarize_news_ast_definition():
     """Verify src/curator.py contains exactly one top-level summarize_news function definition."""
     import ast

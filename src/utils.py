@@ -218,6 +218,8 @@ def load_vanguard_state() -> dict:
             return local_state
         else:
             SafeLogger.warn("Vanguard: Gist request failed; cross-run persistence is degraded, falling back to local cache.")
+            if isinstance(local_state, dict):
+                local_state["_gist_read_degraded"] = True
             return local_state
 
     return local_state
@@ -231,18 +233,28 @@ def save_vanguard_state(state: dict) -> bool:
         SafeLogger.info("DRY RUN: Skipping Vanguard state persistence.")
         return True
 
+    # Strip transient metadata flag if present before saving
+    is_degraded = False
+    clean_state = dict(state)
+    if clean_state.pop("_gist_read_degraded", None):
+        is_degraded = True
+
     local_ok = True
     try:
         with FileLock(VANGUARD_STATE_PATH):
             temp_path = f"{VANGUARD_STATE_PATH}.tmp"
-            save_json_state(temp_path, state, indent=2)
+            save_json_state(temp_path, clean_state, indent=2)
             os.replace(temp_path, VANGUARD_STATE_PATH)
     except Exception as e:
         local_ok = False
         SafeLogger.warn(f"Vanguard: Failed to write local cache: {e}")
 
     if settings.gist_id and settings.gist_token:
-        gist_ok = _save_gist_state("feed_vanguard.json", state)
+        if is_degraded:
+            SafeLogger.warn("Vanguard: Initial Gist read was degraded; skipping remote state overwrite to preserve remote data.")
+            return False
+
+        gist_ok = _save_gist_state("feed_vanguard.json", clean_state)
         if gist_ok:
             SafeLogger.info("Vanguard: Authoritative Gist feed-health state saved.")
             if not local_ok:

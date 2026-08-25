@@ -154,37 +154,42 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         from src.utils import normalize_url
         normalized_seen_links = {normalize_url(sl) for sl in seen_links if sl}
         for entry in feed.entries:
-            link = getattr(entry, 'link', None)
-            if not link:
-                continue
-            canonical_link = normalize_url(link)
-            if link in seen_links or canonical_link in normalized_seen_links:
-                continue
+            try:
+                link = getattr(entry, 'link', None)
+                if not link:
+                    continue
+                canonical_link = normalize_url(link)
+                if link in seen_links or canonical_link in normalized_seen_links:
+                    continue
 
-            pub_date = None
-            if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
-            elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                pub_date = datetime.fromtimestamp(calendar.timegm(entry.updated_parsed), timezone.utc)
-            else:
-                pub_date = now_utc
+                pub_date = None
+                if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.published_parsed), timezone.utc)
+                elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                    pub_date = datetime.fromtimestamp(calendar.timegm(entry.updated_parsed), timezone.utc)
+                else:
+                    pub_date = now_utc
 
-            # Explicit recency cutoff enforcement
-            if start_time and pub_date < start_time:
+                # Explicit recency cutoff enforcement
+                if start_time and pub_date < start_time:
+                    continue
+
+                raw_summary = getattr(entry, 'summary', getattr(entry, 'description', ""))
+                clean_summary = BeautifulSoup(raw_summary or "", "html.parser").get_text()
+                item = {
+                    "title": getattr(entry, 'title', 'Untitled') or 'Untitled',
+                    "summary": clean_summary[:FEED_SUMMARY_MAX_CHARS],
+                    "link": link,
+                    "published": pub_date.isoformat(),
+                    "source": getattr(feed.feed, 'title', url),
+                    "source_url": url,
+                    "source_id": source_id
+                }
+                item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics, recent_categories, watch_topics)
+                items.append(item)
+            except Exception as entry_err:
+                SafeLogger.warn(f"Vanguard: Skipping malformed entry in {url}: {type(entry_err).__name__}")
                 continue
-
-            clean_summary = BeautifulSoup(getattr(entry, 'summary', getattr(entry, 'description', "")), "html.parser").get_text()
-            item = {
-                "title": getattr(entry, 'title', 'Untitled'),
-                "summary": clean_summary[:FEED_SUMMARY_MAX_CHARS],
-                "link": link,
-                "published": pub_date.isoformat(),
-                "source": getattr(feed.feed, 'title', url),
-                "source_url": url,
-                "source_id": source_id
-            }
-            item["score"] = calculate_relevance_score(item, pub_date, now_utc, recent_topics, recent_categories, watch_topics)
-            items.append(item)
 
         return url, items, True, None
     except Exception as e:
