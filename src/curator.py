@@ -484,7 +484,8 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
             SafeLogger.info(f"Synthesizing via {model_id}...")
 
             config_args = {
-                "system_instruction": combined_instruction
+                "system_instruction": combined_instruction,
+                "automatic_function_calling": types.AutomaticFunctionCallingConfig(disable=True),
             }
             # gemini-3.7-flash and gemini-3.6-flash omit legacy temperature
             normalized = normalize_gemini_model_id(model_id)
@@ -1049,7 +1050,8 @@ async def generate_interactive_reply(original_text, author, context):
 
         config_args = {
             "temperature": 0.7,
-            "max_output_tokens": 100
+            "max_output_tokens": 100,
+            "automatic_function_calling": types.AutomaticFunctionCallingConfig(disable=True),
         }
 
         # Check for system_instruction support
