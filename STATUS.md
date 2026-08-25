@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-08-24 | 🚀 Morning Intelligence (General) |
+| **Broadcaster** | Operational | 2026-08-25 | 🔍 Night Reflection (Intercept) (General) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
