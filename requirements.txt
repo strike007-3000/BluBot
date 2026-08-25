@@ -11,7 +11,7 @@ anyio==4.14.2
     #   httpx
 apscheduler==3.11.2
     # via python-telegram-bot
-atproto==0.0.69
+atproto==0.0.71
     # via -r requirements.in
 beautifulsoup4==4.15.0
     # via -r requirements.in
@@ -45,14 +45,16 @@ feedparser==6.0.14
     # via -r requirements.in
 feedparser-sgmllib==2.1.0
     # via feedparser
-google-auth==2.56.2
+google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.16.0
+google-genai==2.19.0
     # via -r requirements.in
 h11==0.16.0
     # via httpcore
 httpcore==1.0.9
-    # via httpx
+    # via
+    #   httpx
+    #   python-telegram-bot
 httpx==0.28.1
     # via
     #   -r requirements.in
@@ -68,7 +70,7 @@ iniconfig==2.3.0
     # via pytest
 libipld==3.4.1
     # via atproto
-mastodon-py==2.2.1
+mastodon-py==2.2.2
     # via -r requirements.in
 packaging==26.2
     # via pytest
@@ -101,9 +103,9 @@ pytest-mock==3.15.1
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via mastodon-py
-python-dotenv==1.2.2
+python-dotenv==1.2.3
     # via -r requirements.in
-python-telegram-bot==22.8
+python-telegram-bot[ext]==22.8
     # via -r requirements.in
 requests==2.34.2
     # via
@@ -143,3 +145,5 @@ websockets==15.0.1
     #   google-genai
 zipp==4.1.0
     # via -r requirements.in
+zstandard==0.25.0
+    # via atproto
