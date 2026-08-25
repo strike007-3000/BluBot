@@ -805,7 +805,8 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
             SafeLogger.info(f"Successfully replied to @{mention.author} on {mention.platform}!")
 
         except Exception as e:
-            error = f"{type(e).__name__}: {str(e).splitlines()[0][:120]}"
+            message = (str(e).splitlines() or ["no message"])[0][:120]
+            error = f"{type(e).__name__}: {message}"
             SafeLogger.error(f"Failed to process interaction for @{mention.author}: {error}")
             errors.append(error)
 
