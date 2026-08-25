@@ -1,8 +1,86 @@
 import pytest
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
-from src.models import Article, CurationResult, SynthesisResult
+from src.models import Article, CurationResult, InteractionNote, SynthesisResult
 from src.settings import settings
+
+
+@pytest.mark.asyncio
+async def test_bluesky_interaction_reply_is_truncated_before_send(mocker):
+    """Generated replies must be bounded before reaching Bluesky."""
+    import bot
+
+    mention = InteractionNote(
+        platform="bluesky",
+        id="mention-1",
+        author="example.test",
+        text="Hello",
+        timestamp="2026-08-25T00:00:00Z",
+        uri="at://did:example/post/1",
+        cid="cid-1",
+    )
+    bsky_client = MagicMock()
+    bsky_client.send_post = AsyncMock()
+
+    mocker.patch("bot.load_seen_interactions", return_value=[])
+    mocker.patch("bot.save_seen_interactions")
+    mocker.patch("bot.fetch_bluesky_mentions", new_callable=AsyncMock, return_value=[mention])
+    mocker.patch("bot.fetch_mastodon_mentions", new_callable=AsyncMock, return_value=[])
+    mocker.patch("bot.generate_interactive_reply", new_callable=AsyncMock, return_value="e\u0301" * 180)
+    mocker.patch("bot.human_delay", new_callable=AsyncMock)
+    mocker.patch("random.random", return_value=0)
+    mocker.patch.object(bot, "AUTO_LIKE_INTERACTIONS", False)
+
+    await bot.interaction_stage(
+        bsky_client,
+        AsyncMock(),
+        {"session": "Morning Intelligence", "day": "Monday"},
+    )
+
+    sent = bsky_client.send_post.call_args.kwargs["text"]
+    assert len(sent) <= 280
+    assert sent.endswith("...")
+
+
+@pytest.mark.asyncio
+async def test_message_less_interaction_error_does_not_abort_later_mentions(mocker):
+    """A message-less platform error must not escape the interaction loop."""
+    import bot
+
+    mentions = [
+        InteractionNote(
+            platform="bluesky",
+            id=f"mention-{index}",
+            author=f"example-{index}.test",
+            text="Hello",
+            timestamp="2026-08-25T00:00:00Z",
+            uri=f"at://did:example/post/{index}",
+            cid=f"cid-{index}",
+        )
+        for index in (1, 2)
+    ]
+    bsky_client = MagicMock()
+    bsky_client.send_post = AsyncMock(side_effect=[TimeoutError(), None])
+
+    mocker.patch("bot.load_seen_interactions", return_value=[])
+    save_seen = mocker.patch("bot.save_seen_interactions")
+    mocker.patch("bot.fetch_bluesky_mentions", new_callable=AsyncMock, return_value=mentions)
+    mocker.patch("bot.fetch_mastodon_mentions", new_callable=AsyncMock, return_value=[])
+    mocker.patch("bot.generate_interactive_reply", new_callable=AsyncMock, return_value="A useful reply")
+    mocker.patch("bot.human_delay", new_callable=AsyncMock)
+    mocker.patch("random.random", return_value=0)
+    mocker.patch.object(bot, "AUTO_LIKE_INTERACTIONS", False)
+
+    result = await bot.interaction_stage(
+        bsky_client,
+        AsyncMock(),
+        {"session": "Morning Intelligence", "day": "Monday"},
+    )
+
+    assert bsky_client.send_post.await_count == 2
+    assert result.replied_ids == ["mention-2"]
+    assert result.errors == ["TimeoutError: no message"]
+    save_seen.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_linkless_fallback_synthesis_creates_reservation_key(mocker):

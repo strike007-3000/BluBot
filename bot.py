@@ -23,7 +23,7 @@ from src.utils import (
     load_seen_articles, save_seen_articles, SafeLogger,
     load_session_string, save_session_string, get_link_metadata,
     load_seen_interactions, save_seen_interactions, human_delay,
-    is_safe_url, normalize_url, compute_story_fingerprint
+    is_safe_url, normalize_url, compute_story_fingerprint, smart_truncate
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight,
@@ -741,6 +741,14 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
             if not reply_text:
                 continue
 
+            reply_limit = {
+                "bluesky": min(settings.bluesky_limit, 280),
+                "mastodon": settings.mastodon_limit,
+                "threads": settings.threads_limit,
+            }.get(mention.platform)
+            if reply_limit:
+                reply_text = smart_truncate(reply_text, reply_limit)
+
             # Human Delay before interaction
             await human_delay(10, 30)
 
@@ -797,8 +805,10 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
             SafeLogger.info(f"Successfully replied to @{mention.author} on {mention.platform}!")
 
         except Exception as e:
-            SafeLogger.error(f"Failed to process interaction for @{mention.author}: {e}")
-            errors.append(str(e))
+            message = (str(e).splitlines() or ["no message"])[0][:120]
+            error = f"{type(e).__name__}: {message}"
+            SafeLogger.error(f"Failed to process interaction for @{mention.author}: {error}")
+            errors.append(error)
 
     await asyncio.to_thread(save_seen_interactions, seen_ids)
     return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)

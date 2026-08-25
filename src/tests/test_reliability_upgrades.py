@@ -294,6 +294,7 @@ async def test_gemini_config_temperature_conditional(monkeypatch):
         model, cfg = configs_passed[-1]
         assert model == "models/gemini-3.5-flash-lite"
         assert cfg.temperature == 0.7
+        assert cfg.automatic_function_calling.disable is True
 
     # Test 2: gemini-3.7-flash (should omit temperature)
     with patch("src.curator.GEMINI_MODEL_PRIORITY", ["models/gemini-3.7-flash"]):

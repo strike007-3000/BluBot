@@ -175,7 +175,15 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
-- **v3.21.3 (Current)**: **Local Tool Metadata Hygiene**.
+- **v3.22.1 (Current)**: **Interaction Boundary Hardening**.
+    - 💬 **Reply Limits**: Enforces platform-safe interaction reply lengths before publishing, including a conservative Bluesky grapheme safety margin.
+    - 🧹 **Cleaner AI Calls**: Disables unused automatic function calling for tool-free synthesis and reply generation.
+    - 🩵 **Bounded Failures**: Keeps interaction errors concise instead of logging complete provider responses and headers.
+- **v3.22.0**: **Persistent Feed Reliability**.
+    - 📡 **Single-Fetch Vanguard**: Persists feed health in Gist state and evaluates each eligible RSS feed once per run.
+    - 🧠 **Model Routing**: Uses Gemini 3.5 Flash-Lite first, with immediate model rotation after exhausted transient failures.
+    - ♿ **Media Fallbacks**: Uses detected image MIME types and neutral local alt text when Vision is unavailable.
+- **v3.21.3**: **Local Tool Metadata Hygiene**.
     - 🧹 **Repository Hygiene**: Ignores `.v3code/` workspace metadata so local editor state cannot appear in Git changes.
 - **v3.21.2**: **Merged Review Corrections**.
     - ☁️ **Gist Recovery**: Clears `unsynced_gist` in the authoritative payload before a successful recovery upload.
@@ -289,7 +297,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.18.2 features a dual-layer testing strategy with **94 automated tests** across 11 test modules:
+BluBot v3.22.1 features a dual-layer testing strategy with over 130 automated tests:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:
