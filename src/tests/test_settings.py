@@ -8,14 +8,21 @@ def test_settings_from_env_default(monkeypatch):
     monkeypatch.setenv("GEMINI_KEY", "test_gemini")
     monkeypatch.setenv("BSKY_HANDLE", "test_handle")
     monkeypatch.setenv("BSKY_APP_PASSWORD", "test_pass")
-    
+
     settings = Settings.from_env()
     assert settings.gemini_key == "test_gemini"
     assert settings.bsky_handle == "test_handle"
     assert settings.bsky_password == "test_pass"
+    assert settings.gemini_model == "models/gemini-3.5-flash-lite"
     assert settings.is_dry_run is False
     assert settings.is_manual_run is False
     assert settings.should_bypass_rest is True # not in CI default
+
+def test_settings_gemini_model_override(monkeypatch):
+    """Verify that Settings.from_env() respects GEMINI_MODEL override."""
+    monkeypatch.setenv("GEMINI_MODEL", "models/custom-model")
+    settings = Settings.from_env()
+    assert settings.gemini_model == "models/custom-model"
 
 def test_settings_validation_dry_run():
     """Verify that validate() always returns True in dry run."""

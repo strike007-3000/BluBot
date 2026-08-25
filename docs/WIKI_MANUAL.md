@@ -180,7 +180,7 @@ As of **v3.8.5**, BluBot supports multiple logging formats:
 - **`LOG_FORMAT=pretty`** (Default for local): Colored, human-friendly text.
 - **`LOG_FORMAT=json`** (Default for CI): Structured JSON for long-term auditability.
 *Note: Secret redaction remains active in BOTH modes.*
-You can test the entire bot locally **without social media credentials**. 
+You can test the entire bot locally **without social media credentials**.
 1. **Interactive Entry**: If `GEMINI_KEY` or `NVIDIA_KEY` are missing from your `.env`, the script will prompt you to paste them in the console.
 2. **Elite Rigidity**: The `Settings.from_env()` engine automatically injects "Mock" values for `BSKY_HANDLE` during dry runs, allowing you to verify synthesis logic with only AI keys.
 
@@ -201,7 +201,7 @@ To ensure the Sage never "forgets" even in ephemeral runner environments, we use
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.21.3 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for repository hygiene, exact Gemini discovery, Gist recovery state, permanent provider errors, and Threads failures.
+BluBot v3.22.0 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for repository hygiene, exact Gemini discovery, Gist recovery state, permanent provider errors, and Threads failures.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
@@ -229,7 +229,7 @@ Version 3.7.0 transforms the bot from a script into a **living editorial entity*
 The bot now tracks its previous tone to ensure consecutive updates feel varied:
 - **Style Memory**: Saves the `last_dialect` key to `seen_articles.json` after successfully posting.
 - **Tone Rotation Logic**: During news synthesis in `summarize_news`, the system loads the `last_dialect` from the state. It dynamically prunes the active dialect choice pool (`available_dialects = list(PERSONA_DIALECTS.keys())`) by removing the `last_dialect`. This guarantees the bot never uses the same editorial persona twice in a row.
-- **The Diversity Pool**: 
+- **The Diversity Pool**:
     - **Analytical**: High-fidelity technical specs and benchmarks.
     - **Practical**: Developer utility and "How-to" engineering.
     - **Sage**: Visionary strategic impact and industry shifts.
@@ -245,7 +245,7 @@ Resolved from a 2-session split into **5 granular sessions**:
 - **Evening Synthesis** (19:00-24:00)
 
 ### 3. Manual Intercept Mode
-The Sage now detects if it was triggered via a manual GitHub **workflow_dispatch**. 
+The Sage now detects if it was triggered via a manual GitHub **workflow_dispatch**.
 - **Urgency Shift**: Appends **"(Intercept)"** to the session name.
 - **Tone Modification**: Signifies to the AI that this is an ad-hoc briefing rather than a standard daily run, shifting the synthesis towards urgent insights.
 
@@ -297,7 +297,7 @@ Every run begins with a pre-flight health scan using `VanguardManager._check_fee
 ### The "Soft-Disable" Strategy
 Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transient Blacklist**:
 1. **Audit**: Every run begins with a pre-flight health check using `VanguardManager`.
-2. **Penalty (Hiccup Resilience)**: 
+2. **Penalty (Hiccup Resilience)**:
    - **1st failure**: Marked as a `WARNING` only; the feed remains active.
    - **2nd failure**: Silenced for 1 hour.
    - **3rd failure**: Silenced for 12 hours.
@@ -425,7 +425,7 @@ Set these in `config.py` or as environment variables:
 To maintain "Elite" signal-to-noise ratios and avoid feed fatigue, BluBot v3.8.5 introduces a localized thread cap.
 
 ### Configuration
-- **`MAX_THREAD_PARTS=2`** (Default): Enforces a strict 2-post limit per thread. 
+- **`MAX_THREAD_PARTS=2`** (Default): Enforces a strict 2-post limit per thread.
 - **The Weaver Split Logic**: If AI synthesis produces a long narrative, the logic intelligently splits it into 2 parts. If more content exists, it truncates with `...` and relies on the linked article for full details.
 
 ### Character Safety Buffers

@@ -52,15 +52,16 @@ NVIDIA_MODEL_ID = "stabilityai/stable-diffusion-3-medium"
 NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-3-medium"
 
 GEMINI_MODEL_PRIORITY = [
-    "models/gemini-3.7-flash",
     "models/gemini-3.5-flash-lite",
+    "models/gemini-3.7-flash",
     "models/gemini-3.6-flash",
-    "models/gemini-3.1-flash-lite",
-    "models/gemma-4-31b-it",
-    "models/gemma-4-26b-a4b-it",
-    "models/gemma-3-27b-it",
     "models/gemini-2.5-flash-lite",
 ]
+ALT_TEXT_MODELS = [
+    "models/gemini-3.5-flash-lite",
+    "models/gemini-2.5-flash-lite",
+]
+VISUAL_PROMPT_MODEL = "models/gemini-3.5-flash-lite"
 BLUESKY_LIMIT = 300
 MASTODON_LIMIT = 500
 THREADS_LIMIT = 500
@@ -81,7 +82,7 @@ JITTER_RANGE = 2.0
 SOURCE_REGISTRY = [
     # Category list: research_lab, enterprise, practitioner, open_source, infrastructure, business, journalism, academic, critical
     # Quality list: official, community, academic, journalism, opinion
-    
+
     # === Tier 1: AI Research Labs (base 30) ===
     {"id": "openai_news",         "name": "OpenAI News",         "url": "https://openai.com/news/rss.xml",                                    "category": "research_lab",   "quality": "official",   "base_score": 30},
     {"id": "deepmind_blog",       "name": "DeepMind Blog",       "url": "https://deepmind.google/blog/rss.xml",                               "category": "research_lab",   "quality": "official",   "base_score": 30},
@@ -163,13 +164,13 @@ BASE_TIER_2 = 15
 
 # --- Breakthrough Scoring Engine Constants ---
 HIGH_SIGNAL_KEYWORDS = [
-    "sota", "benchmark", "breakthrough", "agentic", "autonomous", 
-    "world model", "test-time compute", "moe", "reasoning", 
+    "sota", "benchmark", "breakthrough", "agentic", "autonomous",
+    "world model", "test-time compute", "moe", "reasoning",
     "open weights", "open source", "scaling law"
 ]
 
 MOMENTUM_PRODUCTS = [
-    "gpt-5", "claude 4", "llama 4", "gemini 3", "gemma 4", 
+    "gpt-5", "claude 4", "llama 4", "gemini 3", "gemma 4",
     "sora", "devin", "grok 4", "mistral 4", "strawberry"
 ]
 
@@ -236,7 +237,7 @@ STYLE:
 * Always append 1-2 relevant technical hashtags at the very end of the final paragraph of your response (e.g. #LLMs #EdgeAI) for discoverability.
 """
 
-MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor. 
+MENTOR_SYSTEM_INSTRUCTION = """Share technical insights as a Veteran Mentor.
 STRICTLY limit your output to a single post under 280 characters, presenting the core lesson with zero fluff."""
 SAGE_DESIGNER_INSTRUCTION = """Design professional minimalist isometric AI visual prompts for conceptual editorial illustrations.
 Do NOT generate prompts for: fake screenshots, fake dashboards, benchmark graphs, UI mockups, fabricated charts, company logos, copied branding, or text-heavy graphics.
@@ -290,13 +291,13 @@ def validate_gemini_model_priority():
         # List models synchronously
         SafeLogger.info("Gemini Validation: Querying available models from API...")
         available = {normalize_gemini_model_id(m.name) for m in client.models.list()}
-        
+
         # Prune prioritised list in-place
         pruned = []
         for model_id in GEMINI_MODEL_PRIORITY:
             if normalize_gemini_model_id(model_id) in available:
                 pruned.append(model_id)
-                
+
         if pruned:
             SafeLogger.info(f"Gemini Validation: Discovered active models: {pruned}")
             GEMINI_MODEL_PRIORITY.clear()
