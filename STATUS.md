@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-09-02 | 🔍 Midday Briefing (Research Lab) |
+| **Broadcaster** | Operational | 2026-09-02 | 🔍 Afternoon Deep Dive (LLMs) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
