@@ -164,14 +164,31 @@ BASE_TIER_2 = 15
 
 # --- Breakthrough Scoring Engine Constants ---
 HIGH_SIGNAL_KEYWORDS = [
-    "sota", "benchmark", "breakthrough", "agentic", "autonomous",
-    "world model", "test-time compute", "moe", "reasoning",
-    "open weights", "open source", "scaling law"
+    "sota",
+    "agentic",
+    "reasoning",
+    "compute",
+    "multimodal",
+    "frontier",
+    "open weights",
+    "benchmark",
+    "datacenter",
+    "distillation",
+    "safety",
+    "token"
 ]
 
 MOMENTUM_PRODUCTS = [
-    "gpt-5", "claude 4", "llama 4", "gemini 3", "gemma 4",
-    "sora", "devin", "grok 4", "mistral 4", "strawberry"
+    "gpt-6 astra",
+    "claude fable",
+    "muse spark",
+    "gemini 3.8 flash",
+    "gemma 4",
+    "glm-5.3",
+    "deepseek v4",
+    "rubin cpx",
+    "nemotron 3",
+    "agentcore"
 ]
 
 # Weighting Matrix (retained/updated)
