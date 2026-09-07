@@ -3,7 +3,7 @@
 # to generate the Python 3.13 runtime lockfile.
 
 atproto>=0.0.71
-google-genai>=2.19.0
+google-genai>=2.22.0
 feedparser>=6.0.14
 python-dotenv>=1.2.3
 requests==2.34.2
@@ -17,7 +17,7 @@ python-telegram-bot[ext]>=21.0
 # atproto 0.0.71 supports cryptography <51; 50.0.0 fixes the active advisories.
 cryptography>=50.0.0,<51
 urllib3==2.7.0
-anyio==4.14.2
+anyio==4.15.0
 zipp==4.1.0
 dnspython==2.8.0
 
