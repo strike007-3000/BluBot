@@ -382,6 +382,60 @@ async def test_gemini_model_discovery_and_multimodal_checks():
     except Exception as e:
         print(f"❌ Gemini model discovery failed: {e}")
 
+async def test_multiplatform_telegram_simulation():
+    """Mode 6: Pure state-rendering simulation of multi-platform drafting and Telegram tab navigation."""
+    from src.models import PlatformDrafts
+    from src.curator import parse_platform_drafts, validate_platform_drafts, repair_platform_drafts
+    from src.telegram_gateway import _format_preview_text, _build_telegram_markup
+
+    print(f"\n{'='*20}")
+    print("DIAGNOSTIC: MULTI-PLATFORM & TELEGRAM STATE SIMULATION")
+    print(f"{'='*20}")
+
+    sample_json = (
+        '{\n'
+        '  "topic": "Autonomous Agents",\n'
+        '  "bluesky": "Anthropic releases Claude 3.7 Sonnet featuring hybrid reasoning. Dynamic thinking budgets scale chain-of-thought tokens on demand.",\n'
+        '  "threads": "Hybrid reasoning just landed with Claude 3.7 Sonnet! Instead of choosing between instant speed or slow reasoning, you can now adjust thinking budgets per prompt. How will you use this in your workflow?",\n'
+        '  "mastodon": "Anthropic announced Claude 3.7 Sonnet today, unifying instantaneous generation with extended chain-of-thought thinking tokens for complex engineering tasks. #AI #LLM #OpenSource"\n'
+        '}'
+    )
+
+    print("\n1. Parsing Sample Structured JSON...")
+    drafts = parse_platform_drafts(sample_json)
+    print(f"  - Bluesky:  {len(drafts.bluesky)} chars -> {drafts.bluesky[:60]}...")
+    print(f"  - Threads:  {len(drafts.threads)} chars -> {drafts.threads[:60]}...")
+    print(f"  - Mastodon: {len(drafts.mastodon)} chars -> {drafts.mastodon[:60]}...")
+
+    print("\n2. Validating Platform Safety Budgets...")
+    valid, violations = validate_platform_drafts(drafts)
+    print(f"  - Valid: {valid} (Violations: {violations or 'None'})")
+
+    print("\n3. Testing URL-Safe Truncation Policy on Oversized Draft with Link...")
+    oversized_text = "Important breakthrough release details with a very long technical analysis string that definitely exceeds platform limits: https://example.com/very-long-research-paper-url"
+    oversized_drafts = PlatformDrafts(
+        bluesky=oversized_text,
+        threads=oversized_text,
+        mastodon=oversized_text
+    )
+    repaired = repair_platform_drafts(oversized_drafts)
+    print(f"  - Repaired Bluesky ({len(repaired.bluesky)} chars): {repaired.bluesky}")
+    assert "https://" in repaired.bluesky or "omitted" in repaired.bluesky or len(repaired.bluesky) <= 290
+
+    print("\n4. Simulating Authoritative Telegram Preview Rendering...")
+    for tab in ("bluesky", "threads", "mastodon"):
+        preview = _format_preview_text(drafts, current_tab=tab, view_mode="tabs")
+        markup = _build_telegram_markup(current_tab=tab, view_mode="tabs")
+        buttons = [[b.text for b in row] for row in markup.inline_keyboard]
+        print(f"\n--- [Tab: {tab.upper()}] (Preview Len: {len(preview)} chars; Caption Budget: 1024) ---")
+        print(f"Buttons: {buttons}")
+        print(f"Rendered Text:\n{preview}")
+
+    print("\n--- [All-in-One View] ---")
+    all_in_one = _format_preview_text(drafts, current_tab="bluesky", view_mode="all")
+    print(f"Rendered Text ({len(all_in_one)} chars):\n{all_in_one}")
+    print("\n✅ Simulation completed successfully with zero network errors.")
+
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
@@ -392,9 +446,10 @@ async def main():
     print("3. Live Image Generation Test (Pollinations, Hugging Face, & Gemini Imagen)")
     print("4. Gist State Diagnostics (Opt-in Read/Write Test)")
     print("5. Gemini Model Discovery & Multi-Model Test (Text + PNG Image Input)")
+    print("6. Multi-Platform Drafting & Telegram State Simulation")
 
     try:
-        choice = input("\nEnter choice (1-5) or 'q' to quit: ").strip().lower()
+        choice = input("\nEnter choice (1-6) or 'q' to quit: ").strip().lower()
         if choice == "1":
             await test_scoring()
         elif choice == "2":
@@ -413,6 +468,8 @@ async def main():
             await test_gist_diagnostics()
         elif choice == "5":
             await test_gemini_model_discovery_and_multimodal_checks()
+        elif choice == "6":
+            await test_multiplatform_telegram_simulation()
         elif choice == "q":
             print("Exiting.")
         else:

@@ -258,3 +258,114 @@ async def test_pending_and_uncertain_stories_suppressed_in_curation(mocker, tmp_
     called_links = mock_fetch.call_args[0][1]
     assert "https://example.com/old-link" in called_links
     assert "https://example.com/active-pending" in called_links
+
+@pytest.mark.asyncio
+async def test_broadcaster_routes_three_distinct_platform_payloads(mocker):
+    """Verify Bluesky, Mastodon, and Threads each receive their distinct payload from PlatformDrafts."""
+    import bot
+    from src.models import PlatformDrafts, SynthesisResult
+    import httpx
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "bsky_handle", "bot.bsky.social")
+    object.__setattr__(settings, "bsky_password", "pass")
+    object.__setattr__(settings, "mastodon_token", "m_tok")
+    object.__setattr__(settings, "mastodon_base_url", "https://mastodon.social")
+    object.__setattr__(settings, "threads_token", "t_tok")
+    object.__setattr__(settings, "threads_user_id", "t_user")
+
+    drafts = PlatformDrafts(
+        bluesky="Distinct Bluesky Thought Leadership",
+        threads="Distinct Threads Narrative",
+        mastodon="Distinct Mastodon Technical Overview #AI"
+    )
+    synthesis = SynthesisResult(
+        content=drafts.bluesky,
+        drafts=drafts,
+        lead_link="https://example.com/lead",
+        topic="AI"
+    )
+
+    mock_bsky_client = MagicMock()
+    mocker.patch("bot.AsyncClient", return_value=mock_bsky_client)
+    mock_bsky_client.login = AsyncMock()
+    mock_bsky_client.export_session_string.return_value = "session"
+    mocker.patch("bot.load_session_string", return_value=None)
+    mocker.patch("bot.save_session_string")
+
+    mock_post_bsky = mocker.patch("bot.post_to_bluesky", new_callable=AsyncMock, return_value=True)
+    mock_post_mastodon = mocker.patch("bot.post_to_mastodon", new_callable=AsyncMock, return_value=True)
+    mock_post_threads = mocker.patch("bot.post_to_threads", new_callable=AsyncMock, return_value=True)
+
+    async with httpx.AsyncClient() as client:
+        results, _ = await bot.broadcast_stage(client, synthesis)
+
+    assert len(results) == 3
+    assert all(r.success for r in results)
+
+    # Verify each platform received its distinct draft content
+    mock_post_bsky.assert_called_once()
+    assert mock_post_bsky.call_args[0][2] == "Distinct Bluesky Thought Leadership"
+
+    mock_post_mastodon.assert_called_once()
+    assert mock_post_mastodon.call_args[0][0] == "Distinct Mastodon Technical Overview #AI"
+
+    mock_post_threads.assert_called_once()
+    assert mock_post_threads.call_args[0][1] == "Distinct Threads Narrative"
+
+@pytest.mark.asyncio
+async def test_full_multiplatform_orchestration_flow(mocker):
+    """Verify end-to-end multi-platform orchestration from curation through synthesis, approval, reservation, and broadcast."""
+    import bot
+    from src.models import PlatformDrafts, SynthesisResult, Article, CurationResult
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "enable_telegram_approval", True)
+    object.__setattr__(settings, "github_event", "workflow_dispatch")
+
+    article = Article(title="Breakthrough", link="https://example.com/ai", summary="AI summary", published="2026-09-07", source="arXiv", score=95)
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+
+    drafts = PlatformDrafts(
+        bluesky="Bluesky post",
+        threads="Threads post",
+        mastodon="Mastodon post #AI"
+    )
+    synthesis = SynthesisResult(content=drafts.bluesky, drafts=drafts, lead_link=article.link, topic="AI")
+
+    mocker.patch("bot.check_for_telegram_topic", return_value=(None, None))
+    mocker.patch("bot.curation_stage", return_value=curation)
+    mocker.patch("bot.synthesis_stage", return_value=(synthesis, curation))
+    mocker.patch("bot.media_strategy_stage", return_value=None)
+    mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
+
+    # Simulate Telegram approval modifying the drafts
+    approved_drafts = PlatformDrafts(
+        bluesky="Approved Bluesky post",
+        threads="Approved Threads post",
+        mastodon="Approved Mastodon post #AI"
+    )
+    mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, return_value=(approved_drafts, None))
+
+    mock_reserve = mocker.patch("bot.reserve_pending_stage", new_callable=AsyncMock, return_value=({"schema_version": 2, "revision": 2, "pending_stories": []}, article))
+    mock_broadcast = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([
+        bot.BroadcastResult("Bluesky", True),
+        bot.BroadcastResult("Mastodon", True),
+        bot.BroadcastResult("Threads", True)
+    ], MagicMock()))
+    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock)
+    mock_interaction = mocker.patch("bot.interaction_stage", new_callable=AsyncMock)
+
+    await bot.main()
+
+    mock_reserve.assert_called_once()
+    reserve_synthesis = mock_reserve.call_args[0][1]
+    assert reserve_synthesis.drafts == approved_drafts
+
+    mock_broadcast.assert_called_once()
+    broadcast_synthesis = mock_broadcast.call_args[0][1]
+    assert broadcast_synthesis.drafts == approved_drafts
+    assert broadcast_synthesis.get_platform_content("bluesky") == "Approved Bluesky post"
+    assert broadcast_synthesis.get_platform_content("threads") == "Approved Threads post"
+    assert broadcast_synthesis.get_platform_content("mastodon") == "Approved Mastodon post #AI"
+    mock_settle.assert_called_once()

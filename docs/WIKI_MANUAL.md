@@ -32,9 +32,15 @@ The bot implements a **DNS Pinner** and **Public IP Validator** in `src/utils.py
 The `SafeLogger` automatically redacts secrets based on both keyword matching and **statistical entropy analysis**, ensuring that accidentally logged tokens are masked before hitting CI logs.
 
 ### Platform Synergy
-- **Bluesky**: The central technical hub.
-- **Mastodon**: The academic and decentralized pulse.
-- **Threads**: The broad industry narrative.
+- **Bluesky**: The central technical hub (tailored punchy thought leadership <= 290 chars).
+- **Mastodon**: The academic and decentralized pulse (tailored technical overview with relevant hashtags <= 485 chars).
+- **Threads**: The broad industry narrative (tailored conversational narrative with engagement prompt <= 490 chars).
+
+### Telegram Authoritative Review & Remix Copilot
+- **Authoritative Preview**: Maintains a single primary preview message (photo if media present, else text).
+- **Tab Navigation**: Interactive buttons (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) swap views in place with zero delay.
+- **Natural Language Remix**: Reply to remix prompt with instructions (e.g., *"make it punchier"*); Gemini rewrites the active tab (or all platforms via `/remix_all`) with link-safe deterministic truncation and fallback preservation.
+- **Safe Truncation**: Deterministic URL policy ensures links are never bisected. If a URL cannot fit within a platform's budget, it is safely omitted from post text and logged. For Bluesky, the source article reference remains available as an external link card via `lead_link`. Note that Mastodon and Threads publish text and media only (no standalone external link card), so omitted links will not be broadcast to those networks.
 
 ---
 
@@ -201,7 +207,7 @@ To ensure the Sage never "forgets" even in ephemeral runner environments, we use
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.22.2 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for repository hygiene, exact Gemini discovery, Gist recovery state, platform-safe interaction replies, permanent provider errors, and Threads failures.
+BluBot v3.23.0 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for repository hygiene, exact Gemini discovery, Gist recovery state, platform-safe interaction replies, multi-platform drafts, Telegram remix copilot, permanent provider errors, and Threads failures.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.

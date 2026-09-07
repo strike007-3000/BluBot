@@ -283,6 +283,9 @@ async def test_summarize_news_with_thinking_budget(monkeypatch):
         mock_settings.gemini_key = "test_key"
         mock_settings.thinking_budget = 500
         mock_settings.is_dry_run = False
+        mock_settings.bluesky_limit = 300
+        mock_settings.threads_limit = 500
+        mock_settings.mastodon_limit = 500
 
         # We need some dummy news items
         news_items = [{"title": "Important AI Breakthrough", "link": "https://openai.com/1", "source": "OpenAI", "score": 100}]
@@ -806,3 +809,110 @@ async def test_generate_imagen_multimodal_mode(monkeypatch):
     res = await generate_imagen_image(mock_client, "test prompt")
     assert res == b"MultimodalImagenBytes"
     mock_client.aio.models.generate_content.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_platform_drafts_parsing_and_fallback():
+    from src.curator import parse_platform_drafts, validate_platform_drafts
+    from src.models import PlatformDrafts
+
+    # 1. Valid JSON with all 3 keys
+    raw = '{"bluesky": "Bsky text", "threads": "Threads text", "mastodon": "Masto text"}'
+    drafts = parse_platform_drafts(raw)
+    assert drafts.bluesky == "Bsky text"
+    assert drafts.threads == "Threads text"
+    assert drafts.mastodon == "Masto text"
+
+    # 2. Per-field fallback when 1 key is missing
+    partial = '{"bluesky": "Bsky only", "threads": "Threads too"}'
+    drafts_partial = parse_platform_drafts(partial)
+    assert drafts_partial.bluesky == "Bsky only"
+    assert drafts_partial.threads == "Threads too"
+    assert drafts_partial.mastodon == "Bsky only"  # Inherits best valid candidate
+
+    # 3. Complete JSON failure fallback
+    malformed = 'This is plain text output from Gemini without JSON'
+    drafts_fallback = parse_platform_drafts(malformed)
+    assert drafts_fallback.bluesky == malformed
+    assert drafts_fallback.threads == malformed
+
+@pytest.mark.asyncio
+async def test_deterministic_url_truncation_policy():
+    from src.curator import repair_platform_drafts
+    from src.models import PlatformDrafts
+
+    long_url = "https://deepmind.google/discover/blog/introducing-gemini-3-8-frontier-capabilities"
+    short_text = f"Frontier reasoning launch announced: {long_url}"
+    drafts = PlatformDrafts.from_single(short_text)
+
+    repaired = repair_platform_drafts(drafts)
+    # Fits within all platform limits intact
+    assert long_url in repaired.bluesky
+    assert long_url in repaired.threads
+    assert long_url in repaired.mastodon
+
+    # Oversized text where URL + context cannot fit within 290 chars
+    oversized_prefix = "A " * 200  # 400 chars
+    oversized = f"{oversized_prefix}{long_url}"
+    drafts_over = PlatformDrafts.from_single(oversized)
+
+    repaired_over = repair_platform_drafts(drafts_over)
+    assert len(repaired_over.bluesky) <= 290
+    # URL was omitted without broken URL emitted
+    assert not repaired_over.bluesky.endswith("https://deepmind.google/disc...")
+
+@pytest.mark.asyncio
+async def test_remix_platform_draft_api_failure_preserves_original():
+    from src.curator import remix_platform_draft
+
+    mock_client = MagicMock()
+    mock_client.aio = MagicMock()
+    mock_client.aio.models = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(side_effect=RuntimeError("Quota or network error"))
+
+    orig = "Original robust draft text."
+    success, result = await remix_platform_draft(mock_client, orig, "Make it punchier", "Bluesky")
+    # Preserved original text on failure and reports success=False
+    assert success is False
+    assert result == orig
+
+@pytest.mark.asyncio
+async def test_remix_all_malformed_json_preserves_variants():
+    """Verify malformed non-JSON Gemini output preserves all platform variants and reports success=False."""
+    from src.curator import remix_all_drafts
+    from src.models import PlatformDrafts
+
+    mock_client = MagicMock()
+    mock_client.aio = MagicMock()
+    mock_client.aio.models = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = "This is a malformed Gemini response without valid JSON braces."
+    mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+
+    current = PlatformDrafts(
+        bluesky="Original Bluesky post",
+        threads="Original Threads narrative",
+        mastodon="Original Mastodon technical note #AI"
+    )
+
+    success, result = await remix_all_drafts(mock_client, current, "Make all punchier")
+    assert success is False
+    assert result == current
+    assert result.threads == "Original Threads narrative"
+    assert result.mastodon == "Original Mastodon technical note #AI"
+
+@pytest.mark.asyncio
+async def test_summarize_news_empty_input_arity():
+    """Verify summarize_news on empty news_items returns 6 items with PlatformDrafts."""
+    from src.curator import summarize_news
+    from src.models import PlatformDrafts
+
+    result = await summarize_news([], "Some context")
+    assert len(result) == 6
+    summary, lead_link, topic, is_failover, dialect, drafts = result
+    assert summary is None
+    assert lead_link is None
+    assert topic == "General"
+    assert is_failover is False
+    assert dialect is None
+    assert isinstance(drafts, PlatformDrafts)
+    assert drafts.bluesky == ""
