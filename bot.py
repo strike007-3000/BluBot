@@ -299,9 +299,11 @@ async def synthesis_stage(
     if settings.is_dry_run:
         SafeLogger.info("DRY RUN: Generating mock synthesis summary.")
         summary = "DRY RUN: This is a mock synthesis summary of AI breakthrough news. #AI #Tech"
-        lead_link = "https://example.com/mock-lead-link"
+        lead_link = curation.top_articles[0].link if curation.top_articles else "https://example.com/mock-lead-link"
         topic = telegram_topic if telegram_topic else "DryRun"
         is_failover = False
+        from src.models import PlatformDrafts
+        platform_drafts = PlatformDrafts.from_single(summary)
     elif use_scratch_synthesis:
         SafeLogger.info(f"Synthesis Stage: Generating on-demand post from scratch for topic: '{telegram_topic}'")
         try:
@@ -315,14 +317,21 @@ async def synthesis_stage(
             response = await genai_client.aio.models.generate_content(
                 model=settings.gemini_model,
                 contents=prompt,
-                config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.7)
+                config=types.GenerateContentConfig(
+                    system_instruction=CURATOR_SYSTEM_INSTRUCTION,
+                    temperature=0.7
+                )
             )
             summary = strip_markdown(response.text.strip())
+            from src.models import PlatformDrafts
+            platform_drafts = PlatformDrafts.from_single(summary)
             lead_link = None
             topic = telegram_topic
         except Exception as e:
             SafeLogger.warn(f"Telegram topic synthesis failed: {e}")
             summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
+            from src.models import PlatformDrafts
+            platform_drafts = PlatformDrafts.from_single(summary)
     elif news_count > 3 or (telegram_topic and news_count > 0):
         # Curation flow: either normal flow with >3 articles or matched Telegram topic
         is_mentor_time = any(x in curation.session_name for x in ["Afternoon", "Evening", "Night"])
@@ -330,9 +339,16 @@ async def synthesis_stage(
         try:
             # Convert back to dict for legacy curator logic (minimizing regression)
             news_dicts = [vars(a) for a in curation.top_articles]
-            summary, lead_link, topic, is_failover, current_dialect = await summarize_news(
+            summary_res = await summarize_news(
                 news_dicts, context, mode=mode, last_dialect=curation.last_dialect, writing_style=chosen_style
             )
+            if len(summary_res) == 6:
+                summary, lead_link, topic, is_failover, current_dialect, platform_drafts = summary_res
+            else:
+                summary, lead_link, topic, is_failover, current_dialect = summary_res
+                from src.models import PlatformDrafts
+                platform_drafts = PlatformDrafts.from_single(summary)
+
             if telegram_topic:
                 topic = telegram_topic
             # v3.7.1 Fix: Propagate updated dialect back to main state
@@ -349,12 +365,17 @@ async def synthesis_stage(
         except Exception as e:
             SafeLogger.warn(f"Synthesis failed, falling back to insight: {e}")
             summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
+            from src.models import PlatformDrafts
+            platform_drafts = PlatformDrafts.from_single(summary)
     else:
         SafeLogger.info(f"Low volume ({news_count}), using Strategist Insight.")
         summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
+        from src.models import PlatformDrafts
+        platform_drafts = PlatformDrafts.from_single(summary)
 
     if not summary:
-        return SynthesisResult(content="", lead_link=None, topic="General", writing_style=chosen_style), curation
+        from src.models import PlatformDrafts
+        return SynthesisResult(content="", lead_link=None, topic="General", writing_style=chosen_style, drafts=PlatformDrafts.from_single("")), curation
 
 
     return SynthesisResult(
@@ -363,7 +384,8 @@ async def synthesis_stage(
         topic=topic,
         is_failover=is_failover,
         media=None,
-        writing_style=chosen_style
+        writing_style=chosen_style,
+        drafts=platform_drafts
     ), curation
 
 async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult, curation: CurationResult) -> Optional[MediaAsset]:
@@ -560,12 +582,16 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
         bsky_client = None
 
     tasks = []
+    bsky_content = synthesis.get_platform_content("bluesky")
+    mastodon_content = synthesis.get_platform_content("mastodon")
+    threads_content = synthesis.get_platform_content("threads")
+
     if bsky_client and settings.bsky_handle:
-        tasks.append(("Bluesky", post_to_bluesky(bsky_client, client, synthesis.content, synthesis.lead_link, synthesis.media)))
+        tasks.append(("Bluesky", post_to_bluesky(bsky_client, client, bsky_content, synthesis.lead_link, synthesis.media)))
     if settings.mastodon_token and settings.mastodon_base_url:
-        tasks.append(("Mastodon", post_to_mastodon(synthesis.content, synthesis.media)))
+        tasks.append(("Mastodon", post_to_mastodon(mastodon_content, synthesis.media)))
     if settings.threads_token and settings.threads_user_id:
-        tasks.append(("Threads", post_to_threads(client, synthesis.content, synthesis.media)))
+        tasks.append(("Threads", post_to_threads(client, threads_content, synthesis.media)))
 
     if not tasks:
         SafeLogger.error("No configured broadcast targets available!")
@@ -885,20 +911,26 @@ async def main():
 
         # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
         if settings.enable_telegram_approval and not settings.is_dry_run:
-            final_content, final_media = await send_draft_for_approval(
-                text=synthesis.content,
+            from src.models import PlatformDrafts
+            initial_drafts = synthesis.drafts or PlatformDrafts.from_single(synthesis.content)
+            final_drafts, final_media = await send_draft_for_approval(
+                drafts=initial_drafts,
                 media=synthesis.media,
                 client=client,
                 genai_client=genai_client,
                 topic=synthesis.topic
             )
-            if final_content is None:
+            if final_drafts is None:
                 SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
                 return
 
+            if isinstance(final_drafts, str):
+                final_drafts = PlatformDrafts.from_single(final_drafts)
+
             synthesis = replace(
                 synthesis,
-                content=final_content,
+                content=final_drafts.bluesky,
+                drafts=final_drafts,
                 media=final_media
             )
         else:

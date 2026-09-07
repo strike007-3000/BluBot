@@ -78,3 +78,26 @@ async def test_generate_briefing_dry_run(monkeypatch, mocker):
         assert "DRY RUN" in briefing
         assert "Test Title" in briefing
         genai_client.aio.models.generate_content.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_dry_run_multiplatform_orchestration_e2e(monkeypatch, mocker):
+    """Verify dry-run mode completes full orchestration end-to-end without UnboundLocalError."""
+    import bot
+    from src.models import Article, CurationResult
+
+    mock_settings = Settings(gemini_key="mock", is_dry_run=True, github_event="workflow_dispatch")
+    monkeypatch.setattr("src.settings.settings", mock_settings)
+    monkeypatch.setattr("bot.settings", mock_settings)
+
+    article = Article(title="Dry Run Story", link="https://example.com/dry", summary="Dry run summary", published="2026-09-07", source="Test", score=90)
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+
+    mocker.patch("bot.check_for_telegram_topic", return_value=(None, None))
+    mocker.patch("bot.curation_stage", return_value=curation)
+    mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
+    mocker.patch("bot.save_seen_articles", return_value=(True, {"schema_version": 2, "revision": 2}))
+    mocker.patch("bot.load_seen_articles", return_value={"schema_version": 2, "revision": 1, "pending_stories": [], "links": []})
+    mocker.patch("bot.interaction_stage", new_callable=AsyncMock)
+
+    # Execute bot.main() in dry run mode
+    await bot.main()

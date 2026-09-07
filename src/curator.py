@@ -369,6 +369,176 @@ def strip_markdown(text):
     if not text: return text
     return _MARKDOWN_STRIP_RE.sub('', text).strip()
 
+_URL_RE = re.compile(r'https?://[^\s)]+')
+
+def parse_platform_drafts(
+    raw_text: str,
+    fallback_text: str = "",
+    fallback_drafts: Optional["PlatformDrafts"] = None
+) -> "PlatformDrafts":
+    """
+    Extracts platform drafts from model output, supporting markdown JSON blocks or raw JSON.
+    Applies per-field fallback: valid keys are preserved, missing keys inherit from fallback_drafts
+    or the best candidate.
+    """
+    from src.models import PlatformDrafts
+    import json
+
+    cleaned = (raw_text or "").strip()
+    parsed_json = None
+
+    # Try extracting from code fences
+    if "```" in cleaned:
+        for block in cleaned.split("```"):
+            candidate = block.strip()
+            if candidate.startswith("json"):
+                candidate = candidate[4:].strip()
+            if candidate.startswith("{") and candidate.endswith("}"):
+                try:
+                    parsed_json = json.loads(candidate)
+                    break
+                except Exception:
+                    continue
+
+    # Try parsing raw text if fences failed
+    if not parsed_json and "{" in cleaned and "}" in cleaned:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}") + 1
+        try:
+            parsed_json = json.loads(cleaned[start:end])
+        except Exception:
+            parsed_json = None
+
+    if isinstance(parsed_json, dict):
+        bsky_val = str(parsed_json.get("bluesky") or "").strip()
+        threads_val = str(parsed_json.get("threads") or "").strip()
+        mastodon_val = str(parsed_json.get("mastodon") or "").strip()
+
+        # Reject JSON that lacks any actual platform draft fields (e.g. metadata only like {"topic": "AI"})
+        if bsky_val or threads_val or mastodon_val:
+            best_candidate = bsky_val or threads_val or mastodon_val or fallback_text
+
+            fb_bsky = fallback_drafts.bluesky if fallback_drafts else best_candidate
+            fb_threads = fallback_drafts.threads if fallback_drafts else best_candidate
+            fb_mastodon = fallback_drafts.mastodon if fallback_drafts else best_candidate
+
+            return PlatformDrafts(
+                bluesky=strip_markdown(bsky_val) if bsky_val else strip_markdown(fb_bsky),
+                threads=strip_markdown(threads_val) if threads_val else strip_markdown(fb_threads),
+                mastodon=strip_markdown(mastodon_val) if mastodon_val else strip_markdown(fb_mastodon),
+            )
+
+    # If parsing completely failed, use fallback_drafts if provided, else fallback_text
+    if fallback_drafts:
+        return fallback_drafts
+    if parsed_json is not None:
+        # Serialized JSON was returned without platform fields; do not treat JSON metadata as post content
+        base = strip_markdown(fallback_text)
+    else:
+        base = strip_markdown(fallback_text or cleaned)
+    return PlatformDrafts.from_single(base)
+
+def _get_platform_limits():
+    try:
+        bsky = int(getattr(settings, "bluesky_limit", 300)) - 10
+    except Exception:
+        bsky = 290
+    try:
+        threads = int(getattr(settings, "threads_limit", 500)) - 10
+    except Exception:
+        threads = 490
+    try:
+        mast = int(getattr(settings, "mastodon_limit", 500)) - 15
+    except Exception:
+        mast = 485
+    return bsky, threads, mast
+
+def validate_platform_drafts(drafts: "PlatformDrafts") -> Tuple[bool, List[str]]:
+    """Validates drafts against platform safety limits."""
+    bsky_limit, threads_limit, mastodon_limit = _get_platform_limits()
+
+    violations = []
+    if len(drafts.bluesky) > bsky_limit:
+        violations.append(f"Bluesky exceeds {bsky_limit} chars ({len(drafts.bluesky)})")
+    if len(drafts.threads) > threads_limit:
+        violations.append(f"Threads exceeds {threads_limit} chars ({len(drafts.threads)})")
+    if len(drafts.mastodon) > mastodon_limit:
+        violations.append(f"Mastodon exceeds {mastodon_limit} chars ({len(drafts.mastodon)})")
+
+    return (len(violations) == 0, violations)
+
+def _repair_text_url_safe(text: str, limit: int, platform_name: str) -> str:
+    """
+    Truncates text to limit without splitting URLs according to the deterministic URL policy:
+    - Never emit a broken URL.
+    - If URL fits with surrounding context, preserve URL intact and trim preceding context.
+    - If URL cannot fit, omit it and log that this platform will not receive the link.
+    """
+    if len(text) <= limit:
+        return text
+
+    from src.utils import smart_truncate
+
+    # Find URL if present
+    match = _URL_RE.search(text)
+    if not match:
+        return smart_truncate(text, limit)
+
+    url = match.group(0)
+    url_start = match.start()
+    url_end = match.end()
+    url_len = len(url)
+
+    # Check if URL itself exceeds budget
+    if url_len >= limit:
+        SafeLogger.warn(f"URL exceeds {platform_name} budget ({url_len} >= {limit}). Omitted from post text.")
+        text_no_url = (text[:url_start] + text[url_end:]).strip()
+        return smart_truncate(text_no_url, limit)
+
+    pre_text = text[:url_start].rstrip()
+    post_text = text[url_end:].lstrip()
+
+    # Budget remaining for prose around URL
+    remaining_budget = limit - url_len - 1  # 1 space before URL if pre_text exists
+
+    if remaining_budget <= 10:
+        # Not enough space for any useful context + URL; omit URL
+        SafeLogger.warn(f"URL cannot fit with context in {platform_name} ({limit} limit). Omitted from post text.")
+        text_no_url = (text[:url_start] + text[url_end:]).strip()
+        return smart_truncate(text_no_url, limit)
+
+    # Trim pre_text at word boundary to fit remaining_budget
+    trimmed_pre = smart_truncate(pre_text, remaining_budget)
+    repaired = f"{trimmed_pre} {url}".strip() if trimmed_pre else url
+
+    # If space remains after pre_text and url, preserve as much post_text as fits
+    if post_text:
+        budget_for_post = limit - len(repaired) - 1  # 1 space before post_text
+        if budget_for_post > 5:
+            trimmed_post = smart_truncate(post_text, budget_for_post)
+            if trimmed_post:
+                repaired = f"{repaired} {trimmed_post}".strip()
+
+    if len(repaired) <= limit:
+        return repaired
+
+    # Final fallback if still over limit
+    SafeLogger.warn(f"URL could not be safely preserved in {platform_name}. Omitted from post text.")
+    text_no_url = (text[:url_start] + text[url_end:]).strip()
+    return smart_truncate(text_no_url, limit)
+
+def repair_platform_drafts(drafts: "PlatformDrafts") -> "PlatformDrafts":
+    """Applies deterministic, link-safe repair and truncation to each platform draft."""
+    from src.models import PlatformDrafts
+
+    bsky_limit, threads_limit, mastodon_limit = _get_platform_limits()
+
+    return PlatformDrafts(
+        bluesky=_repair_text_url_safe(strip_markdown(drafts.bluesky), bsky_limit, "Bluesky"),
+        threads=_repair_text_url_safe(strip_markdown(drafts.threads), threads_limit, "Threads"),
+        mastodon=_repair_text_url_safe(strip_markdown(drafts.mastodon), mastodon_limit, "Mastodon"),
+    )
+
 def supports_thinking(model_name: str) -> bool:
     """
     Determines if a model supports the thinking_budget parameter.
@@ -424,12 +594,20 @@ def _derive_topic_locally(title: str, summary: str, source_id: str) -> str:
     return "General"
 
 async def summarize_news(news_items, context, mode="Curator", last_dialect=None, writing_style=None):
-    """Synthesizes news with SDK-aware Failover Loop and randomized Dialect adaptation."""
-    if not news_items: return None, None, "General", False, None
+    if not news_items:
+        from src.models import PlatformDrafts
+        return None, None, "General", False, None, PlatformDrafts.from_single("")
 
     if settings.is_dry_run:
         SafeLogger.info("Dry run: Bypassing Gemini synthesis call.")
-        return "Mock Dry-Run Post Summary: BluBot is operating correctly in dry-run mode. #AI #News", news_items[0]['link'], "Dry Run Curation", False, "ANALYTICAL"
+        mock_text = "Mock Dry-Run Post Summary: BluBot is operating correctly in dry-run mode. #AI #News"
+        from src.models import PlatformDrafts
+        mock_drafts = PlatformDrafts(
+            bluesky=mock_text,
+            threads="Mock Dry-Run Threads: BluBot is operating correctly in dry-run mode. How does your team automate news curation?",
+            mastodon="Mock Dry-Run Mastodon: BluBot operating correctly in dry-run mode with multi-platform tailoring. #AI #News #OpenSource"
+        )
+        return mock_drafts.bluesky, news_items[0]['link'], "Dry Run Curation", False, "ANALYTICAL", mock_drafts
 
     client = genai.Client(api_key=settings.gemini_key)
 
@@ -452,9 +630,24 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
         formatted_lines.append(line)
     news_text = "\n".join(formatted_lines)
 
+    # Multi-platform output requirement
+    multi_platform_instruction = (
+        "\n\nOUTPUT FORMAT INSTRUCTION:\n"
+        "You must output valid JSON containing tailored posts for three platforms:\n"
+        "```json\n"
+        "{\n"
+        '  "topic": "Detected Story Topic",\n'
+        '  "bluesky": "Concise, punchy thought leadership (target <=280 chars, no hashtags).",\n'
+        '  "threads": "Engaging conversational narrative with an open question to prompt replies (target <=450 chars).",\n'
+        '  "mastodon": "Technical, nuanced overview with relevant hashtags (target <=450 chars)."\n'
+        "}\n"
+        "```\n"
+        "Do not wrap with unnecessary conversational pleasantries."
+    )
+
     # Combine instructions
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
-    combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}"
+    combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}{multi_platform_instruction}"
 
     if writing_style:
         from .config import WRITING_STYLES
@@ -465,7 +658,7 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
     # Check for Consensus Curation (allows threads opt-in)
     has_consensus = any(item.get('consensus_synergy', False) for item in news_items)
     if has_consensus:
-        combined_instruction += "\n\nCONSENSUS EVENT INSTRUCTION: Multiple independent feeds have reported the same major breakthrough. You may expand the post up to 500 characters only when the existing platform-specific limits and splitter can safely handle it. Do not pad. Do not write a long summary. State one clear thesis, explain why the consensus matters, and keep the tone human, concise, and business-relevant."
+        combined_instruction += "\n\nCONSENSUS EVENT INSTRUCTION: Multiple independent feeds have reported the same major breakthrough. State one clear thesis, explain why the consensus matters, and keep the tone human, concise, and business-relevant."
 
     # Friday Morning Curation focus overlay
     is_friday_morning = context.get('day') == 'Friday' and 'Morning' in context.get('session', '')
@@ -504,29 +697,52 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
 
             raw_text = (response.text or "").strip()
             topic = None
-            summary = None
+            platform_drafts = None
 
+            # First attempt: parse structured JSON
+            parsed_drafts = parse_platform_drafts(raw_text)
+            import json
+            try:
+                # Check if topic is in JSON
+                json_str = raw_text
+                if "```" in raw_text:
+                    for part in raw_text.split("```"):
+                        p = part.strip()
+                        if p.startswith("json"): p = p[4:].strip()
+                        if p.startswith("{") and p.endswith("}"):
+                            json_str = p
+                            break
+                if "{" in json_str and "}" in json_str:
+                    s = json_str.find("{")
+                    e = json_str.rfind("}") + 1
+                    data = json.loads(json_str[s:e])
+                    if isinstance(data, dict) and data.get("topic"):
+                        topic = str(data["topic"]).strip()
+            except Exception:
+                pass
+
+            # Legacy TOPIC: / BODY: format parsing fallback
             if "TOPIC:" in raw_text and "BODY:" in raw_text:
                 parts = raw_text.split("BODY:", 1)
                 parsed_topic = parts[0].replace("TOPIC:", "").strip()
                 parsed_body = parts[1].strip()
                 if len(parsed_body) > 60:
-                    summary = parsed_body
                     topic = parsed_topic if parsed_topic else _derive_topic_locally(lead_title, lead_summary, lead_source_id)
+                    parsed_drafts = parse_platform_drafts(parsed_body, fallback_text=parsed_body)
             elif "BODY:" in raw_text:
                 parsed_body = raw_text.split("BODY:", 1)[1].strip()
                 if len(parsed_body) > 60:
-                    summary = parsed_body
                     topic = _derive_topic_locally(lead_title, lead_summary, lead_source_id)
-            else:
-                if len(raw_text) > 60:
-                    summary = raw_text
-                    topic = _derive_topic_locally(lead_title, lead_summary, lead_source_id)
+                    parsed_drafts = parse_platform_drafts(parsed_body, fallback_text=parsed_body)
 
-            if summary and len(summary) > 60:
+            if not topic:
+                topic = _derive_topic_locally(lead_title, lead_summary, lead_source_id)
+
+            if parsed_drafts and len(parsed_drafts.bluesky) > 30:
+                repaired = repair_platform_drafts(parsed_drafts)
                 is_failover = (idx > 0)
                 SafeLogger.info(f"Synthesis successful via {model_id} (Topic: {topic}, Failover: {is_failover}).")
-                return strip_markdown(summary), lead_item['link'], topic, is_failover, current_dialect
+                return repaired.bluesky, lead_item['link'], topic, is_failover, current_dialect, repaired
             else:
                 SafeLogger.warn(f"Model {model_id} produced empty or insufficient body. Rotating to next model.")
 
@@ -544,7 +760,129 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
             if idx == len(GEMINI_MODEL_PRIORITY) - 1:
                 raise e
 
-    return None, None, "General", False, None
+    from src.models import PlatformDrafts
+    return None, None, "General", False, None, PlatformDrafts.from_single("")
+
+async def remix_platform_draft(
+    genai_client,
+    current_text: str,
+    instruction: str,
+    platform_name: str
+) -> Tuple[bool, str]:
+    """
+    Rewrites a single platform draft using Gemini based on user instruction.
+    Returns (success, result_text).
+    Preserves current_text and returns (False, current_text) if an error occurs.
+    """
+    if not current_text or not instruction:
+        return False, current_text
+
+    prompt = (
+        f"You are an expert social media editor for {platform_name}.\n"
+        f"Current Draft:\n\"\"\"\n{current_text}\n\"\"\"\n\n"
+        f"User Edit Instruction:\n{instruction}\n\n"
+        "Requirements:\n"
+        "1. Apply the instruction directly to improve the draft.\n"
+        "2. Return ONLY the revised draft as clean text (no markdown bold/italics, no preambles, no conversational filler).\n"
+        "3. Preserve the core facts and any URLs unless instructed otherwise."
+    )
+
+    for model_id in GEMINI_MODEL_PRIORITY:
+        try:
+            SafeLogger.info(f"Remixing {platform_name} draft via {model_id}...")
+            config_args = {
+                "system_instruction": CURATOR_SYSTEM_INSTRUCTION,
+            }
+            normalized = normalize_gemini_model_id(model_id)
+            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+                config_args["temperature"] = 0.7
+
+            if supports_thinking(model_id):
+                config_args["thinking_config"] = types.ThinkingConfig(
+                    thinking_budget=settings.thinking_budget if settings.thinking_budget is not None else 1024
+                )
+
+            response = await genai_client.aio.models.generate_content(
+                model=model_id,
+                contents=prompt,
+                config=types.GenerateContentConfig(**config_args)
+            )
+            raw = (response.text or "").strip()
+            if raw and len(raw) > 20:
+                stripped = strip_markdown(raw)
+                bsky_limit, threads_limit, mastodon_limit = _get_platform_limits()
+                limit = bsky_limit if platform_name.lower() == "bluesky" else (threads_limit if platform_name.lower() == "threads" else mastodon_limit)
+                return True, _repair_text_url_safe(stripped, limit, platform_name)
+        except Exception as e:
+            SafeLogger.warn(f"Remix call failed on {model_id} ({e}). Rotating if possible...")
+            continue
+
+    SafeLogger.warn(f"All remix attempts failed. Preserving previous {platform_name} draft.")
+    return False, current_text
+
+async def remix_all_drafts(
+    genai_client,
+    current_drafts: "PlatformDrafts",
+    instruction: str
+) -> Tuple[bool, "PlatformDrafts"]:
+    """
+    Rewrites all platform drafts using Gemini structured JSON output based on user instruction.
+    Returns (success, result_drafts).
+    Preserves current_drafts and returns (False, current_drafts) if parsing fails or an API error occurs.
+    """
+    if not current_drafts or not instruction:
+        return False, current_drafts
+
+    prompt = (
+        "You are an expert social media editor rewriting multi-platform tech posts based on user feedback.\n\n"
+        "Current Drafts:\n"
+        f"- Bluesky: {current_drafts.bluesky}\n"
+        f"- Threads: {current_drafts.threads}\n"
+        f"- Mastodon: {current_drafts.mastodon}\n\n"
+        f"User Edit Instruction for All Platforms:\n{instruction}\n\n"
+        "Return valid JSON containing the revised posts for all three targets:\n"
+        "```json\n"
+        "{\n"
+        '  "bluesky": "...",\n'
+        '  "threads": "...",\n'
+        '  "mastodon": "..."\n'
+        "}\n"
+        "```\n"
+        "Do not include markdown wrappers (bold/italics) inside the text."
+    )
+
+    for model_id in GEMINI_MODEL_PRIORITY:
+        try:
+            SafeLogger.info(f"Remixing all drafts via {model_id}...")
+            config_args = {
+                "system_instruction": CURATOR_SYSTEM_INSTRUCTION,
+            }
+            normalized = normalize_gemini_model_id(model_id)
+            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+                config_args["temperature"] = 0.7
+
+            if supports_thinking(model_id):
+                config_args["thinking_config"] = types.ThinkingConfig(
+                    thinking_budget=settings.thinking_budget if settings.thinking_budget is not None else 1024
+                )
+
+            response = await genai_client.aio.models.generate_content(
+                model=model_id,
+                contents=prompt,
+                config=types.GenerateContentConfig(**config_args)
+            )
+            raw = (response.text or "").strip()
+            # Only consider parsed successfully if raw actually contains valid JSON structure
+            if "{" in raw and "}" in raw:
+                parsed = parse_platform_drafts(raw, fallback_drafts=current_drafts)
+                if parsed and len(parsed.bluesky) > 20 and parsed != current_drafts:
+                    return True, repair_platform_drafts(parsed)
+        except Exception as e:
+            SafeLogger.warn(f"All-draft remix failed on {model_id} ({e}). Rotating if possible...")
+            continue
+
+    SafeLogger.warn("All-draft remix failed across all models. Preserving current drafts.")
+    return False, current_drafts
 
 async def generate_mentor_insight(context):
     if settings.is_dry_run:

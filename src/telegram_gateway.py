@@ -2,6 +2,7 @@ import asyncio
 import time
 import httpx
 import re
+import json
 from datetime import datetime, timezone
 from typing import Optional, Tuple, Any
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
@@ -49,78 +50,186 @@ def validate_text_limits(text: str) -> Optional[str]:
 
     return None
 
+def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs", remix_state: str = "idle") -> InlineKeyboardMarkup:
+    """Constructs inline keyboard with platform tabs, view toggles, approval, and remix buttons."""
+    if remix_state == "in_flight":
+        # Disable action buttons while remix request is in flight
+        return InlineKeyboardMarkup([[InlineKeyboardButton("⏳ AI Remix In Progress...", callback_data="noop")]])
+
+    # Row 1: Platform tabs (if in tabs view)
+    tab_row = [
+        InlineKeyboardButton(f"{'👉 ' if current_tab == 'bluesky' else ''}🔵 Bluesky", callback_data="tab:bsky"),
+        InlineKeyboardButton(f"{'👉 ' if current_tab == 'threads' else ''}🧵 Threads", callback_data="tab:threads"),
+        InlineKeyboardButton(f"{'👉 ' if current_tab == 'mastodon' else ''}🐘 Mastodon", callback_data="tab:mastodon"),
+    ]
+
+    # Row 2: View toggle & Remix
+    control_row = []
+    if view_mode == "tabs":
+        control_row.append(InlineKeyboardButton("📋 Show All", callback_data="view:all"))
+        control_row.append(InlineKeyboardButton(f"✨ Remix {current_tab.title()}", callback_data=f"remix:{current_tab}"))
+    else:
+        control_row.append(InlineKeyboardButton("📑 Show Tabs", callback_data="view:tabs"))
+        control_row.append(InlineKeyboardButton("✨ Remix All", callback_data="remix:all"))
+
+    # Row 3: Approval & Rejection
+    action_row = [
+        InlineKeyboardButton("✅ Approve", callback_data="approve"),
+        InlineKeyboardButton("❌ Reject", callback_data="reject"),
+    ]
+
+    # Row 4: Image Regen
+    regen_row = [
+        InlineKeyboardButton("🎨 Regenerate Image", callback_data="regenerate_image")
+    ]
+
+    return InlineKeyboardMarkup([tab_row, control_row, action_row, regen_row])
+
+def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: str = "tabs") -> str:
+    """Formats preview text ensuring strict compliance with Telegram caption / text budgets."""
+    from src.models import PlatformDrafts
+    if isinstance(drafts, str):
+        drafts = PlatformDrafts.from_single(drafts)
+
+    if view_mode == "tabs":
+        tab_content = drafts.get(current_tab)
+        limit = 290 if current_tab == "bluesky" else (490 if current_tab == "threads" else 485)
+        title_map = {"bluesky": "🔵 Bluesky View", "threads": "🧵 Threads View", "mastodon": "🐘 Mastodon View"}
+        title = title_map.get(current_tab, "Draft View")
+        return f"📝 **DRAFT POST ({title})**:\n\n{tab_content}\n\n`[{len(tab_content)}/{limit} chars]`"
+    else:
+        return (
+            "📝 **MULTI-PLATFORM DRAFTS**:\n\n"
+            f"🔵 **Bluesky** ({len(drafts.bluesky)}/290):\n{drafts.bluesky}\n\n"
+            f"🧵 **Threads** ({len(drafts.threads)}/490):\n{drafts.threads}\n\n"
+            f"🐘 **Mastodon** ({len(drafts.mastodon)}/485):\n{drafts.mastodon}"
+        )
+
+def _get_caption_payload(drafts: Any, current_tab: str, view_mode: str) -> Tuple[str, Optional[str]]:
+    """
+    Returns (primary_caption, optional_followup_text) for media messages.
+    If view_mode is 'all' and full preview exceeds 950 characters (Telegram caption limit is 1024),
+    splits into a concise primary caption and a full markdown follow-up message.
+    """
+    preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode)
+    if view_mode == "all" and len(preview_text) > 950:
+        concise_caption = "📝 **MULTI-PLATFORM DRAFTS**:\n(See full breakdown below)\n\n" + f"🔵 Bluesky: {drafts.bluesky[:200]}..."
+        return concise_caption, preview_text
+    return preview_text, None
+
+async def _render_and_update_preview(
+    bot: Bot,
+    chat_id: Any,
+    sent_message: Any,
+    drafts: Any,
+    current_tab: str,
+    view_mode: str,
+    reply_markup: InlineKeyboardMarkup,
+    image_bytes: Optional[bytes]
+) -> bool:
+    """
+    Renders preview text and updates the authoritative Telegram preview message.
+    Protects against Telegram's 1024-character caption limit when media + all-in-one mode is active
+    by posting a concise caption on the photo and the full breakdown in a follow-up message.
+    Returns True if update succeeded, False otherwise.
+    """
+    try:
+        if image_bytes:
+            caption, followup = _get_caption_payload(drafts, current_tab=current_tab, view_mode=view_mode)
+            await bot.edit_message_caption(
+                chat_id=chat_id, message_id=sent_message.message_id,
+                caption=caption, reply_markup=reply_markup, parse_mode="Markdown"
+            )
+            if followup:
+                try:
+                    await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                except Exception as followup_err:
+                    SafeLogger.warn(f"Failed to send all-in-one breakdown follow-up message: {followup_err}")
+                    try:
+                        await bot.send_message(
+                            chat_id=chat_id,
+                            text="⚠️ Full breakdown follow-up message could not be sent. Authoritative draft updated in photo caption; switch tabs to view full platform variants."
+                        )
+                    except Exception:
+                        pass
+        else:
+            preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode)
+            await bot.edit_message_text(
+                chat_id=chat_id, message_id=sent_message.message_id,
+                text=preview_text, reply_markup=reply_markup, parse_mode="Markdown"
+            )
+        return True
+    except Exception as e:
+        SafeLogger.warn(f"Failed to update Telegram preview message: {e}")
+        return False
+
 async def send_draft_for_approval(
-    text: str,
+    drafts: Any = None,  # PlatformDrafts | str
     media: Optional[MediaAsset] = None,
     client: Optional[httpx.AsyncClient] = None,
     genai_client: Optional[Any] = None,
-    topic: str = "General"
-) -> Tuple[Optional[str], Optional[MediaAsset]]:
+    topic: str = "General",
+    text: Optional[str] = None  # Backward-compatible keyword alias
+) -> Tuple[Optional[Any], Optional[MediaAsset]]:
     """
-    Sends the generated post draft and image to Telegram for approval.
-    Waits up to settings.telegram_timeout_minutes (default 5) for user callback or text reply.
-    If the timeout expires, defaults to the current text and media asset, and posts.
-    Returns a Tuple: (approved_text, approved_media).
-    Returns (None, None) if rejected.
+    Sends generated post drafts and image to Telegram for approval.
+    Maintains one authoritative preview message (photo if media present, else text).
+    Returns Tuple: (approved_drafts, approved_media) or (None, None) if rejected.
     """
+    from src.models import PlatformDrafts
+    raw_input = drafts if drafts is not None else text
+    current_drafts = raw_input if isinstance(raw_input, PlatformDrafts) else PlatformDrafts.from_single(str(raw_input or ""))
+
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
-        return text, media
+        return current_drafts, media
 
-    # Do not request approval in dry-run mode
     if settings.is_dry_run:
         SafeLogger.info("Telegram: DRY_RUN enabled. Skipping approval message dispatch.")
-        return text, media
+        return current_drafts, media
 
     try:
         bot = Bot(token=settings.telegram_bot_token)
         chat_id = settings.telegram_user_id
 
-        # Create the inline keyboard buttons (with Option A options)
-        keyboard = [
-            [
-                InlineKeyboardButton("✅ Approve", callback_data="approve"),
-                InlineKeyboardButton("❌ Reject", callback_data="reject")
-            ],
-            [
-                InlineKeyboardButton("🔄 Regenerate Text", callback_data="regenerate_text"),
-                InlineKeyboardButton("🎨 Regenerate Image", callback_data="regenerate_image")
-            ]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        current_tab = "bluesky"
+        view_mode = "tabs"
+        remix_state = "idle"  # "idle" | "awaiting_instruction" | "in_flight"
+        active_prompt_id = None
+        remix_target = "bluesky"  # "bluesky" | "threads" | "mastodon" | "all"
 
-        # Send text + image or just text
+        reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
+        preview_text = _format_preview_text(current_drafts, current_tab=current_tab, view_mode=view_mode)
+
         sent_message = None
         image_bytes = media.image_bytes if media else None
         if image_bytes:
             SafeLogger.info("Telegram: Sending draft and image for approval...")
+            caption, followup = _get_caption_payload(current_drafts, current_tab=current_tab, view_mode=view_mode)
             sent_message = await bot.send_photo(
                 chat_id=chat_id,
                 photo=image_bytes,
-                caption=f"📝 **DRAFT POST**:\n\n{text}",
+                caption=caption,
                 reply_markup=reply_markup,
                 parse_mode="Markdown"
             )
+            if followup:
+                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
         else:
             SafeLogger.info("Telegram: Sending draft for approval...")
             sent_message = await bot.send_message(
                 chat_id=chat_id,
-                text=f"📝 **DRAFT POST**:\n\n{text}",
+                text=preview_text,
                 reply_markup=reply_markup,
                 parse_mode="Markdown"
             )
 
-        # Clear existing updates to avoid acting on old clicks
         updates = await bot.get_updates(limit=100)
         offset = updates[-1].update_id + 1 if updates else None
 
-        # Start waiting/polling loop
         timeout_seconds = settings.telegram_timeout_minutes * 60
         poll_interval = 2
         start_time = time.monotonic()
-
-        waiting_for_feedback = False
-        feedback_prompt_id = None
 
         SafeLogger.info(f"Telegram: Waiting up to {settings.telegram_timeout_minutes} minutes for approval or edits...")
         while (time.monotonic() - start_time) < timeout_seconds:
@@ -129,219 +238,279 @@ async def send_draft_for_approval(
                 for update in updates:
                     offset = update.update_id + 1
 
-                    # Handle callback query (Approve/Reject/Regen buttons)
+                    # 1. Callback query handling
                     if update.callback_query:
                         query = update.callback_query
 
-                        # Validate sender matches settings.telegram_user_id
+                        # Ownership validation
                         if str(query.from_user.id) != str(chat_id):
                             SafeLogger.warn(f"Telegram: Unauthorized interaction from user ID: {query.from_user.id}")
                             continue
 
-                        # Check if callback is on our sent message
-                        if sent_message and query.message and query.message.message_id == sent_message.message_id:
-                            action = query.data
-                            if action == "approve":
-                                SafeLogger.info("Telegram: User approved draft.")
-                                await query.answer("Draft approved! Publishing...")
-                                await bot.send_message(chat_id=chat_id, text="🚀 Approved. Posting to platforms...")
-                                return text, media
-                            elif action == "reject":
-                                SafeLogger.info("Telegram: User rejected draft.")
-                                await query.answer("Draft rejected.")
-                                await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
-                                return None, None
-                            elif action == "regenerate_text":
-                                SafeLogger.info("Telegram: User requested text regeneration.")
-                                prompt_msg = await bot.send_message(
-                                    chat_id=chat_id,
-                                    text="📥 Reply to this message with a feedback hint for text regeneration (or reply `/skip` to regenerate with default settings):",
-                                    reply_to_message_id=sent_message.message_id
-                                )
-                                feedback_prompt_id = prompt_msg.message_id
-                                waiting_for_feedback = True
-                                await query.answer("Provide feedback for text regeneration...")
-                            elif action == "regenerate_image":
-                                SafeLogger.info("Telegram: User requested image regeneration.")
-                                if not genai_client or not client:
-                                    await bot.send_message(chat_id=chat_id, text="⚠️ API clients are missing; image regeneration not possible.")
-                                    await query.answer()
-                                    continue
+                        # Stale callback validation
+                        if not sent_message or not query.message or query.message.message_id != sent_message.message_id:
+                            try:
+                                await query.answer("Stale or expired draft session.", show_alert=True)
+                            except Exception:
+                                pass
+                            continue
 
-                                status_msg = await bot.send_message(chat_id=chat_id, text=f"🎨 Regenerating image card using {settings.image_provider.upper()}...")
-                                await query.answer("Regenerating image...")
+                        action = query.data
+                        if action == "noop":
+                            await query.answer()
+                            continue
 
-                                try:
-                                    from src.curator import generate_visual_prompt, generate_ai_image, generate_image_alt_text, validate_image_bytes
-                                    from PIL import Image
-                                    import io
-                                    from src.utils import get_image_mime
+                        # Concurrency rule: ignore additional remix actions if not idle
+                        if action.startswith("remix:") and remix_state != "idle":
+                            await query.answer("A remix request is already in progress or awaiting feedback.", show_alert=True)
+                            continue
 
-                                    # 1. Generate new visual prompt
-                                    visual_prompt = await generate_visual_prompt(genai_client, text, topic)
+                        if action == "approve":
+                            SafeLogger.info("Telegram: User approved draft.")
+                            await query.answer("Draft approved! Publishing...")
+                            await bot.send_message(chat_id=chat_id, text="🚀 Approved. Posting to platforms...")
+                            return current_drafts, media
 
-                                    # 2. Generate AI image
-                                    new_image_data = await generate_ai_image(client, genai_client, visual_prompt)
+                        elif action == "reject":
+                            SafeLogger.info("Telegram: User rejected draft.")
+                            await query.answer("Draft rejected.")
+                            await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
+                            return None, None
 
-                                    if new_image_data and validate_image_bytes(new_image_data):
-                                        # 3. Generate image alt text
-                                        alt_prompt = visual_prompt if visual_prompt else f"Minimalist tech illustration of {topic}"
-                                        new_alt_text = await generate_image_alt_text(new_image_data, prompt=alt_prompt, topic=topic)
+                        elif action.startswith("tab:"):
+                            tab_key = action.split(":")[1]
+                            target_tab = "bluesky" if tab_key == "bsky" else ("threads" if tab_key == "threads" else "mastodon")
+                            reply_markup = _build_telegram_markup(current_tab=target_tab, view_mode="tabs", remix_state=remix_state)
+                            success = await _render_and_update_preview(
+                                bot=bot, chat_id=chat_id, sent_message=sent_message,
+                                drafts=current_drafts, current_tab=target_tab, view_mode="tabs",
+                                reply_markup=reply_markup, image_bytes=image_bytes
+                            )
+                            if success:
+                                current_tab = target_tab
+                                view_mode = "tabs"
+                                await query.answer(f"Switched to {current_tab.title()} tab.")
+                            else:
+                                await query.answer("Failed to switch tab.", show_alert=True)
 
-                                        # Get dimensions and mime
-                                        mime_type = get_image_mime(new_image_data)
-                                        width, height = None, None
-                                        try:
-                                            img = Image.open(io.BytesIO(new_image_data))
-                                            width, height = img.size
-                                        except Exception:
-                                            pass
+                        elif action.startswith("view:"):
+                            target_view = action.split(":")[1]
+                            reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=target_view, remix_state=remix_state)
+                            success = await _render_and_update_preview(
+                                bot=bot, chat_id=chat_id, sent_message=sent_message,
+                                drafts=current_drafts, current_tab=current_tab, view_mode=target_view,
+                                reply_markup=reply_markup, image_bytes=image_bytes
+                            )
+                            if success:
+                                view_mode = target_view
+                                await query.answer(f"View mode: {view_mode.title()}")
+                            else:
+                                await query.answer("Failed to switch view.", show_alert=True)
 
-                                        # Construct new MediaAsset
-                                        new_media = MediaAsset(
-                                            source=MediaSource.GENERATED,
-                                            image_bytes=new_image_data,
-                                            public_url=None,
-                                            mime_type=mime_type,
-                                            width=width,
-                                            height=height,
-                                            alt_text=new_alt_text,
-                                            attribution_url=media.attribution_url if media else None
-                                        )
+                        elif action.startswith("remix:"):
+                            remix_target = action.split(":")[1]
+                            remix_state = "awaiting_instruction"
+                            prompt_msg = await bot.send_message(
+                                chat_id=chat_id,
+                                text=f"✨ Reply to this message with your instruction to remix the **{remix_target.title()}** draft (e.g., 'make it punchier', 'remove company name'):",
+                                reply_to_message_id=sent_message.message_id
+                            )
+                            active_prompt_id = prompt_msg.message_id
+                            await query.answer("Awaiting edit instruction...")
 
-                                        # 4. Update preview message media
-                                        original_has_media = media is not None and media.image_bytes is not None
-                                        if sent_message and original_has_media:
-                                            await bot.edit_message_media(
-                                                chat_id=chat_id,
-                                                message_id=sent_message.message_id,
-                                                media=InputMediaPhoto(
-                                                    media=new_image_data,
-                                                    caption=f"📝 **DRAFT POST**:\n\n{text}",
-                                                    parse_mode="Markdown"
-                                                ),
-                                                reply_markup=reply_markup
-                                            )
-                                            media = new_media
-                                            SafeLogger.info("Telegram: Image regenerated successfully.")
-                                            await bot.send_message(chat_id=chat_id, text="🎨 Image card regenerated successfully!", reply_to_message_id=status_msg.message_id)
-                                        else:
-                                            # If original was text-only, we can't edit media, so send new photo instead
-                                            sent_photo = await bot.send_photo(
-                                                chat_id=chat_id,
-                                                photo=new_image_data,
-                                                caption=f"📝 **DRAFT POST**:\n\n{text}",
-                                                reply_markup=reply_markup,
+                        elif action == "regenerate_text":
+                            remix_target = current_tab
+                            remix_state = "awaiting_instruction"
+                            prompt_msg = await bot.send_message(
+                                chat_id=chat_id,
+                                text="📥 Reply to this message with a feedback hint for text regeneration (or reply `/skip` to regenerate with default settings):",
+                                reply_to_message_id=sent_message.message_id
+                            )
+                            active_prompt_id = prompt_msg.message_id
+                            await query.answer("Provide feedback for text regeneration...")
+
+                        elif action == "regenerate_image":
+                            SafeLogger.info("Telegram: User requested image regeneration.")
+                            if not genai_client or not client:
+                                await bot.send_message(chat_id=chat_id, text="⚠️ API clients missing; image regeneration unavailable.")
+                                await query.answer()
+                                continue
+
+                            status_msg = await bot.send_message(chat_id=chat_id, text=f"🎨 Regenerating image card using {settings.image_provider.upper()}...")
+                            await query.answer("Regenerating image...")
+
+                            try:
+                                from src.curator import generate_visual_prompt, generate_ai_image, generate_image_alt_text, validate_image_bytes
+                                from PIL import Image
+                                import io
+                                from src.utils import get_image_mime
+
+                                active_text = current_drafts.get(current_tab)
+                                visual_prompt = await generate_visual_prompt(genai_client, active_text, topic)
+                                new_image_data = await generate_ai_image(client, genai_client, visual_prompt)
+
+                                if new_image_data and validate_image_bytes(new_image_data):
+                                    alt_prompt = visual_prompt or f"Minimalist tech illustration of {topic}"
+                                    new_alt_text = await generate_image_alt_text(new_image_data, prompt=alt_prompt, topic=topic)
+                                    mime_type = get_image_mime(new_image_data)
+                                    width, height = None, None
+                                    try:
+                                        img = Image.open(io.BytesIO(new_image_data))
+                                        width, height = img.size
+                                    except Exception:
+                                        pass
+
+                                    new_media = MediaAsset(
+                                        source=MediaSource.GENERATED,
+                                        image_bytes=new_image_data,
+                                        public_url=None,
+                                        mime_type=mime_type,
+                                        width=width,
+                                        height=height,
+                                        alt_text=new_alt_text,
+                                        attribution_url=media.attribution_url if media else None
+                                    )
+
+                                    caption, followup = _get_caption_payload(current_drafts, current_tab=current_tab, view_mode=view_mode)
+                                    if sent_message and image_bytes:
+                                        await bot.edit_message_media(
+                                            chat_id=chat_id,
+                                            message_id=sent_message.message_id,
+                                            media=InputMediaPhoto(
+                                                media=new_image_data,
+                                                caption=caption,
                                                 parse_mode="Markdown"
-                                            )
-                                            sent_message = sent_photo
-                                            media = new_media
-                                            SafeLogger.info("Telegram: Image generated and attached successfully.")
-                                            await bot.send_message(chat_id=chat_id, text="🎨 Image card generated and attached successfully!", reply_to_message_id=status_msg.message_id)
+                                            ),
+                                            reply_markup=reply_markup
+                                        )
+                                        # Commit authoritative media state immediately
+                                        media = new_media
+                                        image_bytes = new_image_data
+                                        if followup:
+                                            try:
+                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                            except Exception as fe:
+                                                SafeLogger.warn(f"Failed to send follow-up after image regeneration: {fe}")
                                     else:
-                                        await bot.send_message(chat_id=chat_id, text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.", reply_to_message_id=status_msg.message_id)
-                                except Exception as e:
-                                    SafeLogger.error(f"Telegram: Image regeneration failed: {e}")
-                                    await bot.send_message(chat_id=chat_id, text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.", reply_to_message_id=status_msg.message_id)
+                                        sent_photo = await bot.send_photo(
+                                            chat_id=chat_id,
+                                            photo=new_image_data,
+                                            caption=caption,
+                                            reply_markup=reply_markup,
+                                            parse_mode="Markdown"
+                                        )
+                                        # Commit authoritative media state immediately
+                                        sent_message = sent_photo
+                                        media = new_media
+                                        image_bytes = new_image_data
+                                        if followup:
+                                            try:
+                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                            except Exception as fe:
+                                                SafeLogger.warn(f"Failed to send follow-up after image regeneration: {fe}")
 
-                    # Handle incoming text messages (direct edits, replies, or feedback)
+                                    await bot.send_message(chat_id=chat_id, text="🎨 Image card regenerated successfully!", reply_to_message_id=status_msg.message_id)
+                                else:
+                                    await bot.send_message(chat_id=chat_id, text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.", reply_to_message_id=status_msg.message_id)
+                            except Exception as e:
+                                SafeLogger.error(f"Telegram: Image regeneration error: {e}")
+                                await bot.send_message(chat_id=chat_id, text="Image regeneration failed. The previous image has been preserved and the draft can still be approved.", reply_to_message_id=status_msg.message_id)
+
+                    # 2. Text message handling
                     elif update.message and update.message.text:
                         msg = update.message
-
-                        # Validate sender matches settings.telegram_user_id
                         if str(msg.from_user.id) != str(chat_id):
                             continue
 
                         text_val = msg.text.strip()
                         cmd_res = process_authorized_command(text_val)
                         if cmd_res:
-                            if cmd_res.get("action") == "topic":
+                            if cmd_res.get("action") == "topic" and cmd_res.get("topic"):
                                 from src.config import PENDING_TOPIC_FILE_PATH
-                                import json
-                                topic_str = cmd_res.get("topic")
                                 try:
                                     with open(PENDING_TOPIC_FILE_PATH, "w", encoding="utf-8") as f:
-                                        json.dump({"topic": topic_str, "timestamp": time.time()}, f)
-                                    SafeLogger.info(f"Telegram Loop: Persisted topic '{topic_str}' to pending_topic.json")
-                                    await bot.send_message(chat_id=chat_id, text=f"📥 Topic request recorded for next run: *{topic_str}*.", reply_to_message_id=msg.message_id)
+                                        json.dump({"topic": cmd_res["topic"], "timestamp": time.time()}, f)
+                                    SafeLogger.info(f"Telegram Loop: Persisted topic '{cmd_res['topic']}' to pending_topic.json")
                                 except Exception as persist_err:
                                     SafeLogger.error(f"Telegram Loop: Failed to persist topic: {persist_err}")
-                            elif cmd_res.get("response"):
+
+                            if cmd_res.get("response"):
                                 await bot.send_message(chat_id=chat_id, text=cmd_res["response"], reply_to_message_id=msg.message_id)
                             continue
 
-                        # Scenario A: User is replying to the text feedback prompt
-                        if waiting_for_feedback and msg.reply_to_message and msg.reply_to_message.message_id == feedback_prompt_id:
-                            waiting_for_feedback = False
-                            feedback = msg.text.strip()
-                            if feedback.lower() == '/skip':
-                                feedback = "Refine the wording and present the insight from a slightly different perspective."
+                        # Scenario A: Replying to the active remix prompt
+                        if (
+                            remix_state == "awaiting_instruction"
+                            and active_prompt_id
+                            and msg.reply_to_message
+                            and msg.reply_to_message.message_id == active_prompt_id
+                        ):
+                            remix_state = "in_flight"
+                            instruction = msg.text.strip()
+                            status_msg = await bot.send_message(
+                                chat_id=chat_id,
+                                text=f"✨ Remixing {remix_target.title()} draft with Gemini...",
+                                reply_to_message_id=msg.message_id
+                            )
 
-                            status_msg = await bot.send_message(chat_id=chat_id, text="🔄 Regenerating text draft...", reply_to_message_id=msg.message_id)
+                            # Temporarily update primary controls to in_flight
+                            try:
+                                await bot.edit_message_reply_markup(
+                                    chat_id=chat_id,
+                                    message_id=sent_message.message_id,
+                                    reply_markup=_build_telegram_markup(remix_state="in_flight")
+                                )
+                            except Exception:
+                                pass
 
                             try:
-                                from src.config import CURATOR_SYSTEM_INSTRUCTION
-                                from google.genai import types
-                                from src.curator import strip_markdown
-
-                                rewrite_prompt = (
-                                    f"You are a professional editor. Please rewrite the following technical post draft based on the user's feedback.\n\n"
-                                    f"Current Draft:\n\"\"\"\n{text}\n\"\"\"\n\n"
-                                    f"User Feedback: {feedback}\n\n"
-                                    f"Follow all system instructions for style, tone, and length constraints."
-                                )
-
-                                response = await genai_client.aio.models.generate_content(
-                                    model=settings.gemini_model,
-                                    contents=rewrite_prompt,
-                                    config=types.GenerateContentConfig(
-                                        system_instruction=CURATOR_SYSTEM_INSTRUCTION,
-                                        temperature=0.7
-                                    )
-                                )
-                                new_text = strip_markdown(response.text.strip())
-
-                                # Update the sent message preview
-                                original_has_media = media is not None and media.image_bytes is not None
-                                if original_has_media:
-                                    await bot.edit_message_caption(
-                                        chat_id=chat_id,
-                                        message_id=sent_message.message_id,
-                                        caption=f"📝 **DRAFT POST**:\n\n{new_text}",
-                                        reply_markup=reply_markup,
-                                        parse_mode="Markdown"
-                                    )
+                                from src.curator import remix_platform_draft, remix_all_drafts
+                                candidate_drafts = current_drafts
+                                if remix_target == "all" or instruction.startswith("/remix_all "):
+                                    clean_inst = instruction.replace("/remix_all ", "", 1).strip() or instruction
+                                    remix_ok, new_drafts = await remix_all_drafts(genai_client, current_drafts, clean_inst)
+                                    if remix_ok:
+                                        candidate_drafts = new_drafts
                                 else:
-                                    await bot.edit_message_text(
-                                        chat_id=chat_id,
-                                        message_id=sent_message.message_id,
-                                        text=f"📝 **DRAFT POST**:\n\n{new_text}",
-                                        reply_markup=reply_markup,
-                                        parse_mode="Markdown"
-                                    )
+                                    target_p = remix_target if remix_target in ("bluesky", "threads", "mastodon") else current_tab
+                                    current_p_text = current_drafts.get(target_p)
+                                    remix_ok, remixed_text = await remix_platform_draft(genai_client, current_p_text, instruction, target_p.title())
+                                    if remix_ok:
+                                        candidate_drafts = current_drafts.with_update(target_p, remixed_text)
 
-                                text = new_text
-                                SafeLogger.info(f"Telegram: Text regenerated to: {text}")
-                                await bot.send_message(chat_id=chat_id, text="📝 Draft text updated successfully!", reply_to_message_id=msg.message_id)
+                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
+                                update_ok = await _render_and_update_preview(
+                                    bot=bot, chat_id=chat_id, sent_message=sent_message,
+                                    drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,
+                                    reply_markup=reply_markup, image_bytes=image_bytes
+                                )
 
-                                # Validate limits and generate feedback message
-                                warning_msg = validate_text_limits(text)
-                                if warning_msg:
-                                    await bot.send_message(
-                                        chat_id=chat_id,
-                                        text=warning_msg,
-                                        parse_mode="Markdown"
-                                    )
+                                if remix_ok and update_ok:
+                                    current_drafts = candidate_drafts
+                                    await bot.send_message(chat_id=chat_id, text="✨ Draft successfully remixed!", reply_to_message_id=msg.message_id)
+                                elif not update_ok and remix_ok:
+                                    # Edit to Telegram preview failed; preserve previous in-memory draft so approval matches preview
+                                    await bot.send_message(chat_id=chat_id, text="⚠️ Preview update failed. Previous draft preserved.", reply_to_message_id=msg.message_id)
+                                else:
+                                    await bot.send_message(chat_id=chat_id, text="⚠️ Remix failed (quota or network error). Previous draft preserved.", reply_to_message_id=msg.message_id)
                             except Exception as e:
-                                SafeLogger.error(f"Telegram: Text regeneration failed: {e}")
-                                await bot.send_message(chat_id=chat_id, text=f"❌ Text regeneration failed: {e}", reply_to_message_id=msg.message_id)
+                                SafeLogger.warn(f"Remix execution failed: {e}")
+                                await bot.send_message(chat_id=chat_id, text=f"⚠️ Remix failed ({e}). Previous draft preserved.", reply_to_message_id=msg.message_id)
+                            finally:
+                                remix_state = "idle"
+                                active_prompt_id = None
+                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
+                                try:
+                                    await bot.edit_message_reply_markup(
+                                        chat_id=chat_id, message_id=sent_message.message_id, reply_markup=reply_markup
+                                    )
+                                except Exception:
+                                    pass
 
-                        # Scenario B: Manual editing via direct reply or command
+                        # Scenario B: Manual direct replacement via /edit or direct reply to draft
                         else:
                             new_text = None
                             is_edit = False
-
-                            # Check for /edit command or reply to the draft message
                             if msg.text.startswith("/edit "):
                                 new_text = msg.text[6:].strip()
                                 is_edit = True
@@ -350,59 +519,31 @@ async def send_draft_for_approval(
                                 is_edit = True
 
                             if is_edit and new_text:
-                                # Update the sent message with new draft text first (before committing)
-                                original_has_media = media is not None and media.image_bytes is not None
-                                if original_has_media:
-                                    await bot.edit_message_caption(
-                                        chat_id=chat_id,
-                                        message_id=sent_message.message_id,
-                                        caption=f"📝 **DRAFT POST**:\n\n{new_text}",
-                                        reply_markup=reply_markup,
-                                        parse_mode="Markdown"
-                                    )
+                                candidate_drafts = current_drafts.with_update(current_tab, new_text)
+                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
+                                update_ok = await _render_and_update_preview(
+                                    bot=bot, chat_id=chat_id, sent_message=sent_message,
+                                    drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,
+                                    reply_markup=reply_markup, image_bytes=image_bytes
+                                )
+                                if update_ok:
+                                    current_drafts = candidate_drafts
+                                    await bot.send_message(chat_id=chat_id, text=f"📝 Updated {current_tab.title()} draft!", reply_to_message_id=msg.message_id)
                                 else:
-                                    await bot.edit_message_text(
-                                        chat_id=chat_id,
-                                        message_id=sent_message.message_id,
-                                        text=f"📝 **DRAFT POST**:\n\n{new_text}",
-                                        reply_markup=reply_markup,
-                                        parse_mode="Markdown"
-                                    )
-
-                                # Only update the stored text if the Telegram API update succeeded
-                                text = new_text
-                                SafeLogger.info(f"Telegram: Draft updated by user to: {text}")
-
-                                # Validate limits and generate feedback message
-                                warning_msg = validate_text_limits(text)
-                                if warning_msg:
-                                    await bot.send_message(
-                                        chat_id=chat_id,
-                                        text=warning_msg,
-                                        parse_mode="Markdown",
-                                        reply_to_message_id=msg.message_id
-                                    )
-                                else:
-                                    await bot.send_message(
-                                        chat_id=chat_id,
-                                        text="📝 Draft updated!",
-                                        reply_to_message_id=msg.message_id
-                                    )
+                                    await bot.send_message(chat_id=chat_id, text="⚠️ Failed to update draft preview. Previous draft preserved.", reply_to_message_id=msg.message_id)
 
             except Exception as e:
-                # Silently catch network hiccups, but log warnings
                 SafeLogger.warn(f"Telegram: Error checking updates: {e}")
 
             await asyncio.sleep(poll_interval)
 
-        # Timeout occurred: auto-post
         SafeLogger.info("Telegram: Approval timeout expired. Automatically publishing draft.")
         await bot.send_message(chat_id=chat_id, text="🕒 Timeout expired. Automatically publishing draft.")
-        return text, media
+        return current_drafts, media
 
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
-        return text, media  # Fallback to current text and media to maintain robustness_bytes, image_alt_text  # Fallback to current text and images to maintain robustness
+        return current_drafts, media
 
 def process_authorized_command(text: str) -> Optional[dict]:
     """

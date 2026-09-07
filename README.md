@@ -9,6 +9,8 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 ## 🚀 Key Features
 
 - **Sage Intelligence v3 (Self-Healing AI)**:
+    - **Multi-Platform Differentiation**: Generates tailored drafts for **Bluesky** (punchy thought leadership), **Threads** (conversational narrative with engagement questions), and **Mastodon** (technical overview with hashtags) in a single request.
+    - **Interactive Telegram Review & Remix Copilot**: Interactive inline tab switcher (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) and All-in-One review. Allows conversational editing via replies (`remix_platform_draft`), in-place caption updates within strict 1,024-character limits, and link-safe deterministic truncation.
     - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.5-flash-lite`** → **`gemini-3.7-flash`** → **`gemini-3.6-flash`** → **`gemini-2.5-flash-lite`**) with immediate status-aware rotation (503, 429, 400, 404) and local deterministic topic derivation.
     - **Task-Specific Routing**: Dedicated multimodal models (`gemini-3.5-flash-lite`, `gemini-2.5-flash-lite`) for screen-reader alt-text with MIME detection and neutral local fallback; `gemini-3.5-flash-lite` for visual prompt generation and briefings.
     - **Self-Healing Loop**: Automatically corrects common AI output issues and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
@@ -175,7 +177,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
-- **v3.22.2 (Current)**: **Cryptography Security Update**.
+- **v3.23.0 (Current)**: **Platform-Native Differentiation & Telegram Remix Copilot**.
+    - 🌐 **Platform-Native Drafts**: Curates tailored, high-signal content for Bluesky (<=290 chars punchy thought leadership), Threads (<=490 chars conversational narrative with open question), and Mastodon (<=485 chars technical overview with hashtags).
+    - 💬 **Telegram Interactive Review**: Single authoritative preview message with tabbed platform switching (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) and All-in-One view mode.
+    - ✨ **Remix Copilot**: Reply directly to remix prompts to refine individual platform variants or all platforms (`/remix_all`) using zero-cost Gemini Flash rotation with deterministic URL-safe truncation and robust fallback preservation.
+- **v3.22.2**: **Cryptography Security Update**.
     - 🔒 **Advisory Remediation**: Upgraded `cryptography` to `>=50.0.0,<51`, resolving CVE-2026-69247, CVE-2026-69248, and CVE-2026-69249 while remaining compatible with `atproto` 0.0.71.
     - 🤖 **Dependabot Recovery**: Removed the obsolete `cryptography>=47` ignore rule so future compatible security updates are proposed normally.
     - 📚 **Documentation Alignment**: Updated dependency and security guidance to match the supported runtime constraint.
@@ -301,7 +307,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.22.2 features a dual-layer testing strategy with over 130 automated tests:
+BluBot v3.23.0 features a dual-layer testing strategy with 158 automated tests:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:

@@ -36,11 +36,12 @@ async def test_synthesis_failover_on_503(monkeypatch):
     news_items = [{"title": "Agent Breakthrough", "summary": "Details on autonomous agents", "link": "https://example.com/1", "source": "Tech", "source_id": "tech"}]
     context = {"day": "Monday", "session": "Morning Intelligence"}
 
-    summary, link, topic, is_failover, dialect = await summarize_news(news_items, context)
+    summary, link, topic, is_failover, dialect, drafts = await summarize_news(news_items, context)
 
     assert is_failover is True
     assert topic == "Agents"
     assert "Breakthrough autonomous agents" in summary
+    assert drafts is not None
     assert mock_client.aio.models.generate_content.call_count == 2
 
 @pytest.mark.asyncio
@@ -57,7 +58,7 @@ async def test_synthesis_auth_error_halts_rotation(monkeypatch):
     news_items = [{"title": "Test", "summary": "Test summary", "link": "https://example.com/1", "source": "Tech", "source_id": "tech"}]
     context = {"day": "Monday", "session": "Morning Intelligence"}
 
-    summary, link, topic, is_failover, dialect = await summarize_news(news_items, context)
+    summary, link, topic, is_failover, dialect, drafts = await summarize_news(news_items, context)
     assert summary is None
     # Only called once on the first model, rotation halted
     assert mock_client.aio.models.generate_content.call_count == 1
@@ -79,10 +80,11 @@ async def test_synthesis_unexpected_exception_rotates(monkeypatch):
     news_items = [{"title": "GPU Cluster", "summary": "Datacenter upgrades", "link": "https://example.com/gpu", "source": "HW", "source_id": "hw"}]
     context = {"day": "Monday", "session": "Morning Intelligence"}
 
-    summary, link, topic, is_failover, dialect = await summarize_news(news_items, context)
+    summary, link, topic, is_failover, dialect, drafts = await summarize_news(news_items, context)
     assert is_failover is True
     assert topic == "Compute/HW"
     assert "New GPU cluster deployed" in summary
+    assert drafts is not None
     assert mock_client.aio.models.generate_content.call_count == 2
 
 @pytest.mark.asyncio
@@ -99,7 +101,7 @@ async def test_synthesis_topic_fallbacks(monkeypatch):
     resp1 = MagicMock(text="TOPIC: Ethics\nBODY: New guidelines established for responsible deployment of frontier AI models in enterprise systems.")
     mock_client.aio.models.generate_content = AsyncMock(return_value=resp1)
     news1 = [{"title": "Ethics Guidelines", "summary": "Policy framework", "link": "https://example.com/1", "source_id": "openai_news", "source": "OpenAI"}]
-    s, l, t, f, _ = await summarize_news(news1, context)
+    s, l, t, f, _, d = await summarize_news(news1, context)
     assert t == "Ethics"
     assert "New guidelines established" in s
 
@@ -107,7 +109,7 @@ async def test_synthesis_topic_fallbacks(monkeypatch):
     resp2 = MagicMock(text="TOPIC:\nBODY: Major breakthrough in GPU accelerator systems published today by leading research labs.")
     mock_client.aio.models.generate_content = AsyncMock(return_value=resp2)
     news2 = [{"title": "GPU Architecture Breakthrough", "summary": "New GPU capabilities", "link": "https://example.com/2", "source_id": "openai_news", "source": "OpenAI"}]
-    s, l, t, f, _ = await summarize_news(news2, context)
+    s, l, t, f, _, d = await summarize_news(news2, context)
     assert t == "Compute/HW"
     assert "Major breakthrough in GPU" in s
 
@@ -116,7 +118,7 @@ async def test_synthesis_topic_fallbacks(monkeypatch):
     resp_ok = MagicMock(text="TOPIC: Compute/HW\nBODY: Semiconductor advancements offer incredible speedups for deep learning workloads across the industry.")
     mock_client.aio.models.generate_content = AsyncMock(side_effect=[resp_short, resp_ok])
     news3 = [{"title": "Silicon Advancements", "summary": "Hardware compute update", "link": "https://example.com/3", "source_id": "semi", "source": "Semi"}]
-    s, l, t, f, _ = await summarize_news(news3, context)
+    s, l, t, f, _, d = await summarize_news(news3, context)
     assert f is True
     assert t == "Compute/HW"
 
@@ -126,7 +128,7 @@ async def test_synthesis_topic_fallbacks(monkeypatch):
     news4 = [{"title": "Miscellaneous Update", "summary": "Summary without keywords", "link": "https://example.com/4", "source_id": "research_lab", "source": "Lab"}]
     # research_lab category is mapped to "Research Lab"
     with patch("src.config.FEED_CATEGORY_MAP", {"research_lab": "research_lab"}):
-        s, l, t, f, _ = await summarize_news(news4, context)
+        s, l, t, f, _, d = await summarize_news(news4, context)
         assert t == "Research Lab"
         assert "A comprehensive overview" in s
 

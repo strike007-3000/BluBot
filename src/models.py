@@ -58,6 +58,48 @@ class CurationResult:
     recent_styles: List[str] = field(default_factory=list)
 
 @dataclass(frozen=True)
+class PlatformDrafts:
+    """Holds tailored draft content for each broadcast target."""
+    bluesky: str
+    threads: str
+    mastodon: str
+
+    @classmethod
+    def from_single(cls, text: str) -> "PlatformDrafts":
+        """Factory for legacy or fallback single-text posts."""
+        safe_text = text or ""
+        return cls(bluesky=safe_text, threads=safe_text, mastodon=safe_text)
+
+    def get(self, platform: str, fallback: Optional[str] = None) -> str:
+        key = platform.lower()
+        if key == "bluesky":
+            return self.bluesky or fallback or ""
+        elif key == "threads":
+            return self.threads or fallback or ""
+        elif key == "mastodon":
+            return self.mastodon or fallback or ""
+        return fallback or ""
+
+    def with_update(self, platform: str, new_text: str) -> "PlatformDrafts":
+        """Returns a new immutable instance with the specified platform updated."""
+        key = platform.lower()
+        return PlatformDrafts(
+            bluesky=new_text if key == "bluesky" else self.bluesky,
+            threads=new_text if key == "threads" else self.threads,
+            mastodon=new_text if key == "mastodon" else self.mastodon,
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, str):
+            return self.bluesky == other
+        if isinstance(other, PlatformDrafts):
+            return (self.bluesky, self.threads, self.mastodon) == (other.bluesky, other.threads, other.mastodon)
+        return False
+
+    def __str__(self) -> str:
+        return self.bluesky
+
+@dataclass(frozen=True)
 class SynthesisResult:
     """The result of the AI summarization and persona synthesis phase."""
     content: str
@@ -66,6 +108,15 @@ class SynthesisResult:
     is_failover: bool = False
     media: Optional[MediaAsset] = None
     writing_style: Optional[str] = None
+    drafts: Optional[PlatformDrafts] = None
+
+    def get_platform_content(self, platform: str) -> str:
+        """Retrieves platform-tailored content, falling back to .content."""
+        if self.drafts:
+            val = self.drafts.get(platform)
+            if val and val.strip():
+                return val
+        return self.content
 
 @dataclass(frozen=True)
 class BroadcastResult:
