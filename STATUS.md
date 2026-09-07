@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-09-06 | 🔍 Midday Briefing (Open Source) |
+| **Broadcaster** | Operational | 2026-09-07 | 🔍 Midday Briefing (Practitioner) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
