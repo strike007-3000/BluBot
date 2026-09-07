@@ -916,3 +916,65 @@ async def test_summarize_news_empty_input_arity():
     assert dialect is None
     assert isinstance(drafts, PlatformDrafts)
     assert drafts.bluesky == ""
+
+def test_parse_platform_drafts_rejects_metadata_only_json():
+    """Verify JSON with only metadata and no platform keys does not become post content."""
+    from src.curator import parse_platform_drafts
+    metadata_json = '{"topic": "Artificial Intelligence", "category": "tech"}'
+    drafts = parse_platform_drafts(metadata_json, fallback_text="Fallback content")
+    # Must not contain the serialized json string
+    assert "topic" not in drafts.bluesky
+    assert drafts.bluesky == "Fallback content"
+    assert drafts.threads == "Fallback content"
+    assert drafts.mastodon == "Fallback content"
+
+    # Also test with no fallback_text
+    drafts_empty = parse_platform_drafts(metadata_json)
+    assert drafts_empty.bluesky == ""
+    assert drafts_empty.threads == ""
+    assert drafts_empty.mastodon == ""
+
+@pytest.mark.asyncio
+async def test_remix_omits_temperature_for_flash_models(monkeypatch):
+    """Verify remix calls omit temperature when model is gemini-3.7-flash or gemini-3.6-flash."""
+    from src.curator import remix_platform_draft, remix_all_drafts
+    from src.models import PlatformDrafts
+
+    mock_client = MagicMock()
+    mock_client.aio = MagicMock()
+    mock_client.aio.models = MagicMock()
+
+    captured_configs = []
+    async def mock_generate_content(*args, **kwargs):
+        captured_configs.append(kwargs.get("config"))
+        resp = MagicMock()
+        resp.text = '{"bluesky": "Remixed B", "threads": "Remixed T", "mastodon": "Remixed M"}'
+        return resp
+
+    mock_client.aio.models.generate_content = AsyncMock(side_effect=mock_generate_content)
+
+    monkeypatch.setattr("src.curator.GEMINI_MODEL_PRIORITY", ["models/gemini-3.7-flash"])
+
+    # Test single platform remix
+    await remix_platform_draft(mock_client, "Current text", "make punchy", "Bluesky")
+    assert len(captured_configs) >= 1
+    assert captured_configs[0].temperature is None
+
+    # Test all platforms remix
+    captured_configs.clear()
+    await remix_all_drafts(mock_client, PlatformDrafts.from_single("Base"), "make punchy")
+    assert len(captured_configs) >= 1
+    assert captured_configs[0].temperature is None
+
+def test_url_safe_truncation_retains_post_url_prose():
+    """Verify that when a URL is embedded mid-sentence, prose following the URL is preserved if budget allows."""
+    from src.curator import _repair_text_url_safe
+    text = "Intro words https://example.com/link trailing details and conclusion"
+    # Limit generous enough to keep intro, url, and trailing details
+    limit = 65
+    repaired = _repair_text_url_safe(text, limit, "Bluesky")
+    assert "https://example.com/link" in repaired
+    assert repaired.startswith("Intro words")
+    # Verify post-URL text was not needlessly dropped
+    assert "trailing" in repaired
+    assert len(repaired) <= limit

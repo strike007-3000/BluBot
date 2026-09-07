@@ -1028,3 +1028,98 @@ async def test_media_all_in_one_followup_failure_maintains_authoritative_draft(m
     # Verify the user received a warning notice regarding the follow-up message failure
     sent_texts = [call[1].get("text", "") for call in mock_bot.send_message.call_args_list]
     assert any("Full breakdown follow-up message could not be sent" in t for t in sent_texts)
+
+@pytest.mark.asyncio
+async def test_regenerated_media_committed_even_if_followup_fails(monkeypatch, mocker):
+    """Verify that when image regeneration succeeds in all-in-one mode, new media is committed even if follow-up fails."""
+    from src.models import PlatformDrafts, MediaAsset, MediaSource
+    mock_settings = Settings(
+        gemini_key="mock",
+        telegram_bot_token="123:abc",
+        telegram_user_id="98765",
+        telegram_timeout_minutes=1,
+        is_dry_run=False
+    )
+    monkeypatch.setattr("src.telegram_gateway.settings", mock_settings)
+
+    mock_bot = MagicMock()
+    mock_bot.send_photo = AsyncMock()
+    mock_bot.edit_message_media = AsyncMock()
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot)
+
+    sent_photo = MagicMock()
+    sent_photo.message_id = 999
+    mock_bot.send_photo.return_value = sent_photo
+
+    status_msg = MagicMock()
+    status_msg.message_id = 888
+
+    # Fail follow-up send_message specifically
+    async def mock_send_message_side_effect(*args, **kwargs):
+        text = kwargs.get("text", "")
+        if "MULTI-PLATFORM DRAFTS" in text:
+            raise RuntimeError("Network failure on follow-up")
+        msg = MagicMock()
+        msg.message_id = 12345
+        return msg
+
+    mock_bot.send_message = AsyncMock(side_effect=mock_send_message_side_effect)
+
+    # 1. Switch to view:all
+    update_view = MagicMock()
+    update_view.update_id = 100
+    update_view.message = None
+    update_view.callback_query = MagicMock()
+    update_view.callback_query.from_user.id = "98765"
+    update_view.callback_query.data = "view:all"
+    update_view.callback_query.answer = AsyncMock()
+    update_view.callback_query.message.message_id = 999
+
+    # 2. Trigger regenerate_image
+    update_regen = MagicMock()
+    update_regen.update_id = 101
+    update_regen.message = None
+    update_regen.callback_query = MagicMock()
+    update_regen.callback_query.from_user.id = "98765"
+    update_regen.callback_query.data = "regenerate_image"
+    update_regen.callback_query.answer = AsyncMock()
+    update_regen.callback_query.message.message_id = 999
+
+    # 3. Approve
+    update_approve = MagicMock()
+    update_approve.update_id = 102
+    update_approve.message = None
+    update_approve.callback_query = MagicMock()
+    update_approve.callback_query.from_user.id = "98765"
+    update_approve.callback_query.data = "approve"
+    update_approve.callback_query.answer = AsyncMock()
+    update_approve.callback_query.message.message_id = 999
+
+    updates_queue = [[], [update_view], [update_regen], [update_approve]]
+    mock_bot.get_updates = AsyncMock(side_effect=lambda *args, **kwargs: updates_queue.pop(0) if updates_queue else [])
+
+    new_img_bytes = b"new_regenerated_valid_image_bytes"
+    mocker.patch("src.curator.generate_visual_prompt", new_callable=AsyncMock, return_value="Tech visual")
+    mocker.patch("src.curator.generate_ai_image", new_callable=AsyncMock, return_value=new_img_bytes)
+    mocker.patch("src.curator.validate_image_bytes", return_value=True)
+    mocker.patch("src.curator.generate_image_alt_text", new_callable=AsyncMock, return_value="Alt text")
+
+    # Large drafts to trigger follow-up in all-in-one mode
+    drafts = PlatformDrafts(
+        bluesky="Blue " * 60,
+        threads="Thread " * 75,
+        mastodon="Masto " * 75
+    )
+    initial_media = MediaAsset(source=MediaSource.OPENGRAPH, image_bytes=b"old_image")
+
+    approved_drafts, approved_media = await send_draft_for_approval(
+        drafts=drafts,
+        media=initial_media,
+        client=MagicMock(),
+        genai_client=MagicMock()
+    )
+
+    # edit_message_media succeeded, so approved media MUST be the newly regenerated media!
+    assert approved_media is not None
+    assert approved_media.image_bytes == new_img_bytes
+    assert mock_bot.edit_message_media.called

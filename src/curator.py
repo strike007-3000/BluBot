@@ -414,23 +414,28 @@ def parse_platform_drafts(
         threads_val = str(parsed_json.get("threads") or "").strip()
         mastodon_val = str(parsed_json.get("mastodon") or "").strip()
 
-        # Find best available text among valid parsed keys
-        best_candidate = bsky_val or threads_val or mastodon_val or fallback_text or cleaned
+        # Reject JSON that lacks any actual platform draft fields (e.g. metadata only like {"topic": "AI"})
+        if bsky_val or threads_val or mastodon_val:
+            best_candidate = bsky_val or threads_val or mastodon_val or fallback_text
 
-        fb_bsky = fallback_drafts.bluesky if fallback_drafts else best_candidate
-        fb_threads = fallback_drafts.threads if fallback_drafts else best_candidate
-        fb_mastodon = fallback_drafts.mastodon if fallback_drafts else best_candidate
+            fb_bsky = fallback_drafts.bluesky if fallback_drafts else best_candidate
+            fb_threads = fallback_drafts.threads if fallback_drafts else best_candidate
+            fb_mastodon = fallback_drafts.mastodon if fallback_drafts else best_candidate
 
-        return PlatformDrafts(
-            bluesky=strip_markdown(bsky_val) if bsky_val else strip_markdown(fb_bsky),
-            threads=strip_markdown(threads_val) if threads_val else strip_markdown(fb_threads),
-            mastodon=strip_markdown(mastodon_val) if mastodon_val else strip_markdown(fb_mastodon),
-        )
+            return PlatformDrafts(
+                bluesky=strip_markdown(bsky_val) if bsky_val else strip_markdown(fb_bsky),
+                threads=strip_markdown(threads_val) if threads_val else strip_markdown(fb_threads),
+                mastodon=strip_markdown(mastodon_val) if mastodon_val else strip_markdown(fb_mastodon),
+            )
 
-    # If parsing completely failed, use fallback_drafts if provided, else fallback_text or raw_text across all platforms
+    # If parsing completely failed, use fallback_drafts if provided, else fallback_text
     if fallback_drafts:
         return fallback_drafts
-    base = strip_markdown(fallback_text or cleaned)
+    if parsed_json is not None:
+        # Serialized JSON was returned without platform fields; do not treat JSON metadata as post content
+        base = strip_markdown(fallback_text)
+    else:
+        base = strip_markdown(fallback_text or cleaned)
     return PlatformDrafts.from_single(base)
 
 def _get_platform_limits():
@@ -504,10 +509,15 @@ def _repair_text_url_safe(text: str, limit: int, platform_name: str) -> str:
 
     # Trim pre_text at word boundary to fit remaining_budget
     trimmed_pre = smart_truncate(pre_text, remaining_budget)
-    if trimmed_pre:
-        repaired = f"{trimmed_pre} {url}".strip()
-    else:
-        repaired = url
+    repaired = f"{trimmed_pre} {url}".strip() if trimmed_pre else url
+
+    # If space remains after pre_text and url, preserve as much post_text as fits
+    if post_text:
+        budget_for_post = limit - len(repaired) - 1  # 1 space before post_text
+        if budget_for_post > 5:
+            trimmed_post = smart_truncate(post_text, budget_for_post)
+            if trimmed_post:
+                repaired = f"{repaired} {trimmed_post}".strip()
 
     if len(repaired) <= limit:
         return repaired
@@ -782,8 +792,11 @@ async def remix_platform_draft(
             SafeLogger.info(f"Remixing {platform_name} draft via {model_id}...")
             config_args = {
                 "system_instruction": CURATOR_SYSTEM_INSTRUCTION,
-                "temperature": 0.7,
             }
+            normalized = normalize_gemini_model_id(model_id)
+            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+                config_args["temperature"] = 0.7
+
             if supports_thinking(model_id):
                 config_args["thinking_config"] = types.ThinkingConfig(
                     thinking_budget=settings.thinking_budget if settings.thinking_budget is not None else 1024
@@ -843,8 +856,11 @@ async def remix_all_drafts(
             SafeLogger.info(f"Remixing all drafts via {model_id}...")
             config_args = {
                 "system_instruction": CURATOR_SYSTEM_INSTRUCTION,
-                "temperature": 0.7,
             }
+            normalized = normalize_gemini_model_id(model_id)
+            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+                config_args["temperature"] = 0.7
+
             if supports_thinking(model_id):
                 config_args["thinking_config"] = types.ThinkingConfig(
                     thinking_budget=settings.thinking_budget if settings.thinking_budget is not None else 1024

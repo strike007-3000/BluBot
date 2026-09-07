@@ -383,10 +383,14 @@ async def send_draft_for_approval(
                                             ),
                                             reply_markup=reply_markup
                                         )
-                                        if followup:
-                                            await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                        # Commit authoritative media state immediately
                                         media = new_media
                                         image_bytes = new_image_data
+                                        if followup:
+                                            try:
+                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                            except Exception as fe:
+                                                SafeLogger.warn(f"Failed to send follow-up after image regeneration: {fe}")
                                     else:
                                         sent_photo = await bot.send_photo(
                                             chat_id=chat_id,
@@ -395,11 +399,15 @@ async def send_draft_for_approval(
                                             reply_markup=reply_markup,
                                             parse_mode="Markdown"
                                         )
-                                        if followup:
-                                            await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                        # Commit authoritative media state immediately
                                         sent_message = sent_photo
                                         media = new_media
                                         image_bytes = new_image_data
+                                        if followup:
+                                            try:
+                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                            except Exception as fe:
+                                                SafeLogger.warn(f"Failed to send follow-up after image regeneration: {fe}")
 
                                     await bot.send_message(chat_id=chat_id, text="🎨 Image card regenerated successfully!", reply_to_message_id=status_msg.message_id)
                                 else:

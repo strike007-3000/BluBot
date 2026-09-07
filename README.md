@@ -307,7 +307,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.23.0 features a dual-layer testing strategy with over 140 automated tests:
+BluBot v3.23.0 features a dual-layer testing strategy with 158 automated tests:
 
 ### 1. Automated Regression (CI-Ready)
 Run the professional test suite via `pytest`:
