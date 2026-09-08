@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-09-07 | 🔍 Evening Synthesis (Intercept) (Agent Memory and Compression Risk) |
+| **Broadcaster** | Operational | 2026-09-08 | 🔍 Midday Briefing (PyTorch and vLLM Framework Updates) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
