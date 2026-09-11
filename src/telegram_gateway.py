@@ -4,7 +4,7 @@ import httpx
 import re
 import json
 from datetime import datetime, timezone
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, List
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from src.settings import settings
 from src.utils import SafeLogger
@@ -708,3 +708,88 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
     except Exception as e:
         SafeLogger.warn(f"Telegram: Error checking for topic intercept: {e}")
         return (None, None)
+
+async def send_broadcast_platform_messages(
+    bot_token: str,
+    chat_id: Any,
+    results: List[Any],
+    synthesis: Any,
+) -> bool:
+    """
+    Sends 3 dedicated plain-text messages to Telegram (one per platform: Bluesky, Threads, Mastodon).
+    Provides immediate full transparency on published post variants, status, and requested delivery mode.
+    Attempts all platforms independently so a failure on one does not block the others.
+    Returns True if all sends succeeded, False if any send failed.
+    """
+    if not bot_token or not chat_id:
+        return False
+
+    try:
+        bot = Bot(token=bot_token)
+    except Exception as e:
+        SafeLogger.warn(f"Telegram: Failed to initialize bot for broadcast summary: {e}")
+        return False
+
+    platform_specs = [
+        ("bluesky", "🔵 Bluesky"),
+        ("threads", "🧵 Threads"),
+        ("mastodon", "🐘 Mastodon"),
+    ]
+
+    all_succeeded = True
+    media = getattr(synthesis, "media", None)
+    lead_link = getattr(synthesis, "lead_link", None)
+
+    for p_key, p_label in platform_specs:
+        try:
+            # 1. Resolve outcome from broadcast results
+            matched_res = None
+            for res in (results or []):
+                res_platform = getattr(res, "platform", "")
+                if res_platform and res_platform.lower() == p_key:
+                    matched_res = res
+                    break
+
+            if matched_res:
+                if matched_res.success:
+                    status_str = "✅ Published"
+                else:
+                    err_detail = matched_res.error or "Unknown error"
+                    status_str = f"❌ Failed ({err_detail})"
+            else:
+                status_str = "⚪ Not configured / not attempted"
+
+            # 2. Determine requested delivery mode
+            has_bytes = bool(media and getattr(media, "image_bytes", None))
+            has_public_url = bool(media and getattr(media, "public_url", None))
+            if p_key == "bluesky":
+                delivery_mode = f"External card ({lead_link})" if lead_link else ("Image embed" if has_bytes else "Text only")
+            elif p_key == "mastodon":
+                delivery_mode = "Uploaded media" if has_bytes else "Text only"
+            elif p_key == "threads":
+                delivery_mode = "Hosted image" if has_public_url else "Text only"
+            else:
+                delivery_mode = "Text only"
+
+            # 3. Retrieve draft sent to broadcaster
+            draft_content = ""
+            if hasattr(synthesis, "get_platform_content"):
+                draft_content = synthesis.get_platform_content(p_key)
+            elif hasattr(synthesis, "content"):
+                draft_content = synthesis.content or ""
+
+            # 4. Compose clean plain-text message
+            msg_text = (
+                f"{p_label} • {status_str}\n"
+                f"Requested delivery: {delivery_mode}\n\n"
+                f"Draft sent to broadcaster:\n"
+                f"{draft_content}"
+            )
+
+            # 5. Dispatch plain-text message
+            await bot.send_message(chat_id=chat_id, text=msg_text)
+        except Exception as p_err:
+            SafeLogger.warn(f"Telegram: Failed to send broadcast message for {p_label}: {p_err}")
+            all_succeeded = False
+
+    return all_succeeded

@@ -37,7 +37,8 @@ from src.broadcaster import (
     fetch_threads_replies
 )
 from src.telegram_gateway import (
-    send_draft_for_approval, check_for_telegram_topic
+    send_draft_for_approval, check_for_telegram_topic,
+    send_broadcast_platform_messages
 )
 from src.config import (
     STATUS_FILE_PATH, IMAGEN_MODEL,
@@ -953,6 +954,18 @@ async def main():
         # 3.5 Immediate Post-Broadcast Settlement
         state = await settle_persistence_stage(state, curation, synthesis, matched_article, results)
         SafeLogger.info(f"Total Pipeline Duration: {time.monotonic() - t_start:.2f}s.")
+
+        # 3.6 Post-Broadcast Telegram Multi-Platform Notifications
+        if settings.telegram_bot_token and settings.telegram_user_id and not settings.is_dry_run:
+            try:
+                await send_broadcast_platform_messages(
+                    bot_token=settings.telegram_bot_token,
+                    chat_id=settings.telegram_user_id,
+                    results=results,
+                    synthesis=synthesis,
+                )
+            except Exception as e:
+                SafeLogger.warn(f"Telegram post-broadcast notifications failed: {e}")
 
         # 4. Post-Persistence Nonessential Tasks
         today_date = datetime.now(timezone.utc).date()

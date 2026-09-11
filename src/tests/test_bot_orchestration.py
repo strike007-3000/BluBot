@@ -369,3 +369,115 @@ async def test_full_multiplatform_orchestration_flow(mocker):
     assert broadcast_synthesis.get_platform_content("threads") == "Approved Threads post"
     assert broadcast_synthesis.get_platform_content("mastodon") == "Approved Mastodon post #AI"
     mock_settle.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_broadcast_messages_dispatched_when_approval_disabled_with_credentials(monkeypatch, mocker):
+    """Verify post-broadcast notifications are dispatched if credentials exist, even when approval is disabled."""
+    import bot
+    from src.models import PlatformDrafts
+
+    mock_settings = MagicMock()
+    mock_settings.is_dry_run = False
+    mock_settings.enable_telegram_approval = False
+    mock_settings.telegram_bot_token = "123:abc"
+    mock_settings.telegram_user_id = "98765"
+    mock_settings.enable_interactions = False
+    mock_settings.gemini_model = "gemini-3.5-flash-lite"
+    mock_settings.mastodon_token = None
+    mock_settings.image_provider = "pollinations"
+    mock_settings.enable_image_gen = False
+    monkeypatch.setattr("bot.settings", mock_settings)
+
+    article = Article(
+        title="AI Breakthrough Announced",
+        link="https://example.com/story-1",
+        summary="Summary of story",
+        published="2026-08-25T00:00:00Z",
+        source="ArXiv"
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    drafts = PlatformDrafts(bluesky="Bsky text", threads="Threads text", mastodon="Masto text")
+    synth_res = SynthesisResult(content="Fallback", lead_link="https://example.com/story-1", topic="AI", drafts=drafts)
+
+    mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=(None, None))
+    mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation)
+    mocker.patch("bot.synthesis_stage", new_callable=AsyncMock, return_value=(synth_res, curation))
+    mocker.patch("bot.media_strategy_stage", new_callable=AsyncMock, return_value=None)
+    mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
+    mocker.patch("bot.reserve_pending_stage", new_callable=AsyncMock, return_value=({}, article))
+    mock_broadcast_results = [bot.BroadcastResult("Bluesky", True)]
+    mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=(mock_broadcast_results, MagicMock()))
+    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock)
+    mocker.patch("bot.update_status_dashboard", new_callable=AsyncMock)
+    mocker.patch("bot.update_social_profiles", new_callable=AsyncMock)
+
+    mock_send_summary = mocker.patch("bot.send_broadcast_platform_messages", new_callable=AsyncMock, return_value=True)
+
+    await bot.main()
+
+    # send_broadcast_platform_messages MUST be called even though enable_telegram_approval is False
+    mock_send_summary.assert_called_once()
+    call_kwargs = mock_send_summary.call_args.kwargs
+    assert call_kwargs["bot_token"] == "123:abc"
+    assert call_kwargs["chat_id"] == "98765"
+    assert call_kwargs["results"] == mock_broadcast_results
+    # Settle persistence stage must also have been called
+    mock_settle.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_settlement_occurs_before_telegram_notifications(monkeypatch, mocker):
+    """Verify durable settlement runs before Telegram notification network calls, protecting publication state."""
+    import bot
+    from src.models import PlatformDrafts
+
+    mock_settings = MagicMock()
+    mock_settings.is_dry_run = False
+    mock_settings.enable_telegram_approval = True
+    mock_settings.telegram_bot_token = "123:abc"
+    mock_settings.telegram_user_id = "98765"
+    mock_settings.enable_interactions = False
+    mock_settings.gemini_model = "gemini-3.5-flash-lite"
+    mock_settings.mastodon_token = None
+    mock_settings.image_provider = "pollinations"
+    mock_settings.enable_image_gen = False
+    monkeypatch.setattr("bot.settings", mock_settings)
+
+    article = Article(
+        title="AI Breakthrough Announced",
+        link="https://example.com/story-1",
+        summary="Summary of story",
+        published="2026-08-25T00:00:00Z",
+        source="ArXiv"
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    drafts = PlatformDrafts(bluesky="Bsky text", threads="Threads text", mastodon="Masto text")
+    synth_res = SynthesisResult(content="Fallback", lead_link="https://example.com/story-1", topic="AI", drafts=drafts)
+
+    call_order = []
+
+    mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=(None, None))
+    mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation)
+    mocker.patch("bot.synthesis_stage", new_callable=AsyncMock, return_value=(synth_res, curation))
+    mocker.patch("bot.media_strategy_stage", new_callable=AsyncMock, return_value=None)
+    mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, return_value=(drafts, None))
+    mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
+    mocker.patch("bot.reserve_pending_stage", new_callable=AsyncMock, return_value=({}, article))
+    mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([bot.BroadcastResult("Bluesky", True)], MagicMock()))
+
+    async def mock_settle_action(*args, **kwargs):
+        call_order.append("settle")
+        return {}
+
+    async def mock_notify_action(*args, **kwargs):
+        call_order.append("notify")
+        return True
+
+    mocker.patch("bot.settle_persistence_stage", side_effect=mock_settle_action)
+    mocker.patch("bot.send_broadcast_platform_messages", side_effect=mock_notify_action)
+    mocker.patch("bot.update_status_dashboard", new_callable=AsyncMock)
+    mocker.patch("bot.update_social_profiles", new_callable=AsyncMock)
+
+    await bot.main()
+
+    # Verify settle happened strictly before notify
+    assert call_order == ["settle", "notify"]
