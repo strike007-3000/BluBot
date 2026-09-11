@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-09-10 | 🔍 Afternoon Deep Dive (Combining Traditional ML with Agentic Reasoning) |
+| **Broadcaster** | Operational | 2026-09-11 | 🔍 Midday Briefing (OpenAI Agents API) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
