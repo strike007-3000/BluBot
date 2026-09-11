@@ -41,6 +41,7 @@ The `SafeLogger` automatically redacts secrets based on both keyword matching an
 - **Tab Navigation**: Interactive buttons (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) swap views in place with zero delay.
 - **Natural Language Remix**: Reply to remix prompt with instructions (e.g., *"make it punchier"*); Gemini rewrites the active tab (or all platforms via `/remix_all`) with link-safe deterministic truncation and fallback preservation.
 - **Safe Truncation**: Deterministic URL policy ensures links are never bisected. If a URL cannot fit within a platform's budget, it is safely omitted from post text and logged. For Bluesky, the source article reference remains available as an external link card via `lead_link`. Note that Mastodon and Threads publish text and media only (no standalone external link card), so omitted links will not be broadcast to those networks.
+- **Post-Broadcast Platform Notifications**: Immediately following broadcast, 3 dedicated plain-text messages are dispatched to Telegram (one each for Bluesky, Threads, and Mastodon). Each message independently reports delivery outcome (`✅ Published`, `❌ Failed (<error>)`, or `⚪ Not configured / not attempted`), the `Requested delivery` mode, and the approved post draft sent to that network. Failures on one network are isolated and do not prevent other network messages or pipeline settlement.
 
 ---
 

@@ -1,7 +1,10 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from src.settings import Settings
-from src.telegram_gateway import validate_text_limits, send_draft_for_approval
+from src.telegram_gateway import (
+    validate_text_limits, send_draft_for_approval,
+    send_broadcast_platform_messages
+)
 
 def test_validate_text_limits(monkeypatch):
     mock_settings = Settings(
@@ -1123,3 +1126,200 @@ async def test_regenerated_media_committed_even_if_followup_fails(monkeypatch, m
     assert approved_media is not None
     assert approved_media.image_bytes == new_img_bytes
     assert mock_bot.edit_message_media.called
+
+@pytest.mark.asyncio
+async def test_send_broadcast_platform_messages_all_success(mocker):
+    """Verify 3 separate plain-text messages are sent with expected headers, requested delivery, and content."""
+    from src.models import BroadcastResult, SynthesisResult, PlatformDrafts, MediaAsset, MediaSource
+    mock_bot = MagicMock()
+    mock_bot.send_message = AsyncMock()
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot)
+
+    results = [
+        BroadcastResult(platform="Bluesky", success=True),
+        BroadcastResult(platform="Threads", success=True),
+        BroadcastResult(platform="Mastodon", success=True),
+    ]
+    drafts = PlatformDrafts(
+        bluesky="Bluesky post text",
+        threads="Threads post text",
+        mastodon="Mastodon post text",
+    )
+    media = MediaAsset(source=MediaSource.OPENGRAPH, public_url="https://example.com/img.png", image_bytes=b"fake_bytes")
+    synthesis = SynthesisResult(
+        content="Fallback",
+        lead_link="https://example.com/story",
+        topic="AI Tech",
+        drafts=drafts,
+        media=media,
+    )
+
+    success = await send_broadcast_platform_messages(
+        bot_token="token123",
+        chat_id="chat999",
+        results=results,
+        synthesis=synthesis,
+    )
+
+    assert success is True
+    assert mock_bot.send_message.call_count == 3
+
+    # Check each call's arguments
+    calls = mock_bot.send_message.call_args_list
+
+    # Call 1: Bluesky
+    bsky_text = calls[0].kwargs["text"]
+    assert calls[0].kwargs["chat_id"] == "chat999"
+    assert "🔵 Bluesky • ✅ Published" in bsky_text
+    assert "Requested delivery: External card (https://example.com/story)" in bsky_text
+    assert "Bluesky post text" in bsky_text
+    assert "parse_mode" not in calls[0].kwargs
+
+    # Call 2: Threads
+    threads_text = calls[1].kwargs["text"]
+    assert "🧵 Threads • ✅ Published" in threads_text
+    assert "Requested delivery: Hosted image" in threads_text
+    assert "Threads post text" in threads_text
+    assert "parse_mode" not in calls[1].kwargs
+
+    # Call 3: Mastodon
+    masto_text = calls[2].kwargs["text"]
+    assert "🐘 Mastodon • ✅ Published" in masto_text
+    assert "Requested delivery: Uploaded media" in masto_text
+    assert "Mastodon post text" in masto_text
+    assert "parse_mode" not in calls[2].kwargs
+
+@pytest.mark.asyncio
+async def test_send_broadcast_platform_messages_public_url_without_bytes_mastodon_text_only(mocker):
+    """Verify that when MediaAsset has public_url but no image_bytes, Mastodon reports 'Text only'."""
+    from src.models import BroadcastResult, SynthesisResult, PlatformDrafts, MediaAsset, MediaSource
+    mock_bot = MagicMock()
+    mock_bot.send_message = AsyncMock()
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot)
+
+    results = [BroadcastResult(platform="Mastodon", success=True)]
+    drafts = PlatformDrafts.from_single("Post text")
+    # public_url present but image_bytes is None (e.g. image download failed)
+    media = MediaAsset(source=MediaSource.OPENGRAPH, public_url="https://example.com/img.png", image_bytes=None)
+    synthesis = SynthesisResult(content="Post text", lead_link=None, topic="Tech", drafts=drafts, media=media)
+
+    await send_broadcast_platform_messages(
+        bot_token="token",
+        chat_id="123",
+        results=results,
+        synthesis=synthesis,
+    )
+
+    calls = mock_bot.send_message.call_args_list
+    # Mastodon call is 3rd in platform_specs
+    masto_text = calls[2].kwargs["text"]
+    assert "🐘 Mastodon • ✅ Published" in masto_text
+    assert "Requested delivery: Text only" in masto_text
+
+
+@pytest.mark.asyncio
+async def test_send_broadcast_platform_messages_partial_and_unconfigured(mocker):
+    """Verify failed targets display failure detail and unconfigured targets are explicitly labeled."""
+    from src.models import BroadcastResult, SynthesisResult, PlatformDrafts
+    mock_bot = MagicMock()
+    mock_bot.send_message = AsyncMock()
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot)
+
+    # Only Bluesky succeeded, Mastodon failed, Threads was not configured/attempted
+    results = [
+        BroadcastResult(platform="Bluesky", success=True),
+        BroadcastResult(platform="Mastodon", success=False, error="Rate limit exceeded"),
+    ]
+    drafts = PlatformDrafts(
+        bluesky="Bluesky text",
+        threads="Threads text",
+        mastodon="Mastodon text",
+    )
+    synthesis = SynthesisResult(
+        content="Fallback",
+        lead_link=None,
+        topic="AI Tech",
+        drafts=drafts,
+        media=None,
+    )
+
+    success = await send_broadcast_platform_messages(
+        bot_token="token123",
+        chat_id="chat999",
+        results=results,
+        synthesis=synthesis,
+    )
+
+    assert success is True
+    assert mock_bot.send_message.call_count == 3
+    calls = mock_bot.send_message.call_args_list
+
+    # Bluesky: Published, Text only
+    assert "🔵 Bluesky • ✅ Published" in calls[0].kwargs["text"]
+    assert "Requested delivery: Text only" in calls[0].kwargs["text"]
+
+    # Threads: Not configured / not attempted
+    assert "🧵 Threads • ⚪ Not configured / not attempted" in calls[1].kwargs["text"]
+    assert "Requested delivery: Text only" in calls[1].kwargs["text"]
+
+    # Mastodon: Failed with error
+    assert "🐘 Mastodon • ❌ Failed (Rate limit exceeded)" in calls[2].kwargs["text"]
+    assert "Requested delivery: Text only" in calls[2].kwargs["text"]
+
+@pytest.mark.asyncio
+async def test_send_broadcast_platform_messages_per_platform_isolation(mocker):
+    """Verify that if the first platform send raises an exception, Threads and Mastodon are still attempted."""
+    from src.models import BroadcastResult, SynthesisResult, PlatformDrafts
+    mock_bot = MagicMock()
+    # First send_message call (Bluesky) fails with network error; subsequent calls succeed
+    mock_bot.send_message = AsyncMock(side_effect=[
+        RuntimeError("Telegram network timeout on Bluesky"),
+        MagicMock(),
+        MagicMock()
+    ])
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot)
+
+    results = [
+        BroadcastResult(platform="Bluesky", success=True),
+        BroadcastResult(platform="Threads", success=True),
+        BroadcastResult(platform="Mastodon", success=True),
+    ]
+    drafts = PlatformDrafts(
+        bluesky="Bluesky text",
+        threads="Threads text",
+        mastodon="Mastodon text",
+    )
+    synthesis = SynthesisResult(
+        content="Fallback",
+        lead_link=None,
+        topic="AI Tech",
+        drafts=drafts,
+        media=None,
+    )
+
+    # Overall should return False because Bluesky failed, but all 3 must have been attempted
+    success = await send_broadcast_platform_messages(
+        bot_token="token123",
+        chat_id="chat999",
+        results=results,
+        synthesis=synthesis,
+    )
+
+    assert success is False
+    assert mock_bot.send_message.call_count == 3
+    calls = mock_bot.send_message.call_args_list
+    assert "🔵 Bluesky" in calls[0].kwargs["text"]
+    assert "🧵 Threads" in calls[1].kwargs["text"]
+    assert "🐘 Mastodon" in calls[2].kwargs["text"]
+
+@pytest.mark.asyncio
+async def test_send_broadcast_platform_messages_missing_credentials():
+    """Verify that missing credentials safely returns False without raising."""
+    from src.models import SynthesisResult
+    res = await send_broadcast_platform_messages(
+        bot_token="",
+        chat_id="chat999",
+        results=[],
+        synthesis=SynthesisResult(content="test", lead_link=None, topic="test")
+    )
+    assert res is False
