@@ -4,14 +4,14 @@ aiolimiter==1.2.1
     # via python-telegram-bot
 annotated-types==0.7.0
     # via pydantic
-anyio==4.15.0
+anyio==4.15.1
     # via
     #   -r requirements.in
     #   google-genai
     #   httpx
 apscheduler==3.11.2
     # via python-telegram-bot
-atproto==0.0.71
+atproto==0.0.72
     # via -r requirements.in
 beautifulsoup4==4.15.0
     # via -r requirements.in
@@ -47,7 +47,7 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.22.0
+google-genai==2.23.0
     # via -r requirements.in
 h11==0.16.0
     # via httpcore
