@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-09-21 | 🔍 Midday Briefing (StepFun Step 5 Preview MoE Architecture) |
+| **Broadcaster** | Operational | 2026-09-22 | 🔍 Midday Briefing (LLM Infrastructure & Ecosystem Expansion) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
