@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-09-22 | 🔍 Afternoon Deep Dive (AI Benchmark Reproducibility and Pricing) |
+| **Broadcaster** | Operational | 2026-09-22 | 🔍 Evening Synthesis (Intercept) (Jev data classification model) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
