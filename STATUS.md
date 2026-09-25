@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-09-25 | 🔍 Midday Briefing (Google's Call for Me & AI Autonomy) |
+| **Broadcaster** | Operational | 2026-09-25 | 🔍 Afternoon Deep Dive (MoE Infrastructure Optimization & Compute ROI) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
