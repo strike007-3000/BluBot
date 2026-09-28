@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from src.curator import calculate_relevance_score, strip_markdown, fetch_news
 from src.config import BASE_TIER_1, SIGNAL_BOOST, MOMENTUM_BOOST, SYNERGY_BONUS
 
-def test_calculate_relevance_score_factors():
+def test_calculate_relevance_score_factors(monkeypatch):
     """Verify that different scoring factors are correctly applied."""
     now_utc = datetime.now(timezone.utc)
 
@@ -28,6 +28,8 @@ def test_calculate_relevance_score_factors():
     assert score_signal >= SIGNAL_BOOST
 
     # 3. Momentum Product
+    # Keep the scoring fixture independent of weekly product-list updates.
+    monkeypatch.setattr("src.curator.MOMENTUM_PRODUCTS", ["gpt-5"])
     item_momentum = {
         "title": "GPT-5 First Look",
         "summary": "Testing the new model",
