@@ -177,6 +177,8 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
+- **v3.24.1**: Isolated the momentum-scoring test from weekly product-list updates. The test supplies its own product fixture so changing trending products does not break CI.
+
 - **v3.23.0 (Current)**: **Platform-Native Differentiation & Telegram Remix Copilot**.
     - 🌐 **Platform-Native Drafts**: Curates tailored, high-signal content for Bluesky (<=290 chars punchy thought leadership), Threads (<=490 chars conversational narrative with open question), and Mastodon (<=485 chars technical overview with hashtags).
     - 💬 **Telegram Interactive Review**: Single authoritative preview message with tabbed platform switching (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) and All-in-One view mode.
