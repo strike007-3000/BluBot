@@ -37,7 +37,7 @@ The `SafeLogger` automatically redacts secrets based on both keyword matching an
 - **Threads**: Conversational explanation targeting 450 characters, repaired to a safety-buffered maximum of 490. A question is optional and must follow naturally from the source.
 
 ### Shared Natural-Writing Policy
-All text-generation paths reuse `NATURAL_WRITING_GUIDE`: daily synthesis, mentor fallback, Telegram remixing, interaction replies, and `/brief`. The policy requires supplied evidence, direct verbs, plain language, and varied sentence rhythm. It rejects generic setup, unsupported importance claims, forced questions, binary "not X, but Y" contrasts, fake revelations, stacked fragments, and recap endings. Daily synthesis also includes each selected article's source summary, capped by `FEED_SUMMARY_MAX_CHARS`, so technical details are grounded in more than the headline.
+All text-generation paths reuse `NATURAL_WRITING_GUIDE`: daily synthesis, mentor fallback, Telegram remixing, interaction replies, and `/brief`. The policy requires supplied evidence, direct verbs, plain language, and varied sentence rhythm. It rejects generic setup, unsupported importance claims, forced questions, binary "not X, but Y" contrasts, fake revelations, stacked fragments, and recap endings. Daily synthesis serializes selected titles, source names, and summaries as a labeled untrusted JSON data block; `SOURCE_CONTENT_SAFETY` explicitly prohibits following instructions embedded in RSS content. Summaries remain capped by `FEED_SUMMARY_MAX_CHARS`.
 
 ### Telegram Authoritative Review & Remix Copilot
 - **Authoritative Preview**: Maintains a single primary preview message (photo if media present, else text).
