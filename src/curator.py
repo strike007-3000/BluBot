@@ -625,6 +625,9 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
     formatted_lines = []
     for i, item in enumerate(news_items):
         line = f"- {i+1}. {item['title']} ({item['source']})"
+        summary = str(item.get("summary", "")).strip()
+        if summary:
+            line += f"\n  Summary: {summary[:FEED_SUMMARY_MAX_CHARS]}"
         if item.get('consensus_synergy') and item.get('supporting_sources'):
             line += f" [Corroborated by: {', '.join(item['supporting_sources'])}]"
         formatted_lines.append(line)
@@ -637,8 +640,8 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
         "```json\n"
         "{\n"
         '  "topic": "Detected Story Topic",\n'
-        '  "bluesky": "Concise, punchy thought leadership (target <=280 chars, no hashtags).",\n'
-        '  "threads": "Engaging conversational narrative with an open question to prompt replies (target <=450 chars).",\n'
+        '  "bluesky": "Direct, specific observation (target <=280 chars, no hashtags).",\n'
+        '  "threads": "Conversational explanation; ask a question only when it follows naturally (target <=450 chars).",\n'
         '  "mastodon": "Technical, nuanced overview with relevant hashtags (target <=450 chars)."\n'
         "}\n"
         "```\n"
@@ -647,7 +650,7 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
 
     # Combine instructions
     base_instruction = MENTOR_SYSTEM_INSTRUCTION if mode == "Mentor" else CURATOR_SYSTEM_INSTRUCTION
-    combined_instruction = f"{base_instruction}\n\nSTYLE OVERRIDE: {dialect_instruction}{multi_platform_instruction}"
+    combined_instruction = f"{base_instruction}\n\nCONTENT ANGLE: {dialect_instruction}{multi_platform_instruction}"
 
     if writing_style:
         from .config import WRITING_STYLES

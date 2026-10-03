@@ -1,6 +1,6 @@
 # 👨‍🔧 BluBot: Elite AI News Curator
 
-Automated AI news curator that fetches updates twice daily, synthesizes them using **Sage Intelligence (Multi-Model Failover)**, and broadcasts insightfully to **Bluesky**, **Mastodon**, and **Threads**—all running entirely for free on **GitHub Actions**.
+Automated AI news curator that fetches updates twice daily, synthesizes them with multi-model failover, and broadcasts to **Bluesky**, **Mastodon**, and **Threads** from **GitHub Actions**.
 
 ## 📊 System Status
 
@@ -9,21 +9,21 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 ## 🚀 Key Features
 
 - **Sage Intelligence v3 (Self-Healing AI)**:
-    - **Multi-Platform Differentiation**: Generates tailored drafts for **Bluesky** (punchy thought leadership), **Threads** (conversational narrative with engagement questions), and **Mastodon** (technical overview with hashtags) in a single request.
+    - **Multi-Platform Differentiation**: Generates tailored drafts for **Bluesky** (direct, specific observation), **Threads** (conversational explanation), and **Mastodon** (technical overview with hashtags) in a single request. Questions are optional, not forced.
     - **Interactive Telegram Review & Post-Broadcast Transparency**: Interactive inline tab switcher (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) and All-in-One inspection. Allows conversational editing via replies (`remix_platform_draft`), in-place caption updates within strict 1,024-character limits, and link-safe deterministic truncation. Following broadcast, dispatches 3 dedicated plain-text messages to Telegram detailing publication status (`✅ Published`, `❌ Failed`, `⚪ Not configured / not attempted`), requested delivery mode, and the approved draft variant sent to each network.
     - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.5-flash-lite`** → **`gemini-3.7-flash`** → **`gemini-3.6-flash`** → **`gemini-2.5-flash-lite`**) with immediate status-aware rotation (503, 429, 400, 404) and local deterministic topic derivation.
-    - **Task-Specific Routing**: Dedicated multimodal models (`gemini-3.5-flash-lite`, `gemini-2.5-flash-lite`) for screen-reader alt-text with MIME detection and neutral local fallback; `gemini-3.5-flash-lite` for visual prompt generation and briefings.
-    - **Self-Healing Loop**: Automatically corrects common AI output issues and **strips accidental markdown formatting** (bolding/italics) to ensure 100% clean posts.
-    - **Self-Discovery Diagnostics**: If a model fails to validate, the bot automatically **logs every available model ID** for your key.
+    - **Task-Specific Routing**: Dedicated multimodal models (`gemini-3.5-flash-lite`, `gemini-2.5-flash-lite`) handle screen-reader alt-text with MIME detection and a neutral local fallback. `gemini-3.5-flash-lite` handles visual prompts; `GEMINI_MODEL` handles interactive replies and `/brief` synthesis.
+    - **Output Repair**: Strips accidental markdown formatting, applies platform-specific hashtag policy, and repairs overlong output without splitting URLs.
+    - **Model Discovery**: Lists the models available to the configured key and keeps only exact matches from the approved priority list; if discovery fails, the defaults remain available for runtime failover.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
 - **🖼️ Unified Media Strategy Stage**:
-    - **Single Media Decision Point**: Decides if a post should contain media, extracts/validates OpenGraph metadata, generates a visual prompt, fetches an image from Pollinations (with Hugging Face fallback) if necessary, and compiles everything into a single `MediaAsset`.
+    - **Single Media Decision Point**: Decides if a post should contain media, extracts and validates OpenGraph metadata, generates a visual prompt, uses the configured image-provider fallback chain when necessary, and compiles everything into a single `MediaAsset`.
     - **Self-Healing OpenGraph Validation**: Runs multi-criteria validation (dimensions, size, aspect ratios, decoding, known placeholder logo patterns) before selecting.
     - **Platform-Specific Adaptors**: Intelligently renders the canonical `MediaAsset` according to platform requirements:
         - *Bluesky*: Uses `AppBskyEmbedExternal` for link cards and `AppBskyEmbedImages` for scratch posts.
         - *Mastodon*: Uploads image bytes, degrading gracefully to text on upload errors.
         - *Threads*: Renders OpenGraph public URLs only, gracefully falling back to text-only mode for generated assets lacking public hosting.
-    - **Pollinations & Hugging Face Integration**: Uses **Pollinations** (Flux) as the primary provider with serverless **Hugging Face Inference Providers** (Flux Schnell) as the immediate fallback.
+    - **Configurable Image Fallbacks**: Defaults to **Hugging Face Inference Providers**, then falls back to **Pollinations**. Selecting another `IMAGE_PROVIDER` changes the ordered fallback chain.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture**:
     - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
@@ -38,7 +38,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Advisory File Locking**: Cross-platform `FileLock` for state persistence, preventing race conditions during concurrent CI/local runs.
 - **🛡️ Industrial Stabilization**:
     - **Universal RGB Defense**: Image mode detection and conversion engine that prevents "Black/White Box" artifacts from non-standard (ArXiv) thumbnails.
-    - **Resilient Rebase Logic**: Automated conflict resolution for `README.md` dashboards (using `git checkout --ours`) ensuring 100% state persistence uptime.
+    - **Isolated Status Sync**: Scheduled runs write `STATUS.md` to `automated/state`; a separate workflow copies that file to `main` through the GitHub Contents API.
     - **Smart Truncation**: Word-boundary-aware trimming for Mastodon and Threads to prevent mid-word cutoffs.
 - **Fortress Hardening**:
     - **Non-Blocking I/O**: Offloads all disk persistence, social bio updates, status telemetry updates, and feed vanguard state saving to background worker threads via `asyncio.to_thread`.
@@ -47,15 +47,16 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity), fixing `TypeError` formatting bugs for non-string args.
     - **SSRF Prevention Architecture**: Hardened the metadata scraper with **DNS Pinning** and **IP validation** to block all internal/private network requests.
     - **Zero-Duplicate Threads Logic**: Implemented "Catch & Log" delivery validation to prevent duplicate posts during transient API failures.
-- **🧠 Natural Vibe Engine**:
-    - **Stylistic Memory**: The bot now remembers its previous "vibe" and ensures it never repeats the same tone twice in a row, switching between **Analytical**, **Practical**, **Sage**, **Concise**, and **Philosophical** dialects.
+- **🧠 Natural Writing Engine**:
+    - **Shared Editorial Voice**: Synthesis, mentor posts, remixes, replies, and briefings use one compact policy: source-grounded facts, direct verbs, plain language, varied sentence rhythm, and no forced questions, fake revelations, binary contrasts, or recap endings.
+    - **Content-Angle Memory**: The bot avoids repeating the previous analytical, practical, strategic, concise, or trade-off angle while keeping one consistent peer-like voice.
     - **Temporal Intelligence**: Upgraded from 2 to **5 granular sessions** (Dawn, Morning, Midday, Afternoon, Evening) for hyper-relevant time-of-day awareness.
     - **Manual Run "Intercept"**: Automatically detects manual `workflow_dispatch` runs and labels them as **"(Intercept)"**, shifting the AI into an urgent, ad-hoc reporting mode.
 - **💬 Interaction Engine**:
     - **Configurable Comments & Replies**: Platforms can have comments/replies toggled independently (Bluesky `true`, Mastodon/Threads `false` by default).
     - **24-Hour Lookback Filters**: Strict timestamp boundaries filter out notifications/comments older than 24 hours to prevent scanning entire profile histories.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
-    - **Conversational Quality & Persona**: System prompts are highly tailored to speak in a natural, peer-like mentor/analyst voice, stripping robotic introductory pre-ambles and hashtags.
+    - **Conversational Quality**: Replies address the actual comment as a peer, without persona introductions, canned thanks, hashtags, or forced broader lessons.
 - **Breakthrough Scoring Engine v5 (Elite Signal Processing)**:
     - **Stable-ID Curation Registry (8-Tier, 45 Feeds)**:
 
@@ -71,12 +72,12 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         | **Critical / Policy & Security** | `+5`–`+10` | AI Incident Database, EU AI Act Tracker, AI Snake Oil, Gary Marcus, Algorithmic Bridge, Victoria Krakovna |
     - **Curation Boosts & Penalties**:
         - **High-Signal Keywords**: `+12` (Boosts *SOTA, agentic, world model, open weights*, etc.)
-        - **Momentum Products**: `+18` (Boosts *gpt-5, claude 4, llama 4*, etc.)
+        - **Momentum Products**: `+18` (The weekly workflow refreshes the current product list in `src/config.py`.)
         - **Consensus Synergy (Story Clustering)**: `+15` (Awarded when stories from ≥2 distinct publisher domains cluster together based on title normalization and headline similarity)
         - **Watchlist Boost**: `+3` to `+8` (Bounded boost for articles matching user-defined `/watch` topics via word-boundary regex matching against title and summary text)
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
-    - **Writing-Style Rotation**: Least-Recently-Used (LRU) style selection across 5 distinct writing structures to prevent structural narration repetition.
+    - **Writing-Style Rotation**: Least-Recently-Used (LRU) selection across 4 content structures: strategic shift, practical workflow, risk/verification, and enterprise ROI.
     - **Curated Feed Network**: **45 configured feeds** across 8 tiers mapped dynamically via registry and audited for freshness.
 
 
@@ -87,9 +88,9 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 #### Bluesky & Mastodon
 Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
-#### Pollinations & Hugging Face (Required for v3.14.0+)
+#### Pollinations & Hugging Face
 - Pollinations is free and requires no API key.
-- Get a Hugging Face token from [Hugging Face](https://huggingface.co/settings/tokens) with **Inference** permissions.
+- To use the default Hugging Face provider, create a token with **Inference** permissions. Without one, the chain skips Hugging Face and tries Pollinations.
 
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
@@ -101,12 +102,19 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky App Password |
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
-| `POLLINATIONS_API_KEY` | No | Deprecated — Pollinations free API requires no key |
-| `HUGGINGFACE_API_KEY` | **Yes** | Hugging Face token with **Inference** permissions |
+| `POLLINATIONS_API_KEY` | No | Deprecated compatibility setting; the current Pollinations request does not use it |
+| `HUGGINGFACE_API_KEY` | No | Hugging Face token with **Inference** permissions; needed when using the default Hugging Face provider |
 | `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
 | `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
-| `GEMINI_MODEL` | No | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
+| `GEMINI_MODEL` | No | (Optional) Model used for interactive replies, on-demand topics, and `/brief` synthesis (default: `models/gemini-3.5-flash-lite`) |
 | `IMAGE_PROVIDER` | No | Default: `huggingface`. Options: `huggingface`, `pollinations`, `nvidia`, `imagen`. Each runs a fallback chain. |
+| `NVIDIA_KEY` | No | NVIDIA image API key; also retained as a legacy token fallback for Hugging Face |
+| `POLLINATIONS_API_URL` | No | Override the Pollinations image endpoint |
+| `ENABLE_IMAGE_GEN` | No | Enable generated-image fallbacks (default: `true`) |
+| `ENABLE_BIO_MGMT` | No | Enable profile bio updates (default: `true`) |
+| `ENABLE_INTERACTIONS` | No | Enable mention/comment processing (default: `true`) |
+| `MAX_THREAD_PARTS` | No | Maximum posts in a platform thread (default: `2`) |
+| `LOG_FORMAT` | No | `pretty` locally or `json` in CI by default |
 | `MASTODON_ACCESS_TOKEN` | No | Your Mastodon Access Token |
 | `MASTODON_BASE_URL` | No | Your Mastodon Instance URL |
 | `THREADS_ACCESS_TOKEN` | No | Your Threads Long-Lived Access Token |
@@ -126,7 +134,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ## 🛡️ Resilience Architecture
 
-BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarantee state durability and prevent duplicate posts across ephemeral CI environments.
+BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce stale state and duplicate posts across ephemeral CI environments.
 
 ```
 [Load Sequence]
@@ -177,12 +185,17 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
 
 ## 🗒️ Updates & History
 
+- **v3.25.0 (Current)**: **Natural, Source-Grounded Writing**.
+    - ✍️ **Shared Editorial Policy**: Applies direct, concrete, non-formulaic writing rules across curation, mentor posts, remixes, interaction replies, and executive briefings.
+    - 📰 **Better Grounding**: Passes source summaries into synthesis so requested technical facts come from supplied evidence instead of article titles alone.
+    - 🧹 **Simpler Style Rotation**: Removes the forced question-first structure and reframes rotating personas as content angles under one consistent voice.
+    - 📚 **Documentation Reconciliation**: Corrects model defaults, media-provider order, platform target versus safety limits, test guidance, and stale version labels.
 - **v3.24.1**: Isolated the momentum-scoring test from weekly product-list updates. The test supplies its own product fixture so changing trending products does not break CI.
 
-- **v3.23.0 (Current)**: **Platform-Native Differentiation & Telegram Remix Copilot**.
-    - 🌐 **Platform-Native Drafts**: Curates tailored, high-signal content for Bluesky (<=290 chars punchy thought leadership), Threads (<=490 chars conversational narrative with open question), and Mastodon (<=485 chars technical overview with hashtags).
+- **v3.23.0**: **Platform-Native Differentiation & Telegram Remix Copilot**.
+    - 🌐 **Platform-Native Drafts**: Curates distinct posts for Bluesky, Threads, and Mastodon, then enforces safety-buffered maximums of 290, 490, and 485 characters respectively.
     - 💬 **Telegram Interactive Review**: Single authoritative preview message with tabbed platform switching (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) and All-in-One view mode.
-    - ✨ **Remix Copilot**: Reply directly to remix prompts to refine individual platform variants or all platforms (`/remix_all`) using zero-cost Gemini Flash rotation with deterministic URL-safe truncation and robust fallback preservation.
+    - ✨ **Remix Copilot**: Reply directly to remix prompts to refine individual platform variants or all platforms (`/remix_all`) using Gemini Flash rotation with deterministic URL-safe truncation and fallback preservation.
 - **v3.22.2**: **Cryptography Security Update**.
     - 🔒 **Advisory Remediation**: Upgraded `cryptography` to `>=50.0.0,<51`, resolving CVE-2026-69247, CVE-2026-69248, and CVE-2026-69249 while remaining compatible with `atproto` 0.0.71.
     - 🤖 **Dependabot Recovery**: Removed the obsolete `cryptography>=47` ignore rule so future compatible security updates are proposed normally.
@@ -257,7 +270,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
     - ⚡ **Failover Resilience**: Hardened AI synthesis with 503 retry delays and robust model rotation.
 - **v3.8.4**: **Final Infrastructure & Security Hardening**.
     - 🛡️ **Harden Masking**: Relocated session metadata masking to the absolute first step of CI to prevent ID leaks in logs.
-    - 🛠️ **Universal Manual Bypass**: Extended scheduling logic to regard ALL non-scheduled events (Push/Dispatch/PR) as manual runs, ensuring zero weekend development blocks.
+    - 🛠️ **Development Rest Bypass**: Extended weekend-rest bypass logic to all non-scheduled events (push, dispatch, and pull request); only `workflow_dispatch` receives the `(Intercept)` editorial label.
 - **v3.8.3**: **Infrastructure Modernization**.
     - 🐍 **Python 3.13 Upgrade**: Realigned the entire CI/CD pipeline and delivery environment to Python 3.13.
     - ⚡ **Node.js 24 Actions**: Migrated to `actions/checkout@v4`, `actions/setup-python@v5`, and `actions/cache@v4`.
@@ -309,12 +322,12 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to guarante
     - Narrowed retry behavior to skip terminal 403/400 errors.
 ## 🧪 Testing
 
-BluBot v3.23.0 features a dual-layer testing strategy with 158 automated tests:
+BluBot uses automated regression tests plus an interactive diagnostic suite. The test count is intentionally not pinned here because coverage grows independently of releases.
 
 ### 1. Automated Regression (CI-Ready)
-Run the professional test suite via `pytest`:
+Run the test suite with the repository virtual environment:
 ```bash
-pytest src/tests/
+.venv/bin/python -m pytest src/tests/
 ```
 Targeting **SSRF protection**, **Scoring fidelity**, **Secret redaction**, **Story clustering**, **Watchlist boost scoring**, **Topic grounding**, **Telegram command parsing** (including `/brief`, `/watch`, `/unwatch`), **Dry-run pipeline bypasses**, and **Media pipeline integrity**.
 
