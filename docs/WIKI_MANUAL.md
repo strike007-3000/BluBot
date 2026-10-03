@@ -1,19 +1,19 @@
-# 📖 BluBot Elite Sage: The Complete Manual
+# 📖 BluBot: The Complete Manual
 
-Welcome to the official Wiki for the **Elite Sage** (BluBot). This guide balances the technical inner workings with the "Sage" persona's philosophy.
+This manual describes BluBot's current curation, writing, review, publication, persistence, and diagnostic behavior.
 
 ---
 
-## 🏠 Page 1: The Sage Philosophy
+## 🏠 Page 1: Editorial Approach
 
 The BluBot is an **Impact-Aware Intelligence** designed to separate the *signal* from the *noise*.
 
 ### The Vision
-The Sage looks for **Product Shifts** (real code) and **Technical Gems** (research papers, deep engineering blogs). It shares findings as a mentor, not just a news aggregator.
+BluBot looks for **Product Shifts** (real code) and **Technical Gems** (research papers and deep engineering blogs). It explains the useful consequence in plain language instead of repeating headlines or writing promotional copy.
 
 ## Security & Supply Chain
 
-BluBot uses elite hardening to protect its environment and secrets.
+BluBot applies dependency locking, request validation, and secret redaction to protect its environment and credentials.
 
 ### Dependency Locking (`uv`)
 To prevent supply-chain attacks via unvetted transitive dependencies, BluBot generates a Python 3.13 lockfile with **`uv`**.
@@ -32,9 +32,12 @@ The bot implements a **DNS Pinner** and **Public IP Validator** in `src/utils.py
 The `SafeLogger` automatically redacts secrets based on both keyword matching and **statistical entropy analysis**, ensuring that accidentally logged tokens are masked before hitting CI logs.
 
 ### Platform Synergy
-- **Bluesky**: The central technical hub (tailored punchy thought leadership <= 290 chars).
-- **Mastodon**: The academic and decentralized pulse (tailored technical overview with relevant hashtags <= 485 chars).
-- **Threads**: The broad industry narrative (tailored conversational narrative with engagement prompt <= 490 chars).
+- **Bluesky**: Direct, specific observation targeting 280 characters, repaired to a safety-buffered maximum of 290.
+- **Mastodon**: Technical context with relevant hashtags targeting 450 characters, repaired to a safety-buffered maximum of 485.
+- **Threads**: Conversational explanation targeting 450 characters, repaired to a safety-buffered maximum of 490. A question is optional and must follow naturally from the source.
+
+### Shared Natural-Writing Policy
+All text-generation paths reuse `NATURAL_WRITING_GUIDE`: daily synthesis, mentor fallback, Telegram remixing, interaction replies, and `/brief`. The policy requires supplied evidence, direct verbs, plain language, and varied sentence rhythm. It rejects generic setup, unsupported importance claims, forced questions, binary "not X, but Y" contrasts, fake revelations, stacked fragments, and recap endings. Daily synthesis serializes selected titles, source names, and summaries as a labeled untrusted JSON data block; `SOURCE_CONTENT_SAFETY` explicitly prohibits following instructions embedded in RSS content. Summaries remain capped by `FEED_SUMMARY_MAX_CHARS`.
 
 ### Telegram Authoritative Review & Remix Copilot
 - **Authoritative Preview**: Maintains a single primary preview message (photo if media present, else text).
@@ -61,7 +64,7 @@ The "Brain" of the bot ranked by a weighted matrix.
    - **Tier 7 (Academic)**: `+10` score boost.
    - **Tier 8 (Critical/Balancing)**: `+5` score boost.
 2. **Signal Boosting**: `+12` boost if title or summary contains high-signal keywords (e.g. *SOTA, agentic, world model, open weights*, etc.).
-3. **Momentum Product Boosting**: `+18` boost if title contains momentum products (e.g. *gpt-5, llama 4, gemini 3, gemma 4*, etc.).
+3. **Momentum Product Boosting**: `+18` boost if the title contains a product from the current `MOMENTUM_PRODUCTS` list. The weekly configuration workflow refreshes this list.
 4. **Consensus Synergy Pass (Story Clustering)**: `+15` synergy bonus added when stories from ≥2 distinct publisher domains cluster together based on title normalization and headline similarity.
 5. **Watchlist Topic Boosting**: Bounded `+3` to `+8` boost for articles matching user-defined `/watch` topics. Uses word-boundary regex matching: `+8` for exact topic match in title, `+5` for keyword match in title, `+3` for keyword match in summary. Maximum boost across all watches capped at `+8`.
 6. **Diversity Penalty**: Subtracts `-12` if the article's classified topic is already in `recent_topics` list, preventing repetition.
@@ -72,7 +75,7 @@ The "Brain" of the bot ranked by a weighted matrix.
 
 ## 🛡️ Page 3: Reliability & The Fortress
 
-The Sage is designed to be **unbreakable**.
+BluBot uses layered failure handling and state recovery.
 
 ### Hardening Features
 - **3-Tier State Resilience**: BluBot implements a redundant persistence model. If the primary `seen_articles.json` is corrupted or missing, it automatically falls back to a local `.bak` rotation and finally a remote **GitHub Gist**.
@@ -85,9 +88,9 @@ The Sage is designed to be **unbreakable**.
 
 ---
 
-## 🎨 Page 4: Pollinations & Hugging Face Image Generation
+## 🎨 Page 4: Configurable Image Generation
 
-The Sage uses **Pollinations** (Flux) as the primary image provider with serverless **Hugging Face Inference Providers** (Flux Schnell) as the immediate fallback.
+BluBot defaults to **Hugging Face Inference Providers** and then falls back to **Pollinations**. `IMAGE_PROVIDER` can select `pollinations`, `nvidia`, or `imagen`, each with its own ordered fallback chain.
 
 ### The Designer & Image Pipeline
 
@@ -131,7 +134,7 @@ The Sage uses **Pollinations** (Flux) as the primary image provider with serverl
 
 ## 📡 Page 5: Source Intelligence
 
-Scanning exactly **45 premium feeds** across 8 tiers.
+The current registry contains **45 configured feeds** across 8 tiers.
 
 ---
 
@@ -141,11 +144,12 @@ Scanning exactly **45 premium feeds** across 8 tiers.
 | Variable | Description |
 | :--- | :--- |
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
-| `POLLINATIONS_API_KEY` | Optional token for Pollinations custom accounts |
+| `POLLINATIONS_API_KEY` | Deprecated compatibility setting; current Pollinations requests do not use it |
 | `HUGGINGFACE_API_KEY` | Hugging Face Hub User Access Token |
 | `HUGGINGFACE_IMAGE_MODEL` | Hugging Face model target (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
 | `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma models) |
-| `GEMINI_MODEL` | (Optional) Primary model used for interactive replies (default: `models/gemini-2.5-flash-lite`) |
+| `GEMINI_MODEL` | (Optional) Model for replies, on-demand topics, and `/brief` (default: `models/gemini-3.5-flash-lite`) |
+| `NVIDIA_KEY` | Optional NVIDIA image API key and legacy Hugging Face token fallback |
 | `BSKY_HANDLE` | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | Bluesky App Password |
 | `MASTODON_ACCESS_TOKEN` | Your Mastodon Access Token |
@@ -155,6 +159,12 @@ Scanning exactly **45 premium feeds** across 8 tiers.
 | `GIST_ID` | Private GitHub Gist ID |
 | `GIST_TOKEN` | GitHub Token with `gist` scope |
 | `IMAGE_PROVIDER` | `huggingface` (default) or `pollinations` or `nvidia` or `imagen` |
+| `POLLINATIONS_API_URL` | Optional Pollinations endpoint override |
+| `ENABLE_IMAGE_GEN` | Enable generated-image fallbacks (default: `true`) |
+| `ENABLE_BIO_MGMT` | Enable profile bio updates (default: `true`) |
+| `ENABLE_INTERACTIONS` | Enable mention/comment processing (default: `true`) |
+| `MAX_THREAD_PARTS` | Maximum posts in a platform thread (default: `2`) |
+| `LOG_FORMAT` | `pretty` locally or `json` in CI by default |
 | `TELEGRAM_BOT_TOKEN` | (Optional) Your Telegram Bot API Token |
 | `TELEGRAM_USER_ID` | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | (Optional) Telegram polling timeout in minutes (default: `5`) |
@@ -193,22 +203,24 @@ You can test the entire bot locally **without social media credentials**.
 
 Select **Option 2 (FULL PIPELINE DRY RUN)** to see a draft review of exactly what will be posted.
 
+Select **Option 6 (Multi-Platform Drafting & Telegram State Simulation)** for an offline check of JSON parsing, natural-writing policy availability, platform limits, URL-safe repair, and Telegram preview rendering.
+
 ---
 
 ## 💾 Page 8: 3-Tier State Resilience
 
 
-To ensure the Sage never "forgets" even in ephemeral runner environments, we use a tiered persistence model.
+BluBot uses a tiered persistence model so ephemeral runners can recover recent state.
 
 ### The Recovery Sequence
-1. **Remote Gist (Gist-Authoritative Cloud Memory)**: Syncs state with a private GitHub Gist using `schema_version: 2` revision tracking and updated timestamps.
+1. **Remote Gist (when configured)**: Loads the private Gist as the authoritative state and compares `schema_version: 2`, revision counters, and timestamps with local data.
 2. **Two-Phase Pre-Broadcast Reservation Protocol**: Writes a `pending_stories` reservation to Gist/local state before broadcasting, aborting publication if Gist reservation fails, and transitioning to `published` upon success.
 3. **Primary Local & Backup Rotation**: Saves perform atomic writes (`.tmp` -> `seen_articles.json`) and rotate previous valid state to `.bak` under advisory `FileLock`. If Gist write fails during settlement, local recovery state is saved with `unsynced_gist: true`.
 
 ---
 ## 🧪 Page 9: Automated Quality Control
 
-BluBot v3.23.0 maintains a professional **Automated Test Suite** powered by `pytest`, including regression coverage for repository hygiene, exact Gemini discovery, Gist recovery state, platform-safe interaction replies, multi-platform drafts, Telegram remix copilot, permanent provider errors, and Threads failures.
+BluBot maintains an automated `pytest` suite covering repository hygiene, exact Gemini discovery, Gist recovery state, platform-safe replies, source-grounded prompts, multi-platform drafts, Telegram remixing, permanent provider errors, and Threads failures. The documentation does not pin a test count because coverage changes independently of releases.
 
 ### The Test Layers
 1. **Security (SSRF)**: Every URL metadata fetch is automatically tested against private IP ranges and redirect-spoofing attacks.
@@ -223,25 +235,21 @@ BluBot v3.23.0 maintains a professional **Automated Test Suite** powered by `pyt
 
 ### Running Automated Tests
 ```bash
-pytest src/tests/
+.venv/bin/python -m pytest src/tests/
 ```
 
 ---
 
-## 🎭 Page 10: The Natural Vibe Engine
+## 🎭 Page 10: The Natural Writing Engine
 
-Version 3.7.0 transforms the bot from a script into a **living editorial entity**.
+BluBot keeps one plainspoken editorial voice while rotating the angle used to examine a story.
 
-### 1. The Editorial Pulse (Stylistic Memory)
-The bot now tracks its previous tone to ensure consecutive updates feel varied:
+### 1. Editorial Memory
+The bot tracks its previous content angle so consecutive updates do not use the same structure:
 - **Style Memory**: Saves the `last_dialect` key to `seen_articles.json` after successfully posting.
-- **Tone Rotation Logic**: During news synthesis in `summarize_news`, the system loads the `last_dialect` from the state. It dynamically prunes the active dialect choice pool (`available_dialects = list(PERSONA_DIALECTS.keys())`) by removing the `last_dialect`. This guarantees the bot never uses the same editorial persona twice in a row.
-- **The Diversity Pool**:
-    - **Analytical**: High-fidelity technical specs and benchmarks.
-    - **Practical**: Developer utility and "How-to" engineering.
-    - **Sage**: Visionary strategic impact and industry shifts.
-    - **Concise**: Zero-fluff, minimalist scanner-friendly items.
-    - **Philosophical**: Ethical considerations and world-shifting nature.
+- **Angle Rotation**: `summarize_news` removes the previous key from `PERSONA_DIALECTS` before selection. The historical field name remains for state compatibility; the values now describe content angles rather than different personas.
+- **Angle Pool**: mechanism and consequence, developer workflow, strategic consequence, concise explanation, or a concrete trade-off.
+- **Structure Rotation**: Least-recently-used selection chooses among strategic shift, practical workflow, risk/verification, and enterprise ROI. The former forced question-first structure was removed.
 
 ### 2. High-Resolution Temporal Intelligence
 Resolved from a 2-session split into **5 granular sessions**:
@@ -252,9 +260,10 @@ Resolved from a 2-session split into **5 granular sessions**:
 - **Evening Synthesis** (19:00-24:00)
 
 ### 3. Manual Intercept Mode
-The Sage now detects if it was triggered via a manual GitHub **workflow_dispatch**.
-- **Urgency Shift**: Appends **"(Intercept)"** to the session name.
-- **Tone Modification**: Signifies to the AI that this is an ad-hoc briefing rather than a standard daily run, shifting the synthesis towards urgent insights.
+BluBot treats GitHub `workflow_dispatch` as a manual editorial run.
+- **Intercept Label**: Appends **"(Intercept)"** to the session name.
+- **Context Shift**: Marks the run as ad hoc without changing the shared editorial policy.
+- **Weekend Rest Bypass**: Local execution and any non-scheduled CI event bypass the scheduled weekend-rest window, but push and pull-request events do not receive the `(Intercept)` label.
 
 ---
 
@@ -273,8 +282,8 @@ Instead of hard truncation, the bot now uses `smart_split` to chunk text at natu
 - **Mastodon**: Chains via `in_reply_to_id`.
 - **Threads**: Sequentially publishes media containers with a `reply_to` link to the parent post.
 
-### 3. Narrative Expansion
-The Weaver allows the AI to use a **1000-character budget**, transforming the daily brief into a deep technical deep-dive without the fear of character limits.
+### 3. Bounded Expansion
+Generation targets 280 characters for Bluesky and 450 for Mastodon and Threads. If content still exceeds a platform's safety budget, the broadcaster splits it at natural boundaries and caps the thread at `MAX_THREAD_PARTS=2`.
 
 ---
 
@@ -293,7 +302,7 @@ To eliminate "Rebase Conflicts" in CI, live status updates (Operational status, 
 
 ## 📡 Page 13: Feed Vanguard Automation
 
-To maintain 100% signal quality, BluBot uses the **Feed Vanguard** to automatically manage RSS health.
+BluBot uses the **Feed Vanguard** to track RSS health and temporarily silence repeatedly failing feeds.
 
 ### The Auditing Logic
 Every run begins with a pre-flight health scan using `VanguardManager._check_feed()`:
@@ -388,7 +397,7 @@ The engine runs post-broadcast in `bot.py` and performs the following:
 2. **24-Hour Lookback Window**: Filters all comments and notifications to only process items published or indexed within the last 24 hours.
 3. **Selective Engagement**: To prevent bot-spam signaling, `MENTION_REPLY_PROB` (default 0.8) and `COMMENT_REPLY_PROB` (default 0.5) ensure the bot only engages with high-quality interactions.
 4. **Resilient Threading**:
-   - **Bluesky**: Corrects for `root` vs `parent` refs to maintain perfect thread integrity.
+   - **Bluesky**: Maintains the required `root` and `parent` references for reply chains.
    - **Mastodon**: Uses status-id reply chaining.
 
 ### Token & Cost Optimization
@@ -396,15 +405,15 @@ To optimize inference cost and minimize latency during interactive reply synthes
 - **Disabled Thinking**: By default, the `generate_interactive_reply` API call bypasses the `thinking_config` parameters entirely. Bypassing reasoning models prevents runaway token usage on simple dialog.
 - **Strict Token Budget**: Enforces a max output limit of `100` tokens (`max_output_tokens=100`), ensuring that responses are concise, focused, and token-efficient.
 
-### Conversational Persona & Prompts
-To prevent robotic-sounding AI replies, the model utilizes `INTERACTIVE_REPLY_INSTRUCTION` prompting rules:
-1. **Human-like Authenticity**: Avoid robotic pre-ambles, clichés, and greeting formulas (e.g., do NOT start with "As the Elite AI Sage...", "Indeed,", "Greetings,"). Speak as a peer sharing a quick insight.
-2. **High Signal**: Provide a genuine piece of strategic or technical insight. Avoid generic "Thanks for the comment!" templates.
+### Conversational Prompts
+`INTERACTIVE_REPLY_INSTRUCTION` uses the shared natural-writing policy plus reply-specific rules:
+1. **Direct Response**: Address what the person said without persona introductions, canned thanks, or a forced broader lesson.
+2. **Useful Detail**: Provide a relevant technical or strategic detail supported by the conversation.
 3. **Strict Constraints**: No hashtags. Emojis are blocked unless representing a specific technical concept (e.g., 🚀, 🧠). Under 280 characters limit.
 
 **Example Prompt & Output:**
-* *Input*: "User @dev1 mentioned you: 'What is the impact of gemma 4 on edge computing?'. Respond insightfully as the Elite Sage."
-* *Response*: "Gemma 4's lightweight variants significantly optimize memory-bound edge environments. Look for major efficiency gains in localized agent pipelines."
+* *Input*: "User @dev1 mentioned you: 'What does a smaller model change for edge deployment?'"
+* *Response*: "A smaller model can fit within tighter memory and power limits. The real test is whether its task accuracy holds up on the target device."
 
 ### Security & Anti-Spam
 - **Interaction Limit**: Hard-capped at 5 interactions per run to prevent "tag-bombing" from exhausting AI tokens.
@@ -438,7 +447,8 @@ To maintain "Elite" signal-to-noise ratios and avoid feed fatigue, BluBot v3.8.5
 ### Character Safety Buffers
 We now apply a character "Safety Buffer" to prevent rejection from platform APIs (Mastodon, Threads):
 - **Mastodon**: 485 chars (Limit 500 - 15)
-- **Bluesky/Threads**: 290 chars (Limit 300 - 10)
+- **Bluesky**: 290 chars (Limit 300 - 10)
+- **Threads**: 490 chars (Limit 500 - 10)
 This ensures that the pagination markers (e.g., `(1/2)`) never push a post over the platform-specific character limit.
 
 ---
@@ -457,7 +467,7 @@ On Friday mornings, the curation prompt automatically shifts. The bot appends a 
 
 ## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.13.0)
 
-BluBot v3.13.0 introduces three massive upgrades for manual intervention, accessibility, and platform culture alignment:
+BluBot v3.13.0 introduced three upgrades for manual intervention, accessibility, and platform-specific formatting:
 
 ### 1. Interactive Telegram Gateway & Approval Queue
 You can control the bot directly from Telegram. The integration supports two key workflows:
@@ -475,7 +485,7 @@ You can control the bot directly from Telegram. The integration supports two key
 
 ### 2. Screen Reader Multimodal Alt-Text
 Accessibility is native. If the bot generates or attaches an image:
-* It calls Gemini Vision (`models/gemini-2.5-flash-lite`) with the image bytes and the generation prompt.
+* It tries the configured alt-text model list (`models/gemini-3.5-flash-lite`, then `models/gemini-2.5-flash-lite`) with the image bytes and generation context.
 * Gemini generates a descriptive, screen-reader-ready alt text under 100 characters.
 * Alt text is automatically broadcasted alongside the image to Mastodon and Threads.
 

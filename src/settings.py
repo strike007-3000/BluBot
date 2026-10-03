@@ -136,7 +136,7 @@ class Settings:
 
     @property
     def is_manual_run(self) -> bool:
-        """Determines if the current execution was manually triggered (Persona logic)."""
+        """Determines if the current execution needs manual-run editorial context."""
         return self.github_event == "workflow_dispatch"
 
     @property

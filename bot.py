@@ -42,7 +42,8 @@ from src.telegram_gateway import (
 )
 from src.config import (
     STATUS_FILE_PATH, IMAGEN_MODEL,
-    MENTION_REPLY_PROB, COMMENT_REPLY_PROB, INTERACTION_LIMIT, AUTO_LIKE_INTERACTIONS
+    MENTION_REPLY_PROB, COMMENT_REPLY_PROB, INTERACTION_LIMIT, AUTO_LIKE_INTERACTIONS,
+    BRIEFING_SYSTEM_INSTRUCTION
 )
 from google.genai import types
 from google import genai
@@ -245,11 +246,10 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
     )
 
     try:
-        from src.config import CURATOR_SYSTEM_INSTRUCTION
         response = await genai_client.aio.models.generate_content(
             model=settings.gemini_model,
             contents=prompt,
-            config=types.GenerateContentConfig(system_instruction=CURATOR_SYSTEM_INSTRUCTION, temperature=0.5)
+            config=types.GenerateContentConfig(system_instruction=BRIEFING_SYSTEM_INSTRUCTION, temperature=0.5)
         )
         briefing_text = response.text.strip()
         header = f"📊 *7-Day Executive Briefing: {topic}*\n\n"

@@ -384,6 +384,7 @@ async def test_gemini_model_discovery_and_multimodal_checks():
 
 async def test_multiplatform_telegram_simulation():
     """Mode 6: Pure state-rendering simulation of multi-platform drafting and Telegram tab navigation."""
+    from src.config import NATURAL_WRITING_GUIDE
     from src.models import PlatformDrafts
     from src.curator import parse_platform_drafts, validate_platform_drafts, repair_platform_drafts
     from src.telegram_gateway import _format_preview_text, _build_telegram_markup
@@ -396,12 +397,13 @@ async def test_multiplatform_telegram_simulation():
         '{\n'
         '  "topic": "Autonomous Agents",\n'
         '  "bluesky": "Anthropic releases Claude 3.7 Sonnet featuring hybrid reasoning. Dynamic thinking budgets scale chain-of-thought tokens on demand.",\n'
-        '  "threads": "Hybrid reasoning just landed with Claude 3.7 Sonnet! Instead of choosing between instant speed or slow reasoning, you can now adjust thinking budgets per prompt. How will you use this in your workflow?",\n'
+        '  "threads": "Claude 3.7 Sonnet lets developers adjust thinking budgets per prompt, so teams can spend more compute on difficult work without slowing every request.",\n'
         '  "mastodon": "Anthropic announced Claude 3.7 Sonnet today, unifying instantaneous generation with extended chain-of-thought thinking tokens for complex engineering tasks. #AI #LLM #OpenSource"\n'
         '}'
     )
 
     print("\n1. Parsing Sample Structured JSON...")
+    assert "forced questions" in NATURAL_WRITING_GUIDE
     drafts = parse_platform_drafts(sample_json)
     print(f"  - Bluesky:  {len(drafts.bluesky)} chars -> {drafts.bluesky[:60]}...")
     print(f"  - Threads:  {len(drafts.threads)} chars -> {drafts.threads[:60]}...")
