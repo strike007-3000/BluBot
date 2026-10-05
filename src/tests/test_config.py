@@ -6,6 +6,13 @@ from src.config import validate_config, validate_gemini_model_priority
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
+def test_scheduled_workflow_cadence():
+    daily = (PROJECT_ROOT / ".github/workflows/daily_post.yml").read_text()
+    weekly = (PROJECT_ROOT / ".github/workflows/weekly_config_update.yml").read_text()
+
+    assert "cron: '17 6,12,18 * * 1-5'" in daily
+    assert "cron: '0 2 * * 5'" in weekly
+
 def test_validate_config_dry_run_injection():
     """Verify that missing config variables are injected with mocks in DRY_RUN mode."""
     # Ensure variables are missing

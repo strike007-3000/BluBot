@@ -2,7 +2,7 @@ name: Daily AI News Post
 
 on:
   schedule:
-    - cron: '0 7,13 * * *' # 9:00 AM and 3:00 PM (UTC+2)
+    - cron: '17 6,12,18 * * 1-5' # Weekday experiment: 06:17, 12:17, and 18:17 UTC
   workflow_dispatch: # Allows manual triggering
 
 # Ensure only one run updates the state branch at a time

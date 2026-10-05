@@ -254,6 +254,7 @@ The bot tracks its previous content angle so consecutive updates do not use the 
 
 ### 2. High-Resolution Temporal Intelligence
 Resolved from a 2-session split into **5 granular sessions**:
+- **Weekday Experiment**: Scheduled runs start at 06:17, 12:17, and 18:17 UTC Monday through Friday; the session label still follows the actual execution time.
 - **Night Reflection** (00:00-06:00)
 - **Morning Intelligence** (06:00-11:00)
 - **Midday Briefing** (11:00-15:00)
