@@ -162,7 +162,8 @@ async def test_fetch_news_deduplicates_canonical_urls(mock_httpx_client, mocker)
     articles, _ = await fetch_news(mock_httpx_client, feed_list=["f1"])
 
     assert len(articles) == 1
-    assert articles[0]["link"] == items[0]["link"]
+    assert articles[0]["link"] == items[1]["link"]
+    assert articles[0]["score"] == 20
 
 from src.curator import normalize_headline, calculate_title_similarity, cluster_articles
 

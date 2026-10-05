@@ -337,7 +337,7 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
     unique_by_link = {}
     for e in all_raw_entries:
         canonical_link = normalize_url(e['link'])
-        if canonical_link not in unique_by_link:
+        if canonical_link not in unique_by_link or e.get("score", 0) > unique_by_link[canonical_link].get("score", 0):
             unique_by_link[canonical_link] = e
 
     deduped_entries = list(unique_by_link.values())
