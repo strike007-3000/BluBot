@@ -42,7 +42,7 @@ The Bot accesses platform APIs solely to:
 
 BluBot operates in a near-stateless environment. It does not run a persistent database for personal information. The only local state persisted is:
 
-* **`seen_articles.json`**: Public news article URLs (to prevent duplicate posts) and editorial metadata (last dialect, topic history, watchlist topics). Capped at the last 500 links, 20 recent topics, and 10 watchlist entries.
+* **`seen_articles.json`**: Public news article URLs and source publication timestamps (to prevent duplicate posts and preserve article age), plus editorial metadata (last dialect, topic history, watchlist topics). Capped at the last 500 links, 20 recent topics, and 10 watchlist entries.
 * **`seen_interactions.json`**: Social media post/notification IDs of processed interactions, to prevent double-replies. No personal text is stored.
 * **`bluesky_session.txt`**: A Bluesky session token for session resumption, stored in your private repository.
 * **`broken_feeds.json`**: Health status of RSS feeds (URLs and failure counts). No personal data.

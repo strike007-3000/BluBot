@@ -1,6 +1,6 @@
 # 👨‍🔧 BluBot: Elite AI News Curator
 
-Automated AI news curator that fetches updates twice daily, synthesizes them with multi-model failover, and broadcasts to **Bluesky**, **Mastodon**, and **Threads** from **GitHub Actions**.
+Automated AI news curator running a three-slot weekday experiment, synthesizing updates with multi-model failover and broadcasting to **Bluesky**, **Mastodon**, and **Threads** from **GitHub Actions**.
 
 ## 📊 System Status
 
@@ -185,7 +185,12 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.25.0 (Current)**: **Natural, Source-Grounded Writing**.
+- **v3.26.0 (Current)**: **Curation Selection Integrity**.
+    - ⏱️ **Weekday Cadence Experiment**: Schedules runs at 06:17, 12:17, and 18:17 UTC Monday through Friday while leaving weekend behavior unchanged.
+    - 🧬 **Complete Fresh Selection**: Applies semantic story-history filtering before the final eight-article limit so lower-ranked fresh stories refill removed duplicates.
+    - 🔗 **Canonical URL Identity**: Collapses tracking and fragment variants during current-batch deduplication while preserving the source URL used for publication.
+    - 🕒 **Source-Time Retention**: Persists each selected article's best available feed timestamp separately from BluBot's reservation and broadcast timestamps.
+- **v3.25.0**: **Natural, Source-Grounded Writing**.
     - ✍️ **Shared Editorial Policy**: Applies direct, concrete, non-formulaic writing rules across curation, mentor posts, remixes, interaction replies, and executive briefings.
     - 📰 **Better Grounding**: Passes source summaries into synthesis so requested technical facts come from supplied evidence instead of article titles alone.
     - 🧹 **Simpler Style Rotation**: Removes the forced question-first structure and reframes rotating personas as content angles under one consistent voice.

@@ -31,7 +31,7 @@ The project is currently hardened against:
 - **Decompression Bomb DoS**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to prevent memory exhaustion attacks when fetching remote media.
 - **Telegram Impersonation**: The Telegram approval gateway validates all incoming callback queries and message updates against the configured `TELEGRAM_USER_ID`, silently discarding interactions from unauthorized senders.
 - **Telegram Command Injection**: All Telegram commands (`/watch`, `/unwatch`, `/brief`, `/topic`) enforce input sanitization: topics are bounded to 100 characters and reject URL-containing payloads. Watchlists are capped at 10 entries to prevent state file inflation.
-- **Zero-Duplicate Threads Logic**: A "Catch & Log" delivery model persists successfully broadcast post identifiers immediately on partial failure, preventing duplicate re-posts on subsequent runner restarts.
+- **Duplicate Publication Defense**: Canonical URL identity, semantic story-history filtering, pre-broadcast reservations, and "Catch & Log" delivery state prevent duplicate posts across feed variants, concurrent runs, and partial platform failures.
 - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) with safe attribute lookups (`getattr(entry, 'link', None)`) to survive malformed XML without exposing the pipeline to injection risks.
 
 *Thank you for helping keep the Sage secure!*

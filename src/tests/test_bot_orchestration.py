@@ -179,7 +179,7 @@ async def test_reservation_and_settlement_revision_advancement(mocker, tmp_path)
     initial_state = {"schema_version": 2, "revision": 5, "updated_at": "2026-08-18T10:00:00Z", "links": []}
     src.utils.save_json_state(test_file, initial_state)
 
-    article = Article(title="Art 1", link="https://example.com/art1", summary="s", published="2026-08-18", source="src", score=100)
+    article = Article(title="Art 1", link="https://example.com/art1", summary="s", published="2026-08-18T09:00:00+00:00", source="src", score=100)
     curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
     synthesis = SynthesisResult(content="Content", lead_link="https://example.com/art1", topic="AI")
 
@@ -188,6 +188,7 @@ async def test_reservation_and_settlement_revision_advancement(mocker, tmp_path)
     assert reserved_state["revision"] == 6
     assert len(reserved_state["pending_stories"]) == 1
     assert reserved_state["pending_stories"][0]["url"] == "https://example.com/art1"
+    assert reserved_state["pending_stories"][0]["source_published_at"] == article.published
 
     # 2. Settle Partial Broadcast Success (Revision 6 -> 7)
     results = [BroadcastResult("Bluesky", True), BroadcastResult("Mastodon", False)]
@@ -197,6 +198,8 @@ async def test_reservation_and_settlement_revision_advancement(mocker, tmp_path)
     assert len(final_state["recent_stories"]) == 1
     assert final_state["recent_stories"][0]["url"] == "https://example.com/art1"
     assert final_state["recent_stories"][0]["stage"] == "published"
+    assert final_state["recent_stories"][0]["source_published_at"] == article.published
+    assert final_state["recent_stories"][0]["published_at"] != article.published
 
 @pytest.mark.asyncio
 async def test_all_broadcast_targets_fail_retains_uncertain_reservation(mocker, tmp_path):

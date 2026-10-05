@@ -73,6 +73,7 @@ async def test_generate_briefing_dry_run(monkeypatch, mocker):
         mock_fetch.assert_called_once()
         args, kwargs = mock_fetch.call_args
         assert kwargs.get("seen_links") == []
+        assert kwargs.get("story_state") is None
 
         # Verify mock briefing text was returned
         assert "DRY RUN" in briefing
