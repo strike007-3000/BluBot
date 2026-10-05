@@ -28,7 +28,7 @@ charset-normalizer==3.4.7
     # via requests
 click==8.4.1
     # via atproto
-cryptography==50.0.1
+cryptography==50.0.2
     # via
     #   -r requirements.in
     #   atproto
@@ -47,7 +47,7 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.25.0
+google-genai==2.27.0
     # via -r requirements.in
 h11==0.16.0
     # via httpcore
@@ -99,11 +99,11 @@ pytest==9.1.1
     #   pytest-mock
 pytest-asyncio==1.4.0
     # via -r requirements.in
-pytest-mock==3.15.1
+pytest-mock==3.16.0
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via mastodon-py
-python-dotenv==1.2.3
+python-dotenv==1.2.4
     # via -r requirements.in
 python-telegram-bot[ext]==22.8
     # via -r requirements.in

@@ -3,9 +3,9 @@
 # to generate the Python 3.13 runtime lockfile.
 
 atproto>=0.0.72
-google-genai>=2.25.0
+google-genai>=2.27.0
 feedparser>=6.0.14
-python-dotenv>=1.2.3
+python-dotenv>=1.2.4
 requests==2.34.2
 Mastodon.py>=2.2.2
 beautifulsoup4>=4.15.0
@@ -15,7 +15,7 @@ python-telegram-bot[ext]>=21.0
 
 # Security Hardening (Specific Transitive Pins)
 # atproto 0.0.71 supports cryptography <51; 50.0.0 fixes the active advisories.
-cryptography>=50.0.0,<51
+cryptography>=50.0.2,<51
 urllib3==2.8.0
 anyio==4.15.1
 zipp==4.1.0
@@ -24,4 +24,4 @@ dnspython==2.8.0
 # Testing
 pytest>=9.1.1
 pytest-asyncio>=1.4.0
-pytest-mock>=3.12.0
+pytest-mock>=3.16.0
