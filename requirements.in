@@ -15,7 +15,7 @@ python-telegram-bot[ext]>=21.0
 
 # Security Hardening (Specific Transitive Pins)
 # atproto 0.0.71 supports cryptography <51; 50.0.0 fixes the active advisories.
-cryptography>=50.0.2,<51
+cryptography>=50.0.0,<51
 urllib3==2.8.0
 anyio==4.15.1
 zipp==4.1.0
