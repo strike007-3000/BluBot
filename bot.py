@@ -154,13 +154,12 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
         feed_list=active_feeds,
         limit=None if telegram_topic else 8,
         recent_categories=seen_data.get("recent_categories", []),
-        watch_topics=seen_data.get("watch_topics", [])
+        watch_topics=seen_data.get("watch_topics", []),
+        story_state=seen_data
     )
     await asyncio.to_thread(vanguard.apply_feed_outcomes, feed_outcomes)
 
     all_articles = [Article(**item) for item in raw_news]
-    from src.utils import is_story_semantic_duplicate
-    all_articles = [art for art in all_articles if not is_story_semantic_duplicate(art.title, seen_data)]
 
     if telegram_topic:
         SafeLogger.info(f"Curation Stage: Filtering RSS articles for Telegram topic request: '{telegram_topic}'")
@@ -645,6 +644,7 @@ async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisRe
         "title": matched_article.title,
         "fingerprint": compute_story_fingerprint(matched_article.title),
         "stage": "pending",
+        "source_published_at": matched_article.published,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     state.setdefault("pending_stories", []).append(pending_entry)
@@ -675,6 +675,7 @@ async def settle_persistence_stage(
             "fingerprint": compute_story_fingerprint(matched_article.title),
             "supporting_links": [normalize_url(sl) for sl in (matched_article.supporting_links or []) if sl],
             "stage": "published",
+            "source_published_at": matched_article.published,
             "published_at": datetime.now(timezone.utc).isoformat()
         }
         state.setdefault("recent_stories", []).append(pub_entry)

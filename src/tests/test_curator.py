@@ -103,6 +103,67 @@ async def test_fetch_news_synergy_and_deduplication(mock_httpx_client, mocker):
     assert top_news[0]["score"] == 10 + SYNERGY_BONUS
     assert top_news[0]["supporting_sources"] == ["Site 2"]
 
+@pytest.mark.asyncio
+async def test_fetch_news_refills_after_semantic_history_filter(mock_httpx_client, mocker, monkeypatch):
+    """Historical duplicates are removed before lead policy and the final limit."""
+    titles = [
+        "Anthropic Releases Claude 3.7 Sonnet",
+        "Critical Safety Incident Report",
+        "Quantum Compiler Breakthrough",
+        "Robotics Warehouse Deployment",
+        "Chip Fabrication Advance",
+        "Policy Copyright Decision",
+        "Medical Imaging Benchmark",
+        "Open Source Database Launch",
+        "Satellite Foundation Model",
+    ]
+    items = [
+        {
+            "title": title,
+            "link": f"https://example.com/{idx}",
+            "summary": "Summary",
+            "source": "Source",
+            "source_id": "critical_feed" if idx == 1 else "standard_feed",
+            "published": f"2026-10-05T00:00:0{idx}+00:00",
+            "score": 100 - idx,
+        }
+        for idx, title in enumerate(titles)
+    ]
+    mocker.patch("src.curator.fetch_single_feed", return_value=("f1", items, True, None))
+
+    from src.config import FEED_CATEGORY_MAP
+    monkeypatch.setitem(FEED_CATEGORY_MAP, "critical_feed", "critical")
+    monkeypatch.setitem(FEED_CATEGORY_MAP, "standard_feed", "research_lab")
+    story_state = {
+        "recent_stories": [{"title": "Anthropic Announces New Claude 3.7 Sonnet Model"}],
+        "pending_stories": [],
+    }
+
+    articles, _ = await fetch_news(
+        mock_httpx_client,
+        feed_list=["f1"],
+        limit=8,
+        story_state=story_state,
+    )
+
+    assert len(articles) == 8
+    assert titles[0] not in [article["title"] for article in articles]
+    assert titles[-1] in [article["title"] for article in articles]
+    assert articles[0]["source_id"] == "standard_feed"
+
+@pytest.mark.asyncio
+async def test_fetch_news_deduplicates_canonical_urls(mock_httpx_client, mocker):
+    items = [
+        {"title": "First Headline", "link": "https://example.com/story?utm_source=rss", "summary": "...", "source": "One", "source_id": "one", "published": "2026-10-05T00:00:00+00:00", "score": 10},
+        {"title": "Different Headline", "link": "HTTPS://EXAMPLE.COM/story#share", "summary": "...", "source": "Two", "source_id": "two", "published": "2026-10-05T00:00:01+00:00", "score": 20},
+    ]
+    mocker.patch("src.curator.fetch_single_feed", return_value=("f1", items, True, None))
+
+    articles, _ = await fetch_news(mock_httpx_client, feed_list=["f1"])
+
+    assert len(articles) == 1
+    assert articles[0]["link"] == items[0]["link"]
+
 from src.curator import normalize_headline, calculate_title_similarity, cluster_articles
 
 def test_headline_normalization():

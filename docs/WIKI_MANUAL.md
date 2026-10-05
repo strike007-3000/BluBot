@@ -216,6 +216,7 @@ BluBot uses a tiered persistence model so ephemeral runners can recover recent s
 1. **Remote Gist (when configured)**: Loads the private Gist as the authoritative state and compares `schema_version: 2`, revision counters, and timestamps with local data.
 2. **Two-Phase Pre-Broadcast Reservation Protocol**: Writes a `pending_stories` reservation to Gist/local state before broadcasting, aborting publication if Gist reservation fails, and transitioning to `published` upon success.
 3. **Primary Local & Backup Rotation**: Saves perform atomic writes (`.tmp` -> `seen_articles.json`) and rotate previous valid state to `.bak` under advisory `FileLock`. If Gist write fails during settlement, local recovery state is saved with `unsynced_gist: true`.
+4. **Timestamp Provenance**: Story records keep `source_published_at` as the best timestamp supplied by the RSS/Atom feed, while `created_at` records reservation time and `published_at` records BluBot's broadcast time.
 
 ---
 ## 🧪 Page 9: Automated Quality Control
@@ -528,6 +529,7 @@ BluBot v3.18.0 introduces a **title normalization and story clustering engine** 
 2. **Similarity Matching**: Articles are compared pairwise using Jaccard similarity on their normalized token sets. Articles with high overlap (and optionally matching version strings) are grouped into clusters.
 3. **Domain Corroboration**: Within each cluster, the engine counts distinct publisher domains. If ≥2 unique domains report the same story, the cluster is awarded **Consensus Synergy** (`+15` bonus).
 4. **Lead Selection**: The highest-scoring article in each cluster becomes the lead. Supporting source names and direct article links are attached to the lead article for editorial transparency.
+5. **Selection Integrity**: Current-batch URLs are canonicalized before deduplication. For regular curation, stories matching recent or pending semantic fingerprints are removed before the final eight-article limit and lead-category policy, allowing fresh lower-ranked stories to refill the selection. Historical `/brief` requests intentionally retain the complete seven-day archive.
 
 ### Scoring Debug Metadata
 Each clustered article's `_score_debug` dictionary is extended with:

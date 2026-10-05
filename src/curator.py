@@ -319,7 +319,7 @@ def cluster_articles(raw_entries: List[dict]) -> List[dict]:
 
     return result_articles
 
-async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8, recent_categories=None, watch_topics=None, days_lookback=2):
+async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None, limit=8, recent_categories=None, watch_topics=None, days_lookback=2, story_state=None):
     """Orchestrates parallel fetching with Consensus Synergy and Greedy Diversity, returning (articles, feed_outcomes)."""
     now_utc = datetime.now(timezone.utc)
     source_list = feed_list if feed_list is not None else RSS_FEEDS
@@ -332,17 +332,23 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
         feed_outcomes.append((url, is_healthy, error_msg))
         all_raw_entries.extend(items)
 
-    # Exact URL deduplication
+    # Canonical URL deduplication
+    from src.utils import normalize_url
     unique_by_link = {}
     for e in all_raw_entries:
-        if e['link'] not in unique_by_link:
-            unique_by_link[e['link']] = e
+        canonical_link = normalize_url(e['link'])
+        if canonical_link not in unique_by_link:
+            unique_by_link[canonical_link] = e
 
     deduped_entries = list(unique_by_link.values())
 
     # Cross-source Story Clustering
     entries = cluster_articles(deduped_entries)
     entries.sort(key=lambda x: x["score"], reverse=True)
+
+    if story_state:
+        from src.utils import is_story_semantic_duplicate
+        entries = [e for e in entries if not is_story_semantic_duplicate(e.get("title", ""), story_state)]
 
     # Enforce policy: The lead article (index 0) cannot be from a "critical" category
     # unless all available entries are critical.
