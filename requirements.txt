@@ -121,7 +121,7 @@ soupsieve==2.9
     # via beautifulsoup4
 tenacity==9.1.4
     # via google-genai
-tornado==6.5.8
+tornado==6.5.9
     # via python-telegram-bot
 typing-extensions==4.16.0
     # via
