@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-10-05 | 🔍 Afternoon Deep Dive (vllm v0.31.0 Release) |
+| **Broadcaster** | Operational | 2026-10-06 | 🔍 Midday Briefing (Enterprise AI Model Availability and Deployment) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
