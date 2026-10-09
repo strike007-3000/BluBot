@@ -166,29 +166,29 @@ BASE_TIER_2 = 15
 HIGH_SIGNAL_KEYWORDS = [
     "agentic",
     "reasoning",
-    "moe",
-    "autonomous",
-    "benchmark",
-    "open weights",
-    "inference",
-    "fine-tuning",
-    "watermarking",
     "multimodal",
-    "distillation",
-    "compute"
+    "open weights",
+    "watermark",
+    "reinforcement learning",
+    "inference",
+    "benchmark",
+    "autonomous",
+    "fine-tuning",
+    "scaling",
+    "embedding"
 ]
 
 MOMENTUM_PRODUCTS = [
-    "gpt-6.1 sol",
-    "gemini 4 argon",
+    "gpt-5",
+    "claude haiku 5.5",
+    "gemini 4",
     "gemma 4",
-    "claude",
-    "openai dots",
-    "meta muse",
-    "nemotron 3",
     "gpt-6 astra",
-    "chatgpt enterprise",
-    "amazon bedrock agentcore"
+    "nemotron",
+    "codex",
+    "embeddinggemma",
+    "falcon asr",
+    "claude 4"
 ]
 
 # Weighting Matrix (retained/updated)
