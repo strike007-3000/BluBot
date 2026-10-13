@@ -37,7 +37,7 @@ decorator==5.3.1
     # via mastodon-py
 distro==1.9.0
     # via google-genai
-dnspython==2.8.0
+dnspython==2.9.0
     # via
     #   -r requirements.in
     #   atproto
@@ -47,7 +47,7 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.27.0
+google-genai==2.29.0
     # via -r requirements.in
 h11==0.16.0
     # via httpcore
@@ -144,7 +144,7 @@ websockets==15.0.1
     # via
     #   atproto
     #   google-genai
-zipp==4.1.0
+zipp==4.1.1
     # via -r requirements.in
 zstandard==0.25.0
     # via atproto
