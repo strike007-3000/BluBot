@@ -4,5 +4,5 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-10-14 | 🔍 Midday Briefing (Gemini 4 Argon and MoE Kernel Optimizations) |
+| **Broadcaster** | Operational | 2026-10-14 | 🔍 Afternoon Deep Dive (Tamnoon AWS Bedrock Security Remediation) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
