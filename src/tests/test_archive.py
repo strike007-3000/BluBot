@@ -170,15 +170,20 @@ def test_compute_guid_stability():
     assert len(g1) == 64
 
 
-def test_build_archive_fail_closed_without_gist_credentials():
-    """build_archive.py MUST exit non-zero when Gist state is unavailable."""
+def test_build_archive_fail_closed_without_gist_credentials(tmp_path):
+    """build_archive.py MUST raise SystemExit(1) and write no files when Gist state is unavailable."""
     from src.settings import settings
     object.__setattr__(settings, "gist_id", None)
     object.__setattr__(settings, "gist_token", None)
 
-    with patch("sys.exit") as mock_exit, patch("src.logger.SafeLogger.error") as mock_log:
+    out_dir = tmp_path / "site_out"
+    with patch("src.logger.SafeLogger.error") as mock_log:
         from scripts import build_archive
-        build_archive.main(argv=[])
-        mock_exit.assert_called_once_with(1)
+        with pytest.raises(SystemExit) as exc_info:
+            build_archive.main(argv=["--out", str(out_dir)])
+        assert exc_info.value.code == 1
         mock_log.assert_called_once()
         assert "Archive build failed-closed" in mock_log.call_args[0][0]
+
+    # Verify no files or directories were created on failure
+    assert not out_dir.exists()
