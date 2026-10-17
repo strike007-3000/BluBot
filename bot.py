@@ -694,14 +694,16 @@ async def settle_persistence_stage(
                 posts["bluesky"] = {"uri": res.post_id, "cid": res.post_cid, "receipt_uri": res.receipt_id}
             else:
                 posts[res.platform.lower()] = {"id": res.post_id}
-        state.setdefault("published_posts", []).append({
-            "url": canonical_lead,
-            "title": matched_article.title,
-            "supporting_links": pub_entry["supporting_links"],
-            "published_at": pub_entry["published_at"],
-            "posts": posts,
-        })
-        state["published_posts"] = state["published_posts"][-PUBLISHED_POSTS_CAP:]
+        from src.utils import append_published_post
+        append_published_post(
+            state,
+            url=canonical_lead,
+            title=matched_article.title,
+            topic=synthesis.topic or "General",
+            supporting_links=pub_entry["supporting_links"],
+            posts=posts,
+            published_at=pub_entry["published_at"],
+        )
         state.setdefault("links", [])
         if canonical_lead not in state["links"]:
             state["links"].append(canonical_lead)
