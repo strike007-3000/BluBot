@@ -39,7 +39,10 @@ def test_migration_replaces_non_list_ledger():
 
 
 def test_migration_drops_invalid_entries():
-    state = sanitize_and_migrate_state({"published_posts": [{"url": "u1"}, "x", {"title": "no url"}, {"url": ""}]})
+    state = sanitize_and_migrate_state({"published_posts": [
+        {"url": "u1"}, "x", {"title": "no url"}, {"url": ""}, {"url": "   "},
+        {"url": ["https://example.com/list"]}, {"url": {"value": "https://example.com/dict"}},
+    ]})
     assert state["published_posts"] == [{"url": "u1"}]
 
 
@@ -85,6 +88,23 @@ def test_merge_combines_fields_for_the_same_platform_post():
     assert entry["posts"]["bluesky"] == {
         "uri": "at://a", "cid": "cid-a", "receipt_uri": "at://receipt",
     }
+
+
+def test_merge_drops_entries_with_unhashable_urls():
+    s1 = {"published_posts": [
+        {"url": ["https://example.com/list"], "published_at": "2026-01-01"},
+        {"url": "https://example.com/valid-1", "published_at": "2026-01-02"},
+    ]}
+    s2 = {"published_posts": [
+        {"url": {"value": "https://example.com/dict"}, "published_at": "2026-01-03"},
+        {"url": "https://example.com/valid-2", "published_at": "2026-01-04"},
+    ]}
+
+    ledger = _merge_publication_states(s1, s2)["published_posts"]
+
+    assert [entry["url"] for entry in ledger] == [
+        "https://example.com/valid-1", "https://example.com/valid-2",
+    ]
 
 
 def test_merge_caps_ledger():

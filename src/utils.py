@@ -297,7 +297,12 @@ PUBLISHED_POSTS_CAP = 500  # Durable ledger: count-capped only, never time-prune
 
 def _sanitize_published_posts(entries: list) -> list:
     """Return valid ledger entries ordered oldest-to-newest and count-capped."""
-    valid = [entry for entry in entries if isinstance(entry, dict) and entry.get("url")]
+    valid = [
+        entry for entry in entries
+        if isinstance(entry, dict)
+        and isinstance(entry.get("url"), str)
+        and entry["url"].strip()
+    ]
     return sorted(valid, key=lambda entry: str(entry.get("published_at", "")))[-PUBLISHED_POSTS_CAP:]
 
 def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
