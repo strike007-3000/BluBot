@@ -5,7 +5,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from src.config import FEED_CATEGORY_MAP, FEED_SCORE_MAP, HF_MODELS_API_URL, RSS_FEEDS
-from src.curator import cluster_articles, fetch_hf_trending, fetch_news, summarize_news
+from src.curator import (
+    _extract_hf_model_card_excerpt,
+    cluster_articles,
+    fetch_hf_trending,
+    fetch_news,
+    summarize_news,
+)
 from src.settings import Settings, settings
 
 
@@ -27,6 +33,16 @@ def test_hf_api_source_is_scored_but_not_an_rss_feed():
     assert HF_MODELS_API_URL not in RSS_FEEDS
     assert FEED_SCORE_MAP["hf_trending"] == 18
     assert FEED_CATEGORY_MAP["hf_trending"] == "open_source"
+
+
+def test_model_card_heading_without_blank_line_keeps_description():
+    card = """# Model Description
+This compact multilingual model translates technical manuals while preserving terminology, formatting, and document structure across long inputs.
+"""
+
+    excerpt = _extract_hf_model_card_excerpt(card)
+
+    assert excerpt.startswith("This compact multilingual model")
 
 
 @pytest.mark.asyncio

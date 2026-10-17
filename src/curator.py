@@ -208,10 +208,13 @@ def _extract_hf_model_card_excerpt(markdown: str) -> Optional[str]:
     text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
 
     for block in re.split(r"\n\s*\n", text):
-        raw = block.strip()
+        raw = "\n".join(
+            line for line in block.splitlines()
+            if not re.match(r"^\s*#{1,6}(?:\s+|$)", line)
+        ).strip()
         if (
             not raw
-            or raw.startswith(("#", "|", "![", "[!["))
+            or raw.startswith(("|", "![", "[!["))
             or "<img" in raw.lower()
             or raw.lower().count("<a ") >= 2
         ):
