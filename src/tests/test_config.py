@@ -16,6 +16,7 @@ def test_scheduled_workflow_cadence():
     assert "[skip ci]" not in weekly
     assert weekly.count("secrets.REPO_TOKEN") == 2
     assert "git push origin HEAD:main" not in weekly
+    assert "git fetch origin automated/config-update:refs/remotes/origin/automated/config-update" in weekly
 
 def test_validate_config_dry_run_injection():
     """Verify that missing config variables are injected with mocks in DRY_RUN mode."""
