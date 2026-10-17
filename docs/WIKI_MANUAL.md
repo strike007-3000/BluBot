@@ -90,7 +90,7 @@ BluBot uses layered failure handling and state recovery.
 
 ## 🎨 Page 4: Configurable Image Generation
 
-BluBot defaults to **Hugging Face Inference Providers** and then falls back to **Pollinations**. `IMAGE_PROVIDER` can select `pollinations`, `nvidia`, or `imagen`, each with its own ordered fallback chain.
+BluBot defaults to **Cloudflare Workers AI** with `@cf/black-forest-labs/flux-1-schnell`, then falls back to **Pollinations** and **Hugging Face**. `IMAGE_PROVIDER` can select another chain; Imagen is used only when explicitly selected.
 
 ### The Designer & Image Pipeline
 
@@ -102,7 +102,7 @@ BluBot defaults to **Hugging Face Inference Providers** and then falls back to *
            /                        \
       (Found)                     (Not Found)
          ▼                            ▼
-  [Normalize URL]            [Call Pollinations / Hugging Face]
+  [Normalize URL]            [Cloudflare → Pollinations → HF]
          ▼                    (Generate Isometric Prompt)
   [Filter Generic Logos]              ▼
   (Skip if e.g. "arxiv-logo") [Convert Base64 to Bytes]
@@ -126,7 +126,7 @@ BluBot defaults to **Hugging Face Inference Providers** and then falls back to *
 
 1. **Lead Selection & Scraper**: The metadata scraper extracts metadata tags like `og:image` from the target article.
 2. **URL Normalization & Logo Filter**: Resolves protocol-relative link formats (e.g. `//site.com/img.png` to `https://site.com/img.png`) and checks the path against `GENERIC_IMAGE_PATTERNS`. If a site logo is detected, it is discarded.
-3. **Pollinations & Hugging Face Generation (Fallback)**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using the active Gemini model, then invokes the Pollinations API (falling back to Hugging Face serverless API) to generate the image.
+3. **Free-Tier Image Generation**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using the active Gemini model, then tries Cloudflare Workers AI, Pollinations, and Hugging Face in order. Exhausting the chain returns no generated image; it never invokes Imagen implicitly.
 4. **RGB Conversion**: Standardizes image mode representations by converting CMYK or Grayscale source images to standard RGB, preventing rendering distortions.
 5. **Iterative Quality Compression**: Fits the binary payload under the strict 900KB platform upload cap. The optimizer iteratively scales JPEG quality down (from 85% to 30%, in steps of 10%) and writes to an in-memory buffer (`io.BytesIO()`) until the constraints are met.
 
@@ -144,6 +144,9 @@ The current registry contains **45 RSS feeds plus one API source** across 8 tier
 | Variable | Description |
 | :--- | :--- |
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account used for Workers AI image generation |
+| `CLOUDFLARE_API_TOKEN` | Scoped API token with Workers AI permissions |
+| `CLOUDFLARE_IMAGE_MODEL` | Optional Workers AI model override (default: `@cf/black-forest-labs/flux-1-schnell`) |
 | `POLLINATIONS_API_KEY` | Deprecated compatibility setting; current Pollinations requests do not use it |
 | `HUGGINGFACE_API_KEY` | Hugging Face Hub User Access Token |
 | `HUGGINGFACE_IMAGE_MODEL` | Hugging Face model target (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
@@ -158,7 +161,7 @@ The current registry contains **45 RSS feeds plus one API source** across 8 tier
 | `THREADS_USER_ID` | Your Threads User ID |
 | `GIST_ID` | Private GitHub Gist ID |
 | `GIST_TOKEN` | GitHub Token with `gist` scope |
-| `IMAGE_PROVIDER` | `huggingface` (default) or `pollinations` or `nvidia` or `imagen` |
+| `IMAGE_PROVIDER` | `cloudflare` (default), `pollinations`, `huggingface`, `nvidia`, or explicit-only `imagen` |
 | `POLLINATIONS_API_URL` | Optional Pollinations endpoint override |
 | `ENABLE_IMAGE_GEN` | Enable generated-image fallbacks (default: `true`) |
 | `ENABLE_BIO_MGMT` | Enable profile bio updates (default: `true`) |

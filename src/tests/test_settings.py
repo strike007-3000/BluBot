@@ -15,9 +15,20 @@ def test_settings_from_env_default(monkeypatch):
     assert settings.bsky_handle == "test_handle"
     assert settings.bsky_password == "test_pass"
     assert settings.gemini_model == "models/gemini-3.5-flash-lite"
+    assert settings.image_provider == "cloudflare"
     assert settings.is_dry_run is False
     assert settings.is_manual_run is False
     assert settings.should_bypass_rest is True # not in CI default
+
+def test_settings_cloudflare_image_credentials(monkeypatch):
+    monkeypatch.setenv("CLOUDFLARE_ACCOUNT_ID", "account-id")
+    monkeypatch.setenv("CLOUDFLARE_API_TOKEN", "cf-token")
+    monkeypatch.setenv("CLOUDFLARE_IMAGE_MODEL", "@cf/example/model")
+
+    settings = Settings.from_env()
+    assert settings.cloudflare_account_id == "account-id"
+    assert settings.cloudflare_api_token == "cf-token"
+    assert settings.cloudflare_image_model == "@cf/example/model"
 
 def test_settings_gemini_model_override(monkeypatch):
     """Verify that Settings.from_env() respects GEMINI_MODEL override."""

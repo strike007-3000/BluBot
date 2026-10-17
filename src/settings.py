@@ -25,7 +25,10 @@ class Settings:
     is_dry_run: bool = False
     is_ci: bool = False
     github_event: str = "schedule"
-    image_provider: str = "huggingface"
+    image_provider: str = "cloudflare"
+    cloudflare_account_id: Optional[str] = None
+    cloudflare_api_token: Optional[str] = None
+    cloudflare_image_model: str = "@cf/black-forest-labs/flux-1-schnell"
     pollinations_api_url: str = "" # will load from config constant in from_env
     pollinations_api_key: Optional[str] = None
     huggingface_api_key: Optional[str] = None
@@ -68,7 +71,7 @@ class Settings:
 
         is_dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
         is_ci = os.getenv("CI", "false").lower() == "true"
-        image_provider = os.getenv("IMAGE_PROVIDER", "huggingface")
+        image_provider = os.getenv("IMAGE_PROVIDER", "cloudflare")
 
         # Parse thinking budget safely
         tb_env = os.getenv("THINKING_BUDGET")
@@ -102,6 +105,12 @@ class Settings:
             "is_ci": is_ci,
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
+            "cloudflare_account_id": os.getenv("CLOUDFLARE_ACCOUNT_ID"),
+            "cloudflare_api_token": os.getenv("CLOUDFLARE_API_TOKEN"),
+            "cloudflare_image_model": os.getenv(
+                "CLOUDFLARE_IMAGE_MODEL",
+                "@cf/black-forest-labs/flux-1-schnell",
+            ),
             "pollinations_api_url": os.getenv("POLLINATIONS_API_URL", POLLINATIONS_API_URL),
             "pollinations_api_key": os.getenv("POLLINATIONS_API_KEY"),
             "huggingface_api_key": os.getenv("HUGGINGFACE_API_KEY"),

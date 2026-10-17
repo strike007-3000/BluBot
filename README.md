@@ -23,7 +23,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - *Bluesky*: Uses `AppBskyEmbedExternal` for link cards and `AppBskyEmbedImages` for scratch posts.
         - *Mastodon*: Uploads image bytes, degrading gracefully to text on upload errors.
         - *Threads*: Renders OpenGraph public URLs only, gracefully falling back to text-only mode for generated assets lacking public hosting.
-    - **Configurable Image Fallbacks**: Defaults to **Hugging Face Inference Providers**, then falls back to **Pollinations**. Selecting another `IMAGE_PROVIDER` changes the ordered fallback chain.
+    - **Configurable Image Fallbacks**: Defaults to **Cloudflare Workers AI (FLUX.1 Schnell)**, then falls back to **Pollinations** and **Hugging Face**. Imagen runs only when explicitly selected.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture**:
     - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
@@ -89,9 +89,10 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 #### Bluesky & Mastodon
 Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
-#### Pollinations & Hugging Face
+#### Cloudflare Workers AI, Pollinations & Hugging Face
+- Cloudflare Workers AI is the default image provider. Create a scoped Workers AI API token and copy your Cloudflare Account ID.
 - Pollinations is free and requires no API key.
-- To use the default Hugging Face provider, create a token with **Inference** permissions. Without one, the chain skips Hugging Face and tries Pollinations.
+- Hugging Face remains the final fallback when a token with **Inference** permissions is configured.
 
 #### Google Gemini
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
@@ -103,12 +104,15 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
 | `BSKY_APP_PASSWORD` | **Yes** | Your Bluesky App Password |
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
+| `CLOUDFLARE_ACCOUNT_ID` | No | Cloudflare account used for Workers AI image generation; required for the default provider |
+| `CLOUDFLARE_API_TOKEN` | No | Scoped API token with Workers AI permissions; required for the default provider |
+| `CLOUDFLARE_IMAGE_MODEL` | No | Workers AI image model (default: `@cf/black-forest-labs/flux-1-schnell`) |
 | `POLLINATIONS_API_KEY` | No | Deprecated compatibility setting; the current Pollinations request does not use it |
-| `HUGGINGFACE_API_KEY` | No | Hugging Face token with **Inference** permissions; needed when using the default Hugging Face provider |
+| `HUGGINGFACE_API_KEY` | No | Hugging Face token with **Inference** permissions; used by the final fallback |
 | `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
 | `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
 | `GEMINI_MODEL` | No | (Optional) Model used for interactive replies, on-demand topics, and `/brief` synthesis (default: `models/gemini-3.5-flash-lite`) |
-| `IMAGE_PROVIDER` | No | Default: `huggingface`. Options: `huggingface`, `pollinations`, `nvidia`, `imagen`. Each runs a fallback chain. |
+| `IMAGE_PROVIDER` | No | Default: `cloudflare`. Options: `cloudflare`, `pollinations`, `huggingface`, `nvidia`, `imagen`. Imagen is explicit-only. |
 | `NVIDIA_KEY` | No | NVIDIA image API key; also retained as a legacy token fallback for Hugging Face |
 | `POLLINATIONS_API_URL` | No | Override the Pollinations image endpoint |
 | `ENABLE_IMAGE_GEN` | No | Enable generated-image fallbacks (default: `true`) |
@@ -193,7 +197,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.28.0 (Current)**: **Source Receipts & Hugging Face Trending**.
+- **v3.29.0 (Current)**: **Free-Tier Cloudflare Image Generation**.
+  - Added Cloudflare Workers AI with FLUX.1 Schnell as the primary generated-image provider.
+  - Falls back to Pollinations and then Hugging Face, while removing automatic Imagen fallback and its billing risk.
+  - Extended the existing live image diagnostic to test Cloudflare credentials and generation directly.
+- **v3.28.0**: **Source Receipts & Hugging Face Trending**.
     - 🧾 **Bluesky Receipts**: Best-effort replies attach up to two corroborating links after root-post settlement, preserving source/link pairing and recording the receipt URI in the ledger.
     - 🤗 **Trending Models**: Adds the public Hugging Face models API as a scored source, requires a factual model-card excerpt, and keeps Feed Vanguard and RSS audits RSS-only.
     - 🧪 **Diagnostics**: Extends the existing diagnostic menu with a live Hugging Face Trending source check.

@@ -1376,6 +1376,52 @@ async def generate_pollinations_image(
         SafeLogger.warn(f"Pollinations failed: {e}")
         return None
 
+async def generate_cloudflare_image(
+    prompt: str,
+    client: httpx.AsyncClient,
+) -> bytes | None:
+    """Generate an image through the Cloudflare Workers AI REST API."""
+    if not settings.cloudflare_account_id or not settings.cloudflare_api_token:
+        SafeLogger.info("Cloudflare Workers AI: Skipping because credentials are missing.")
+        return None
+
+    model = settings.cloudflare_image_model
+    url = (
+        "https://api.cloudflare.com/client/v4/accounts/"
+        f"{settings.cloudflare_account_id}/ai/run/{model}"
+    )
+    headers = {
+        "Authorization": f"Bearer {settings.cloudflare_api_token}",
+        "Content-Type": "application/json",
+    }
+    payload = {"prompt": prompt, "steps": 4, "seed": 0}
+
+    try:
+        response = await client.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=httpx.Timeout(90.0, connect=10.0),
+        )
+        if response.status_code in {401, 403, 429} or response.status_code >= 500:
+            SafeLogger.warn(f"Cloudflare Workers AI HTTP error: Status={response.status_code}")
+        response.raise_for_status()
+
+        result = response.json().get("result", {})
+        encoded_image = result.get("image")
+        if not isinstance(encoded_image, str):
+            SafeLogger.warn("Cloudflare Workers AI response did not contain an image")
+            return None
+
+        img_bytes = base64.b64decode(encoded_image, validate=True)
+        if not validate_image_bytes(img_bytes):
+            SafeLogger.warn("Cloudflare Workers AI returned invalid image bytes")
+            return None
+        return img_bytes
+    except (httpx.TimeoutException, httpx.HTTPStatusError, httpx.RequestError, ValueError) as e:
+        SafeLogger.warn(f"Cloudflare Workers AI failed: {e}")
+        return None
+
 async def generate_huggingface_image(
     prompt: str,
     client: httpx.AsyncClient,
@@ -1481,19 +1527,21 @@ async def generate_nvidia_image(
     return None
 
 IMAGE_PROVIDER_CHAINS = {
+    "cloudflare": ["cloudflare", "pollinations", "huggingface"],
     "pollinations": ["pollinations", "huggingface"],
     "huggingface": ["huggingface", "pollinations"],
     "nvidia": ["nvidia", "huggingface", "pollinations"],
 }
 
 IMAGE_GENERATORS = {
+    "cloudflare": generate_cloudflare_image,
     "pollinations": generate_pollinations_image,
     "huggingface": generate_huggingface_image,
     "nvidia": generate_nvidia_image,
 }
 
 async def generate_ai_image(client: httpx.AsyncClient, genai_client, prompt: str) -> bytes | None:
-    """Generates an image using the configured provider dispatcher chain, falling back to Imagen if both fail."""
+    """Generate an image through the configured provider chain."""
     configured_provider = settings.image_provider.strip().lower()
 
     # Explicitly handle legacy/explicit selections.
@@ -1513,7 +1561,7 @@ async def generate_ai_image(client: httpx.AsyncClient, genai_client, prompt: str
 
     chain = IMAGE_PROVIDER_CHAINS.get(
         configured_provider,
-        ["huggingface", "pollinations"],
+        IMAGE_PROVIDER_CHAINS["cloudflare"],
     )
 
     attempted = set()
@@ -1540,14 +1588,6 @@ async def generate_ai_image(client: httpx.AsyncClient, genai_client, prompt: str
             return img_bytes
 
     SafeLogger.error("All dynamic image providers failed")
-
-    if genai_client is not None:
-        SafeLogger.info("Falling back to Imagen for image generation...")
-        try:
-            return await generate_imagen_image(genai_client, prompt)
-        except Exception as e:
-            SafeLogger.warn(f"Imagen fallback also failed: {e}")
-
     return None
 
 
