@@ -200,7 +200,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 ## 🗒️ Updates & History
 
 - **v3.33.1 (Current)**: **Weekly Config PR CI Fix**.
-  - Removes the CI-skip marker from automated weekly configuration commits so required pull-request checks run normally.
+  - Weekly configuration changes always use the existing `REPO_TOKEN` to update a pull request, allowing required CI and CodeQL workflows to run normally.
 - **v3.32.0**: **GitHub Pages Archive & RSS Feed**.
   - Adds `scripts/build_archive.py` generating a lightweight, responsive static HTML archive (`index.html`) and RSS 2.0 XML feed (`feed.xml`) directly from the durable `published_posts` ledger.
   - Fail-closed Gist loading ensures an empty state is never accidentally published if remote state is unreachable.

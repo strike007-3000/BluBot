@@ -489,7 +489,7 @@ This ensures that the pagination markers (e.g., `(1/2)`) never push a post over 
 ### 1. Dynamic Keyword & Product Updates
 To prevent search terms from becoming outdated, BluBot utilizes `scripts/update_config_keywords.py` and a weekly GitHub Actions workflow `weekly_config_update.yml` running every Friday morning at 2:00 AM UTC.
 * **Functionality**: The script automatically fetches recent headlines from the feed network and calls Gemini to extract the top 10 momentum products and top 12 high-signal developer event/tech keywords.
-* **State Push / Pull Request**: The workflow attempts to commit updates back to `main`. If branch protection is active, it automatically creates a new branch and logs a GitHub Pull Request. Automated configuration commits intentionally run the normal required pull-request checks.
+* **State Pull Request**: The workflow uses the `REPO_TOKEN` secret to update the `automated/config-update` branch and open or refresh a pull request. This non-default credential allows the pull-request event to trigger the normal required CI and CodeQL checks.
 
 ### 2. Friday Release Curation Focus
 On Friday mornings, the curation prompt automatically shifts. The bot appends a specialized instruction to focus exclusively on product launches and developer releases from the past week, creating a weekly roundup digest.
