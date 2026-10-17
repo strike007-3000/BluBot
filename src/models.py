@@ -124,7 +124,9 @@ class BroadcastResult:
     platform: str
     success: bool
     error: Optional[str] = None
-    post_id: Optional[str] = None
+    post_id: Optional[str] = None      # Bluesky root URI, Mastodon/Threads root ID
+    post_cid: Optional[str] = None     # Bluesky root CID (needed for replies)
+    receipt_id: Optional[str] = None   # Bluesky source-receipt reply URI
 
 @dataclass(frozen=True)
 class InteractionNote:

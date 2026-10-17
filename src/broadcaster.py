@@ -123,6 +123,7 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
             root_post = resp
             
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Bluesky!")
+    return root_post
 
 @retry_with_backoff
 async def post_to_mastodon(text, media=None):
@@ -152,6 +153,7 @@ async def post_to_mastodon(text, media=None):
                 SafeLogger.warn(f"Mastodon media failed: {e}")
 
         prev_id = None
+        root_post_id = None
         for i, chunk in enumerate(chunks):
             current_text = chunk
             if len(chunks) > 1:
@@ -171,9 +173,13 @@ async def post_to_mastodon(text, media=None):
                 in_reply_to_id=prev_id
             )
             prev_id = status['id']
+            if i == 0:
+                root_post_id = prev_id
+        return root_post_id
 
-    await asyncio.to_thread(_post_thread)
+    root_post_id = await asyncio.to_thread(_post_thread)
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Mastodon!")
+    return root_post_id
 
 @retry_with_backoff
 async def post_to_threads(client, text, media=None):
@@ -259,6 +265,7 @@ async def post_to_threads(client, text, media=None):
             await human_delay(settings.thread_pause_min, settings.thread_pause_max)
 
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Threads!")
+    return root_post_id
 
 async def fetch_bluesky_mentions(bsky_client):
     """Fetches recent mentions and replies from Bluesky within 24 hours."""

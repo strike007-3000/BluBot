@@ -23,7 +23,8 @@ from src.utils import (
     load_seen_articles, save_seen_articles, SafeLogger,
     load_session_string, save_session_string, get_link_metadata,
     load_seen_interactions, save_seen_interactions, human_delay,
-    is_safe_url, normalize_url, compute_story_fingerprint, smart_truncate
+    is_safe_url, normalize_url, compute_story_fingerprint, smart_truncate,
+    PUBLISHED_POSTS_CAP,
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight,
@@ -606,7 +607,12 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
         elif res is False:
             report.append(BroadcastResult(platform=name, success=False, error="Platform skipped or failed internally"))
         else:
-            report.append(BroadcastResult(platform=name, success=True))
+            post_id = getattr(res, "uri", res)
+            report.append(BroadcastResult(
+                platform=name, success=True,
+                post_id=str(post_id) if post_id else None,
+                post_cid=getattr(res, "cid", None),
+            ))
     return report, bsky_client
 
 async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisResult) -> Tuple[dict, Article]:
@@ -679,6 +685,23 @@ async def settle_persistence_stage(
             "published_at": datetime.now(timezone.utc).isoformat()
         }
         state.setdefault("recent_stories", []).append(pub_entry)
+
+        posts = {}
+        for res in results:
+            if not (res.success and res.post_id):
+                continue
+            if res.platform == "Bluesky":
+                posts["bluesky"] = {"uri": res.post_id, "cid": res.post_cid, "receipt_uri": res.receipt_id}
+            else:
+                posts[res.platform.lower()] = {"id": res.post_id}
+        state.setdefault("published_posts", []).append({
+            "url": canonical_lead,
+            "title": matched_article.title,
+            "supporting_links": pub_entry["supporting_links"],
+            "published_at": pub_entry["published_at"],
+            "posts": posts,
+        })
+        state["published_posts"] = state["published_posts"][-PUBLISHED_POSTS_CAP:]
         state.setdefault("links", [])
         if canonical_lead not in state["links"]:
             state["links"].append(canonical_lead)
