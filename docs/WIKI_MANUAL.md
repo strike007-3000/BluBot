@@ -199,7 +199,7 @@ The Sage provides a robust **Full Pipeline Dry Run** via `scripts/diagnostic.py`
 ### Execution
 ```bash
 python scripts/diagnostic.py
-python scripts/diagnostic.py --mode engagement   # non-interactive; modes: scoring, dry-run, images, gist, gemini, drafts, hf, engagement
+python scripts/diagnostic.py --mode engagement   # non-interactive; modes: scoring, dry-run, images, gist, gemini, drafts, hf, github, engagement
 ```
 
 ### 🎨 Sage Console (Logging)

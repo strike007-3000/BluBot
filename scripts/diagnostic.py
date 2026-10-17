@@ -11,7 +11,7 @@ os.environ["DRY_RUN"] = "true"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
-from src.curator import fetch_hf_trending, fetch_news, summarize_news
+from src.curator import fetch_github_rising, fetch_hf_trending, fetch_news, summarize_news
 from src.logger import SafeLogger
 from src.config import validate_gemini_model_priority, IMAGE_PROVIDER, VERSION, FEED_CATEGORY_MAP
 
@@ -102,6 +102,22 @@ async def test_hf_trending_fetch():
     for item in sorted(items, key=lambda entry: entry["score"], reverse=True):
         print(
             f"- {item['title']} | score {item['score']:.1f}\n"
+            f"  {item['summary'][:220]}\n"
+            f"  {item['link']}"
+        )
+
+async def test_github_rising_fetch():
+    import httpx
+    print(f"\n{'='*20}\nGITHUB RISING REPOSITORIES SOURCE\n{'='*20}")
+    async with httpx.AsyncClient() as client:
+        items = await fetch_github_rising(client, days_lookback=7)
+    if not items:
+        print("No rising repositories returned.")
+        return
+    for item in sorted(items, key=lambda entry: entry["score"], reverse=True):
+        vel = item.get("_score_debug", {}).get("github_velocity", 0)
+        print(
+            f"- {item['title']} | score {item['score']:.1f} (velocity bonus: +{vel})\n"
             f"  {item['summary'][:220]}\n"
             f"  {item['link']}"
         )
@@ -500,7 +516,7 @@ async def test_engagement():
 MODES = {"scoring": test_scoring, "dry-run": test_full_dry_run, "images": test_image_generation,
          "gist": test_gist_diagnostics, "gemini": test_gemini_model_discovery_and_multimodal_checks,
          "drafts": test_multiplatform_telegram_simulation, "hf": test_hf_trending_fetch,
-         "engagement": test_engagement}
+         "github": test_github_rising_fetch, "engagement": test_engagement}
 
 async def main():
     load_dotenv()
@@ -524,9 +540,10 @@ async def main():
     print("5. Gemini Model Discovery & Multi-Model Test (Text + PNG Image Input)")
     print("6. Multi-Platform Drafting & Telegram State Simulation")
     print("7. Hugging Face Trending Source Test")
+    print("8. GitHub Fast-Rising Repositories Source Test")
 
     try:
-        choice = input("\nEnter choice (1-7) or 'q' to quit: ").strip().lower()
+        choice = input("\nEnter choice (1-8) or 'q' to quit: ").strip().lower()
         if choice == "1":
             await test_scoring()
         elif choice == "2":
@@ -549,6 +566,8 @@ async def main():
             await test_multiplatform_telegram_simulation()
         elif choice == "7":
             await test_hf_trending_fetch()
+        elif choice == "8":
+            await test_github_rising_fetch()
         elif choice == "q":
             print("Exiting.")
         else:

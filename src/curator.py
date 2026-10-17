@@ -23,8 +23,10 @@ from src.config import (
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
     MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
-    FEED_SUMMARY_MAX_CHARS, HF_MODELS_API_URL, CLOUDFLARE_IMAGE_MODEL
+    FEED_SUMMARY_MAX_CHARS, HF_MODELS_API_URL, CLOUDFLARE_IMAGE_MODEL,
+    GITHUB_SEARCH_REPOS_URL, GITHUB_REPOS_API_URL
 )
+from urllib.parse import urlparse
 from src.utils import retry_with_backoff, SafeLogger
 from src.models import ImageValidationResult
 
@@ -343,6 +345,188 @@ async def fetch_hf_trending(
         SafeLogger.warn(f"Hugging Face Trending fetch failed: {type(exc).__name__}")
         return []
 
+
+def _is_valid_github_repo_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        return parsed.scheme == "https" and parsed.netloc.lower() == "github.com"
+    except Exception:
+        return False
+
+
+async def _fetch_github_readme_excerpt(client, full_name: str, headers: dict) -> Optional[str]:
+    """Fetch raw README for a repository and extract a bounded text excerpt."""
+    try:
+        readme_url = f"{GITHUB_REPOS_API_URL}/{full_name}/readme"
+        req_headers = {**headers, "Accept": "application/vnd.github.raw+json"}
+        resp = await client.get(readme_url, headers=req_headers, timeout=5.0)
+        if resp.status_code == 200 and resp.text:
+            text = resp.text.strip()
+            # Clean markdown/HTML tags and normalize whitespace
+            text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
+            text = re.sub(r'<[^>]+>', ' ', text)
+            text = re.sub(r'#+\s*', '', text)
+            text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)
+            text = _MARKDOWN_STRIP_RE.sub('', text)
+            text = " ".join(text.split())
+            if text:
+                return text[:400].strip()
+    except Exception as exc:
+        SafeLogger.debug(f"GitHub README fetch failed for {full_name}: {exc}")
+    return None
+
+
+async def fetch_github_rising(
+    client,
+    seen_links=None,
+    recent_topics=None,
+    recent_categories=None,
+    watch_topics=None,
+    days_lookback=7,
+    limit=5,
+):
+    """Fetch fast-rising AI GitHub repositories as scored curation entries."""
+    try:
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        if settings.github_token:
+            headers["Authorization"] = f"Bearer {settings.github_token}"
+
+        now_utc = datetime.now(timezone.utc)
+        created_since = (now_utc - timedelta(days=days_lookback)).strftime("%Y-%m-%d")
+        query = f"llm OR generative-ai OR machine-learning in:topics created:>{created_since} stars:>50"
+        params = [
+            ("q", query),
+            ("sort", "stars"),
+            ("order", "desc"),
+            ("per_page", "30"),
+        ]
+
+        resp = await client.get(GITHUB_SEARCH_REPOS_URL, params=params, headers=headers, timeout=10.0)
+
+        if resp.status_code in (403, 429):
+            retry_after = resp.headers.get("Retry-After")
+            reset_time = resp.headers.get("x-ratelimit-reset")
+            SafeLogger.warn(
+                f"GitHub API rate limit encountered (HTTP {resp.status_code}). "
+                f"Retry-After: {retry_after}, Reset: {reset_time}"
+            )
+            return []
+
+        if resp.status_code != 200:
+            SafeLogger.warn(f"GitHub Search API returned HTTP {resp.status_code}")
+            return []
+
+        data = resp.json()
+        items_data = data.get("items")
+        if not isinstance(items_data, list):
+            SafeLogger.warn("GitHub Search API returned unexpected payload format.")
+            return []
+
+        from src.utils import normalize_url
+        normalized_seen = {normalize_url(link) for link in (seen_links or []) if link}
+
+        candidates = []
+        for repo in items_data:
+            if not isinstance(repo, dict):
+                continue
+
+            html_url = repo.get("html_url")
+            if not isinstance(html_url, str) or not _is_valid_github_repo_url(html_url):
+                continue
+
+            link = normalize_url(html_url)
+            if link in normalized_seen:
+                continue
+
+            full_name = repo.get("full_name")
+            if not full_name or not isinstance(full_name, str):
+                continue
+
+            created_at_raw = repo.get("created_at")
+            if not created_at_raw:
+                continue
+            try:
+                created_dt = datetime.fromisoformat(str(created_at_raw).replace("Z", "+00:00"))
+                if created_dt.tzinfo is None:
+                    created_dt = created_dt.replace(tzinfo=timezone.utc)
+            except (ValueError, TypeError):
+                continue
+
+            age_days = max((now_utc - created_dt).total_seconds() / 86400.0, 1.0)
+            stargazers = repo.get("stargazers_count", 0)
+            try:
+                stargazers = int(stargazers)
+            except (ValueError, TypeError):
+                stargazers = 0
+
+            velocity = stargazers / age_days
+            description = (repo.get("description") or "").strip()
+
+            candidates.append({
+                "repo": repo,
+                "full_name": full_name,
+                "link": link,
+                "created_dt": created_dt,
+                "velocity": velocity,
+                "description": description,
+            })
+
+        # Rank candidates by velocity descending and bound before making README calls
+        candidates.sort(key=lambda c: c["velocity"], reverse=True)
+        top_candidates = candidates[:limit]
+
+        # Fetch READMEs concurrently only for bounded candidates
+        readme_tasks = [
+            _fetch_github_readme_excerpt(client, c["full_name"], headers)
+            for c in top_candidates
+        ]
+        readme_excerpts = await asyncio.gather(*readme_tasks)
+
+        items = []
+        for c, readme_excerpt in zip(top_candidates, readme_excerpts):
+            description = c["description"]
+            # Skip if neither description nor README excerpt is available
+            if not description and not readme_excerpt:
+                continue
+
+            if description and readme_excerpt:
+                summary = f"{description} — {readme_excerpt}"
+            elif description:
+                summary = description
+            else:
+                summary = readme_excerpt
+
+            velocity_bonus = min(10.0, round(c["velocity"], 1))
+
+            item = {
+                "title": c["full_name"],
+                "summary": summary,
+                "link": c["link"],
+                "published": c["created_dt"].isoformat(),
+                "source": "GitHub Fast-Rising Repositories",
+                "source_url": GITHUB_SEARCH_REPOS_URL,
+                "source_id": "github_rising",
+            }
+
+            base_relevance = calculate_relevance_score(
+                item, c["created_dt"], now_utc, recent_topics, recent_categories, watch_topics
+            )
+            item["score"] = base_relevance + velocity_bonus
+
+            # Record velocity bonus separately in _score_debug
+            if "_score_debug" in item:
+                item["_score_debug"]["github_velocity"] = velocity_bonus
+
+            items.append(item)
+
+        return items
+    except Exception as exc:
+        SafeLogger.warn(f"GitHub rising repositories fetch failed: {type(exc).__name__}")
+        return []
+
 _STOPWORDS = {
     "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with",
     "by", "from", "up", "about", "into", "over", "after", "is", "are", "was", "were",
@@ -472,8 +656,17 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
     source_list = feed_list if feed_list is not None else RSS_FEEDS
     tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=days_lookback), now_utc, seen_links or [], recent_topics, recent_categories, watch_topics) for url in source_list]
     hf_task = None
+    gh_task = None
     if include_api_sources:
         hf_task = asyncio.create_task(fetch_hf_trending(
+            client,
+            seen_links=seen_links or [],
+            recent_topics=recent_topics,
+            recent_categories=recent_categories,
+            watch_topics=watch_topics,
+            days_lookback=days_lookback,
+        ))
+        gh_task = asyncio.create_task(fetch_github_rising(
             client,
             seen_links=seen_links or [],
             recent_topics=recent_topics,
@@ -490,6 +683,8 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
         all_raw_entries.extend(items)
     if hf_task:
         all_raw_entries.extend(await hf_task)
+    if gh_task:
+        all_raw_entries.extend(await gh_task)
 
     # Canonical URL deduplication
     from src.utils import normalize_url
