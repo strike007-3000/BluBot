@@ -25,6 +25,7 @@ class Settings:
     # Modes & Flags
     is_dry_run: bool = False
     is_ci: bool = False
+    force_roundup: bool = False
     github_event: str = "schedule"
     image_provider: str = "cloudflare"
     cloudflare_account_id: Optional[str] = None
@@ -104,6 +105,7 @@ class Settings:
             "threads_user_id": os.getenv("THREADS_USER_ID"),
             "is_dry_run": is_dry_run,
             "is_ci": is_ci,
+            "force_roundup": os.getenv("FORCE_ROUNDUP", "false").lower() == "true",
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
             "cloudflare_account_id": os.getenv("CLOUDFLARE_ACCOUNT_ID"),
@@ -146,6 +148,11 @@ class Settings:
     def is_manual_run(self) -> bool:
         """Determines if the current execution needs manual-run editorial context."""
         return self.github_event == "workflow_dispatch"
+
+    @property
+    def is_scheduled_run(self) -> bool:
+        """True only when executing in CI under the cron schedule."""
+        return self.is_ci and self.github_event == "schedule"
 
     @property
     def should_bypass_rest(self) -> bool:

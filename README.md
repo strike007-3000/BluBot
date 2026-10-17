@@ -80,6 +80,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) selection across 4 content structures: strategic shift, practical workflow, risk/verification, and enterprise ROI.
     - **Curated Source Network**: **45 RSS feeds plus two API sources** (Hugging Face Trending and GitHub Fast-Rising Repositories) across 8 tiers, with API sources excluded from RSS health tracking.
     - **Bluesky Source Receipts**: Optionally replies to corroborated Bluesky posts with up to two aligned source links, only after the root publication has been durably settled.
+    - **Friday Evening Roundup**: Automatically replaces the scheduled Friday 18:17 UTC broadcast with a weekly digest summarizing the top 1–5 stories published during the ISO week, ranked by live Bluesky engagement and threaded with exact URL preservation. Skips if already published or reserved, and falls back to normal curation if zero eligible stories are found. Can be triggered manually with `--roundup`.
 
 
 ## 🛠️ Setup Instructions

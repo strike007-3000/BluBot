@@ -35,7 +35,7 @@ def _link_facets(text: str) -> list:
     return facets
 
 @retry_with_backoff
-async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None):
+async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None, max_parts: Optional[int] = None):
     """Posts to Bluesky with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.bsky_handle or not bsky_client:
         return
@@ -45,7 +45,8 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
 
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)")
     safe_limit = settings.bluesky_limit - 10
-    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
+    thread_cap = max_parts if max_parts is not None else settings.max_thread_parts
+    chunks = smart_split(text, safe_limit, max_chunks=thread_cap)
     root_post = None
     parent_post = None
 
@@ -166,7 +167,7 @@ async def post_bluesky_receipt(
         return None
 
 @retry_with_backoff
-async def post_to_mastodon(text, media=None):
+async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None):
     """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver)."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return
@@ -176,7 +177,8 @@ async def post_to_mastodon(text, media=None):
 
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)") with higher margin for Mastodon
     safe_limit = settings.mastodon_limit - 15
-    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
+    thread_cap = max_parts if max_parts is not None else settings.max_thread_parts
+    chunks = smart_split(text, safe_limit, max_chunks=thread_cap)
     
     loop = asyncio.get_running_loop()
     
@@ -222,14 +224,15 @@ async def post_to_mastodon(text, media=None):
     return root_post_id
 
 @retry_with_backoff
-async def post_to_threads(client, text, media=None):
+async def post_to_threads(client, text, media=None, max_parts: Optional[int] = None):
     """Posts to Threads with Conditional Multi-Post Threading (The Weaver)."""
     # Clean hashtags if disabled for Threads
     text = clean_hashtags_if_needed(text, settings.enable_hashtags_threads)
 
     # Safety Buffer: Account for pagination suffixes
     safe_limit = settings.threads_limit - 10
-    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
+    thread_cap = max_parts if max_parts is not None else settings.max_thread_parts
+    chunks = smart_split(text, safe_limit, max_chunks=thread_cap)
     
     base_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
     publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
