@@ -18,6 +18,7 @@ class Settings:
     threads_user_id: Optional[str] = None
     gist_id: Optional[str] = None
     gist_token: Optional[str] = None
+    github_token: Optional[str] = None
     thinking_budget: Optional[int] = None
     gemini_model: str = "models/gemini-3.5-flash-lite"
 
@@ -93,6 +94,7 @@ class Settings:
             "max_thread_parts": int(os.getenv("MAX_THREAD_PARTS", "2")),
             "gist_id": os.getenv("GIST_ID"),
             "gist_token": os.getenv("GIST_TOKEN"),
+            "github_token": os.getenv("GITHUB_TOKEN"),
             "nvidia_key": os.getenv("NVIDIA_KEY"),
             "bsky_handle": os.getenv("BSKY_HANDLE", ""),
             "bsky_password": os.getenv("BSKY_APP_PASSWORD", ""),

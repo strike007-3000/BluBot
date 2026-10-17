@@ -135,7 +135,9 @@ BluBot defaults to **Cloudflare Workers AI** with `@cf/black-forest-labs/flux-1-
 
 ## 📡 Page 5: Source Intelligence
 
-The current registry contains **45 RSS feeds plus one API source** across 8 tiers. Hugging Face Trending uses the public Hub models API, admits only models with a usable model-card excerpt for grounded synthesis, enters the same relevance scoring and clustering pipeline, and is intentionally excluded from Feed Vanguard RSS health state.
+The current registry contains **45 RSS feeds plus two API sources** across 8 tiers:
+1. **Hugging Face Trending**: Uses the public Hub models API, admits only models with a usable model-card excerpt for grounded synthesis, enters the same relevance scoring and clustering pipeline, and is intentionally excluded from Feed Vanguard RSS health state.
+2. **GitHub Fast-Rising Repositories**: Queries the GitHub Search API for trending repositories tagged with `llm`, `generative-ai`, or `machine-learning`. Ranks candidates by star velocity, bounds candidate fetches to top entries, downloads bounded README excerpts with `Range: bytes=0-8191`, applies a capped velocity bonus in scoring, strictly enforces HTTPS `github.com` URLs, and handles 403/429 rate limits gracefully.
 
 ---
 
@@ -161,6 +163,7 @@ The current registry contains **45 RSS feeds plus one API source** across 8 tier
 | `THREADS_USER_ID` | Your Threads User ID |
 | `GIST_ID` | Private GitHub Gist ID |
 | `GIST_TOKEN` | GitHub Token with `gist` scope |
+| `GITHUB_TOKEN` | (Optional) GitHub Token (PAT or automatic Actions `${{ secrets.GITHUB_TOKEN }}`) for higher REST API limits (1,000 req/hr) when fetching fast-rising repositories |
 | `IMAGE_PROVIDER` | `cloudflare` (default), `pollinations`, `huggingface`, `nvidia`, or explicit-only `imagen` |
 | `POLLINATIONS_API_URL` | Optional Pollinations endpoint override |
 | `ENABLE_IMAGE_GEN` | Enable generated-image fallbacks (default: `true`) |
@@ -199,7 +202,7 @@ The Sage provides a robust **Full Pipeline Dry Run** via `scripts/diagnostic.py`
 ### Execution
 ```bash
 python scripts/diagnostic.py
-python scripts/diagnostic.py --mode engagement   # non-interactive; modes: scoring, dry-run, images, gist, gemini, drafts, hf, engagement
+python scripts/diagnostic.py --mode engagement   # non-interactive; modes: scoring, dry-run, images, gist, gemini, drafts, hf, github, engagement
 ```
 
 ### 🎨 Sage Console (Logging)

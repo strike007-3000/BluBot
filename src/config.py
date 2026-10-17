@@ -16,6 +16,8 @@ VANGUARD_STATE_PATH = os.path.join(BASE_DIR, "broken_feeds.json")
 INTERACTIONS_STATE_PATH = os.path.join(BASE_DIR, "seen_interactions.json")
 PENDING_TOPIC_FILE_PATH = os.path.join(BASE_DIR, "pending_topic.json")
 HF_MODELS_API_URL = "https://huggingface.co/api/models"
+GITHUB_SEARCH_REPOS_URL = "https://api.github.com/search/repositories"
+GITHUB_REPOS_API_URL = "https://api.github.com/repos"
 
 # Interaction Engine Constants
 INTERACTION_LIMIT = 5
@@ -110,6 +112,7 @@ SOURCE_REGISTRY = [
     {"id": "ollama_releases",     "name": "Ollama Releases",                 "url": "https://github.com/ollama/ollama/releases.atom",             "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
     {"id": "pytorch_releases",    "name": "PyTorch Releases",                "url": "https://github.com/pytorch/pytorch/releases.atom",            "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
     {"id": "hf_trending",         "name": "Hugging Face Trending",            "url": HF_MODELS_API_URL,                                                   "category": "open_source",    "quality": "community",  "base_score": 18, "kind": "api"},
+    {"id": "github_rising",       "name": "GitHub Fast-Rising Repositories",   "url": GITHUB_SEARCH_REPOS_URL,                                             "category": "open_source",    "quality": "community",  "base_score": 16, "kind": "api"},
 
     # === Tier 5: Infrastructure / Business Analysis (base 15) ===
     {"id": "semianalysis",        "name": "SemiAnalysis",        "url": "https://semianalysis.com/feed/",                                     "category": "infrastructure", "quality": "opinion",    "base_score": 15},
