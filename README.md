@@ -162,6 +162,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 1. **Gist-Authoritative Runtime State**: When `GIST_ID` and `GIST_TOKEN` are set, GitHub Gist is loaded as the primary state source. State comparison uses `schema_version: 2`, `revision`, and `updated_at` timestamps to ensure stale local or branch data never overwrites newer Gist state.
 2. **Two-Phase Pre-Broadcast Reservation Protocol**: Before publishing, BluBot writes a `pending_stories` reservation to Gist and local state. If Gist reservation fails, publication is aborted. If broadcast succeeds, status transitions to `published`. If broadcast fails, pending reservation is cleared.
 3. **Local Primary & Backup Rotation**: Saves perform atomic writes (`.tmp` -> `seen_articles.json`) and rotate previous valid state to `.bak` under advisory `FileLock`. If Gist write fails during post-broadcast settlement, state is saved locally with `unsynced_gist: true` for recovery.
+4. **Durable Published-Post Ledger**: Each settled publication appends a `published_posts` entry (canonical URL, title, supporting links, `published_at`, and per-platform root post references: Bluesky `uri`/`cid`, Mastodon/Threads `id`). Only platforms that succeeded and returned an ID are recorded. Unlike the 14-day `recent_stories` duplicate window, the ledger is capped at 500 entries and never time-pruned.
 
 
 
@@ -185,7 +186,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.26.0 (Current)**: **Curation Selection Integrity**.
+- **v3.27.0 (Current)**: **Published-Post Ledger**.
+    - 📒 **Durable Ledger**: Adds a `published_posts` state collection (500-entry cap, no time pruning) recording where each story was published, kept separate from the 14-day `recent_stories` duplicate window.
+    - 🔗 **Root Post References**: Bluesky, Mastodon, and Threads publishers now return their root post reference; `BroadcastResult` carries `post_id`, `post_cid`, and `receipt_id`.
+    - 🔀 **Merge-Safe**: Gist/local merges union ledger entries, combine fields within each platform reference, and retain the newest 500 by publication timestamp.
+- **v3.26.0**: **Curation Selection Integrity**.
     - ⏱️ **Weekday Cadence Experiment**: Schedules runs at 06:17, 12:17, and 18:17 UTC Monday through Friday while leaving weekend behavior unchanged.
     - 🧬 **Complete Fresh Selection**: Applies semantic story-history filtering before the final eight-article limit so lower-ranked fresh stories refill removed duplicates.
     - 🔗 **Canonical URL Identity**: Collapses tracking and fragment variants during current-batch deduplication while preserving the source URL used for publication.

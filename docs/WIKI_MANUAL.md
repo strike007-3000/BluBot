@@ -217,6 +217,7 @@ BluBot uses a tiered persistence model so ephemeral runners can recover recent s
 2. **Two-Phase Pre-Broadcast Reservation Protocol**: Writes a `pending_stories` reservation to Gist/local state before broadcasting, aborting publication if Gist reservation fails, and transitioning to `published` upon success.
 3. **Primary Local & Backup Rotation**: Saves perform atomic writes (`.tmp` -> `seen_articles.json`) and rotate previous valid state to `.bak` under advisory `FileLock`. If Gist write fails during settlement, local recovery state is saved with `unsynced_gist: true`.
 4. **Timestamp Provenance**: Story records keep `source_published_at` as the best timestamp supplied by the RSS/Atom feed, while `created_at` records reservation time and `published_at` records BluBot's broadcast time.
+5. **Durable Published-Post Ledger**: Settlement appends a `published_posts` entry with the canonical URL, title, supporting links, `published_at`, and per-platform root references (`posts.bluesky.uri`/`cid`/`receipt_uri`, `posts.mastodon.id`, `posts.threads.id`). Failed platforms and platforms that returned no ID are omitted. `recent_stories` remains the 14-day duplicate-detection window; `published_posts` has no time pruning and retains the newest 500 entries by `published_at`. `sanitize_and_migrate_state` enforces that ordering and `_merge_publication_states` unions entries keyed on `url` + `published_at`, including fields within the same platform reference.
 
 ---
 ## 🧪 Page 9: Automated Quality Control

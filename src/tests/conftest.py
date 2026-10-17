@@ -1,11 +1,23 @@
 import pytest
 import os
 import asyncio
+from dataclasses import fields
 from unittest.mock import AsyncMock, MagicMock, patch
 
 # Set environment variables for testing
 os.environ["DRY_RUN"] = "true"
 os.environ["DEBUG"] = "true"
+
+
+@pytest.fixture(autouse=True)
+def restore_global_settings():
+    """Prevent tests that mutate the frozen settings singleton from leaking state."""
+    from src.settings import settings
+
+    original = {field.name: getattr(settings, field.name) for field in fields(settings)}
+    yield
+    for name, value in original.items():
+        object.__setattr__(settings, name, value)
 
 @pytest.fixture
 def mock_httpx_client():

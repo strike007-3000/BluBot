@@ -293,6 +293,17 @@ def save_seen_interactions(interacted_ids: List[str]):
         SafeLogger.error(f"Failed to save interactions: {e}")
 
 LEGACY_DEFAULT_UPDATED_AT = "1970-01-01T00:00:00Z"
+PUBLISHED_POSTS_CAP = 500  # Durable ledger: count-capped only, never time-pruned.
+
+def _sanitize_published_posts(entries: list) -> list:
+    """Return valid ledger entries ordered oldest-to-newest and count-capped."""
+    valid = [
+        entry for entry in entries
+        if isinstance(entry, dict)
+        and isinstance(entry.get("url"), str)
+        and entry["url"].strip()
+    ]
+    return sorted(valid, key=lambda entry: str(entry.get("published_at", "")))[-PUBLISHED_POSTS_CAP:]
 
 def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
     """
@@ -326,10 +337,12 @@ def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
 
     state["unsynced_gist"] = bool(state.get("unsynced_gist", False))
 
-    for list_key in ("links", "recent_topics", "recent_categories", "recent_styles", "watch_topics", "recent_stories", "pending_stories"):
+    for list_key in ("links", "recent_topics", "recent_categories", "recent_styles", "watch_topics", "recent_stories", "pending_stories", "published_posts"):
         val = state.get(list_key)
         if not isinstance(val, list):
             state[list_key] = []
+
+    state["published_posts"] = _sanitize_published_posts(state["published_posts"])
 
     try:
         state["total_posts_curated"] = int(state.get("total_posts_curated", 0))
@@ -377,6 +390,27 @@ def _merge_publication_states(state1: dict, state2: dict) -> dict:
             if ps["url"] not in pending_map:
                 pending_map[ps["url"]] = ps
     merged["pending_stories"] = sorted(pending_map.values(), key=lambda x: str(x.get("created_at", "")))
+
+    ledger = {}
+    for p in merged["published_posts"] + sanitize_and_migrate_state(state2)["published_posts"]:
+        key = (p["url"], str(p.get("published_at", "")))
+        if key in ledger:
+            existing = ledger[key]
+            existing_posts = existing.get("posts") if isinstance(existing.get("posts"), dict) else {}
+            incoming_posts = p.get("posts") if isinstance(p.get("posts"), dict) else {}
+            posts = dict(existing_posts)
+            for platform, incoming_ref in incoming_posts.items():
+                existing_ref = posts.get(platform)
+                if isinstance(existing_ref, dict) and isinstance(incoming_ref, dict):
+                    merged_ref = dict(incoming_ref)
+                    merged_ref.update({field: value for field, value in existing_ref.items() if value is not None})
+                    posts[platform] = merged_ref
+                elif platform not in posts:
+                    posts[platform] = incoming_ref
+            ledger[key] = {**p, **existing, "posts": posts}
+        else:
+            ledger[key] = dict(p)
+    merged["published_posts"] = _sanitize_published_posts(list(ledger.values()))
 
     merged["watch_topics"] = state1.get("watch_topics", [])
 

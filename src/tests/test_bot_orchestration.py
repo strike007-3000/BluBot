@@ -120,6 +120,11 @@ async def test_reservation_failure_aborts_broadcast(mocker):
         object.__setattr__(settings, "gist_id", "test_id")
         object.__setattr__(settings, "gist_token", "test_token")
         object.__setattr__(settings, "is_dry_run", False)
+        object.__setattr__(settings, "is_ci", False)
+        object.__setattr__(settings, "github_event", "workflow_dispatch")
+        object.__setattr__(settings, "gemini_key", "test-key")
+        object.__setattr__(settings, "bsky_handle", "bot.bsky.social")
+        object.__setattr__(settings, "bsky_password", "test-password")
 
         mocker.patch("sys.exit", side_effect=SystemExit(1))
         mocker.patch("bot.check_for_telegram_topic", return_value=(None, None))
@@ -323,8 +328,12 @@ async def test_full_multiplatform_orchestration_flow(mocker):
     from src.models import PlatformDrafts, SynthesisResult, Article, CurationResult
 
     object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "is_ci", False)
     object.__setattr__(settings, "enable_telegram_approval", True)
     object.__setattr__(settings, "github_event", "workflow_dispatch")
+    object.__setattr__(settings, "gemini_key", "test-key")
+    object.__setattr__(settings, "bsky_handle", "bot.bsky.social")
+    object.__setattr__(settings, "bsky_password", "test-password")
 
     article = Article(title="Breakthrough", link="https://example.com/ai", summary="AI summary", published="2026-09-07", source="arXiv", score=95)
     curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
