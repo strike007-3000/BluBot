@@ -124,8 +124,8 @@ async def test_full_dry_run():
 
         with patch("bot.post_to_mastodon", new_callable=AsyncMock), \
              patch("bot.post_to_threads", new_callable=AsyncMock), \
-             patch("bot.update_live_status", new_callable=AsyncMock), \
-             patch("bot.save_seen_articles"):
+             patch("bot.update_status_dashboard", new_callable=AsyncMock), \
+             patch("bot.save_seen_articles", side_effect=lambda data, **kw: (True, data)):
 
             print(f"Executing full bot orchestration (Offline Mode - {IMAGE_PROVIDER} Image Gen)...")
             await bot.main()
