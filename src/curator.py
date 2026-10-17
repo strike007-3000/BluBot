@@ -23,7 +23,7 @@ from src.config import (
     HIGH_SIGNAL_KEYWORDS, MOMENTUM_PRODUCTS,
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
     MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
-    FEED_SUMMARY_MAX_CHARS, HF_MODELS_API_URL
+    FEED_SUMMARY_MAX_CHARS, HF_MODELS_API_URL, CLOUDFLARE_IMAGE_MODEL
 )
 from src.utils import retry_with_backoff, SafeLogger
 from src.models import ImageValidationResult
@@ -1385,10 +1385,9 @@ async def generate_cloudflare_image(
         SafeLogger.info("Cloudflare Workers AI: Skipping because credentials are missing.")
         return None
 
-    model = settings.cloudflare_image_model
     url = (
         "https://api.cloudflare.com/client/v4/accounts/"
-        f"{settings.cloudflare_account_id}/ai/run/{model}"
+        f"{settings.cloudflare_account_id}/ai/run/{CLOUDFLARE_IMAGE_MODEL}"
     )
     headers = {
         "Authorization": f"Bearer {settings.cloudflare_api_token}",

@@ -28,7 +28,6 @@ class Settings:
     image_provider: str = "cloudflare"
     cloudflare_account_id: Optional[str] = None
     cloudflare_api_token: Optional[str] = None
-    cloudflare_image_model: str = "@cf/black-forest-labs/flux-1-schnell"
     pollinations_api_url: str = "" # will load from config constant in from_env
     pollinations_api_key: Optional[str] = None
     huggingface_api_key: Optional[str] = None
@@ -107,10 +106,6 @@ class Settings:
             "image_provider": image_provider,
             "cloudflare_account_id": os.getenv("CLOUDFLARE_ACCOUNT_ID"),
             "cloudflare_api_token": os.getenv("CLOUDFLARE_API_TOKEN"),
-            "cloudflare_image_model": os.getenv(
-                "CLOUDFLARE_IMAGE_MODEL",
-                "@cf/black-forest-labs/flux-1-schnell",
-            ),
             "pollinations_api_url": os.getenv("POLLINATIONS_API_URL", POLLINATIONS_API_URL),
             "pollinations_api_key": os.getenv("POLLINATIONS_API_KEY"),
             "huggingface_api_key": os.getenv("HUGGINGFACE_API_KEY"),

@@ -146,7 +146,6 @@ The current registry contains **45 RSS feeds plus one API source** across 8 tier
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account used for Workers AI image generation |
 | `CLOUDFLARE_API_TOKEN` | Scoped API token with Workers AI permissions |
-| `CLOUDFLARE_IMAGE_MODEL` | Optional Workers AI model override (default: `@cf/black-forest-labs/flux-1-schnell`) |
 | `POLLINATIONS_API_KEY` | Deprecated compatibility setting; current Pollinations requests do not use it |
 | `HUGGINGFACE_API_KEY` | Hugging Face Hub User Access Token |
 | `HUGGINGFACE_IMAGE_MODEL` | Hugging Face model target (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |

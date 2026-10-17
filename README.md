@@ -106,7 +106,6 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
 | `CLOUDFLARE_ACCOUNT_ID` | No | Cloudflare account used for Workers AI image generation; required for the default provider |
 | `CLOUDFLARE_API_TOKEN` | No | Scoped API token with Workers AI permissions; required for the default provider |
-| `CLOUDFLARE_IMAGE_MODEL` | No | Workers AI image model (default: `@cf/black-forest-labs/flux-1-schnell`) |
 | `POLLINATIONS_API_KEY` | No | Deprecated compatibility setting; the current Pollinations request does not use it |
 | `HUGGINGFACE_API_KEY` | No | Hugging Face token with **Inference** permissions; used by the final fallback |
 | `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |

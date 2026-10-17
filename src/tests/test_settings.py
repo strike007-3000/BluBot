@@ -23,12 +23,10 @@ def test_settings_from_env_default(monkeypatch):
 def test_settings_cloudflare_image_credentials(monkeypatch):
     monkeypatch.setenv("CLOUDFLARE_ACCOUNT_ID", "account-id")
     monkeypatch.setenv("CLOUDFLARE_API_TOKEN", "cf-token")
-    monkeypatch.setenv("CLOUDFLARE_IMAGE_MODEL", "@cf/example/model")
 
     settings = Settings.from_env()
     assert settings.cloudflare_account_id == "account-id"
     assert settings.cloudflare_api_token == "cf-token"
-    assert settings.cloudflare_image_model == "@cf/example/model"
 
 def test_settings_gemini_model_override(monkeypatch):
     """Verify that Settings.from_env() respects GEMINI_MODEL override."""
