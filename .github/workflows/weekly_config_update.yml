@@ -46,7 +46,7 @@ jobs:
           
           # Stage config updates
           git add src/config.py || echo "No changes to config"
-          git commit -m "chore: weekly update of trending products and keywords [skip ci]" || exit 0
+          git commit -m "chore: weekly update of trending products and keywords" || exit 0
           
           # Attempt direct push to main, fallback to creating PR if protected
           git push origin HEAD:main || {

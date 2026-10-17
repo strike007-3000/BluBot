@@ -13,6 +13,7 @@ def test_scheduled_workflow_cadence():
     assert "cron: '17 6,12,18 * * 1-5'" in daily
     assert "cron: '0 2 * * 5'" in weekly
     assert "ENABLE_SOURCE_RECEIPTS_BSKY: ${{ vars.ENABLE_SOURCE_RECEIPTS_BSKY || 'false' }}" in daily
+    assert "weekly update of trending products and keywords [skip ci]" not in weekly
 
 def test_validate_config_dry_run_injection():
     """Verify that missing config variables are injected with mocks in DRY_RUN mode."""
