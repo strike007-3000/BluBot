@@ -46,7 +46,8 @@ VERSION = get_version()
 
 # Platform Constraints
 # Platform Constraints
-IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "huggingface")
+IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "cloudflare")
+CLOUDFLARE_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell"
 POLLINATIONS_API_URL = "https://image.pollinations.ai/prompt/"
 HF_IMAGE_MODEL = "stabilityai/stable-diffusion-3-medium-diffusers"
 NVIDIA_MODEL_ID = "stabilityai/stable-diffusion-3-medium"

@@ -167,6 +167,31 @@ async def _test_pollinations(prompt):
         print(f"❌ Failure: Pollinations generation failed: {e}")
 
 
+async def _test_cloudflare(prompt):
+    import httpx
+    from src.curator import generate_cloudflare_image
+
+    account_id = _prompt_key("CLOUDFLARE_ACCOUNT_ID", "Cloudflare Account ID")
+    api_token = _prompt_key("CLOUDFLARE_API_TOKEN", "Cloudflare Workers AI API Token")
+    if not account_id or not api_token:
+        print("Skipping Cloudflare Workers AI test (credentials incomplete).")
+        return
+
+    print("\nRunning Cloudflare Workers AI image generation...")
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await generate_cloudflare_image(prompt, client)
+        if res:
+            out_path = "cloudflare_test.png"
+            with open(out_path, "wb") as f:
+                f.write(res)
+            print(f"✅ Success! Cloudflare image saved to: {out_path} ({len(res)} bytes)")
+        else:
+            print("❌ Failure: Cloudflare generation returned no bytes.")
+    except Exception as e:
+        print(f"❌ Failure: Cloudflare generation failed: {e}")
+
+
 async def _test_huggingface(prompt):
     import httpx
     from src.curator import generate_huggingface_image
@@ -216,9 +241,10 @@ async def _test_imagen(prompt):
 
 
 PROVIDER_TESTS = {
-    "1": ("Pollinations (free, no key)", _test_pollinations),
-    "2": ("Hugging Face (requires HF key)", _test_huggingface),
-    "3": ("Gemini Imagen (requires Gemini key)", _test_imagen),
+    "1": ("Cloudflare Workers AI (default)", _test_cloudflare),
+    "2": ("Pollinations (free, no key)", _test_pollinations),
+    "3": ("Hugging Face (requires HF key)", _test_huggingface),
+    "4": ("Gemini Imagen (explicit-only; requires Gemini key)", _test_imagen),
     "a": ("All providers", None),
 }
 
@@ -462,7 +488,7 @@ async def main():
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
-    print("3. Live Image Generation Test (Pollinations, Hugging Face, & Gemini Imagen)")
+    print("3. Live Image Generation Test (Cloudflare, Pollinations, Hugging Face, & explicit Imagen)")
     print("4. Gist State Diagnostics (Opt-in Read/Write Test)")
     print("5. Gemini Model Discovery & Multi-Model Test (Text + PNG Image Input)")
     print("6. Multi-Platform Drafting & Telegram State Simulation")

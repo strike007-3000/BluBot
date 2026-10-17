@@ -1,3 +1,4 @@
+import base64
 import pytest
 from datetime import datetime, timedelta, timezone
 from src.curator import calculate_relevance_score, strip_markdown, fetch_news
@@ -413,6 +414,7 @@ def test_fallback_behavior_unknown_source():
 from src.curator import (
     generate_ai_image,
     validate_image_bytes,
+    generate_cloudflare_image,
     generate_pollinations_image,
     generate_huggingface_image,
     generate_nvidia_image,
@@ -434,6 +436,123 @@ def test_validate_image_bytes():
     assert validate_image_bytes(b"") is False
     assert validate_image_bytes(b"{}") is False
     assert validate_image_bytes(valid_bytes[:10]) is False  # truncated
+
+@pytest.mark.asyncio
+async def test_generate_cloudflare_success(monkeypatch):
+    from src.settings import Settings
+    mock_settings = Settings(
+        gemini_key="mock",
+        cloudflare_account_id="account-id",
+        cloudflare_api_token="cf-token",
+        image_provider="cloudflare",
+    )
+    monkeypatch.setattr("src.curator.settings", mock_settings)
+
+    valid_bytes = create_valid_test_image_bytes()
+    encoded = base64.b64encode(valid_bytes).decode("ascii")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"success": True, "result": {"image": encoded}}
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=mock_response)
+
+    assert await generate_cloudflare_image("Test Prompt", mock_client) == valid_bytes
+    args, kwargs = mock_client.post.call_args
+    assert args[0].endswith("/ai/run/@cf/black-forest-labs/flux-1-schnell")
+    assert kwargs["headers"]["Authorization"] == "Bearer cf-token"
+    assert kwargs["json"] == {"prompt": "Test Prompt", "steps": 4, "seed": 0}
+
+@pytest.mark.asyncio
+async def test_generate_cloudflare_skips_without_credentials(monkeypatch):
+    from src.settings import Settings
+    monkeypatch.setattr("src.curator.settings", Settings(gemini_key="mock"))
+    mock_client = AsyncMock()
+
+    assert await generate_cloudflare_image("Test Prompt", mock_client) is None
+    mock_client.post.assert_not_called()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [429, 500])
+async def test_generate_cloudflare_http_failures_return_none(monkeypatch, status_code):
+    from src.settings import Settings
+    monkeypatch.setattr(
+        "src.curator.settings",
+        Settings(
+            gemini_key="mock",
+            cloudflare_account_id="account-id",
+            cloudflare_api_token="cf-token",
+        ),
+    )
+    request = httpx.Request("POST", "https://api.cloudflare.com/test")
+    mock_client = AsyncMock()
+    mock_client.post.return_value = httpx.Response(status_code, request=request)
+
+    assert await generate_cloudflare_image("Test Prompt", mock_client) is None
+
+@pytest.mark.asyncio
+async def test_generate_cloudflare_timeout_returns_none(monkeypatch):
+    from src.settings import Settings
+    monkeypatch.setattr(
+        "src.curator.settings",
+        Settings(
+            gemini_key="mock",
+            cloudflare_account_id="account-id",
+            cloudflare_api_token="cf-token",
+        ),
+    )
+    request = httpx.Request("POST", "https://api.cloudflare.com/test")
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = httpx.TimeoutException("timed out", request=request)
+
+    assert await generate_cloudflare_image("Test Prompt", mock_client) is None
+
+@pytest.mark.asyncio
+async def test_generate_cloudflare_invalid_image_returns_none(monkeypatch):
+    from src.settings import Settings
+    monkeypatch.setattr(
+        "src.curator.settings",
+        Settings(
+            gemini_key="mock",
+            cloudflare_account_id="account-id",
+            cloudflare_api_token="cf-token",
+        ),
+    )
+    request = httpx.Request("POST", "https://api.cloudflare.com/test")
+    response = httpx.Response(
+        200,
+        request=request,
+        json={"result": {"image": base64.b64encode(b"not an image").decode("ascii")}},
+    )
+    mock_client = AsyncMock()
+    mock_client.post.return_value = response
+
+    assert await generate_cloudflare_image("Test Prompt", mock_client) is None
+
+@pytest.mark.asyncio
+async def test_dispatcher_falls_back_after_real_cloudflare_quota_error(monkeypatch, mocker):
+    from src.settings import Settings
+    monkeypatch.setattr(
+        "src.curator.settings",
+        Settings(
+            gemini_key="mock",
+            image_provider="cloudflare",
+            cloudflare_account_id="account-id",
+            cloudflare_api_token="cf-token",
+        ),
+    )
+    valid_bytes = create_valid_test_image_bytes()
+    request = httpx.Request("POST", "https://api.cloudflare.com/test")
+    mock_client = AsyncMock()
+    mock_client.post.return_value = httpx.Response(429, request=request)
+    pollinations = AsyncMock(return_value=valid_bytes)
+    mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "cloudflare": generate_cloudflare_image,
+        "pollinations": pollinations,
+        "huggingface": AsyncMock(return_value=None),
+    })
+
+    assert await generate_ai_image(mock_client, None, "Test Prompt") == valid_bytes
+    pollinations.assert_awaited_once_with("Test Prompt", mock_client)
 
 @pytest.mark.asyncio
 async def test_generate_pollinations_success(monkeypatch):
@@ -664,6 +783,42 @@ async def test_dispatcher_pollinations_success_stops_chain(monkeypatch, mocker):
     assert res == valid_bytes
     assert mock_poll["pollinations"].await_count == 1
     assert mock_poll["huggingface"].await_count == 0
+
+@pytest.mark.asyncio
+async def test_dispatcher_cloudflare_falls_back_to_pollinations_then_huggingface(monkeypatch, mocker):
+    from src.settings import Settings
+    monkeypatch.setattr(
+        "src.curator.settings",
+        Settings(gemini_key="mock", image_provider="cloudflare"),
+    )
+    valid_bytes = create_valid_test_image_bytes()
+    generators = mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "cloudflare": AsyncMock(return_value=None),
+        "pollinations": AsyncMock(return_value=None),
+        "huggingface": AsyncMock(return_value=valid_bytes),
+    })
+
+    assert await generate_ai_image(AsyncMock(), None, "Test Prompt") == valid_bytes
+    assert generators["cloudflare"].await_count == 1
+    assert generators["pollinations"].await_count == 1
+    assert generators["huggingface"].await_count == 1
+
+@pytest.mark.asyncio
+async def test_dispatcher_does_not_fall_back_to_imagen(monkeypatch, mocker):
+    from src.settings import Settings
+    monkeypatch.setattr(
+        "src.curator.settings",
+        Settings(gemini_key="mock", image_provider="cloudflare"),
+    )
+    mocker.patch("src.curator.IMAGE_GENERATORS", {
+        "cloudflare": AsyncMock(return_value=None),
+        "pollinations": AsyncMock(return_value=None),
+        "huggingface": AsyncMock(return_value=None),
+    })
+    imagen = mocker.patch("src.curator.generate_imagen_image", return_value=b"unexpected")
+
+    assert await generate_ai_image(AsyncMock(), MagicMock(), "Test Prompt") is None
+    imagen.assert_not_called()
 
 @pytest.mark.asyncio
 async def test_dispatcher_pollinations_failure_uses_huggingface(monkeypatch, mocker):

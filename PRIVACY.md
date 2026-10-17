@@ -1,6 +1,6 @@
 # Privacy Policy for BluBot
 
-**Last Updated: August 4, 2026**
+**Last Updated: October 17, 2026**
 
 BluBot ("we", "our", or "the Bot") is an automated news curation and broadcasting tool. This Privacy Policy explains how the Bot handles data when you integrate it with third-party platforms, specifically Bluesky, Mastodon, Meta Threads, and Telegram.
 
@@ -24,19 +24,19 @@ The Bot accesses platform APIs solely to:
 
 ## 3. Data Sharing and Third Parties
 
-* **No Sharing:** We do not sell, trade, or share any data with third-party companies, marketers, or external entities.
+* **No Sale:** We do not sell or trade data. Content is transmitted only to the configured platform and AI APIs described below.
 * **Platform APIs:** Your data is processed directly via each platform's official API:
   - Bluesky AT Protocol in accordance with Bluesky's [Terms of Service](https://bsky.social/about/support/tos).
   - Mastodon API in accordance with your instance's terms of service.
   - Meta Threads API in accordance with [Meta Developer Policies](https://developers.facebook.com/policy/).
   - Telegram Bot API in accordance with Telegram's [Privacy Policy](https://telegram.org/privacy).
-* **Google Gemini / NVIDIA NIM:** The following content is sent to the Google Gemini API as part of normal operation:
+* **AI services:** The following content is sent to the Google Gemini API as part of normal operation:
   - Curated news article titles and summaries (for synthesis).
-  - Generated image prompts (for alt-text generation via Gemini Vision).
+  - Images and their article or topic context (for alt-text generation via Gemini Vision).
   - `/topic` keywords and text-regeneration feedback from Telegram (when those features are used).
   - When the Interaction Engine is enabled (`ENABLE_INTERACTIONS=true`, default), social mention and reply text — including the author's handle and post content — is sent to Gemini to generate a contextual reply.
-  
-  Image generation prompts are additionally sent to the NVIDIA NIM API (when `IMAGE_PROVIDER=nvidia`, the default). Refer to [Google's Privacy Policy](https://policies.google.com/privacy) and [NVIDIA's Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/) for details on how they handle API request data.
+
+  When generated images are needed, image prompts are sent to **Cloudflare Workers AI** by default. If that request fails or is unavailable, the same prompt may be sent to **Pollinations** and then **Hugging Face**. Selecting `IMAGE_PROVIDER=nvidia` sends image prompts to NVIDIA NIM; selecting `IMAGE_PROVIDER=imagen` sends them to Google Gemini. Refer to [Google's Privacy Policy](https://policies.google.com/privacy), [Cloudflare's Privacy Policy](https://www.cloudflare.com/privacypolicy/), [Pollinations' Privacy Policy](https://pollinations.ai/privacy), [Hugging Face's Privacy Policy](https://huggingface.co/privacy), and [NVIDIA's Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/) for details on how they handle API request data.
 
 ## 4. Data Retention
 
