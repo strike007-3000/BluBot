@@ -3,6 +3,7 @@ import time
 import httpx
 import re
 import json
+from html import escape
 from datetime import datetime, timezone
 from typing import Optional, Tuple, Any, List
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
@@ -96,13 +97,13 @@ def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: s
         limit = 290 if current_tab == "bluesky" else (490 if current_tab == "threads" else 485)
         title_map = {"bluesky": "🔵 Bluesky View", "threads": "🧵 Threads View", "mastodon": "🐘 Mastodon View"}
         title = title_map.get(current_tab, "Draft View")
-        return f"📝 **DRAFT POST ({title})**:\n\n{tab_content}\n\n`[{len(tab_content)}/{limit} chars]`"
+        return f"📝 <b>DRAFT POST ({title})</b>:\n\n{escape(tab_content)}\n\n<code>[{len(tab_content)}/{limit} chars]</code>"
     else:
         return (
-            "📝 **MULTI-PLATFORM DRAFTS**:\n\n"
-            f"🔵 **Bluesky** ({len(drafts.bluesky)}/290):\n{drafts.bluesky}\n\n"
-            f"🧵 **Threads** ({len(drafts.threads)}/490):\n{drafts.threads}\n\n"
-            f"🐘 **Mastodon** ({len(drafts.mastodon)}/485):\n{drafts.mastodon}"
+            "📝 <b>MULTI-PLATFORM DRAFTS</b>:\n\n"
+            f"🔵 <b>Bluesky</b> ({len(drafts.bluesky)}/290):\n{escape(drafts.bluesky)}\n\n"
+            f"🧵 <b>Threads</b> ({len(drafts.threads)}/490):\n{escape(drafts.threads)}\n\n"
+            f"🐘 <b>Mastodon</b> ({len(drafts.mastodon)}/485):\n{escape(drafts.mastodon)}"
         )
 
 def _get_caption_payload(drafts: Any, current_tab: str, view_mode: str) -> Tuple[str, Optional[str]]:
@@ -113,7 +114,7 @@ def _get_caption_payload(drafts: Any, current_tab: str, view_mode: str) -> Tuple
     """
     preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode)
     if view_mode == "all" and len(preview_text) > 950:
-        concise_caption = "📝 **MULTI-PLATFORM DRAFTS**:\n(See full breakdown below)\n\n" + f"🔵 Bluesky: {drafts.bluesky[:200]}..."
+        concise_caption = "📝 <b>MULTI-PLATFORM DRAFTS</b>:\n(See full breakdown below)\n\n" + f"🔵 Bluesky: {escape(drafts.bluesky[:200])}..."
         return concise_caption, preview_text
     return preview_text, None
 
@@ -138,11 +139,11 @@ async def _render_and_update_preview(
             caption, followup = _get_caption_payload(drafts, current_tab=current_tab, view_mode=view_mode)
             await bot.edit_message_caption(
                 chat_id=chat_id, message_id=sent_message.message_id,
-                caption=caption, reply_markup=reply_markup, parse_mode="Markdown"
+                caption=caption, reply_markup=reply_markup, parse_mode="HTML"
             )
             if followup:
                 try:
-                    await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                    await bot.send_message(chat_id=chat_id, text=followup, parse_mode="HTML")
                 except Exception as followup_err:
                     SafeLogger.warn(f"Failed to send all-in-one breakdown follow-up message: {followup_err}")
                     try:
@@ -156,7 +157,7 @@ async def _render_and_update_preview(
             preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode)
             await bot.edit_message_text(
                 chat_id=chat_id, message_id=sent_message.message_id,
-                text=preview_text, reply_markup=reply_markup, parse_mode="Markdown"
+                text=preview_text, reply_markup=reply_markup, parse_mode="HTML"
             )
         return True
     except Exception as e:
@@ -211,17 +212,17 @@ async def send_draft_for_approval(
                 photo=image_bytes,
                 caption=caption,
                 reply_markup=reply_markup,
-                parse_mode="Markdown"
+                parse_mode="HTML"
             )
             if followup:
-                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="HTML")
         else:
             SafeLogger.info("Telegram: Sending draft for approval...")
             sent_message = await bot.send_message(
                 chat_id=chat_id,
                 text=preview_text,
                 reply_markup=reply_markup,
-                parse_mode="Markdown"
+                parse_mode="HTML"
             )
 
         updates = await bot.get_updates(limit=100)
@@ -379,7 +380,7 @@ async def send_draft_for_approval(
                                             media=InputMediaPhoto(
                                                 media=new_image_data,
                                                 caption=caption,
-                                                parse_mode="Markdown"
+                                                parse_mode="HTML"
                                             ),
                                             reply_markup=reply_markup
                                         )
@@ -388,7 +389,7 @@ async def send_draft_for_approval(
                                         image_bytes = new_image_data
                                         if followup:
                                             try:
-                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="HTML")
                                             except Exception as fe:
                                                 SafeLogger.warn(f"Failed to send follow-up after image regeneration: {fe}")
                                     else:
@@ -397,7 +398,7 @@ async def send_draft_for_approval(
                                             photo=new_image_data,
                                             caption=caption,
                                             reply_markup=reply_markup,
-                                            parse_mode="Markdown"
+                                            parse_mode="HTML"
                                         )
                                         # Commit authoritative media state immediately
                                         sent_message = sent_photo
@@ -405,7 +406,7 @@ async def send_draft_for_approval(
                                         image_bytes = new_image_data
                                         if followup:
                                             try:
-                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="Markdown")
+                                                await bot.send_message(chat_id=chat_id, text=followup, parse_mode="HTML")
                                             except Exception as fe:
                                                 SafeLogger.warn(f"Failed to send follow-up after image regeneration: {fe}")
 

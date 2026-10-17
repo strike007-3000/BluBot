@@ -2,9 +2,14 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from src.settings import Settings
 from src.telegram_gateway import (
-    validate_text_limits, send_draft_for_approval,
+    validate_text_limits, send_draft_for_approval, _format_preview_text,
     send_broadcast_platform_messages
 )
+
+def test_preview_escapes_generated_html_entities():
+    preview = _format_preview_text("Draft with _markdown_ <tag> & details")
+    assert "Draft with _markdown_ &lt;tag&gt; &amp; details" in preview
+    assert "<tag>" not in preview
 
 def test_validate_text_limits(monkeypatch):
     mock_settings = Settings(
@@ -248,9 +253,9 @@ async def test_send_draft_for_approval_edit_by_reply(monkeypatch, mocker):
     mock_bot_instance.edit_message_text.assert_called_with(
         chat_id="98765",
         message_id=999,
-        text="📝 **DRAFT POST (🔵 Bluesky View)**:\n\nEdited draft text\n\n`[17/290 chars]`",
+        text="📝 <b>DRAFT POST (🔵 Bluesky View)</b>:\n\nEdited draft text\n\n<code>[17/290 chars]</code>",
         reply_markup=mocker.ANY,
-        parse_mode="Markdown"
+        parse_mode="HTML"
     )
 
 @pytest.mark.asyncio
