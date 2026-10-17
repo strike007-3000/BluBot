@@ -78,7 +78,8 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) selection across 4 content structures: strategic shift, practical workflow, risk/verification, and enterprise ROI.
-    - **Curated Feed Network**: **45 configured feeds** across 8 tiers mapped dynamically via registry and audited for freshness.
+    - **Curated Source Network**: **45 RSS feeds plus the Hugging Face Trending API** across 8 tiers, with API sources excluded from RSS health tracking.
+    - **Bluesky Source Receipts**: Optionally replies to corroborated Bluesky posts with up to two aligned source links, only after the root publication has been durably settled.
 
 
 ## 🛠️ Setup Instructions
@@ -131,6 +132,12 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `ENABLE_HASHTAGS_BSKY` | No | (Optional) Enable/disable hashtags on Bluesky (default: `false` — hashtags stripped to keep Bluesky posts clean) |
 | `ENABLE_HASHTAGS_MASTODON` | No | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
 | `ENABLE_HASHTAGS_THREADS` | No | (Optional) Enable/disable hashtags on Threads (default: `true`) |
+
+### Repository Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLE_SOURCE_RECEIPTS_BSKY` | `false` | Reply to corroborated Bluesky posts with up to two source links after durable settlement |
 
 ## 🛡️ Resilience Architecture
 
@@ -186,7 +193,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.27.0 (Current)**: **Published-Post Ledger**.
+- **v3.28.0 (Current)**: **Source Receipts & Hugging Face Trending**.
+    - 🧾 **Bluesky Receipts**: Best-effort replies attach up to two corroborating links after root-post settlement, preserving source/link pairing and recording the receipt URI in the ledger.
+    - 🤗 **Trending Models**: Adds the public Hugging Face models API as a scored source, requires a factual model-card excerpt, and keeps Feed Vanguard and RSS audits RSS-only.
+    - 🧪 **Diagnostics**: Extends the existing diagnostic menu with a live Hugging Face Trending source check.
+- **v3.27.0**: **Published-Post Ledger**.
     - 📒 **Durable Ledger**: Adds a `published_posts` state collection (500-entry cap, no time pruning) recording where each story was published, kept separate from the 14-day `recent_stories` duplicate window.
     - 🔗 **Root Post References**: Bluesky, Mastodon, and Threads publishers now return their root post reference; `BroadcastResult` carries `post_id`, `post_cid`, and `receipt_id`.
     - 🔀 **Merge-Safe**: Gist/local merges union ledger entries, combine fields within each platform reference, and retain the newest 500 by publication timestamp.

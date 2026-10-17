@@ -387,6 +387,7 @@ def test_registry_validation():
         assert "category" in source
         assert "quality" in source
         assert "base_score" in source
+        assert source.get("kind", "rss") in {"rss", "api"}
 
         # Check duplicate IDs and URLs
         assert source["id"] not in ids, f"Duplicate ID: {source['id']}"

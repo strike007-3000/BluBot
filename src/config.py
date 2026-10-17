@@ -15,6 +15,7 @@ STATUS_FILE_PATH = os.path.join(BASE_DIR, "STATUS.md")
 VANGUARD_STATE_PATH = os.path.join(BASE_DIR, "broken_feeds.json")
 INTERACTIONS_STATE_PATH = os.path.join(BASE_DIR, "seen_interactions.json")
 PENDING_TOPIC_FILE_PATH = os.path.join(BASE_DIR, "pending_topic.json")
+HF_MODELS_API_URL = "https://huggingface.co/api/models"
 
 # Interaction Engine Constants
 INTERACTION_LIMIT = 5
@@ -107,6 +108,7 @@ SOURCE_REGISTRY = [
     {"id": "vllm_releases",       "name": "vLLM Releases",                   "url": "https://github.com/vllm-project/vllm/releases.atom",         "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
     {"id": "ollama_releases",     "name": "Ollama Releases",                 "url": "https://github.com/ollama/ollama/releases.atom",             "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
     {"id": "pytorch_releases",    "name": "PyTorch Releases",                "url": "https://github.com/pytorch/pytorch/releases.atom",            "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
+    {"id": "hf_trending",         "name": "Hugging Face Trending",            "url": HF_MODELS_API_URL,                                                   "category": "open_source",    "quality": "community",  "base_score": 18, "kind": "api"},
 
     # === Tier 5: Infrastructure / Business Analysis (base 15) ===
     {"id": "semianalysis",        "name": "SemiAnalysis",        "url": "https://semianalysis.com/feed/",                                     "category": "infrastructure", "quality": "opinion",    "base_score": 15},
@@ -145,8 +147,8 @@ SOURCE_REGISTRY = [
     {"id": "vkrakovna",           "name": "Victoria Krakovna",   "url": "https://vkrakovna.wordpress.com/feed/",                              "category": "critical",       "quality": "opinion",    "base_score": 5},
 ]
 
-# Derive flat RSS_FEEDS for backward compatibility
-RSS_FEEDS = [s["url"] for s in SOURCE_REGISTRY]
+# Derive flat RSS_FEEDS for RSS-only consumers such as Feed Vanguard.
+RSS_FEEDS = [s["url"] for s in SOURCE_REGISTRY if s.get("kind", "rss") == "rss"]
 
 # Lookups mapped by Source ID
 FEED_SCORE_MAP = {s["id"]: s["base_score"] for s in SOURCE_REGISTRY}

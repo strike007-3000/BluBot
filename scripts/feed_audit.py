@@ -28,7 +28,9 @@ async def run_standalone_audit():
         print(f"\n[1/2] Probing {len(RSS_FEEDS)}-feed network for health and latency...")
         from src.curator import fetch_news
         active_feeds = vanguard.get_active_feeds()
-        _, feed_outcomes = await fetch_news(client, feed_list=active_feeds, limit=None)
+        _, feed_outcomes = await fetch_news(
+            client, feed_list=active_feeds, limit=None, include_api_sources=False
+        )
         await asyncio.to_thread(vanguard.apply_feed_outcomes, feed_outcomes)
 
         active = vanguard.get_active_feeds()

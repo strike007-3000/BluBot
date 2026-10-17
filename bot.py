@@ -33,7 +33,7 @@ from src.curator import (
     generate_image_alt_text, strip_markdown
 )
 from src.broadcaster import (
-    post_to_bluesky, post_to_mastodon, post_to_threads,
+    post_to_bluesky, post_to_mastodon, post_to_threads, post_bluesky_receipt,
     update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions,
     fetch_threads_replies
 )
@@ -163,14 +163,14 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
     all_articles = [Article(**item) for item in raw_news]
 
     if telegram_topic:
-        SafeLogger.info(f"Curation Stage: Filtering RSS articles for Telegram topic request: '{telegram_topic}'")
+        SafeLogger.info(f"Curation Stage: Filtering source items for Telegram topic request: '{telegram_topic}'")
         matching_articles = []
         for a in all_articles:
             if article_matches_topic(a.title, a.summary, telegram_topic):
                 matching_articles.append(a)
 
         if matching_articles:
-            SafeLogger.info(f"Curation Stage: Found {len(matching_articles)} matching articles in RSS feeds.")
+            SafeLogger.info(f"Curation Stage: Found {len(matching_articles)} matching source items.")
             articles = matching_articles
         else:
             SafeLogger.info(f"Curation Stage: No matching articles found in feeds for '{telegram_topic}'. Falling back to raw focus.")
@@ -198,7 +198,7 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
 
 async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Client, topic: str) -> str:
     """Generates a grounded 7-day topic briefing using multi-source story clustering."""
-    SafeLogger.info(f"Briefing Engine: Fetching 7-day RSS articles for topic: '{topic}'")
+    SafeLogger.info(f"Briefing Engine: Fetching 7-day source items for topic: '{topic}'")
     seen_data = await asyncio.to_thread(load_seen_articles)
 
     from src.feed_vanguard import VanguardManager
@@ -220,7 +220,7 @@ async def generate_briefing(client: httpx.AsyncClient, genai_client: genai.Clien
     matching_articles = [a for a in all_articles if article_matches_topic(a.title, a.summary, topic)]
 
     if not matching_articles:
-        return f"🔍 *7-Day Briefing for '{topic}'*\n\nNo articles matching this topic were found in RSS feeds over the past 7 days."
+        return f"🔍 *7-Day Briefing for '{topic}'*\n\nNo matching source items were found over the past 7 days."
 
     article_bullets = []
     for idx, a in enumerate(matching_articles[:15]):
@@ -742,6 +742,84 @@ async def settle_persistence_stage(
         SafeLogger.error("All broadcast targets failed or encountered errors. Pending reservation transitioned to uncertain state.")
         sys.exit(1)
 
+def _source_receipt_pairs(article: Article) -> List[Tuple[str, str]]:
+    """Keep source names aligned with their normalized corroborating links."""
+    lead_link = normalize_url(article.link)
+    seen = set()
+    pairs = []
+    for source, link in zip(article.supporting_sources or [], article.supporting_links or []):
+        if not isinstance(source, str) or not source.strip() or not isinstance(link, str):
+            continue
+        canonical_link = normalize_url(link)
+        if (
+            not canonical_link.startswith(("http://", "https://"))
+            or canonical_link == lead_link
+            or canonical_link in seen
+        ):
+            continue
+        seen.add(canonical_link)
+        pairs.append((source.strip(), canonical_link))
+        if len(pairs) == 2:
+            break
+    return pairs
+
+def _attach_receipt_to_ledger(state: dict, root_uri: str, receipt_uri: str) -> bool:
+    """Attach a receipt to the matching settled Bluesky root entry."""
+    for entry in reversed(state.get("published_posts", [])):
+        posts = entry.get("posts") if isinstance(entry, dict) else None
+        bluesky = posts.get("bluesky") if isinstance(posts, dict) else None
+        if isinstance(bluesky, dict) and bluesky.get("uri") == root_uri:
+            bluesky["receipt_uri"] = receipt_uri
+            return True
+    return False
+
+async def source_receipt_stage(
+    state: dict,
+    matched_article: Article,
+    results: List[BroadcastResult],
+    bsky_client: Any,
+) -> Tuple[dict, List[BroadcastResult]]:
+    """Post and persist an optional Bluesky source receipt after root settlement."""
+    if (
+        not settings.enable_source_receipts_bsky
+        or settings.is_dry_run
+        or not matched_article.consensus_synergy
+        or not bsky_client
+    ):
+        return state, results
+
+    bsky_result = next((result for result in results if result.platform == "Bluesky"), None)
+    if not bsky_result or not bsky_result.success or not bsky_result.post_id or not bsky_result.post_cid:
+        return state, results
+
+    pairs = _source_receipt_pairs(matched_article)
+    if not pairs:
+        return state, results
+
+    receipt_id = await post_bluesky_receipt(
+        bsky_client, bsky_result.post_id, bsky_result.post_cid, pairs
+    )
+    if not receipt_id:
+        return state, results
+
+    from dataclasses import replace
+    results = [
+        replace(result, receipt_id=receipt_id) if result.platform == "Bluesky" else result
+        for result in results
+    ]
+    if not _attach_receipt_to_ledger(state, bsky_result.post_id, receipt_id):
+        SafeLogger.warn("Bluesky source receipt posted but no matching ledger entry was found.")
+        return state, results
+
+    try:
+        saved, updated_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+        if not saved:
+            SafeLogger.warn("Bluesky source receipt state could not be fully synchronized.")
+        return updated_state, results
+    except Exception as exc:
+        SafeLogger.warn(f"Bluesky source receipt state save failed: {type(exc).__name__}")
+        return state, results
+
 async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
     """Legacy compatibility helper delegating to reserve_pending_stage and settle_persistence_stage."""
     from dataclasses import replace
@@ -977,6 +1055,7 @@ async def main():
 
         # 3.5 Immediate Post-Broadcast Settlement
         state = await settle_persistence_stage(state, curation, synthesis, matched_article, results)
+        state, results = await source_receipt_stage(state, matched_article, results, bsky_client)
         SafeLogger.info(f"Total Pipeline Duration: {time.monotonic() - t_start:.2f}s.")
 
         # 3.6 Post-Broadcast Telegram Multi-Platform Notifications
