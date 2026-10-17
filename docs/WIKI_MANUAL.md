@@ -134,7 +134,7 @@ BluBot defaults to **Hugging Face Inference Providers** and then falls back to *
 
 ## 📡 Page 5: Source Intelligence
 
-The current registry contains **45 RSS feeds plus one API source** across 8 tiers. Hugging Face Trending uses the public Hub models API, enters the same relevance scoring and clustering pipeline, and is intentionally excluded from Feed Vanguard RSS health state.
+The current registry contains **45 RSS feeds plus one API source** across 8 tiers. Hugging Face Trending uses the public Hub models API, admits only models with a usable model-card excerpt for grounded synthesis, enters the same relevance scoring and clustering pipeline, and is intentionally excluded from Feed Vanguard RSS health state.
 
 ---
 

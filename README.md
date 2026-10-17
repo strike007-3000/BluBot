@@ -195,7 +195,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 - **v3.28.0 (Current)**: **Source Receipts & Hugging Face Trending**.
     - 🧾 **Bluesky Receipts**: Best-effort replies attach up to two corroborating links after root-post settlement, preserving source/link pairing and recording the receipt URI in the ledger.
-    - 🤗 **Trending Models**: Adds the public Hugging Face models API as a scored source while keeping Feed Vanguard and RSS audits RSS-only.
+    - 🤗 **Trending Models**: Adds the public Hugging Face models API as a scored source, requires a factual model-card excerpt, and keeps Feed Vanguard and RSS audits RSS-only.
     - 🧪 **Diagnostics**: Extends the existing diagnostic menu with a live Hugging Face Trending source check.
 - **v3.27.0**: **Published-Post Ledger**.
     - 📒 **Durable Ledger**: Adds a `published_posts` state collection (500-entry cap, no time pruning) recording where each story was published, kept separate from the 14-day `recent_stories` duplicate window.

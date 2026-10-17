@@ -100,7 +100,11 @@ async def test_hf_trending_fetch():
         print("No recent trending models returned.")
         return
     for item in sorted(items, key=lambda entry: entry["score"], reverse=True):
-        print(f"- {item['title']} | score {item['score']:.1f}\n  {item['link']}")
+        print(
+            f"- {item['title']} | score {item['score']:.1f}\n"
+            f"  {item['summary'][:220]}\n"
+            f"  {item['link']}"
+        )
 
 async def test_full_dry_run():
     print(f"\n{'='*20}")
