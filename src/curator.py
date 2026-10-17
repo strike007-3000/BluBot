@@ -358,10 +358,12 @@ async def _fetch_github_readme_excerpt(client, full_name: str, headers: dict) ->
     """Fetch raw README for a repository and extract a bounded text excerpt."""
     try:
         readme_url = f"{GITHUB_REPOS_API_URL}/{full_name}/readme"
-        req_headers = {**headers, "Accept": "application/vnd.github.raw+json"}
+        req_headers = {**headers, "Accept": "application/vnd.github.raw+json", "Range": "bytes=0-8191"}
         resp = await client.get(readme_url, headers=req_headers, timeout=5.0)
-        if resp.status_code == 200 and resp.text:
-            text = resp.text.strip()
+        if resp.status_code in (200, 206) and (resp.content or resp.text):
+            # Limit bytes before decoding and cleaning
+            raw_bytes = resp.content[:8192] if resp.content else resp.text[:8192].encode("utf-8")
+            text = raw_bytes.decode("utf-8", errors="ignore").strip()
             # Clean markdown/HTML tags and normalize whitespace
             text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
             text = re.sub(r'<[^>]+>', ' ', text)

@@ -68,6 +68,8 @@ async def test_candidate_limiting_before_readme_fetch():
     assert len(items) == 3
     # Exactly 1 search call + 3 README calls = 4 total GET calls
     assert client.get.await_count == 4
+    # Verify bounded byte range header was sent
+    assert client.get.await_args_list[1].kwargs["headers"]["Range"] == "bytes=0-8191"
     assert items[0]["title"] == "org/repo-9"
     assert items[1]["title"] == "org/repo-8"
     assert items[2]["title"] == "org/repo-7"

@@ -78,7 +78,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) selection across 4 content structures: strategic shift, practical workflow, risk/verification, and enterprise ROI.
-    - **Curated Source Network**: **45 RSS feeds plus the Hugging Face Trending API** across 8 tiers, with API sources excluded from RSS health tracking.
+    - **Curated Source Network**: **45 RSS feeds plus two API sources** (Hugging Face Trending and GitHub Fast-Rising Repositories) across 8 tiers, with API sources excluded from RSS health tracking.
     - **Bluesky Source Receipts**: Optionally replies to corroborated Bluesky posts with up to two aligned source links, only after the root publication has been durably settled.
 
 
@@ -125,6 +125,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `THREADS_USER_ID` | No | Your Threads User ID |
 | `GIST_ID` | No | (Optional) Private GitHub Gist ID for remote state |
 | `GIST_TOKEN` | No | (Optional) GitHub PAT with `gist` scope |
+| `GITHUB_TOKEN` | No | (Optional) GitHub Token (PAT or automatic Actions `${{ secrets.GITHUB_TOKEN }}`) for higher REST API limits (1,000 req/hr) when fetching fast-rising repositories |
 | `ENABLE_BSKY_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
