@@ -2,6 +2,7 @@ import asyncio
 import httpx
 import re
 from datetime import datetime, timezone, timedelta
+from typing import List, Optional, Tuple
 from mastodon import Mastodon
 from atproto import AsyncClient, models
 from src.utils import (
@@ -19,6 +20,19 @@ def clean_hashtags_if_needed(text: str, enabled: bool) -> str:
         # Inline hashtags (e.g. #AI -> AI)
         text = text.replace('#', '')
     return text.strip()
+
+def _link_facets(text: str) -> list:
+    """Build Bluesky URL facets using UTF-8 byte offsets."""
+    facets = []
+    for match in re.finditer(r'https?://[^\s]+', text):
+        facets.append(models.AppBskyRichtextFacet.Main(
+            features=[models.AppBskyRichtextFacet.Link(uri=match.group())],
+            index=models.AppBskyRichtextFacet.ByteSlice(
+                byte_start=len(text[:match.start()].encode("utf-8")),
+                byte_end=len(text[:match.end()].encode("utf-8")),
+            ),
+        ))
+    return facets
 
 @retry_with_backoff
 async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None):
@@ -79,15 +93,7 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
             current_text = f"{chunk} ({i+1}/{len(chunks)})"
 
         # Calculate facets for the current chunk
-        facets = []
-        url_regex = re.compile(r'https?://[^\s]+')
-        for match in url_regex.finditer(current_text):
-            start = len(current_text[:match.start()].encode('utf-8'))
-            end = len(current_text[:match.end()].encode('utf-8'))
-            facets.append(models.AppBskyRichtextFacet.Main(
-                features=[models.AppBskyRichtextFacet.Link(uri=match.group())],
-                index=models.AppBskyRichtextFacet.ByteSlice(byte_start=start, byte_end=end)
-            ))
+        facets = _link_facets(current_text)
         
         tag_regex = re.compile(r'#(\w+)')
         for match in tag_regex.finditer(current_text):
@@ -124,6 +130,40 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
             
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Bluesky!")
     return root_post
+
+async def post_bluesky_receipt(
+    bsky_client,
+    root_uri: str,
+    root_cid: str,
+    pairs: List[Tuple[str, str]],
+) -> Optional[str]:
+    """Post one best-effort, non-retried source receipt reply."""
+    try:
+        selected = pairs[:2]
+        if not selected:
+            return None
+
+        def render(items):
+            return "Also reported by:\n" + "\n".join(f"• {source}: {link}" for source, link in items)
+
+        text = render(selected)
+        if len(text) > settings.bluesky_limit and len(selected) > 1:
+            selected = selected[:1]
+            text = render(selected)
+        if len(text) > settings.bluesky_limit:
+            SafeLogger.warn("Bluesky source receipt exceeds the post limit; skipping it.")
+            return None
+
+        root_ref = models.ComAtprotoRepoStrongRef.Main(uri=root_uri, cid=root_cid)
+        response = await bsky_client.send_post(
+            text=text,
+            facets=_link_facets(text),
+            reply_to=models.AppBskyFeedPost.ReplyRef(root=root_ref, parent=root_ref),
+        )
+        return getattr(response, "uri", None)
+    except Exception as exc:
+        SafeLogger.warn(f"Bluesky source receipt failed: {type(exc).__name__}")
+        return None
 
 @retry_with_backoff
 async def post_to_mastodon(text, media=None):

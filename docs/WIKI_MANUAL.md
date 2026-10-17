@@ -134,7 +134,7 @@ BluBot defaults to **Hugging Face Inference Providers** and then falls back to *
 
 ## 📡 Page 5: Source Intelligence
 
-The current registry contains **45 configured feeds** across 8 tiers.
+The current registry contains **45 RSS feeds plus one API source** across 8 tiers. Hugging Face Trending uses the public Hub models API, enters the same relevance scoring and clustering pipeline, and is intentionally excluded from Feed Vanguard RSS health state.
 
 ---
 
@@ -176,10 +176,16 @@ The current registry contains **45 configured feeds** across 8 tiers.
 | `ENABLE_HASHTAGS_MASTODON` | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
 | `ENABLE_HASHTAGS_THREADS` | (Optional) Enable/disable hashtags on Threads (default: `true`) |
 
+### Repository Variables
+| Variable | Description |
+| :--- | :--- |
+| `ENABLE_SOURCE_RECEIPTS_BSKY` | Enable Bluesky corroboration receipts after durable settlement (default: `false`) |
+
 ### Hardening & Event-Loop Optimization
 - **Non-Blocking I/O**: File persistence (`load_seen_articles`/`save_seen_articles`, `load_seen_interactions`/`save_seen_interactions`, `load_session_string`/`save_session_string`), social media profile bio updates, status dashboard telemetry, and feed vanguard state tracking are completely offloaded to background worker threads via `asyncio.to_thread`. This guarantees that the core async event loop is never blocked during high-concurrency periods.
 - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield the application from decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
 - **Resilient RSS Parsing**: Incorporates raw byte parsing via `response.content` and robust fallback handling for malformed XML schemas. It uses safe lookups (`getattr(entry, 'link', None)`) and skips invalid entries to prevent single-feed crashes from dropping whole RSS sources.
+- **Typed Source Registry**: Registry entries default to `kind: rss`; API entries such as `hf_trending` are scored normally but never passed to Feed Vanguard or RSS audit tooling.
 
 ---
 
@@ -428,6 +434,7 @@ Set these in `config.py` or as environment variables:
 - `ENABLE_BSKY_COMMENT_REPLIES`: Enable/disable comment replying on Bluesky (default: `true`).
 - `ENABLE_MASTODON_COMMENT_REPLIES`: Enable/disable comment replying on Mastodon (default: `false`).
 - `ENABLE_THREADS_COMMENT_REPLIES`: Enable/disable comment replying on Threads (default: `false`).
+- `ENABLE_SOURCE_RECEIPTS_BSKY`: Enable a best-effort Bluesky reply containing up to two corroborating links (default: `false`). Receipts run only after root-post settlement and never change broadcast success.
 - `MENTION_REPLY_PROB`: Adjust balance between silence and engagement (default: `0.8`).
 - `COMMENT_REPLY_PROB`: Adjust balance for replying to non-mentions (default: `0.5`).
 - `AUTO_LIKE_INTERACTIONS`: Enable/Disable bot "Likes" on interacted posts (default: `true`).

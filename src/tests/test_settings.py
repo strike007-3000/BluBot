@@ -4,6 +4,7 @@ from src.settings import Settings
 
 def test_settings_from_env_default(monkeypatch):
     """Verify that Settings.from_env() reads correct defaults."""
+    monkeypatch.setenv("DRY_RUN", "false")
     monkeypatch.setenv("CI", "false")
     monkeypatch.setenv("GEMINI_KEY", "test_gemini")
     monkeypatch.setenv("BSKY_HANDLE", "test_handle")
@@ -83,3 +84,11 @@ def test_telegram_settings_defaults(monkeypatch):
     assert settings.telegram_timeout_minutes == 10
     assert settings.enable_telegram_approval is True
     assert settings.enable_hashtags_bsky is True
+
+def test_source_receipts_setting(monkeypatch):
+    monkeypatch.setenv("DRY_RUN", "false")
+    monkeypatch.delenv("ENABLE_SOURCE_RECEIPTS_BSKY", raising=False)
+    assert Settings.from_env().enable_source_receipts_bsky is False
+
+    monkeypatch.setenv("ENABLE_SOURCE_RECEIPTS_BSKY", "true")
+    assert Settings.from_env().enable_source_receipts_bsky is True

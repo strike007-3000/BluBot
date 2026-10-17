@@ -480,11 +480,16 @@ async def test_settlement_occurs_before_telegram_notifications(monkeypatch, mock
         call_order.append("settle")
         return {}
 
+    async def mock_receipt_action(state, article, results, client):
+        call_order.append("receipt")
+        return state, results
+
     async def mock_notify_action(*args, **kwargs):
         call_order.append("notify")
         return True
 
     mocker.patch("bot.settle_persistence_stage", side_effect=mock_settle_action)
+    mocker.patch("bot.source_receipt_stage", side_effect=mock_receipt_action)
     mocker.patch("bot.send_broadcast_platform_messages", side_effect=mock_notify_action)
     mocker.patch("bot.update_status_dashboard", new_callable=AsyncMock)
     mocker.patch("bot.update_social_profiles", new_callable=AsyncMock)
@@ -492,4 +497,4 @@ async def test_settlement_occurs_before_telegram_notifications(monkeypatch, mock
     await bot.main()
 
     # Verify settle happened strictly before notify
-    assert call_order == ["settle", "notify"]
+    assert call_order == ["settle", "receipt", "notify"]

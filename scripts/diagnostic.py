@@ -11,7 +11,7 @@ os.environ["DRY_RUN"] = "true"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
-from src.curator import fetch_news, summarize_news
+from src.curator import fetch_hf_trending, fetch_news, summarize_news
 from src.logger import SafeLogger
 from src.config import validate_gemini_model_priority, IMAGE_PROVIDER, VERSION, FEED_CATEGORY_MAP
 
@@ -88,6 +88,19 @@ async def test_scoring():
         debug = item.get('_score_debug', {})
         print(f"   Breakdown: [Src: {debug.get('source')} | Sig: {debug.get('signal')} | Mom: {debug.get('momentum')} | Pen: {debug.get('penalty')} | Dec: {debug.get('decay')}]")
         print("-" * 70)
+
+async def test_hf_trending_fetch():
+    """Fetch and display the current scored Hugging Face trending models."""
+    import httpx
+
+    print(f"\n{'='*20}\nHUGGING FACE TRENDING SOURCE\n{'='*20}")
+    async with httpx.AsyncClient() as client:
+        items = await fetch_hf_trending(client, days_lookback=7)
+    if not items:
+        print("No recent trending models returned.")
+        return
+    for item in sorted(items, key=lambda entry: entry["score"], reverse=True):
+        print(f"- {item['title']} | score {item['score']:.1f}\n  {item['link']}")
 
 async def test_full_dry_run():
     print(f"\n{'='*20}")
@@ -449,9 +462,10 @@ async def main():
     print("4. Gist State Diagnostics (Opt-in Read/Write Test)")
     print("5. Gemini Model Discovery & Multi-Model Test (Text + PNG Image Input)")
     print("6. Multi-Platform Drafting & Telegram State Simulation")
+    print("7. Hugging Face Trending Source Test")
 
     try:
-        choice = input("\nEnter choice (1-6) or 'q' to quit: ").strip().lower()
+        choice = input("\nEnter choice (1-7) or 'q' to quit: ").strip().lower()
         if choice == "1":
             await test_scoring()
         elif choice == "2":
@@ -472,6 +486,8 @@ async def main():
             await test_gemini_model_discovery_and_multimodal_checks()
         elif choice == "6":
             await test_multiplatform_telegram_simulation()
+        elif choice == "7":
+            await test_hf_trending_fetch()
         elif choice == "q":
             print("Exiting.")
         else:

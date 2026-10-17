@@ -36,6 +36,7 @@ class Settings:
     enable_bsky_comment_replies: bool = True
     enable_mastodon_comment_replies: bool = False
     enable_threads_comment_replies: bool = False
+    enable_source_receipts_bsky: bool = False
 
     # Telegram Integration Config
     telegram_bot_token: Optional[str] = None
@@ -85,6 +86,7 @@ class Settings:
             "enable_bsky_comment_replies": os.getenv("ENABLE_BSKY_COMMENT_REPLIES", "true").lower() == "true",
             "enable_mastodon_comment_replies": os.getenv("ENABLE_MASTODON_COMMENT_REPLIES", "false").lower() == "true",
             "enable_threads_comment_replies": os.getenv("ENABLE_THREADS_COMMENT_REPLIES", "false").lower() == "true",
+            "enable_source_receipts_bsky": os.getenv("ENABLE_SOURCE_RECEIPTS_BSKY", "false").lower() == "true",
             "log_format": os.getenv("LOG_FORMAT", "json" if is_ci else "pretty").lower(),
             "max_thread_parts": int(os.getenv("MAX_THREAD_PARTS", "2")),
             "gist_id": os.getenv("GIST_ID"),
