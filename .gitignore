@@ -12,3 +12,4 @@ DOCUMENTATION_COMPARISON.md
 graphify-out/
 seen_articles.json*
 broken_feeds.json*
+.freebuff/project-id

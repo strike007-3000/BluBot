@@ -124,12 +124,19 @@ async def test_full_dry_run():
 
         with patch("bot.post_to_mastodon", new_callable=AsyncMock), \
              patch("bot.post_to_threads", new_callable=AsyncMock), \
-             patch("bot.update_live_status", new_callable=AsyncMock), \
-             patch("bot.save_seen_articles"):
+             patch("bot.update_status_dashboard", new_callable=AsyncMock), \
+             patch("bot.save_seen_articles", side_effect=lambda data, **kw: (True, data)):
 
             print(f"Executing full bot orchestration (Offline Mode - {IMAGE_PROVIDER} Image Gen)...")
             await bot.main()
             print(f"\n{'='*20}\nDRY RUN COMPLETE (v{VERSION})\n{'='*20}")
+
+NON_INTERACTIVE = False  # set by --mode: never block on input()
+
+def _ask(prompt):
+    """input() wrapper; returns "" instead of blocking when running with --mode."""
+    return "" if NON_INTERACTIVE else input(prompt)
+
 
 def _prompt_key(env_var, label):
     """Prompt for an API key if not set in environment. Returns the key or None."""
@@ -139,7 +146,7 @@ def _prompt_key(env_var, label):
         key = None
     if not key:
         print(f"\n--- {env_var} not found ---")
-        key = input(f"Please enter your {label} (or press enter to skip): ").strip()
+        key = _ask(f"Please enter your {label} (or press enter to skip): ").strip()
         if key:
             os.environ[env_var] = key
             from src.settings import settings
@@ -276,7 +283,7 @@ async def test_image_generation():
     for key, (label, _) in PROVIDER_TESTS.items():
         print(f"  {key}. {label}")
 
-    choice = input("\nEnter choice: ").strip().lower()
+    choice = _ask("\nEnter choice: ").strip().lower() or ("a" if NON_INTERACTIVE else "")
     prompt = "A minimalist icon of a blue bird holding a newspaper, clean digital art, simple illustration"
 
     if choice == "a":
@@ -307,9 +314,9 @@ async def test_gist_diagnostics():
     if not gist_id or not gist_token:
         print("⚠️ GIST_ID or GIST_TOKEN not found in environment.")
         if not gist_id:
-            gist_id = input("Enter GIST_ID: ").strip()
+            gist_id = _ask("Enter GIST_ID: ").strip()
         if not gist_token:
-            gist_token = input("Enter GIST_TOKEN (GitHub PAT): ").strip()
+            gist_token = _ask("Enter GIST_TOKEN (GitHub PAT): ").strip()
 
     if not gist_id or not gist_token:
         print("❌ Gist Status: Gist credentials not provided.")
@@ -377,7 +384,7 @@ async def test_gemini_model_discovery_and_multimodal_checks():
 
     key = os.getenv("GEMINI_KEY") or os.getenv("GEMINI_API_KEY")
     if not key:
-        key = input("Enter Gemini API Key: ").strip()
+        key = _ask("Enter Gemini API Key: ").strip()
 
     if not key:
         print("❌ No API key provided. Skipping Gemini model diagnostics.")
@@ -481,9 +488,33 @@ async def test_multiplatform_telegram_simulation():
     print(f"Rendered Text ({len(all_in_one)} chars):\n{all_in_one}")
     print("\n✅ Simulation completed successfully with zero network errors.")
 
+async def test_engagement():
+    import httpx
+    from src.engagement import fetch_bluesky_metrics, recent_entries, render_table
+    from src.utils import load_seen_articles
+    entries = recent_entries(load_seen_articles())
+    async with httpx.AsyncClient() as client:
+        metrics = await fetch_bluesky_metrics(client, entries)
+    print(f"\nEngagement (last 7 days, {len(entries)} posts)\n{render_table(metrics, entries)}")
+
+MODES = {"scoring": test_scoring, "dry-run": test_full_dry_run, "images": test_image_generation,
+         "gist": test_gist_diagnostics, "gemini": test_gemini_model_discovery_and_multimodal_checks,
+         "drafts": test_multiplatform_telegram_simulation, "hf": test_hf_trending_fetch,
+         "engagement": test_engagement}
+
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=sorted(MODES), help="Run a mode non-interactively")
+    mode = parser.parse_args().mode
+    if mode:
+        global NON_INTERACTIVE
+        NON_INTERACTIVE = True
+        await MODES[mode]()
+        return
 
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
