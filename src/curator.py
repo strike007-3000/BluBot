@@ -678,7 +678,7 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
             recent_topics=recent_topics,
             recent_categories=recent_categories,
             watch_topics=watch_topics,
-            days_lookback=days_lookback,
+            days_lookback=7,
         ))
     results = await asyncio.gather(*tasks)
 

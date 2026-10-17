@@ -847,11 +847,16 @@ def is_roundup_reserved_or_published(state: dict, iso_week: str) -> bool:
     return False
 
 def select_eligible_roundup_stories(state: dict, iso_week: str) -> List[dict]:
-    """Finds published ledger entries belonging to the current ISO week with kind == 'post'."""
+    """Finds published ledger entries belonging to the current ISO week with kind == 'post' and valid public URLs."""
     eligible = []
     for entry in state.get("published_posts", []):
         if entry.get("kind") == "roundup":
             continue
+        raw_url = str(entry.get("url") or "").strip()
+        from scripts.build_archive import is_valid_public_http_url
+        if not is_valid_public_http_url(raw_url):
+            continue
+
         pub_at = entry.get("published_at")
         if not pub_at:
             continue
@@ -861,7 +866,14 @@ def select_eligible_roundup_stories(state: dict, iso_week: str) -> List[dict]:
                 pub_dt = pub_dt.replace(tzinfo=timezone.utc)
             ey, ew, _ = pub_dt.isocalendar()
             if f"{ey}-W{ew:02d}" == iso_week:
-                eligible.append(entry)
+                # Normalize title: collapse newlines/whitespace, strip @ to avoid stray mentions, bound length
+                raw_title = str(entry.get("title") or "").replace("\r", " ").replace("\n", " ").replace("@", "")
+                clean_title = " ".join(raw_title.split())[:120]
+                if clean_title:
+                    normalized_entry = dict(entry)
+                    normalized_entry["title"] = clean_title
+                    normalized_entry["url"] = raw_url
+                    eligible.append(normalized_entry)
         except Exception:
             continue
     return eligible
@@ -875,7 +887,7 @@ def build_roundup_text(iso_week: str, stories: List[dict]) -> str:
         parts.append(f"{idx}. {title}\n{url}")
     return "\n\n".join(parts)
 
-def validate_roundup_urls_preserved(roundup_text: str, stories: List[dict], max_parts: int) -> bool:
+def validate_roundup_urls_preserved(roundup_content: Any, stories: List[dict], max_parts: int) -> bool:
     """Pre-broadcast verification: ensures every story URL survives smart_split across all active platforms."""
     expected_urls = [s.get("url", "").strip() for s in stories if s.get("url")]
     def _safe_int(val, default):
@@ -884,13 +896,30 @@ def validate_roundup_urls_preserved(roundup_text: str, stories: List[dict], max_
         except (TypeError, ValueError):
             return default
 
-    platform_limits = [
-        _safe_int(getattr(settings, "bluesky_limit", 300), 300) - 10,
-        _safe_int(getattr(settings, "mastodon_limit", 500), 500) - 15,
-        _safe_int(getattr(settings, "threads_limit", 500), 500) - 10,
+    platform_configs = [
+        ("bluesky", _safe_int(getattr(settings, "bluesky_limit", 300), 300) - 10),
+        ("mastodon", _safe_int(getattr(settings, "mastodon_limit", 500), 500) - 15),
+        ("threads", _safe_int(getattr(settings, "threads_limit", 500), 500) - 10),
     ]
-    for limit in platform_limits:
-        chunks = smart_split(roundup_text, limit, max_chunks=max_parts)
+
+    for platform, limit in platform_configs:
+        if hasattr(roundup_content, "get_platform_content"):
+            text = roundup_content.get_platform_content(platform)
+        elif hasattr(roundup_content, platform):
+            text = getattr(roundup_content, platform)
+        else:
+            text = str(roundup_content)
+
+        # Apply platform-specific cleanups matching broadcasters
+        from src.broadcaster import clean_hashtags_if_needed
+        if platform == "bluesky":
+            text = clean_hashtags_if_needed(text, getattr(settings, "enable_hashtags_bsky", False))
+        elif platform == "mastodon":
+            text = clean_hashtags_if_needed(text, getattr(settings, "enable_hashtags_mastodon", True))
+        elif platform == "threads":
+            text = clean_hashtags_if_needed(text, getattr(settings, "enable_hashtags_threads", False))
+
+        chunks = smart_split(text, limit, max_chunks=max_parts)
         combined = " ".join(chunks)
         for expected_url in expected_urls:
             if expected_url not in combined:
@@ -904,8 +933,8 @@ async def roundup_stage(
 ) -> bool:
     """
     Executes the Friday Roundup pipeline.
-    Returns True if the roundup was handled (published or skipped per duplicate protection).
-    Returns False if 0 eligible stories exist, signaling fallback to the normal publication pipeline.
+    Returns True if the roundup was handled (published, skipped per duplicate protection, or aborted on error).
+    Returns False ONLY if 0 eligible stories exist, signaling clean fallback to the normal publication pipeline.
     """
     current_time = now or datetime.now(timezone.utc)
     iso_week = get_current_iso_week(current_time)
@@ -949,8 +978,8 @@ async def roundup_stage(
 
     # Pre-broadcast URL preservation validation
     if not validate_roundup_urls_preserved(roundup_text, selected_stories, num_parts):
-        SafeLogger.error("Roundup Stage: Pre-broadcast verification failed. Not all story URLs survived thread chunking. Falling back to normal pipeline.")
-        return False
+        SafeLogger.error("Roundup Stage: Pre-broadcast verification failed. Not all story URLs survived thread chunking. Aborting roundup run safely.")
+        return True
 
     from src.models import PlatformDrafts
     drafts = PlatformDrafts.from_single(roundup_text)
@@ -973,6 +1002,11 @@ async def roundup_stage(
             final_drafts = PlatformDrafts.from_single(final_drafts)
         drafts = final_drafts
         roundup_text = drafts.bluesky
+
+        # Re-validate all edited/remixed platform drafts before reservation
+        if not validate_roundup_urls_preserved(drafts, selected_stories, num_parts):
+            SafeLogger.error("Roundup Stage: Post-approval verification failed on edited drafts. Aborting roundup run safely.")
+            return True
     else:
         SafeLogger.info("Telegram: Approval disabled or dry-run bypassed for roundup.")
 
@@ -1250,8 +1284,9 @@ async def main():
         # Friday Evening Roundup Intercept
         is_scheduled = getattr(settings, "is_scheduled_run", False) is True
         force_roundup = getattr(settings, "force_roundup", False) is True
+        # P1 fix: Do not consume or discard an explicit topic or curate command on Friday evening
         is_friday_evening_roundup = (
-            (now.weekday() == 4 and now.hour >= 18 and is_scheduled)
+            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type != "topic")
             or force_roundup
         )
         if is_friday_evening_roundup:

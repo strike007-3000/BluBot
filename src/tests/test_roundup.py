@@ -57,9 +57,13 @@ def test_select_eligible_roundup_stories():
     state = {
         "published_posts": [
             # Eligible (2026-10-14 is W42)
-            {"title": "Story 1", "url": "https://example.com/1", "published_at": "2026-10-14T10:00:00Z", "kind": "post"},
+            {"title": "Story 1\nwith newline and @mention", "url": "https://example.com/1", "published_at": "2026-10-14T10:00:00Z", "kind": "post"},
             # Eligible (2026-10-16 is W42)
             {"title": "Story 2", "url": "https://example.com/2", "published_at": "2026-10-16T12:00:00Z"},
+            # Ineligible: linkless generated key
+            {"title": "Generated Story", "url": "generated:12345abc", "published_at": "2026-10-16T12:00:00Z", "kind": "post"},
+            # Ineligible: unsafe URL (local IP)
+            {"title": "Local Story", "url": "http://127.0.0.1/story", "published_at": "2026-10-16T12:00:00Z", "kind": "post"},
             # Ineligible: earlier week (2026-10-05 is W41)
             {"title": "Story 3", "url": "https://example.com/3", "published_at": "2026-10-05T12:00:00Z", "kind": "post"},
             # Ineligible: kind is roundup
@@ -71,6 +75,11 @@ def test_select_eligible_roundup_stories():
     eligible = select_eligible_roundup_stories(state, iso_week)
     assert len(eligible) == 2
     assert {e["url"] for e in eligible} == {"https://example.com/1", "https://example.com/2"}
+    # Verify title normalization (no newlines, no @)
+    s1 = next(e for e in eligible if e["url"] == "https://example.com/1")
+    assert "\n" not in s1["title"]
+    assert "@" not in s1["title"]
+    assert s1["title"] == "Story 1 with newline and mention"
 
 
 def test_build_roundup_text():
@@ -191,3 +200,83 @@ async def test_roundup_stage_successful_execution(mocker):
         e.get("kind") == "roundup" and e.get("week") == iso_week
         for e in final_state.get("published_posts", [])
     )
+
+
+@pytest.mark.asyncio
+async def test_roundup_stage_validation_failure_aborts_safely(mocker):
+    iso_week = "2026-W42"
+    state = {
+        "published_posts": [
+            {"title": "Story 1", "url": "https://example.com/1", "published_at": "2026-10-15T12:00:00Z", "kind": "post"}
+        ]
+    }
+    mocker.patch("bot.load_seen_articles", return_value=state)
+    mocker.patch("src.engagement.fetch_bluesky_metrics", new_callable=AsyncMock, return_value={})
+    # Force validate_roundup_urls_preserved to fail
+    mocker.patch("bot.validate_roundup_urls_preserved", return_value=False)
+    mock_client = AsyncMock()
+    now = datetime(2026, 10, 16, 18, 17, tzinfo=timezone.utc)
+    handled = await roundup_stage(mock_client, None, now=now)
+    # Must abort safely and return True (handled) so it does NOT fall back to normal news
+    assert handled is True
+
+
+@pytest.mark.asyncio
+async def test_roundup_stage_post_approval_edit_validation(mocker):
+    from src.models import PlatformDrafts
+    iso_week = "2026-W42"
+    state = {
+        "published_posts": [
+            {"title": "Story 1", "url": "https://example.com/1", "published_at": "2026-10-15T12:00:00Z", "kind": "post"}
+        ]
+    }
+    mocker.patch("bot.load_seen_articles", return_value=state)
+    mocker.patch("src.engagement.fetch_bluesky_metrics", new_callable=AsyncMock, return_value={})
+    
+    # First validation succeeds (pre-approval)
+    # Second validation fails (post-approval edit stripped the URL)
+    val_mock = mocker.patch("bot.validate_roundup_urls_preserved", side_effect=[True, False])
+    
+    object.__setattr__(bot.settings, "enable_telegram_approval", True)
+    object.__setattr__(bot.settings, "is_dry_run", False)
+    
+    # Edited draft with URL stripped
+    edited_drafts = PlatformDrafts(bluesky="No URL in here", threads="No URL", mastodon="No URL")
+    mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, return_value=(edited_drafts, None))
+
+    mock_client = AsyncMock()
+    now = datetime(2026, 10, 16, 18, 17, tzinfo=timezone.utc)
+    handled = await roundup_stage(mock_client, None, now=now)
+    assert handled is True
+    assert val_mock.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_topic_command_bypasses_scheduled_roundup(mocker):
+    """When a topic command is pending on Friday 18:17, roundup must not consume/discard it."""
+    # Set up Friday 18:17 scheduled run in settings
+    object.__setattr__(bot.settings, "is_dry_run", True)
+    object.__setattr__(bot.settings, "is_ci", True)
+    object.__setattr__(bot.settings, "github_event", "schedule")
+    object.__setattr__(bot.settings, "force_roundup", False)
+    object.__setattr__(bot.settings, "gemini_key", "test-key")
+
+    friday_time = datetime(2026, 10, 16, 18, 17, tzinfo=timezone.utc)
+    mock_dt = mocker.patch("bot.datetime")
+    mock_dt.now.return_value = friday_time
+    mock_dt.fromisoformat = datetime.fromisoformat
+
+    mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=("topic", "quantum-ai"))
+    mock_roundup = mocker.patch("bot.roundup_stage", new_callable=AsyncMock)
+    mock_curate = mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=MagicMock(top_articles=[]))
+    mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
+    mocker.patch("bot.synthesis_stage", new_callable=AsyncMock, return_value=(MagicMock(content=""), MagicMock()))
+
+    # Run bot.main()
+    await bot.main()
+
+    # Roundup must NOT have been called because cmd_type was 'topic'
+    mock_roundup.assert_not_called()
+    # Curation must have received the requested topic
+    mock_curate.assert_called_once_with(mocker.ANY, telegram_topic="quantum-ai")
+

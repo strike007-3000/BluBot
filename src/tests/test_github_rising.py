@@ -174,11 +174,12 @@ async def test_fetch_news_integrates_github_rising_parallel():
         "score": 25.0,
     }
     with patch("src.curator.fetch_hf_trending", new_callable=AsyncMock, return_value=[]), \
-         patch("src.curator.fetch_github_rising", new_callable=AsyncMock, return_value=[sample_gh_item]):
+         patch("src.curator.fetch_github_rising", new_callable=AsyncMock, return_value=[sample_gh_item]) as mock_gh:
         client = MagicMock()
-        items, _ = await fetch_news(client, feed_list=[], include_api_sources=True)
+        items, _ = await fetch_news(client, feed_list=[], include_api_sources=True, days_lookback=2)
 
     assert any(item["source_id"] == "github_rising" for item in items)
+    assert mock_gh.call_args.kwargs["days_lookback"] == 7
 
 
 @pytest.mark.asyncio
