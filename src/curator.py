@@ -360,9 +360,13 @@ async def _fetch_github_readme_excerpt(client, full_name: str, headers: dict) ->
         readme_url = f"{GITHUB_REPOS_API_URL}/{full_name}/readme"
         req_headers = {**headers, "Accept": "application/vnd.github.raw+json", "Range": "bytes=0-8191"}
         resp = await client.get(readme_url, headers=req_headers, timeout=5.0)
-        if resp.status_code in (200, 206) and (resp.content or resp.text):
-            # Limit bytes before decoding and cleaning
-            raw_bytes = resp.content[:8192] if resp.content else resp.text[:8192].encode("utf-8")
+        if resp.status_code in (200, 206):
+            if isinstance(resp.content, (bytes, bytearray)) and resp.content:
+                raw_bytes = resp.content[:8192]
+            elif isinstance(resp.text, str) and resp.text:
+                raw_bytes = resp.text.encode("utf-8")[:8192]
+            else:
+                return None
             text = raw_bytes.decode("utf-8", errors="ignore").strip()
             # Clean markdown/HTML tags and normalize whitespace
             text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)

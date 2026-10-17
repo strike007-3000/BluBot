@@ -21,10 +21,11 @@ def restore_github_token():
     object.__setattr__(settings, "github_token", original)
 
 
-def _response(payload=None, status=200, text="", headers=None):
+def _response(payload=None, status=200, text="", headers=None, content=None):
     resp = MagicMock(status_code=status)
     resp.json.return_value = payload if payload is not None else {}
     resp.text = text
+    resp.content = content if content is not None else (text.encode("utf-8") if text else b"")
     resp.headers = headers or {}
     return resp
 
@@ -71,8 +72,12 @@ async def test_candidate_limiting_before_readme_fetch():
     # Verify bounded byte range header was sent
     assert client.get.await_args_list[1].kwargs["headers"]["Range"] == "bytes=0-8191"
     assert items[0]["title"] == "org/repo-9"
+    assert "Clean README text" in items[0]["summary"]
+    assert "AI model runner 9" in items[0]["summary"]
     assert items[1]["title"] == "org/repo-8"
+    assert "Clean README text" in items[1]["summary"]
     assert items[2]["title"] == "org/repo-7"
+    assert "Clean README text" in items[2]["summary"]
 
 
 @pytest.mark.asyncio
@@ -123,6 +128,8 @@ async def test_velocity_bonus_capped_and_recorded_in_score_debug():
     items = await fetch_github_rising(client)
     assert len(items) == 1
     item = items[0]
+    assert "Detailed documentation" in item["summary"]
+    assert "Groundbreaking LLM framework" in item["summary"]
     assert item["_score_debug"]["source"] == 16
     assert item["_score_debug"]["github_velocity"] == 10.0
     # base_score(16) - decay(24h * 0.5 = 12) + velocity_bonus(10) = 14
@@ -172,3 +179,27 @@ async def test_fetch_news_integrates_github_rising_parallel():
         items, _ = await fetch_news(client, feed_list=[], include_api_sources=True)
 
     assert any(item["source_id"] == "github_rising" for item in items)
+
+
+@pytest.mark.asyncio
+async def test_repository_with_readme_only_uses_readme_excerpt():
+    now = datetime.now(timezone.utc)
+    search_payload = {
+        "items": [
+            {
+                "full_name": "org/readme-only",
+                "html_url": "https://github.com/org/readme-only",
+                "created_at": (now - timedelta(days=1)).isoformat(),
+                "stargazers_count": 100,
+                "description": "",  # Empty description
+            }
+        ]
+    }
+    client = MagicMock()
+    readme_resp = _response(status=200, text="# Project Title\n\nHigh-performance AI inference engine in C++.")
+    client.get = AsyncMock(side_effect=[_response(search_payload, status=200), readme_resp])
+
+    items = await fetch_github_rising(client)
+    assert len(items) == 1
+    assert items[0]["title"] == "org/readme-only"
+    assert "High-performance AI inference engine in C++." in items[0]["summary"]
