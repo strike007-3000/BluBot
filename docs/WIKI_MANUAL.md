@@ -127,6 +127,7 @@ BluBot defaults to **Cloudflare Workers AI** with `@cf/black-forest-labs/flux-1-
 1. **Lead Selection & Scraper**: The metadata scraper extracts metadata tags like `og:image` from the target article.
 2. **URL Normalization & Logo Filter**: Resolves protocol-relative link formats (e.g. `//site.com/img.png` to `https://site.com/img.png`) and checks the path against `GENERIC_IMAGE_PATTERNS`. If a site logo is detected, it is discarded.
 3. **Free-Tier Image Generation**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using the active Gemini model, then tries Cloudflare Workers AI, Pollinations, and Hugging Face in order. Exhausting the chain returns no generated image; it never invokes Imagen implicitly.
+   Cloudflare prompts are capped at 2,048 characters and rely on FLUX's documented default generation parameters.
 4. **RGB Conversion**: Standardizes image mode representations by converting CMYK or Grayscale source images to standard RGB, preventing rendering distortions.
 5. **Iterative Quality Compression**: Fits the binary payload under the strict 900KB platform upload cap. The optimizer iteratively scales JPEG quality down (from 85% to 30%, in steps of 10%) and writes to an in-memory buffer (`io.BytesIO()`) until the constraints are met.
 

@@ -196,7 +196,10 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.29.0 (Current)**: **Free-Tier Cloudflare Image Generation**.
+- **v3.29.1 (Current)**: **Image Request & Telegram Preview Fixes**.
+  - Sends the documented prompt-only FLUX request, capped at Cloudflare's 2,048-character limit.
+  - Escapes generated drafts before rendering Telegram previews as HTML, preventing malformed entity errors.
+- **v3.29.0**: **Free-Tier Cloudflare Image Generation**.
   - Added Cloudflare Workers AI with FLUX.1 Schnell as the primary generated-image provider.
   - Falls back to Pollinations and then Hugging Face, while removing automatic Imagen fallback and its billing risk.
   - Extended the existing live image diagnostic to test Cloudflare credentials and generation directly.

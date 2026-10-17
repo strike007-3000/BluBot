@@ -460,7 +460,28 @@ async def test_generate_cloudflare_success(monkeypatch):
     args, kwargs = mock_client.post.call_args
     assert args[0].endswith("/ai/run/@cf/black-forest-labs/flux-1-schnell")
     assert kwargs["headers"]["Authorization"] == "Bearer cf-token"
-    assert kwargs["json"] == {"prompt": "Test Prompt", "steps": 4, "seed": 0}
+    assert kwargs["json"] == {"prompt": "Test Prompt"}
+
+@pytest.mark.asyncio
+async def test_generate_cloudflare_caps_prompt(monkeypatch):
+    from src.settings import Settings
+    monkeypatch.setattr(
+        "src.curator.settings",
+        Settings(
+            gemini_key="mock",
+            cloudflare_account_id="account-id",
+            cloudflare_api_token="cf-token",
+        ),
+    )
+    mock_client = AsyncMock()
+    mock_client.post.return_value = httpx.Response(
+        200,
+        request=httpx.Request("POST", "https://api.cloudflare.com/test"),
+        json={"result": {"image": base64.b64encode(create_valid_test_image_bytes()).decode("ascii")}},
+    )
+
+    await generate_cloudflare_image("x" * 3000, mock_client)
+    assert len(mock_client.post.call_args.kwargs["json"]["prompt"]) == 2048
 
 @pytest.mark.asyncio
 async def test_generate_cloudflare_skips_without_credentials(monkeypatch):

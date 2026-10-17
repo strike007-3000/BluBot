@@ -1393,7 +1393,7 @@ async def generate_cloudflare_image(
         "Authorization": f"Bearer {settings.cloudflare_api_token}",
         "Content-Type": "application/json",
     }
-    payload = {"prompt": prompt, "steps": 4, "seed": 0}
+    payload = {"prompt": prompt[:2048]}
 
     try:
         response = await client.post(
