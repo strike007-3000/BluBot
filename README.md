@@ -183,6 +183,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 - `src/`: Modular logic layers (Config, Settings, Models, Logger, Curator, Utils, Broadcaster).
 - `src/tests/`: **Automated Test Suite** (Security, Scoring, Redaction).
 - `scripts/diagnostic.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
+- `scripts/build_archive.py`: **Static Site & RSS Builder** (Generates HTML archive and RSS 2.0 feed from ledger).
 
 ## 📡 Telegram Command Reference
 
@@ -197,7 +198,12 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.31.0 (Current)**: **GitHub Fast-Rising Repositories Source**.
+- **v3.32.0 (Current)**: **GitHub Pages Archive & RSS Feed**.
+  - Adds `scripts/build_archive.py` generating a lightweight, responsive static HTML archive (`index.html`) and RSS 2.0 XML feed (`feed.xml`) directly from the durable `published_posts` ledger.
+  - Fail-closed Gist loading ensures an empty state is never accidentally published if remote state is unreachable.
+  - Adds dedicated `.github/workflows/pages.yml` deploying to GitHub Pages environment upon successful daily runs or manual dispatch.
+  - Adds `append_published_post()` in `src/utils.py` recording `topic`, preserving `published_at`, and enforcing `PUBLISHED_POSTS_CAP`.
+- **v3.31.0**: **GitHub Fast-Rising Repositories Source**.
   - Adds `fetch_github_rising()` querying GitHub Search API for fast-rising AI repositories (`llm`, `generative-ai`, `machine-learning`).
   - Limits candidates before fetching bounded README excerpts, strictly validates HTTPS `github.com` URLs, applies capped velocity bonuses in `_score_debug`, and safely handles 403/429 rate limits.
   - Adds `github_token` settings support and `scripts/diagnostic.py --mode github`.

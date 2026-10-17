@@ -305,6 +305,37 @@ def _sanitize_published_posts(entries: list) -> list:
     ]
     return sorted(valid, key=lambda entry: str(entry.get("published_at", "")))[-PUBLISHED_POSTS_CAP:]
 
+
+def append_published_post(
+    state: dict,
+    *,
+    url: str,
+    title: str,
+    topic: str = "General",
+    supporting_links: Optional[List[str]] = None,
+    posts: Optional[dict] = None,
+    kind: str = "post",
+    week: Optional[str] = None,
+    published_at: Optional[str] = None,
+) -> dict:
+    """Append an entry to the published_posts ledger and enforce the capacity limit."""
+    pub_time = published_at if published_at is not None else datetime.now(timezone.utc).isoformat()
+    entry = {
+        "url": url,
+        "title": title,
+        "topic": topic,
+        "supporting_links": supporting_links if supporting_links is not None else [],
+        "published_at": pub_time,
+        "posts": posts if posts is not None else {},
+        "kind": kind,
+    }
+    if week is not None:
+        entry["week"] = week
+
+    state.setdefault("published_posts", []).append(entry)
+    state["published_posts"] = _sanitize_published_posts(state["published_posts"])
+    return entry
+
 def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
     """
     Pure and idempotent function to validate and migrate seen_articles schema.
