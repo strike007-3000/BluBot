@@ -365,7 +365,8 @@ async def test_full_multiplatform_orchestration_flow(mocker):
         bot.BroadcastResult("Mastodon", True),
         bot.BroadcastResult("Threads", True)
     ], MagicMock()))
-    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock)
+    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock, return_value={"published_posts": []})
+    mock_engagement = mocker.patch("src.engagement.update_engagement_report", new_callable=AsyncMock)
     mock_interaction = mocker.patch("bot.interaction_stage", new_callable=AsyncMock)
 
     await bot.main()
@@ -381,6 +382,7 @@ async def test_full_multiplatform_orchestration_flow(mocker):
     assert broadcast_synthesis.get_platform_content("threads") == "Approved Threads post"
     assert broadcast_synthesis.get_platform_content("mastodon") == "Approved Mastodon post #AI"
     mock_settle.assert_called_once()
+    mock_engagement.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_broadcast_messages_dispatched_when_approval_disabled_with_credentials(monkeypatch, mocker):
@@ -419,9 +421,10 @@ async def test_broadcast_messages_dispatched_when_approval_disabled_with_credent
     mocker.patch("bot.reserve_pending_stage", new_callable=AsyncMock, return_value=({}, article))
     mock_broadcast_results = [bot.BroadcastResult("Bluesky", True)]
     mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=(mock_broadcast_results, MagicMock()))
-    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock)
+    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock, return_value={"published_posts": []})
     mocker.patch("bot.update_status_dashboard", new_callable=AsyncMock)
     mocker.patch("bot.update_social_profiles", new_callable=AsyncMock)
+    mock_engagement = mocker.patch("src.engagement.update_engagement_report", new_callable=AsyncMock)
 
     mock_send_summary = mocker.patch("bot.send_broadcast_platform_messages", new_callable=AsyncMock, return_value=True)
 
@@ -435,6 +438,7 @@ async def test_broadcast_messages_dispatched_when_approval_disabled_with_credent
     assert call_kwargs["results"] == mock_broadcast_results
     # Settle persistence stage must also have been called
     mock_settle.assert_called_once()
+    mock_engagement.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_settlement_occurs_before_telegram_notifications(monkeypatch, mocker):

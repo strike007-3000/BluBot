@@ -34,9 +34,8 @@ def _link_facets(text: str) -> list:
         ))
     return facets
 
-@retry_with_backoff
-async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None):
-    """Posts to Bluesky with Conditional Multi-Post Threading (The Weaver)."""
+async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None, max_parts: Optional[int] = None):
+    """Posts to Bluesky with Conditional Multi-Post Threading (The Weaver). Retries per thread part."""
     if not settings.bsky_handle or not bsky_client:
         return
 
@@ -45,7 +44,8 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
 
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)")
     safe_limit = settings.bluesky_limit - 10
-    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
+    thread_cap = max_parts if max_parts is not None else settings.max_thread_parts
+    chunks = smart_split(text, safe_limit, max_chunks=thread_cap)
     root_post = None
     parent_post = None
 
@@ -86,6 +86,15 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
         except Exception as e:
             SafeLogger.warn(f"Bluesky image embed failed: {e}")
 
+    @retry_with_backoff
+    async def _send_chunk(chunk_text, chunk_embed, chunk_facets, chunk_reply_to):
+        return await bsky_client.send_post(
+            text=chunk_text,
+            embed=chunk_embed,
+            facets=chunk_facets,
+            reply_to=chunk_reply_to,
+        )
+
     for i, chunk in enumerate(chunks):
         # Add pagination markers for threads (1/N)
         current_text = chunk
@@ -116,12 +125,12 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
         if i > 0:
             await human_delay(settings.thread_pause_min, settings.thread_pause_max)
 
-        # Post chunk
-        resp = await bsky_client.send_post(
-            text=current_text, 
-            embed=embed if i == 0 else None, # Lead image on first post only
-            facets=facets,
-            reply_to=reply_ref
+        # Post chunk with per-part retry
+        resp = await _send_chunk(
+            current_text,
+            embed if i == 0 else None,
+            facets,
+            reply_ref,
         )
         
         parent_post = resp
@@ -165,9 +174,8 @@ async def post_bluesky_receipt(
         SafeLogger.warn(f"Bluesky source receipt failed: {type(exc).__name__}")
         return None
 
-@retry_with_backoff
-async def post_to_mastodon(text, media=None):
-    """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver)."""
+async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None):
+    """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver). Retries per thread part."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return
         
@@ -176,60 +184,63 @@ async def post_to_mastodon(text, media=None):
 
     # Safety Buffer: Account for pagination suffixes (e.g. " (1/2)") with higher margin for Mastodon
     safe_limit = settings.mastodon_limit - 15
-    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
+    thread_cap = max_parts if max_parts is not None else settings.max_thread_parts
+    chunks = smart_split(text, safe_limit, max_chunks=thread_cap)
     
-    loop = asyncio.get_running_loop()
-    
-    def _post_thread():
-        m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
-        media_ids = []
-        if media and media.image_bytes:
-            try:
-                mime = media.mime_type or get_image_mime(media.image_bytes)
-                if mime:
-                    uploaded = m.media_post(media.image_bytes, mime_type=mime, description=media.alt_text)
-                    media_ids.append(uploaded['id'])
-            except Exception as e:
-                SafeLogger.warn(f"Mastodon media failed: {e}")
+    m = Mastodon(access_token=settings.mastodon_token, api_base_url=settings.mastodon_base_url)
+    media_ids = []
+    if media and media.image_bytes:
+        try:
+            mime = media.mime_type or get_image_mime(media.image_bytes)
+            if mime:
+                uploaded = await asyncio.to_thread(m.media_post, media.image_bytes, mime_type=mime, description=media.alt_text)
+                media_ids.append(uploaded['id'])
+        except Exception as e:
+            SafeLogger.warn(f"Mastodon media failed: {e}")
 
-        prev_id = None
-        root_post_id = None
-        for i, chunk in enumerate(chunks):
-            current_text = chunk
-            if len(chunks) > 1:
-                current_text = f"{chunk} ({i+1}/{len(chunks)})"
-            
-            # Chaining Delay
-            if i > 0:
-                asyncio.run_coroutine_threadsafe(
-                    human_delay(settings.thread_pause_min, settings.thread_pause_max),
-                    loop
-                ).result()
+    prev_id = None
+    root_post_id = None
 
-            # Post chunk (Media only on the first post)
-            status = m.status_post(
-                current_text, 
-                media_ids=media_ids if i == 0 else None,
-                in_reply_to_id=prev_id
-            )
-            prev_id = status['id']
-            if i == 0:
-                root_post_id = prev_id
-        return root_post_id
+    @retry_with_backoff
+    async def _send_mastodon_status(status_text, chunk_media_ids, in_reply_to):
+        return await asyncio.to_thread(
+            m.status_post,
+            status_text,
+            media_ids=chunk_media_ids,
+            in_reply_to_id=in_reply_to,
+        )
 
-    root_post_id = await asyncio.to_thread(_post_thread)
+    for i, chunk in enumerate(chunks):
+        current_text = chunk
+        if len(chunks) > 1:
+            current_text = f"{chunk} ({i+1}/{len(chunks)})"
+        
+        # Chaining Delay
+        if i > 0:
+            await human_delay(settings.thread_pause_min, settings.thread_pause_max)
+
+        # Post chunk with per-part retry (Media only on the first post)
+        status = await _send_mastodon_status(
+            current_text,
+            media_ids if i == 0 else None,
+            prev_id,
+        )
+        prev_id = status['id']
+        if i == 0:
+            root_post_id = prev_id
+
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Mastodon!")
     return root_post_id
 
-@retry_with_backoff
-async def post_to_threads(client, text, media=None):
-    """Posts to Threads with Conditional Multi-Post Threading (The Weaver)."""
+async def post_to_threads(client, text, media=None, max_parts: Optional[int] = None):
+    """Posts to Threads with Conditional Multi-Post Threading (The Weaver). Retries per thread part."""
     # Clean hashtags if disabled for Threads
     text = clean_hashtags_if_needed(text, settings.enable_hashtags_threads)
 
     # Safety Buffer: Account for pagination suffixes
     safe_limit = settings.threads_limit - 10
-    chunks = smart_split(text, safe_limit, max_chunks=settings.max_thread_parts)
+    thread_cap = max_parts if max_parts is not None else settings.max_thread_parts
+    chunks = smart_split(text, safe_limit, max_chunks=thread_cap)
     
     base_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads"
     publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
@@ -239,18 +250,15 @@ async def post_to_threads(client, text, media=None):
     image_url = media.public_url if media else None
     image_alt_text = media.alt_text if media else None
 
-    for i, chunk in enumerate(chunks):
-        current_text = chunk
-        if len(chunks) > 1:
-            current_text = f"{chunk} ({i+1}/{len(chunks)})"
-            
+    @retry_with_backoff
+    async def _publish_threads_part(chunk_text, is_first, reply_to):
         container_id = None
         # Lead Image ONLY on the first post
-        if i == 0 and image_url:
+        if is_first and image_url:
             try:
                 payload = {
                     "media_type": "IMAGE", "image_url": image_url,
-                    "text": current_text, "access_token": settings.threads_token
+                    "text": chunk_text, "access_token": settings.threads_token
                 }
                 if image_alt_text:
                     payload["alt_text"] = image_alt_text
@@ -263,11 +271,11 @@ async def post_to_threads(client, text, media=None):
 
         if not container_id:
             data = {
-                "media_type": "TEXT", "text": current_text,
+                "media_type": "TEXT", "text": chunk_text,
                 "access_token": settings.threads_token
             }
-            if root_post_id:
-                data["reply_to_id"] = root_post_id
+            if reply_to:
+                data["reply_to_id"] = reply_to
                 
             try:
                 res = await client.post(base_url, data=data, timeout=20)
@@ -290,19 +298,31 @@ async def post_to_threads(client, text, media=None):
         try:
             publish_res = await client.post(publish_url, data={"creation_id": container_id, "access_token": settings.threads_token}, timeout=20)
             publish_res.raise_for_status()
+            return publish_res.json().get("id")
         except httpx.HTTPStatusError as e:
             SafeLogger.warn(f"Threads publication failed: HTTP {e.response.status_code} - {e.response.text}")
             if 400 <= e.response.status_code < 500 and e.response.status_code not in {408, 429}:
                 e.skip_backoff_retry = True
             raise e
-        
-        # Capture the FIRST post ID as the root for all subsequent replies
-        if i == 0:
-            root_post_id = publish_res.json().get("id")
+
+    for i, chunk in enumerate(chunks):
+        current_text = chunk
+        if len(chunks) > 1:
+            current_text = f"{chunk} ({i+1}/{len(chunks)})"
 
         # Chaining Delay
-        if i < len(chunks) - 1:
+        if i > 0:
             await human_delay(settings.thread_pause_min, settings.thread_pause_max)
+
+        part_post_id = await _publish_threads_part(
+            current_text,
+            is_first=(i == 0),
+            reply_to=root_post_id,
+        )
+
+        # Capture the FIRST post ID as the root for all subsequent replies
+        if i == 0:
+            root_post_id = part_post_id
 
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Threads!")
     return root_post_id

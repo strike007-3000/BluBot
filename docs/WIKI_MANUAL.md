@@ -283,6 +283,18 @@ BluBot treats GitHub `workflow_dispatch` as a manual editorial run.
 - **Context Shift**: Marks the run as ad hoc without changing the shared editorial policy.
 - **Weekend Rest Bypass**: Local execution and any non-scheduled CI event bypass the scheduled weekend-rest window, but push and pull-request events do not receive the `(Intercept)` label.
 
+### 4. Friday Evening Roundup
+Scheduled Friday evening runs (18:17 UTC) automatically publish a weekly digest instead of regular single-story news:
+- **Trigger**: Fired automatically on `now.weekday() == 4 and now.hour >= 18 and settings.is_scheduled_run`, or manually when invoking `bot.py` with `--roundup` (`FORCE_ROUNDUP=true`).
+- **Story Selection**: Eligible stories have `kind == "post"` and belong to the current ISO calendar week.
+- **Ranking**: Ranked by live Bluesky engagement metrics (likes + reposts + replies + quotes) fetched without authentication via the public AppView, falling back to recency. Up to 5 stories are included.
+- **Format**: Deterministic zero-AI digest format: `This week in AI (YYYY-Www)` followed by numbered story paragraphs (`1. Title\nURL`).
+- **Verification & Threading**: Automatically allocated up to 6 thread parts (`1 + len(stories)`). Pre-broadcast verification confirms all selected story URLs survive platform chunking before proceeding.
+- **Decision Table**:
+  - If a roundup for the ISO week is already reserved or published: **Skip run** (preserves rest).
+  - If 0 eligible stories exist in the ledger: **Fall back to normal Friday post**.
+  - If 1–5 eligible stories exist: **Publish roundup digest**.
+
 ---
 
 ## 🧵 Page 11: The Weaver (Multi-Post Threading)

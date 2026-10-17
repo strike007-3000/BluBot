@@ -4,6 +4,8 @@ import os
 # Intercept --dry-run CLI argument before any configuration is loaded
 if "--dry-run" in sys.argv:
     os.environ["DRY_RUN"] = "true"
+if "--roundup" in sys.argv:
+    os.environ["FORCE_ROUNDUP"] = "true"
 
 import asyncio
 import httpx
@@ -24,7 +26,7 @@ from src.utils import (
     load_session_string, save_session_string, get_link_metadata,
     load_seen_interactions, save_seen_interactions, human_delay,
     is_safe_url, normalize_url, compute_story_fingerprint, smart_truncate,
-    PUBLISHED_POSTS_CAP,
+    smart_split, PUBLISHED_POSTS_CAP,
 )
 from src.curator import (
     fetch_news, summarize_news, generate_mentor_insight,
@@ -550,7 +552,9 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
 
     return media
 
-async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult) -> Tuple[List[BroadcastResult], Any]:
+async def broadcast_stage(
+    client: httpx.AsyncClient, synthesis: SynthesisResult, max_parts: Optional[int] = None
+) -> Tuple[List[BroadcastResult], Any]:
     """Stage 3: Multi-platform delivery."""
     if settings.is_dry_run:
         SafeLogger.info("DRY RUN: Skip broadcasting to social networks.")
@@ -588,11 +592,11 @@ async def broadcast_stage(client: httpx.AsyncClient, synthesis: SynthesisResult)
     threads_content = synthesis.get_platform_content("threads")
 
     if bsky_client and settings.bsky_handle:
-        tasks.append(("Bluesky", post_to_bluesky(bsky_client, client, bsky_content, synthesis.lead_link, synthesis.media)))
+        tasks.append(("Bluesky", post_to_bluesky(bsky_client, client, bsky_content, synthesis.lead_link, synthesis.media, max_parts=max_parts)))
     if settings.mastodon_token and settings.mastodon_base_url:
-        tasks.append(("Mastodon", post_to_mastodon(mastodon_content, synthesis.media)))
+        tasks.append(("Mastodon", post_to_mastodon(mastodon_content, synthesis.media, max_parts=max_parts)))
     if settings.threads_token and settings.threads_user_id:
-        tasks.append(("Threads", post_to_threads(client, threads_content, synthesis.media)))
+        tasks.append(("Threads", post_to_threads(client, threads_content, synthesis.media, max_parts=max_parts)))
 
     if not tasks:
         SafeLogger.error("No configured broadcast targets available!")
@@ -822,6 +826,292 @@ async def source_receipt_stage(
         SafeLogger.warn(f"Bluesky source receipt state save failed: {type(exc).__name__}")
         return state, results
 
+def get_current_iso_week(now: Optional[datetime] = None) -> str:
+    """Returns the current ISO week formatted as YYYY-Www (e.g. 2026-W42)."""
+    current = now or datetime.now(timezone.utc)
+    iso_year, iso_week, _ = current.isocalendar()
+    return f"{iso_year}-W{iso_week:02d}"
+
+def is_roundup_reserved_or_published(state: dict, iso_week: str) -> bool:
+    """Decision table check: returns True if roundup for iso_week is pending, uncertain, or published."""
+    canonical_key = f"generated:roundup:{iso_week}"
+    for ps in state.get("pending_stories", []):
+        if ps.get("url") == canonical_key:
+            return True
+    for entry in state.get("published_posts", []):
+        if (
+            entry.get("kind") == "roundup"
+            and (entry.get("week") == iso_week or entry.get("url") == canonical_key)
+        ):
+            return True
+    return False
+
+def select_eligible_roundup_stories(state: dict, iso_week: str) -> List[dict]:
+    """Finds published ledger entries belonging to the current ISO week with kind == 'post' and valid public URLs."""
+    eligible = []
+    for entry in state.get("published_posts", []):
+        if entry.get("kind") == "roundup":
+            continue
+        raw_url = str(entry.get("url") or "").strip()
+        from scripts.build_archive import is_valid_public_http_url
+        if not is_valid_public_http_url(raw_url):
+            continue
+
+        pub_at = entry.get("published_at")
+        if not pub_at:
+            continue
+        try:
+            pub_dt = datetime.fromisoformat(str(pub_at))
+            if pub_dt.tzinfo is None:
+                pub_dt = pub_dt.replace(tzinfo=timezone.utc)
+            ey, ew, _ = pub_dt.isocalendar()
+            if f"{ey}-W{ew:02d}" == iso_week:
+                # Normalize title: collapse newlines/whitespace, strip @ to avoid stray mentions, bound length
+                raw_title = str(entry.get("title") or "").replace("\r", " ").replace("\n", " ").replace("@", "")
+                clean_title = " ".join(raw_title.split())[:120]
+                if clean_title:
+                    normalized_entry = dict(entry)
+                    normalized_entry["title"] = clean_title
+                    normalized_entry["url"] = raw_url
+                    eligible.append(normalized_entry)
+        except Exception:
+            continue
+    return eligible
+
+def build_roundup_text(iso_week: str, stories: List[dict]) -> str:
+    """Builds deterministic, zero-AI digest text with header and numbered story paragraphs."""
+    parts = [f"This week in AI ({iso_week})"]
+    for idx, story in enumerate(stories, 1):
+        title = story.get("title", "").strip()
+        url = story.get("url", "").strip()
+        parts.append(f"{idx}. {title}\n{url}")
+    return "\n\n".join(parts)
+
+def validate_roundup_urls_preserved(roundup_content: Any, stories: List[dict], max_parts: int) -> bool:
+    """Pre-broadcast verification: ensures every story URL survives smart_split across all active platforms."""
+    expected_urls = [s.get("url", "").strip() for s in stories if s.get("url")]
+    def _safe_int(val, default):
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            return default
+
+    platform_configs = [
+        ("bluesky", _safe_int(getattr(settings, "bluesky_limit", 300), 300) - 10),
+        ("mastodon", _safe_int(getattr(settings, "mastodon_limit", 500), 500) - 15),
+        ("threads", _safe_int(getattr(settings, "threads_limit", 500), 500) - 10),
+    ]
+
+    for platform, limit in platform_configs:
+        if hasattr(roundup_content, "get_platform_content"):
+            text = roundup_content.get_platform_content(platform)
+        elif hasattr(roundup_content, platform):
+            text = getattr(roundup_content, platform)
+        else:
+            text = str(roundup_content)
+
+        # Apply platform-specific cleanups matching broadcasters
+        from src.broadcaster import clean_hashtags_if_needed
+        if platform == "bluesky":
+            text = clean_hashtags_if_needed(text, getattr(settings, "enable_hashtags_bsky", False))
+        elif platform == "mastodon":
+            text = clean_hashtags_if_needed(text, getattr(settings, "enable_hashtags_mastodon", True))
+        elif platform == "threads":
+            text = clean_hashtags_if_needed(text, getattr(settings, "enable_hashtags_threads", False))
+
+        chunks = smart_split(text, limit, max_chunks=max_parts)
+        combined = " ".join(chunks)
+        for expected_url in expected_urls:
+            if expected_url not in combined:
+                return False
+    return True
+
+async def roundup_stage(
+    client: httpx.AsyncClient,
+    genai_client: Any,
+    now: Optional[datetime] = None,
+) -> bool:
+    """
+    Executes the Friday Roundup pipeline.
+    Returns True if the roundup was handled (published, skipped per duplicate protection, or aborted on error).
+    Returns False ONLY if 0 eligible stories exist, signaling clean fallback to the normal publication pipeline.
+    """
+    current_time = now or datetime.now(timezone.utc)
+    iso_week = get_current_iso_week(current_time)
+    SafeLogger.info(f"Roundup Stage: Evaluating Friday roundup for {iso_week}")
+
+    state = await asyncio.to_thread(load_seen_articles)
+
+    # Decision Table 1: Skip run if already reserved (pending/uncertain) or published
+    if is_roundup_reserved_or_published(state, iso_week):
+        SafeLogger.info(f"Roundup Stage: Roundup for {iso_week} is already reserved or published. Skipping run.")
+        return True
+
+    # Decision Table 2: Find eligible stories from this week's ledger
+    eligible = select_eligible_roundup_stories(state, iso_week)
+    if not eligible:
+        SafeLogger.info(f"Roundup Stage: 0 eligible stories found in published ledger for {iso_week}. Falling back to normal pipeline.")
+        return False
+
+    SafeLogger.info(f"Roundup Stage: Found {len(eligible)} eligible stories for {iso_week}.")
+
+    # Rank stories by Bluesky live engagement metrics, falling back to recency
+    from src.engagement import fetch_bluesky_metrics, bluesky_uri
+    metrics = await fetch_bluesky_metrics(client, eligible)
+
+    def story_score(entry: dict) -> Tuple[int, str]:
+        uri = bluesky_uri(entry)
+        m = metrics.get(uri or "") if uri else None
+        if m:
+            total_eng = m.get("likes", 0) + m.get("reposts", 0) + m.get("replies", 0) + m.get("quotes", 0)
+        else:
+            total_eng = -1
+        pub_at = str(entry.get("published_at", ""))
+        return (total_eng, pub_at)
+
+    sorted_stories = sorted(eligible, key=story_score, reverse=True)
+    selected_stories = sorted_stories[:5]
+
+    # Build deterministic roundup text
+    roundup_text = build_roundup_text(iso_week, selected_stories)
+    num_parts = 1 + len(selected_stories)
+
+    # Pre-broadcast URL preservation validation
+    if not validate_roundup_urls_preserved(roundup_text, selected_stories, num_parts):
+        SafeLogger.error("Roundup Stage: Pre-broadcast verification failed. Not all story URLs survived thread chunking. Aborting roundup run safely.")
+        return True
+
+    from src.models import PlatformDrafts
+    drafts = PlatformDrafts.from_single(roundup_text)
+    roundup_topic = f"Roundup {iso_week}"
+
+    # Telegram Approval Stage (if enabled and not a dry-run)
+    if settings.enable_telegram_approval and not settings.is_dry_run:
+        final_drafts, _ = await send_draft_for_approval(
+            drafts=drafts,
+            media=None,
+            client=client,
+            genai_client=genai_client,
+            topic=roundup_topic,
+        )
+        if final_drafts is None:
+            SafeLogger.info("Telegram: Roundup draft rejected by user. Aborting execution.")
+            return True
+
+        if isinstance(final_drafts, str):
+            final_drafts = PlatformDrafts.from_single(final_drafts)
+        drafts = final_drafts
+        roundup_text = drafts.bluesky
+
+        # Re-validate all edited/remixed platform drafts before reservation
+        if not validate_roundup_urls_preserved(drafts, selected_stories, num_parts):
+            SafeLogger.error("Roundup Stage: Post-approval verification failed on edited drafts. Aborting roundup run safely.")
+            return True
+    else:
+        SafeLogger.info("Telegram: Approval disabled or dry-run bypassed for roundup.")
+
+    synthesis = SynthesisResult(
+        content=roundup_text,
+        lead_link=None,
+        topic=roundup_topic,
+        drafts=drafts,
+        media=None,
+    )
+
+    # Pre-Broadcast Reservation Contract
+    canonical_lead = f"generated:roundup:{iso_week}"
+    state = await asyncio.to_thread(load_seen_articles)
+    if is_roundup_reserved_or_published(state, iso_week):
+        SafeLogger.info(f"Roundup Stage: Concurrent reservation detected for {iso_week}. Skipping.")
+        return True
+
+    pending_entry = {
+        "url": canonical_lead,
+        "title": f"This week in AI ({iso_week})",
+        "fingerprint": compute_story_fingerprint(f"This week in AI ({iso_week})"),
+        "stage": "pending",
+        "kind": "roundup",
+        "week": iso_week,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    state.setdefault("pending_stories", []).append(pending_entry)
+    res_ok, updated_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=True)
+    if not res_ok:
+        SafeLogger.error("CRITICAL: Roundup pending reservation failed on configured state storage. Aborting.")
+        sys.exit(1)
+
+    # Broadcast with exact max_parts
+    SafeLogger.info(f"Initiating roundup broadcast for {iso_week} ({num_parts} parts max).")
+    results, bsky_client = await broadcast_stage(client, synthesis, max_parts=num_parts)
+    for res in results:
+        if res.success:
+            SafeLogger.info(f"{res.platform} roundup broadcast successful.")
+        else:
+            SafeLogger.error(f"{res.platform} roundup broadcast failed: {res.error}")
+
+    any_success = any(res.success for res in results)
+    state = updated_state
+    if any_success:
+        # Settle published roundup
+        state["pending_stories"] = [ps for ps in state.get("pending_stories", []) if ps.get("url") != canonical_lead]
+        posts = {}
+        for res in results:
+            if not (res.success and res.post_id):
+                continue
+            if res.platform == "Bluesky":
+                posts["bluesky"] = {"uri": res.post_id, "cid": res.post_cid, "receipt_uri": res.receipt_id}
+            else:
+                posts[res.platform.lower()] = {"id": res.post_id}
+
+        from src.utils import append_published_post
+        append_published_post(
+            state,
+            url=canonical_lead,
+            title=f"This week in AI ({iso_week})",
+            topic="Roundup",
+            supporting_links=[s.get("url") for s in selected_stories if s.get("url")],
+            posts=posts,
+            kind="roundup",
+            week=iso_week,
+            published_at=datetime.now(timezone.utc).isoformat(),
+        )
+        state.setdefault("links", [])
+        if canonical_lead not in state["links"]:
+            state["links"].append(canonical_lead)
+
+        settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+        if not settle_ok:
+            SafeLogger.error("Post-broadcast settlement failed to save on configured state storage.")
+            sys.exit(1)
+
+        # Telegram post-broadcast notifications
+        if settings.telegram_bot_token and settings.telegram_user_id and not settings.is_dry_run:
+            try:
+                await send_broadcast_platform_messages(
+                    bot_token=settings.telegram_bot_token,
+                    chat_id=settings.telegram_user_id,
+                    results=results,
+                    synthesis=synthesis,
+                )
+            except Exception as e:
+                SafeLogger.warn(f"Telegram post-broadcast notifications failed: {e}")
+
+        # Post-persistence status updates
+        await update_status_dashboard("Friday Roundup", roundup_topic)
+        if not settings.is_dry_run:
+            from src.engagement import update_engagement_report
+            await update_engagement_report(client, final_state, STATUS_FILE_PATH)
+        return True
+    else:
+        # Ambiguous failure path: mark uncertain
+        for ps in state.get("pending_stories", []):
+            if ps.get("url") == canonical_lead:
+                ps["stage"] = "uncertain"
+                ps["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+        SafeLogger.error("All roundup broadcast targets failed. Reservation transitioned to uncertain.")
+        sys.exit(1)
+
 async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult, client_bsky: Any = None):
     """Legacy compatibility helper delegating to reserve_pending_stage and settle_persistence_stage."""
     from dataclasses import replace
@@ -990,6 +1280,19 @@ async def main():
             else:
                 SafeLogger.info(f"Briefing Output:\n{briefing}")
             return
+
+        # Friday Evening Roundup Intercept
+        is_scheduled = getattr(settings, "is_scheduled_run", False) is True
+        force_roundup = getattr(settings, "force_roundup", False) is True
+        # P1 fix: Do not consume or discard an explicit topic or curate command on Friday evening
+        is_friday_evening_roundup = (
+            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type != "topic")
+            or force_roundup
+        )
+        if is_friday_evening_roundup:
+            roundup_handled = await roundup_stage(client, genai_client, now)
+            if roundup_handled:
+                return
 
         t_start = time.monotonic()
 
