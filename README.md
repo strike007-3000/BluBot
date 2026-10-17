@@ -196,7 +196,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.29.1 (Current)**: **Image Request & Telegram Preview Fixes**.
+- **v3.30.0 (Current)**: **Engagement Report (Report-Only)**.
+  - New `src/engagement.py` reads public Bluesky AppView metrics (no login) for the last 7 days and refreshes a marked section in `STATUS.md`.
+  - `scripts/diagnostic.py --mode engagement` prints the full table; all diagnostic modes now accept `--mode` for non-interactive runs.
+  - Metrics are never stored or used for scoring.
+- **v3.29.1**: **Image Request & Telegram Preview Fixes**.
   - Sends the documented prompt-only FLUX request, capped at Cloudflare's 2,048-character limit.
   - Escapes generated drafts before rendering Telegram previews as HTML, preventing malformed entity errors.
 - **v3.29.0**: **Free-Tier Cloudflare Image Generation**.

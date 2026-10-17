@@ -481,9 +481,31 @@ async def test_multiplatform_telegram_simulation():
     print(f"Rendered Text ({len(all_in_one)} chars):\n{all_in_one}")
     print("\n✅ Simulation completed successfully with zero network errors.")
 
+async def test_engagement():
+    import httpx
+    from src.engagement import fetch_bluesky_metrics, recent_entries, render_table
+    from src.utils import load_seen_articles
+    entries = recent_entries(load_seen_articles())
+    async with httpx.AsyncClient() as client:
+        metrics = await fetch_bluesky_metrics(client, entries)
+    print(f"\nEngagement (last 7 days, {len(entries)} posts)\n{render_table(metrics, entries)}")
+
+MODES = {"scoring": test_scoring, "dry-run": test_full_dry_run, "images": test_image_generation,
+         "gist": test_gist_diagnostics, "gemini": test_gemini_model_discovery_and_multimodal_checks,
+         "drafts": test_multiplatform_telegram_simulation, "hf": test_hf_trending_fetch,
+         "engagement": test_engagement}
+
 async def main():
     load_dotenv()
     SafeLogger.configure(mode="Diagnostic")
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=sorted(MODES), help="Run a mode non-interactively")
+    mode = parser.parse_args().mode
+    if mode:
+        await MODES[mode]()
+        return
 
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
