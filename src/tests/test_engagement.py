@@ -67,3 +67,14 @@ def test_summary_reports_top_post():
                eng.bluesky_uri(e2): {"likes": 5, "reposts": 1, "replies": 0, "quotes": 0}}
     out = eng.render_status_summary(metrics, [e1, e2])
     assert "2 posts" in out and "6 likes" in out and "Top: T2" in out
+
+
+def test_diagnostic_ask_never_blocks_in_non_interactive_mode(monkeypatch):
+    import importlib.util, pathlib
+    path = pathlib.Path(__file__).resolve().parents[2] / "scripts" / "diagnostic.py"
+    spec = importlib.util.spec_from_file_location("diagnostic_mod", path)
+    diag = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(diag)
+    monkeypatch.setattr("builtins.input", lambda *_: pytest.fail("input() called"))
+    diag.NON_INTERACTIVE = True
+    assert diag._ask("x") == ""

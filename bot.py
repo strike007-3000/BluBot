@@ -1082,8 +1082,9 @@ async def main():
             active_day = 68
 
         await update_status_dashboard(curation.session_name, synthesis.topic)
-        from src.engagement import update_engagement_report
-        await update_engagement_report(client, state, STATUS_FILE_PATH)
+        if not settings.is_dry_run:
+            from src.engagement import update_engagement_report
+            await update_engagement_report(client, state, STATUS_FILE_PATH)
         await update_social_profiles(bsky_client, settings.mastodon_token, active_day, synthesis.topic)
 
         if settings.enable_interactions and not settings.is_dry_run:
