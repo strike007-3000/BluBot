@@ -314,9 +314,9 @@ def test_theme_toggle_is_accessible_persistent_and_no_js_safe():
 
 def test_zero_eligible_kpis_are_not_rendered_as_failure_percentages():
     html_out = build_html([])
-    assert html_out.count('<div class="stat-value">Not yet measured</div>') == 2
-    assert "No eligible non-roundup stories in the archive" in html_out
-    assert "No corroborated Bluesky stories eligible for receipts" in html_out
+    assert html_out.count('<div class="stat-value">—</div>') == 2
+    assert "No eligible non-roundup stories to corroborate yet" in html_out
+    assert "No corroborated Bluesky stories eligible for receipts yet" in html_out
     assert '<div class="stat-value">0.0%</div>' not in html_out
 
 
@@ -374,7 +374,7 @@ def test_metrics_render_when_supplied():
     assert "42 likes" in html_out
     assert "12 reposts" in html_out
     assert "5 replies" in html_out
-    assert "7-Day Engagement" in html_out
+    assert '<div class="stat-label">Engagement</div>' in html_out
     assert '<option value="engagement">Most engaged (last 7 days)</option>' in html_out
 
 

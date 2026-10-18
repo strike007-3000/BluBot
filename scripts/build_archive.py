@@ -419,10 +419,9 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     engagement_card_html = ""
     if has_metrics:
         engagement_card_html = f"""
-        <div class="stat-card">
-          <div class="stat-label">7-Day Engagement</div>
+        <div class="stat-card" title="Likes, reposts, and replies across recent Bluesky reports (last 7 days)">
+          <div class="stat-label">Engagement</div>
           <div class="stat-value">{eng_7d_total:,}</div>
-          <div class="stat-desc">Likes, reposts, and replies across recent Bluesky reports</div>
         </div>"""
 
     # Top Sources CSS bars
@@ -592,20 +591,18 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     most_engaged_option = '<option value="engagement">Most engaged (last 7 days)</option>' if has_metrics else ''
 
     if stats["eligible_corroboration_count"]:
-        corroboration_value = f'{stats["corroboration_rate"]}%'
-        corroboration_desc = (
-            f'{stats["corroborated_posts"]} of {stats["eligible_corroboration_count"]} eligible stories'
-        )
+        corroboration_value = f'{stats["corroborated_posts"]} / {stats["eligible_corroboration_count"]}'
+        corroboration_desc = f'{stats["corroboration_rate"]}% corroborated across eligible non-roundup stories'
     else:
-        corroboration_value = "Not yet measured"
-        corroboration_desc = "No eligible non-roundup stories in the archive"
+        corroboration_value = "—"
+        corroboration_desc = "No eligible non-roundup stories to corroborate yet"
 
     if stats["eligible_receipt_count"]:
         receipt_value = f'{stats["receipt_coverage"]}%'
-        receipt_desc = f'{stats["source_receipts"]} of {stats["eligible_receipt_count"]} eligible Bluesky stories'
+        receipt_desc = f'{stats["source_receipts"]} of {stats["eligible_receipt_count"]} eligible Bluesky stories have proof receipts'
     else:
-        receipt_value = "Not yet measured"
-        receipt_desc = "No corroborated Bluesky stories eligible for receipts"
+        receipt_value = "—"
+        receipt_desc = "No corroborated Bluesky stories eligible for receipts yet"
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -774,89 +771,96 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       font-weight: 700;
     }}
 
-    .hero {{ padding: clamp(3rem, 7vw, 5.25rem) 0 1.5rem; }}
-    .eyebrow {{
-      margin: 0 0 0.6rem;
-      color: var(--signal);
-      font-size: 0.75rem;
-      font-weight: 750;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-    }}
+    .hero {{ padding: 1.75rem 0 0.85rem; }}
     .hero h1 {{
-      max-width: 780px;
       margin: 0;
-      font-size: clamp(2.35rem, 6vw, 4.5rem);
-      line-height: 0.98;
-      letter-spacing: -0.055em;
-      font-weight: 720;
+      font-size: clamp(1.85rem, 4vw, 2.75rem);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+      font-weight: 700;
     }}
-    .hero-copy {{ max-width: 720px; margin: 1rem 0 0; color: var(--muted); font-size: 1.0625rem; }}
+    .hero-copy {{ margin: 0.45rem 0 0; color: var(--muted); font-size: 0.9375rem; }}
 
     .stats-grid {{
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 0.75rem;
-      margin: 1.25rem 0 2rem;
+      gap: 0.6rem;
+      margin: 1rem 0 1.5rem;
     }}
-    .stat-card {{ min-width: 0; padding: 0.9rem; border: 1px solid var(--border); border-radius: 0.55rem; background: var(--surface); }}
-    .stat-label {{ color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.055em; text-transform: uppercase; }}
-    .stat-value {{ margin: 0.25rem 0; color: var(--text); font-size: clamp(1.35rem, 2.5vw, 1.85rem); font-weight: 720; letter-spacing: -0.035em; overflow-wrap: anywhere; }}
-    .stat-desc {{ color: var(--muted); font-size: 0.75rem; line-height: 1.35; }}
+    .stat-card {{ min-width: 0; padding: 0.65rem 0.8rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); }}
+    .stat-label {{ color: var(--muted); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }}
+    .stat-value {{ margin: 0.15rem 0 0; color: var(--text); font-size: clamp(1.15rem, 2vw, 1.45rem); font-weight: 700; letter-spacing: -0.025em; overflow-wrap: anywhere; }}
 
-    .archive-layout {{ display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 1.5rem; align-items: start; }}
+    .archive-layout {{ display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1.25rem; align-items: start; }}
     .dashboard {{
       position: sticky;
-      top: 80px;
-      padding: 1rem;
+      top: 76px;
+      padding: 0.85rem;
       border: 1px solid var(--border);
-      border-radius: 0.7rem;
+      border-radius: 0.55rem;
       background: var(--surface);
-      box-shadow: var(--shadow);
     }}
-    .dashboard-title {{ margin: 0 0 1rem; font-size: 1rem; letter-spacing: -0.015em; }}
-    .dist-panel + .dist-panel {{ margin-top: 1.35rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }}
-    .dist-heading {{ margin: 0 0 0.75rem; color: var(--muted); font-size: 0.75rem; font-weight: 750; letter-spacing: 0.055em; text-transform: uppercase; }}
-    .bar-row {{ margin-bottom: 0.7rem; font-size: 0.8125rem; }}
+    .dashboard-title {{ margin: 0 0 0.75rem; font-size: 0.875rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 700; }}
+    .dist-panel + .dist-panel {{ margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border); }}
+    .dist-heading {{ margin: 0 0 0.6rem; color: var(--muted); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }}
+    .bar-row {{ margin-bottom: 0.55rem; font-size: 0.8125rem; }}
     .bar-row:last-child {{ margin-bottom: 0; }}
-    .bar-label-line {{ display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }}
+    .bar-label-line {{ display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.25rem; }}
     .bar-label {{ min-width: 0; overflow: hidden; color: var(--text); text-overflow: ellipsis; white-space: nowrap; }}
-    .bar-track {{ height: 6px; overflow: hidden; border-radius: 999px; background: var(--surface-raised); }}
+    .bar-track {{ height: 5px; overflow: hidden; border-radius: 999px; background: var(--surface-raised); }}
     .bar-fill {{ min-width: 2px; height: 100%; border-radius: inherit; background: var(--signal); }}
     .bar-value, .cat-numbers {{ color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }}
-    .categories-list {{ display: grid; gap: 0.25rem; }}
-    .category-stat {{ display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.8125rem; }}
-    .trust-disclosure {{ margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }}
-    .trust-disclosure summary {{ min-height: 44px; display: flex; align-items: center; color: var(--signal); cursor: pointer; font-size: 0.8125rem; font-weight: 700; }}
-    .trust-explanation {{ color: var(--muted); font-size: 0.8125rem; }}
+    .categories-list {{ display: grid; gap: 0.2rem; }}
+    .category-stat {{ display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.25rem 0; font-size: 0.8125rem; }}
+    .trust-disclosure {{ margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }}
+    .trust-disclosure summary {{ min-height: 38px; display: flex; align-items: center; color: var(--muted); cursor: pointer; font-size: 0.75rem; font-weight: 650; }}
+    .trust-disclosure summary:hover {{ color: var(--signal); }}
+    .trust-explanation {{ color: var(--muted); font-size: 0.75rem; line-height: 1.45; }}
     .trust-explanation p:last-child {{ margin-bottom: 0; }}
-    .empty-text {{ margin: 0; color: var(--muted); font-size: 0.8125rem; }}
+    .empty-text {{ margin: 0; color: var(--muted); font-size: 0.75rem; }}
 
     .archive-panel {{ min-width: 0; }}
-    .archive-heading {{ margin: 0 0 0.75rem; font-size: 1.35rem; letter-spacing: -0.025em; }}
+    .archive-heading {{ margin: 0 0 0.65rem; font-size: 1.25rem; letter-spacing: -0.02em; }}
     .toolbar {{
       position: sticky;
       top: 64px;
       z-index: 50;
-      margin: 0 -0.35rem 0.75rem;
-      padding: 0.6rem 0.35rem;
+      margin: 0 0 0.75rem;
+      padding: 0.6rem 0;
       border-bottom: 1px solid var(--border);
       background: var(--bg);
     }}
-    .toolbar-inner {{ display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center; }}
-    .toolbar-search {{ flex: 1 1 230px; }}
+    .toolbar-inner {{
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) repeat(3, 150px);
+      gap: 0.65rem;
+      align-items: end;
+    }}
+    .toolbar-field {{ display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }}
+    .field-label {{
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      line-height: 1;
+    }}
     .toolbar-search input, .control-select {{
-      min-height: 44px;
+      width: 100%;
+      height: 38px;
       border: 1px solid var(--border-strong);
-      border-radius: 0.5rem;
+      border-radius: 0.45rem;
       background: var(--surface);
       color: var(--text);
+      font-size: 0.8125rem;
     }}
-    .toolbar-search input {{ width: 100%; padding: 0.55rem 0.75rem; }}
-    .toolbar-filters {{ display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: 0.45rem; }}
-    .control-group {{ position: relative; flex: 1 1 135px; }}
-    .control-label {{ position: absolute; left: 0.65rem; top: 0.25rem; z-index: 1; color: var(--muted); font-size: 0.75rem; font-weight: 700; line-height: 1; text-transform: uppercase; }}
-    .control-select {{ width: 100%; padding: 0.8rem 1.8rem 0.15rem 0.6rem; cursor: pointer; font-size: 0.8125rem; }}
+    .toolbar-search input {{
+      padding: 0 0.75rem;
+    }}
+    .control-select {{
+      padding: 0 1.8rem 0 0.65rem;
+      cursor: pointer;
+    }}
     .results-status {{ min-height: 1.5rem; margin-bottom: 0.6rem; color: var(--muted); font-size: 0.8125rem; }}
 
     .cards-grid {{ display: grid; gap: 0.7rem; }}
@@ -890,9 +894,10 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       html {{ scroll-padding-top: 5rem; }}
       .stats-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .archive-layout {{ grid-template-columns: 1fr; }}
-      .dashboard {{ position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }}
+      .dashboard {{ position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }}
       .dashboard-title, .trust-disclosure {{ grid-column: 1 / -1; }}
       .dist-panel + .dist-panel {{ margin: 0; padding: 0; border: 0; }}
+      .toolbar-inner {{ grid-template-columns: 1fr repeat(3, 130px); }}
     }}
     @media (max-width: 680px) {{
       html {{ scroll-padding-top: 6.75rem; }}
@@ -901,15 +906,15 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       .masthead-actions {{ width: 100%; justify-content: space-between; }}
       .masthead-nav {{ gap: 0; }}
       .nav-link {{ padding: 0 0.45rem; font-size: 0.8125rem; }}
-      .hero {{ padding-top: 2.75rem; }}
-      .hero h1 {{ font-size: clamp(2.25rem, 13vw, 3.4rem); }}
-      .stats-grid {{ gap: 0.55rem; }}
-      .stat-card {{ padding: 0.75rem; }}
+      .hero {{ padding-top: 1.25rem; }}
+      .hero h1 {{ font-size: 1.75rem; }}
+      .stats-grid {{ gap: 0.45rem; }}
+      .stat-card {{ padding: 0.55rem 0.65rem; }}
       .stats-grid .stat-card:last-child:nth-child(odd) {{ grid-column: 1 / -1; }}
       .dashboard {{ grid-template-columns: 1fr; }}
       .dashboard-title, .trust-disclosure {{ grid-column: auto; }}
       .toolbar {{ top: 104px; }}
-      .toolbar-search, .toolbar-filters {{ flex-basis: 100%; }}
+      .toolbar-inner {{ grid-template-columns: 1fr; gap: 0.5rem; }}
       .card-header {{ align-items: flex-start; flex-direction: column; gap: 0.4rem; }}
       .card-date {{ white-space: normal; }}
     }}
@@ -940,31 +945,26 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
   <main class="container">
     <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">Source Trust &amp; Editorial Intelligence</p>
-      <h1 id="page-title">AI developments, checked against multiple sources</h1>
-      <p class="hero-copy">A durable archive of BluBot’s published reports, with source context, public receipts, and transparent trust calculations.</p>
+      <h1 id="page-title">AI signals, with receipts</h1>
+      <p class="hero-copy">Recent stories, source context, and public receipts.</p>
     </section>
 
     <section class="stats-grid" aria-label="Archive overview">
-      <div class="stat-card">
-        <div class="stat-label">Published stories</div>
+      <div class="stat-card" title="Verified entries in the durable ledger">
+        <div class="stat-label">Published</div>
         <div class="stat-value">{stats['total_posts']}</div>
-        <div class="stat-desc">Verified entries in the durable ledger</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Unique sources</div>
+      <div class="stat-card" title="Distinct primary publication domains">
+        <div class="stat-label">Sources</div>
         <div class="stat-value">{stats['unique_sources']}</div>
-        <div class="stat-desc">Distinct primary publication domains</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" title="{corroboration_desc}">
         <div class="stat-label">Corroborated</div>
         <div class="stat-value">{corroboration_value}</div>
-        <div class="stat-desc">{corroboration_desc}</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Source receipts</div>
+      <div class="stat-card" title="{receipt_desc}">
+        <div class="stat-label">Receipts</div>
         <div class="stat-value">{receipt_value}</div>
-        <div class="stat-desc">{receipt_desc}</div>
       </div>
       {engagement_card_html}
     </section>
@@ -995,40 +995,38 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         <h2 id="stories-heading" class="archive-heading">Published stories</h2>
         <div class="toolbar" role="region" aria-label="Archive filtering controls">
           <div class="toolbar-inner">
-            <div class="toolbar-search">
-              <label for="search-input" class="sr-only">Search stories</label>
+            <div class="toolbar-field toolbar-search">
+              <label for="search-input" class="field-label sr-only">Search stories</label>
               <input type="search" id="search-input" placeholder="Search title, source, or topic…" autocomplete="off">
             </div>
-            <div class="toolbar-filters">
-              <div class="control-group">
-                <label for="filter-type" class="control-label">Type</label>
-                <select id="filter-type" class="control-select">
-                  <option value="all">All types</option>
-                  <option value="news">News</option>
-                  <option value="repositories">Repositories</option>
-                  <option value="models">Models</option>
-                  <option value="roundups">Roundups</option>
-                  <option value="follow-ups">Follow-ups</option>
-                </select>
-              </div>
-              <div class="control-group">
-                <label for="filter-trust" class="control-label">Trust</label>
-                <select id="filter-trust" class="control-select">
-                  <option value="all">All trust levels</option>
-                  <option value="corroborated">Corroborated</option>
-                  <option value="receipt">Receipt available</option>
-                  <option value="single-source">Single-source</option>
-                </select>
-              </div>
-              <div class="control-group">
-                <label for="sort-select" class="control-label">Sort</label>
-                <select id="sort-select" class="control-select">
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="corroborated">Most corroborated</option>
-                  {most_engaged_option}
-                </select>
-              </div>
+            <div class="toolbar-field">
+              <label for="filter-type" class="field-label">Type</label>
+              <select id="filter-type" class="control-select">
+                <option value="all">All types</option>
+                <option value="news">News</option>
+                <option value="repositories">Repositories</option>
+                <option value="models">Models</option>
+                <option value="roundups">Roundups</option>
+                <option value="follow-ups">Follow-ups</option>
+              </select>
+            </div>
+            <div class="toolbar-field">
+              <label for="filter-trust" class="field-label">Trust</label>
+              <select id="filter-trust" class="control-select">
+                <option value="all">All trust levels</option>
+                <option value="corroborated">Corroborated</option>
+                <option value="receipt">Receipt available</option>
+                <option value="single-source">Single-source</option>
+              </select>
+            </div>
+            <div class="toolbar-field">
+              <label for="sort-select" class="field-label">Sort</label>
+              <select id="sort-select" class="control-select">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="corroborated">Most corroborated</option>
+                {most_engaged_option}
+              </select>
             </div>
           </div>
         </div>
