@@ -317,6 +317,10 @@ def append_published_post(
     kind: str = "post",
     week: Optional[str] = None,
     published_at: Optional[str] = None,
+    source: Optional[str] = None,
+    source_id: Optional[str] = None,
+    category: Optional[str] = None,
+    supporting_sources: Optional[List[str]] = None,
 ) -> dict:
     """Append an entry to the published_posts ledger and enforce the capacity limit."""
     pub_time = published_at if published_at is not None else datetime.now(timezone.utc).isoformat()
@@ -331,6 +335,17 @@ def append_published_post(
     }
     if week is not None:
         entry["week"] = week
+
+    if isinstance(source, str) and source.strip():
+        entry["source"] = source.strip()
+    if isinstance(source_id, str) and source_id.strip():
+        entry["source_id"] = source_id.strip()
+    if isinstance(category, str) and category.strip():
+        entry["category"] = category.strip()
+    if isinstance(supporting_sources, list):
+        sanitized_ss = [str(s).strip() for s in supporting_sources if isinstance(s, str) and str(s).strip()]
+        if sanitized_ss:
+            entry["supporting_sources"] = sanitized_ss
 
     state.setdefault("published_posts", []).append(entry)
     state["published_posts"] = _sanitize_published_posts(state["published_posts"])

@@ -199,7 +199,13 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.33.1 (Current)**: **Weekly Config PR CI Fix**.
+- **v3.34.0 (Current)**: **Source Trust Dashboard & Editorial Pages Redesign**.
+  - Redesigns the static GitHub Pages archive (`index.html`) into an editorial signal intelligence product with zero external runtime dependencies, fonts, or scripts.
+  - Adds the **Source Trust Dashboard**: primary metrics (Published stories, Unique sources, Corroborated percentage, Source receipts, and optional 7-Day engagement), horizontal source distribution bars, coverage distribution by category, and an accessible calculation disclosure. Corroboration counts only unique public supporting domains distinct from the lead source.
+  - Extends `append_published_post()` to persist optional `source`, `source_id`, `category`, and `supporting_sources` only when supplied, preserving full backwards compatibility with historical ledger entries without migration.
+  - Adds client-side vanilla search, category/type filtering, trust filtering (Corroborated, Receipt available, Single-source), and sorting (Newest, Oldest, Most corroborated, Most engaged within the last 7 days).
+  - Fetches best-effort public Bluesky metrics during site generation without credentials or failure risk, and enhances RSS 2.0 plain-text descriptions.
+- **v3.33.1**: **Weekly Config PR CI Fix**.
   - Weekly configuration changes always use the existing `REPO_TOKEN` to update a pull request, allowing required CI and CodeQL workflows to run normally.
 - **v3.32.0**: **GitHub Pages Archive & RSS Feed**.
   - Adds `scripts/build_archive.py` generating a lightweight, responsive static HTML archive (`index.html`) and RSS 2.0 XML feed (`feed.xml`) directly from the durable `published_posts` ledger.
