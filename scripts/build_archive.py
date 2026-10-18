@@ -96,8 +96,6 @@ def format_human_date(date_str: Optional[str]) -> str:
     dt = parse_date_safe(date_str)
     if not dt:
         return "Unknown date"
-    day = dt.strftime("%-d") if hasattr(dt, "strftime") else str(dt.day)
-    # On some platforms %-d might fail; use dt.day directly
     return f"{dt.day} {dt.strftime('%b %Y')} · {dt.strftime('%H:%M')} UTC"
 
 
@@ -128,6 +126,34 @@ def extract_display_domain(url: Optional[str]) -> str:
         return "Unknown source"
 
 
+def _hostname_matches(hostname: str, expected: str) -> bool:
+    """Match an exact hostname or its subdomains, never URL text or lookalikes."""
+    return hostname == expected or hostname.endswith(f".{expected}")
+
+
+def get_independent_support_domains(entry: dict) -> List[str]:
+    """Return unique, public supporting domains that differ from the lead source."""
+    lead_domain = extract_display_domain(entry.get("url")).lower()
+    if lead_domain in ("unknown source", "blubot"):
+        return []
+
+    domains = []
+    seen = set()
+    links = entry.get("supporting_links")
+    if not isinstance(links, list):
+        return domains
+
+    for link in links:
+        if not is_valid_public_http_url(link):
+            continue
+        domain = extract_display_domain(link).lower()
+        if domain in ("unknown source", "blubot", lead_domain) or domain in seen:
+            continue
+        seen.add(domain)
+        domains.append(domain)
+    return domains
+
+
 def classify_content_type(entry: dict) -> str:
     """
     Classify entry into: 'Roundup', 'Repository', 'Model', 'Follow-up', or 'News'.
@@ -139,14 +165,15 @@ def classify_content_type(entry: dict) -> str:
     kind = str(entry.get("kind") or "").lower()
     url = str(entry.get("url") or "")
     source_id = str(entry.get("source_id") or "").lower()
+    hostname = extract_display_domain(url).lower()
 
     if kind == "roundup" or source_id == "weekly_roundup" or url.startswith("generated:roundup"):
         return "Roundup"
     if kind == "follow_up" or kind == "followup":
         return "Follow-up"
-    if "github.com" in url or source_id == "github_rising":
+    if _hostname_matches(hostname, "github.com") or source_id == "github_rising":
         return "Repository"
-    if "huggingface.co" in url or source_id == "hf_trending":
+    if _hostname_matches(hostname, "huggingface.co") or source_id == "hf_trending":
         return "Model"
     return "News"
 
@@ -198,7 +225,7 @@ def compute_trust_stats(entries: List[dict], now: Optional[datetime] = None) -> 
     - total_posts: total archive entries
     - posts_last_7d: posts published within the last 7 days
     - unique_sources: count of distinct normalized lead-source domains (excluding unknown/internal)
-    - corroborated_posts: posts with at least one valid supporting link (excluding roundups)
+    - corroborated_posts: posts with at least one public supporting domain distinct from the lead (excluding roundups)
     - corroboration_rate: corroborated_posts / eligible_posts * 100 (excluding roundups from denominator)
     - source_receipts: posts eligible for a receipt that have posts.bluesky.receipt_uri
     - receipt_coverage: source_receipts / eligible_posts * 100
@@ -240,8 +267,7 @@ def compute_trust_stats(entries: List[dict], now: Optional[datetime] = None) -> 
 
         # Corroboration logic: exclude weekly roundups from corroboration rate
         is_roundup = (c_type == "Roundup")
-        sup_links = e.get("supporting_links")
-        has_corroboration = isinstance(sup_links, list) and len(sup_links) > 0
+        has_corroboration = bool(get_independent_support_domains(e))
 
         if not is_roundup:
             eligible_corroboration_count += 1
@@ -256,11 +282,6 @@ def compute_trust_stats(entries: List[dict], now: Optional[datetime] = None) -> 
             eligible_receipt_count += 1
             if has_receipt:
                 source_receipts += 1
-        elif has_receipt:
-            # If an entry somehow has a receipt recorded
-            source_receipts += 1
-            if not is_roundup:
-                eligible_receipt_count = max(eligible_receipt_count, source_receipts)
 
         # Cross-platform check: successful post IDs recorded for >= 2 platforms
         posts_map = e.get("posts")
@@ -320,11 +341,13 @@ def fetch_metrics_best_effort(entries: List[dict]) -> Dict[str, Dict[str, int]]:
     """Safely fetch public Bluesky metrics; return empty dict on any failure."""
     try:
         import httpx
-        from src.engagement import fetch_bluesky_metrics
+        from src.engagement import fetch_bluesky_metrics, recent_entries
+
+        recent = recent_entries({"published_posts": entries}, days=7)
 
         async def _fetch():
             async with httpx.AsyncClient() as client:
-                return await fetch_bluesky_metrics(client, entries)
+                return await fetch_bluesky_metrics(client, recent)
 
         return asyncio.run(_fetch())
     except Exception as exc:
@@ -430,7 +453,8 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     # Articles
     items_html = []
     for e in sorted_entries:
-        title = html.escape(str(e.get("title") or "Untitled"))
+        raw_title = str(e.get("title") or "Untitled")
+        title = html.escape(raw_title)
         raw_url = str(e.get("url") or "")
         pub_at_iso = str(e.get("published_at") or "")
         human_date = html.escape(format_human_date(pub_at_iso))
@@ -439,16 +463,15 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         display_category = get_display_category(e)
         source_name, display_domain = get_display_source_and_domain(e)
 
-        sup_links = e.get("supporting_links") or []
-        sup_sources = e.get("supporting_sources") or []
-        num_corroborating = max(len(sup_links), len(sup_sources))
+        support_domains = get_independent_support_domains(e)
+        num_corroborating = len(support_domains)
         is_corroborated = (num_corroborating > 0)
         is_roundup = (content_type == "Roundup")
 
         bsky_post = (e.get("posts") or {}).get("bluesky") or {}
         bsky_uri = bsky_post.get("uri")
         receipt_uri = bsky_post.get("receipt_uri")
-        has_receipt = bool(receipt_uri)
+        has_receipt = bool(receipt_uri) and is_corroborated and not is_roundup
 
         # Engagement metrics for this card
         post_metrics = metrics.get(bsky_uri) if bsky_uri else None
@@ -499,11 +522,8 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         elif is_corroborated:
             num_sup = num_corroborating
             sup_word = "source" if num_sup == 1 else "sources"
-            if sup_sources:
-                sources_str = ", ".join(str(s) for s in sup_sources[:3])
-                support_desc = f"Supported by {num_sup} additional {sup_word} ({sources_str})"
-            else:
-                support_desc = f"Supported by {num_sup} additional {sup_word}"
+            sources_str = ", ".join(support_domains[:3])
+            support_desc = f"Supported by {num_sup} additional {sup_word} ({sources_str})"
         else:
             support_desc = "Single lead report"
 
@@ -533,10 +553,11 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         actions_html = ' <span class="link-sep" aria-hidden="true">·</span> '.join(actions) if actions else ""
 
         # Search index content
-        search_terms = f"{title} {source_name} {display_domain} {display_category} {content_type}".lower()
+        search_terms = f"{raw_title} {source_name} {display_domain} {display_category} {content_type}".lower()
+        corroboration_sort_score = 0 if is_roundup else num_corroborating
 
         card_html = f"""
-        <article class="card" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-corroborated="{len(sup_links)}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
+        <article class="card" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
           <header class="card-header">
             <div class="card-badges">
               {content_badge}
@@ -1372,8 +1393,8 @@ def build_rss(entries: list) -> str:
         category = get_display_category(e)
         source_name, _ = get_display_source_and_domain(e)
         c_type = classify_content_type(e)
-        sup_links = e.get("supporting_links") or []
-        corroboration_text = f"{len(sup_links)} sources" if sup_links else "single source"
+        support_domains = get_independent_support_domains(e)
+        corroboration_text = f"{len(support_domains)} sources" if support_domains else "single source"
 
         i_desc = ET.SubElement(item, "description")
         i_desc.text = f"Topic: {category} | Lead Source: {source_name} | Content Type: {c_type} | Corroboration: {corroboration_text}"

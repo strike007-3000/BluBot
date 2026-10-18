@@ -17,7 +17,9 @@ from scripts.build_archive import (
     compute_guid,
     compute_trust_stats,
     extract_display_domain,
+    fetch_metrics_best_effort,
     format_human_date,
+    get_independent_support_domains,
     get_display_category,
     get_display_source_and_domain,
     is_valid_public_http_url,
@@ -92,6 +94,12 @@ def test_huggingface_urls_classify_as_models():
     assert get_display_category(entry) == "Models"
 
 
+def test_content_type_classification_uses_hostname_not_url_text():
+    assert classify_content_type({"url": "https://news.example/story?source=github.com"}) == "News"
+    assert classify_content_type({"url": "https://github.com.evil.example/repo"}) == "News"
+    assert classify_content_type({"url": "https://api.github.com/repos/org/repo"}) == "Repository"
+
+
 # --- Required Coverage 6: Human-readable timestamp output ---
 def test_human_readable_timestamp_output():
     iso_ts = "2026-10-17T23:14:00Z"
@@ -108,6 +116,20 @@ def test_source_domain_normalization():
     assert extract_display_domain("https://sub.domain.co.uk:8080/path") == "sub.domain.co.uk"
     assert extract_display_domain("invalid-url") == "Unknown source"
     assert extract_display_domain("") == "Unknown source"
+
+
+def test_independent_support_domains_are_public_distinct_and_unique():
+    entry = {
+        "url": "https://news.example/story",
+        "supporting_links": [
+            "https://news.example/follow-up",
+            "https://support.example/report",
+            "https://support.example/second",
+            "http://127.0.0.1/private",
+            "not-a-url",
+        ],
+    }
+    assert get_independent_support_domains(entry) == ["support.example"]
 
 
 # --- Required Coverage 8: Trust-stat calculations ---
@@ -233,7 +255,21 @@ def test_html_escaping_for_every_new_field():
     assert "<img src=x onerror=alert(1)>" not in html_out
     assert "&lt;img src=x onerror=alert(1)&gt;" in html_out
     assert "<script>source1</script>" not in html_out
-    assert "&lt;script&gt;source1&lt;/script&gt;" in html_out
+
+
+def test_search_index_escapes_title_exactly_once():
+    html_out = build_html([{"url": "https://example.com", "title": "AI's next step"}])
+    assert "ai&#x27;s next step" in html_out
+    assert "ai&amp;#x27;s next step" not in html_out
+
+
+def test_roundup_does_not_gain_corroboration_sort_score():
+    html_out = build_html([{
+        "url": "generated:roundup:2026-W42",
+        "kind": "roundup",
+        "supporting_links": ["https://one.example", "https://two.example"],
+    }])
+    assert 'data-corroborated="0"' in html_out
 
 
 # --- Required Coverage 13: Search/filter controls and accessible labels exist ---
@@ -323,6 +359,17 @@ def test_metrics_absence_does_not_break_html_generation():
     assert '<option value="engagement">Most engaged</option>' not in html_out
 
 
+def test_metrics_fetch_is_limited_to_recent_entries():
+    recent = {"url": "https://example.com/recent"}
+    with (
+        patch("src.engagement.recent_entries", return_value=[recent]) as mock_recent,
+        patch("src.engagement.fetch_bluesky_metrics", new_callable=AsyncMock, return_value={}) as mock_fetch,
+    ):
+        assert fetch_metrics_best_effort([recent, {"url": "https://example.com/old"}]) == {}
+    mock_recent.assert_called_once_with({"published_posts": [recent, {"url": "https://example.com/old"}]}, days=7)
+    assert mock_fetch.await_args.args[1] == [recent]
+
+
 # --- Required Coverage 18: RSS remains valid and capped ---
 def test_rss_remains_valid_and_capped():
     entries = []
@@ -336,6 +383,11 @@ def test_rss_remains_valid_and_capped():
             "supporting_links": ["https://sup.com"],
             "posts": {"bluesky": {"uri": f"at://did:plc:x/app.bsky.feed.post/{i}"}},
         })
+    entries.append({
+        "url": "https://example.com/bad-date",
+        "title": "Bad Date",
+        "published_at": "not-a-date",
+    })
 
     rss_xml = build_rss(entries)
     root = ET.fromstring(rss_xml)
@@ -345,6 +397,10 @@ def test_rss_remains_valid_and_capped():
     assert len(items) == 50
 
     first_item = items[0]
+    assert first_item.find("guid") is not None
+    assert first_item.find("guid").attrib.get("isPermaLink") == "false"
+    assert first_item.find("pubDate") is not None
+    assert email.utils.parsedate_to_datetime(first_item.find("pubDate").text) is not None
     desc_text = first_item.find("description").text
     assert "Topic: Open Source" in desc_text
     assert "Lead Source: GitHub" in desc_text
@@ -377,7 +433,29 @@ def test_dashboard_no_external_asset_dependencies():
     assert '<script src=' not in html_out
     assert 'fonts.googleapis.com' not in html_out
     assert 'cdn.jsdelivr.net' not in html_out
-    assert 'https://' not in html_out or 'xmlns' in html_out or 'strike007-3000.github.io' in html_out
+
+
+def test_public_url_validation_rejects_private_ips_and_non_http_values():
+    assert is_valid_public_http_url("https://github.com/org/repo") is True
+    assert is_valid_public_http_url("http://8.8.8.8/test") is True
+    assert is_valid_public_http_url("http://127.0.0.1/test") is False
+    assert is_valid_public_http_url("http://192.168.1.1/test") is False
+    assert is_valid_public_http_url("http://10.0.0.1/test") is False
+    assert is_valid_public_http_url("generated:roundup:2026-W42") is False
+    assert is_valid_public_http_url("at://did:plc:123/app.bsky.feed.post/abc") is False
+    assert is_valid_public_http_url(None) is False
+
+
+def test_compute_guid_is_stable():
+    with_uri = {
+        "url": "https://example.com/test",
+        "published_at": "2026-10-17T12:00:00Z",
+        "posts": {"bluesky": {"uri": "at://did:plc:x/app.bsky.feed.post/123"}},
+    }
+    without_uri = {"url": "https://example.com/test", "published_at": "2026-10-17T12:00:00Z"}
+    assert compute_guid(with_uri) == "at://did:plc:x/app.bsky.feed.post/123"
+    assert compute_guid(without_uri) == compute_guid(without_uri)
+    assert len(compute_guid(without_uri)) == 64
 
 
 # --- Required Coverage 21: The page contains a skip link and visible focus styles ---

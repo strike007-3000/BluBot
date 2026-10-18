@@ -235,7 +235,7 @@ BluBot uses a tiered persistence model so ephemeral runners can recover recent s
    - **Dashboard Metrics & Definitions**:
      - *Published stories*: Total verified editorial entries curated in the durable ledger.
      - *Unique sources*: Count of distinct normalized lead-source domains.
-     - *Corroborated percentage*: Percentage of eligible stories backed by at least one independent supporting link (`corroborated_posts / eligible_posts * 100`). Weekly roundups are excluded from the corroboration denominator.
+     - *Corroborated percentage*: Percentage of eligible stories backed by at least one unique public supporting domain distinct from the lead source (`corroborated_posts / eligible_posts * 100`). Invalid, private, duplicate, and same-domain links do not count; weekly roundups are excluded from the denominator.
      - *Source receipts*: Percentage of eligible Bluesky posts that include a public proof thread receipt (`posts.bluesky.receipt_uri`).
      - *Cross-platform posts*: Stories successfully posted across at least two federated/social platforms.
      - *Top sources & categories*: Horizontal CSS progress bars and category distributions showing dominant sources and topic distributions.
