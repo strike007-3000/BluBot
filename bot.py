@@ -698,6 +698,9 @@ async def settle_persistence_stage(
                 posts["bluesky"] = {"uri": res.post_id, "cid": res.post_cid, "receipt_uri": res.receipt_id}
             else:
                 posts[res.platform.lower()] = {"id": res.post_id}
+        from src.config import FEED_CATEGORY_MAP
+        published_category = FEED_CATEGORY_MAP.get(matched_article.source_id, "unknown")
+
         from src.utils import append_published_post
         append_published_post(
             state,
@@ -707,6 +710,10 @@ async def settle_persistence_stage(
             supporting_links=pub_entry["supporting_links"],
             posts=posts,
             published_at=pub_entry["published_at"],
+            source=matched_article.source,
+            source_id=matched_article.source_id,
+            category=published_category,
+            supporting_sources=matched_article.supporting_sources,
         )
         state.setdefault("links", [])
         if canonical_lead not in state["links"]:
@@ -718,8 +725,6 @@ async def settle_persistence_stage(
         if synthesis.topic != "General" and synthesis.topic not in state.get("recent_topics", []):
             state.setdefault("recent_topics", []).append(synthesis.topic)
 
-        from src.config import FEED_CATEGORY_MAP
-        published_category = FEED_CATEGORY_MAP.get(matched_article.source_id, "unknown")
         state.setdefault("recent_categories", []).append(published_category)
         state["recent_categories"] = state["recent_categories"][-10:]
 
@@ -1074,6 +1079,9 @@ async def roundup_stage(
             kind="roundup",
             week=iso_week,
             published_at=datetime.now(timezone.utc).isoformat(),
+            source="BluBot",
+            source_id="weekly_roundup",
+            category="roundup",
         )
         state.setdefault("links", [])
         if canonical_lead not in state["links"]:
