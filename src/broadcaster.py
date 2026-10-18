@@ -2,7 +2,7 @@ import asyncio
 import httpx
 import re
 from datetime import datetime, timezone, timedelta
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any
 from mastodon import Mastodon
 from atproto import AsyncClient, models
 from src.utils import (
@@ -34,7 +34,7 @@ def _link_facets(text: str) -> list:
         ))
     return facets
 
-async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None, max_parts: Optional[int] = None):
+async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=None, max_parts: Optional[int] = None, reply_to: Optional[dict] = None):
     """Posts to Bluesky with Conditional Multi-Post Threading (The Weaver). Retries per thread part."""
     if not settings.bsky_handle or not bsky_client:
         return
@@ -115,9 +115,19 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
 
         # Handle Chaining
         reply_ref = None
-        if root_post and parent_post:
+        if i == 0 and reply_to and reply_to.get("uri") and reply_to.get("cid"):
+            # First post replies to target root
+            target_uri = reply_to["uri"]
+            target_cid = reply_to["cid"]
             reply_ref = models.AppBskyFeedPost.ReplyRef(
-                root=models.ComAtprotoRepoStrongRef.Main(uri=root_post.uri, cid=root_post.cid),
+                root=models.ComAtprotoRepoStrongRef.Main(uri=target_uri, cid=target_cid),
+                parent=models.ComAtprotoRepoStrongRef.Main(uri=target_uri, cid=target_cid)
+            )
+        elif root_post and parent_post:
+            root_uri = reply_to["uri"] if (reply_to and reply_to.get("uri")) else root_post.uri
+            root_cid = reply_to["cid"] if (reply_to and reply_to.get("cid")) else root_post.cid
+            reply_ref = models.AppBskyFeedPost.ReplyRef(
+                root=models.ComAtprotoRepoStrongRef.Main(uri=root_uri, cid=root_cid),
                 parent=models.ComAtprotoRepoStrongRef.Main(uri=parent_post.uri, cid=parent_post.cid)
             )
 
@@ -174,7 +184,7 @@ async def post_bluesky_receipt(
         SafeLogger.warn(f"Bluesky source receipt failed: {type(exc).__name__}")
         return None
 
-async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None):
+async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None, reply_to_id: Optional[Any] = None):
     """Posts to Mastodon with Conditional Multi-Post Threading (The Weaver). Retries per thread part."""
     if not settings.mastodon_token or not settings.mastodon_base_url:
         return
@@ -195,10 +205,10 @@ async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None):
             if mime:
                 uploaded = await asyncio.to_thread(m.media_post, media.image_bytes, mime_type=mime, description=media.alt_text)
                 media_ids.append(uploaded['id'])
-        except Exception as e:
+        except Exception as e: 
             SafeLogger.warn(f"Mastodon media failed: {e}")
 
-    prev_id = None
+    prev_id = reply_to_id
     root_post_id = None
 
     @retry_with_backoff
@@ -232,7 +242,7 @@ async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None):
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Mastodon!")
     return root_post_id
 
-async def post_to_threads(client, text, media=None, max_parts: Optional[int] = None):
+async def post_to_threads(client, text, media=None, max_parts: Optional[int] = None, reply_to_id: Optional[str] = None):
     """Posts to Threads with Conditional Multi-Post Threading (The Weaver). Retries per thread part."""
     # Clean hashtags if disabled for Threads
     text = clean_hashtags_if_needed(text, settings.enable_hashtags_threads)
@@ -246,6 +256,7 @@ async def post_to_threads(client, text, media=None, max_parts: Optional[int] = N
     publish_url = f"https://graph.threads.net/v1.0/{settings.threads_user_id}/threads_publish"
     
     root_post_id = None
+    chain_parent_id = reply_to_id
     
     image_url = media.public_url if media else None
     image_alt_text = media.alt_text if media else None
@@ -260,6 +271,8 @@ async def post_to_threads(client, text, media=None, max_parts: Optional[int] = N
                     "media_type": "IMAGE", "image_url": image_url,
                     "text": chunk_text, "access_token": settings.threads_token
                 }
+                if reply_to:
+                    payload["reply_to_id"] = reply_to
                 if image_alt_text:
                     payload["alt_text"] = image_alt_text
                     
@@ -314,15 +327,17 @@ async def post_to_threads(client, text, media=None, max_parts: Optional[int] = N
         if i > 0:
             await human_delay(settings.thread_pause_min, settings.thread_pause_max)
 
+        target_reply = reply_to_id if i == 0 else (chain_parent_id or root_post_id)
         part_post_id = await _publish_threads_part(
             current_text,
             is_first=(i == 0),
-            reply_to=root_post_id,
+            reply_to=target_reply,
         )
 
         # Capture the FIRST post ID as the root for all subsequent replies
         if i == 0:
             root_post_id = part_post_id
+        chain_parent_id = part_post_id
 
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Threads!")
     return root_post_id

@@ -1219,3 +1219,129 @@ def test_url_safe_truncation_retains_post_url_prose():
     # Verify post-URL text was not needlessly dropped
     assert "trailing" in repaired
     assert len(repaired) <= limit
+
+
+def test_continuity_matcher_72h_window_and_duplicate_url():
+    """Phase 11 Curator tests: match within 72h, reject outside 72h, reject duplicate URLs."""
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+    now = datetime(2026, 10, 18, 12, 0, 0, tzinfo=timezone.utc)
+
+    parent_recent = {
+        "url": "https://techcrunch.com/2026/10/17/openai-releases-gpt5",
+        "title": "OpenAI Releases GPT-5 to Early Testers",
+        "published_at": "2026-10-17T12:00:00Z",
+        "source": "TechCrunch",
+        "entry_kind": "original",
+        "story_fingerprint": "gpt-5 openai releases testers",
+        "thread_roots": {"bluesky": {"uri": "at://orig", "cid": "c0"}}
+    }
+    parent_old = {
+        "url": "https://techcrunch.com/2026/10/10/anthropic-announces-claude4",
+        "title": "Anthropic Announces Claude 4",
+        "published_at": "2026-10-10T12:00:00Z",
+        "source": "TechCrunch",
+        "entry_kind": "original",
+        "story_fingerprint": "announces anthropic claude-4",
+        "thread_roots": {"bluesky": {"uri": "at://old", "cid": "c0"}}
+    }
+    published = [parent_recent, parent_old]
+
+    # 1. Match within 72h with new source/action
+    cand_update = {
+        "title": "OpenAI Launches GPT-5 to All Developers Today",
+        "link": "https://theverge.com/2026/10/18/openai-gpt5-launch",
+        "source": "The Verge",
+        "summary": "Full public rollout of GPT-5 is now live for all developers with API access.",
+    }
+    decision, matched, exp = match_story_continuity(cand_update, published, now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    assert matched["title"] == parent_recent["title"]
+    assert "new source/domain" in exp or "new event action" in exp
+
+    # 2. Reject entries outside 72 hours
+    cand_old_target = {
+        "title": "Anthropic Claude 4 Model Launches Today",
+        "link": "https://theverge.com/2026/10/18/anthropic-claude4-launch",
+        "source": "The Verge",
+        "summary": "General release of Claude 4 begins today across all regions.",
+    }
+    decision, matched, exp = match_story_continuity(cand_old_target, published, now_utc=now)
+    assert decision == MatchDecision.NO_MATCH.value
+
+    # 3. Reject duplicate canonical URL
+    cand_dup_url = {
+        "title": "OpenAI Releases GPT-5 to Early Testers (Updated)",
+        "link": "https://techcrunch.com/2026/10/17/openai-releases-gpt5",
+        "source": "TechCrunch",
+        "summary": "Minor edits in TechCrunch article.",
+    }
+    decision, matched, exp = match_story_continuity(cand_dup_url, published, now_utc=now)
+    assert decision != MatchDecision.CONFIDENT_UPDATE.value
+
+
+def test_continuity_matcher_version_conflict_and_change_detection():
+    """Phase 11 Curator tests: reject version conflicts, reject syndicated copies, ignore update entries as parents."""
+    from src.curator import match_story_continuity, detect_meaningful_change
+    from src.models import MatchDecision
+    now = datetime(2026, 10, 18, 12, 0, 0, tzinfo=timezone.utc)
+
+    orig_entry = {
+        "url": "https://techcrunch.com/2026/10/18/mistral-large-2",
+        "title": "Mistral Releases Large 2 Model",
+        "published_at": "2026-10-18T06:00:00Z",
+        "source": "TechCrunch",
+        "entry_kind": "original",
+        "story_fingerprint": "large-2 mistral model releases",
+        "thread_roots": {"bluesky": {"uri": "at://root-mistral", "cid": "c0"}}
+    }
+    prior_update = {
+        "url": "https://venturebeat.com/2026/10/18/mistral-large-2-benchmark",
+        "title": "Mistral Large 2 Benchmarks Beat Competitors",
+        "published_at": "2026-10-18T08:00:00Z",
+        "source": "VentureBeat",
+        "entry_kind": "update",
+        "parent_story_fingerprint": orig_entry["story_fingerprint"],
+        "story_fingerprint": "benchmarks large-2 mistral",
+    }
+    published = [orig_entry, prior_update]
+
+    # Version conflict (e.g. Large 2 vs Large 3) rejects
+    cand_version_conflict = {
+        "title": "Mistral Releases Large 3 Model",
+        "link": "https://wired.com/2026/10/18/mistral-large-3",
+        "source": "Wired",
+        "summary": "Mistral has introduced Large 3 today.",
+    }
+    decision, matched, exp = match_story_continuity(cand_version_conflict, published, now_utc=now)
+    assert decision == MatchDecision.NO_MATCH.value
+
+    # Reject syndicated copy: same publisher, identical title without new facts
+    cand_syndicated = {
+        "title": "Mistral Releases Large 2 Model",
+        "link": "https://techcrunch.com/2026/10/18/mistral-large-2-mirror",
+        "source": "TechCrunch",
+        "summary": "Mistral Releases Large 2 Model for enterprise developers.",
+    }
+    has_change, chg_exp = detect_meaningful_change(
+        candidate_title=cand_syndicated["title"],
+        candidate_summary=cand_syndicated["summary"],
+        candidate_url=cand_syndicated["link"],
+        candidate_source=cand_syndicated["source"],
+        parent_entry=orig_entry
+    )
+    assert has_change is False
+    assert "syndicated" in chg_exp or "rejected" in chg_exp
+
+    # Candidate matches original root, ignoring prior_update as parent
+    cand_valid_update = {
+        "title": "Mistral Large 2 Open-Sources Weights and Launches Weights on Hugging Face",
+        "link": "https://huggingface.co/blog/mistral-large-2",
+        "source": "Hugging Face",
+        "summary": "Official open-weights release of Mistral Large 2 is now available.",
+    }
+    decision, matched, exp = match_story_continuity(cand_valid_update, published, now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    # Crucial: Parent must be the original story, not prior_update
+    assert matched["entry_kind"] == "original"
+    assert matched["url"] == orig_entry["url"]

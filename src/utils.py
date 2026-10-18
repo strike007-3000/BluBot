@@ -296,14 +296,15 @@ LEGACY_DEFAULT_UPDATED_AT = "1970-01-01T00:00:00Z"
 PUBLISHED_POSTS_CAP = 500  # Durable ledger: count-capped only, never time-pruned.
 
 def _sanitize_published_posts(entries: list) -> list:
-    """Return valid ledger entries ordered oldest-to-newest and count-capped."""
-    valid = [
-        entry for entry in entries
-        if isinstance(entry, dict)
-        and isinstance(entry.get("url"), str)
-        and entry["url"].strip()
-    ]
+    """Return valid ledger entries ordered oldest-to-newest and count-capped. Interprets legacy entries as original."""
+    valid = []
+    for entry in entries:
+        if not (isinstance(entry, dict) and isinstance(entry.get("url"), str) and entry["url"].strip()):
+            continue
+        valid.append(entry)
+
     return sorted(valid, key=lambda entry: str(entry.get("published_at", "")))[-PUBLISHED_POSTS_CAP:]
+
 
 
 def append_published_post(
@@ -321,9 +322,37 @@ def append_published_post(
     source_id: Optional[str] = None,
     category: Optional[str] = None,
     supporting_sources: Optional[List[str]] = None,
+    entry_kind: str = "original",
+    story_fingerprint: Optional[str] = None,
+    parent_story_fingerprint: Optional[str] = None,
+    update_number: Optional[int] = None,
+    source_url: Optional[str] = None,
+    thread_roots: Optional[dict] = None,
+    idempotency_key: Optional[str] = None,
 ) -> dict:
     """Append an entry to the published_posts ledger and enforce the capacity limit."""
     pub_time = published_at if published_at is not None else datetime.now(timezone.utc).isoformat()
+    fp = story_fingerprint or compute_story_fingerprint(title)
+    src_u = source_url or url
+    up_num = update_number if update_number is not None else (1 if entry_kind == "update" else 0)
+
+    # Derive thread roots from posts if not explicitly provided
+    t_roots = dict(thread_roots) if thread_roots is not None else {}
+    if not t_roots and isinstance(posts, dict):
+        if "bluesky" in posts and isinstance(posts["bluesky"], dict):
+            t_roots["bluesky"] = {"uri": posts["bluesky"].get("uri"), "cid": posts["bluesky"].get("cid")}
+        if "mastodon" in posts and isinstance(posts["mastodon"], dict):
+            t_roots["mastodon"] = {"id": posts["mastodon"].get("id"), "url": posts["mastodon"].get("url")}
+        if "threads" in posts and isinstance(posts["threads"], dict):
+            t_roots["threads"] = {"id": posts["threads"].get("id"), "url": posts["threads"].get("url")}
+
+    idem_key = idempotency_key
+    if not idem_key:
+        if entry_kind == "update" and parent_story_fingerprint:
+            idem_key = f"update:{parent_story_fingerprint}:{src_u}"
+        else:
+            idem_key = f"original:{fp}:{src_u}"
+
     entry = {
         "url": url,
         "title": title,
@@ -332,6 +361,13 @@ def append_published_post(
         "published_at": pub_time,
         "posts": posts if posts is not None else {},
         "kind": kind,
+        "entry_kind": entry_kind,
+        "story_fingerprint": fp,
+        "parent_story_fingerprint": parent_story_fingerprint,
+        "update_number": up_num,
+        "source_url": src_u,
+        "thread_roots": t_roots,
+        "idempotency_key": idem_key,
     }
     if week is not None:
         entry["week"] = week

@@ -167,6 +167,8 @@ def classify_content_type(entry: dict) -> str:
     source_id = str(entry.get("source_id") or "").lower()
     hostname = extract_display_domain(url).lower()
 
+    if entry.get("entry_kind") == "update" or kind == "update":
+        return "Update"
     if kind == "roundup" or source_id == "weekly_roundup" or url.startswith("generated:roundup"):
         return "Roundup"
     if kind == "follow_up" or kind == "followup":
@@ -455,6 +457,22 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         </div>""")
     coverage_distribution_html = "\n".join(category_chips_html) if category_chips_html else "<p class='empty-text'>No category data recorded yet.</p>"
 
+    # Precompute original roots and updates for story timeline mapping
+    originals_by_fp = {}
+    updates_by_parent_fp = {}
+    for entry in sorted_entries:
+        kind = entry.get("entry_kind", "original")
+        fp = entry.get("story_fingerprint")
+        p_fp = entry.get("parent_story_fingerprint")
+        if kind == "original" and fp:
+            originals_by_fp[fp] = entry
+        elif kind == "update" and p_fp:
+            updates_by_parent_fp.setdefault(p_fp, []).append(entry)
+
+    # Sort update children chronologically
+    for p_fp, up_list in updates_by_parent_fp.items():
+        updates_by_parent_fp[p_fp] = sorted(up_list, key=lambda x: (x.get("update_number", 0), str(x.get("published_at", ""))))
+
     # Articles
     items_html = []
     for e in sorted_entries:
@@ -465,6 +483,11 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         human_date = html.escape(format_human_date(pub_at_iso))
         published_dt = parse_date_safe(pub_at_iso)
         is_recent = bool(published_dt and published_dt >= cutoff_7d)
+
+        e_kind = e.get("entry_kind", "original")
+        is_update = (e_kind == "update")
+        update_num = e.get("update_number", 1) if is_update else 0
+        parent_fp = e.get("parent_story_fingerprint")
 
         content_type = classify_content_type(e)
         display_category = get_display_category(e)
@@ -519,9 +542,16 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
             content_type_attr = "roundups"
         elif content_type_attr == "follow-up":
             content_type_attr = "follow-ups"
+        elif content_type_attr == "update":
+            content_type_attr = "updates"
 
-        # Content type badge
-        content_badge = f'<span class="badge badge-type badge-type-{content_type_attr}">{html.escape(content_type)}</span>'
+        # Badges list
+        badges = []
+        if is_update:
+            badges.append(f'<span class="badge badge-update">Update {update_num}</span>')
+        badges.append(f'<span class="badge badge-type badge-type-{content_type_attr}">{html.escape(content_type)}</span>')
+        badges.append(trust_badge)
+        badges_html = "\n              ".join(badges)
 
         # Supporting text (omit single-source noise)
         if is_roundup:
@@ -535,6 +565,30 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
             support_html = f'<div class="card-support">{html.escape(support_desc)}</div>'
         else:
             support_html = ""
+
+        # Compact timeline / parent context
+        timeline_html = ""
+        if is_update and parent_fp and parent_fp in originals_by_fp:
+            p_orig = originals_by_fp[parent_fp]
+            orig_title_esc = html.escape(str(p_orig.get("title", "Original story")))
+            orig_guid = compute_guid(p_orig)
+            timeline_html = f"""
+            <div class="card-timeline" aria-label="Story continuity timeline">
+              <span class="timeline-title">Update to:</span> <a href="#story-{orig_guid}">{orig_title_esc}</a>
+            </div>"""
+        elif not is_update:
+            fp = e.get("story_fingerprint")
+            child_updates = updates_by_parent_fp.get(fp, []) if fp else []
+            if child_updates:
+                up_links = []
+                for cu in child_updates:
+                    u_num = cu.get("update_number", 1)
+                    u_guid = compute_guid(cu)
+                    up_links.append(f'<a href="#story-{u_guid}">Update {u_num}</a>')
+                timeline_html = f"""
+                <div class="card-timeline" aria-label="Story continuity timeline">
+                  <span class="timeline-title">Story timeline:</span> Original story ── {", ".join(up_links)}
+                </div>"""
 
         # Action links
         actions = []
@@ -551,6 +605,22 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
                 f'View Bluesky <span class="sr-only">post for {title}</span>{render_svg_icon("external")}</a>'
             )
 
+        # Mastodon & Threads thread root links
+        thread_roots = e.get("thread_roots") if isinstance(e.get("thread_roots"), dict) else {}
+        masto_info = thread_roots.get("mastodon") if isinstance(thread_roots.get("mastodon"), dict) else (e.get("posts") or {}).get("mastodon", {})
+        if isinstance(masto_info, dict) and masto_info.get("url"):
+            actions.append(
+                f'<a href="{html.escape(masto_info["url"])}" target="_blank" rel="noopener noreferrer" class="action-link">'
+                f'View Mastodon <span class="sr-only">thread for {title}</span>{render_svg_icon("external")}</a>'
+            )
+
+        threads_info = thread_roots.get("threads") if isinstance(thread_roots.get("threads"), dict) else (e.get("posts") or {}).get("threads", {})
+        if isinstance(threads_info, dict) and threads_info.get("url"):
+            actions.append(
+                f'<a href="{html.escape(threads_info["url"])}" target="_blank" rel="noopener noreferrer" class="action-link">'
+                f'View Threads <span class="sr-only">thread for {title}</span>{render_svg_icon("external")}</a>'
+            )
+
         if receipt_uri:
             receipt_url = at_uri_to_bsky_url(receipt_uri)
             if receipt_url:
@@ -562,15 +632,16 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         actions_html = ' <span class="link-sep" aria-hidden="true">·</span> '.join(actions) if actions else ""
 
         # Search index content
-        search_terms = f"{raw_title} {source_name} {display_domain} {display_category} {content_type}".lower()
+        search_terms = f"{raw_title} {source_name} {display_domain} {display_category} {content_type} {e_kind}".lower()
         corroboration_sort_score = 0 if is_roundup else num_corroborating
+        card_class = "card card-update" if is_update else "card"
+        card_id = f"story-{compute_guid(e)}"
 
         card_html = f"""
-        <article class="card" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-recent="{str(is_recent).lower()}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
+        <article id="{card_id}" class="{card_class}" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-recent="{str(is_recent).lower()}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
           <header class="card-header">
             <div class="card-badges">
-              {content_badge}
-              {trust_badge}
+              {badges_html}
             </div>
             <time class="card-date" datetime="{html.escape(pub_at_iso)}">{human_date}</time>
           </header>
@@ -581,6 +652,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
             <span class="topic">{html.escape(display_category)}</span>
           </div>
           {support_html}
+          {timeline_html}
           {metrics_html}
           <div class="card-actions">
             {actions_html}
@@ -887,6 +959,10 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     .badge-receipt, .badge-corroborated {{ color: var(--trusted); background: var(--trusted-soft); }}
     .badge-single {{ color: var(--warning); background: var(--warning-soft); }}
     .badge-roundup {{ color: var(--signal); background: var(--signal-soft); }}
+    .badge-update {{ color: var(--signal); background: var(--signal-soft); border-color: var(--signal); }}
+    .card-update {{ border-left: 3px solid var(--signal); margin-left: 1rem; }}
+    .card-timeline {{ margin: 0.4rem 0 0.2rem; padding: 0.35rem 0.6rem; border-radius: 0.35rem; background: var(--surface-raised); font-size: 0.75rem; color: var(--muted); }}
+    .timeline-title {{ font-weight: 700; color: var(--text); }}
     .card-date {{ flex: 0 0 auto; color: var(--muted); font-size: 0.75rem; white-space: nowrap; }}
     .card-title {{ margin: 0.55rem 0 0.35rem; color: var(--text); font-size: 1.0625rem; line-height: 1.35; letter-spacing: -0.018em; overflow-wrap: anywhere; }}
     .card-meta {{ display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-bottom: 0.3rem; color: var(--muted); font-size: 0.8125rem; }}
@@ -1038,6 +1114,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
                 <option value="models">Models</option>
                 <option value="roundups">Roundups</option>
                 <option value="follow-ups">Follow-ups</option>
+                <option value="updates">Updates</option>
               </select>
             </div>
             <div class="toolbar-field">

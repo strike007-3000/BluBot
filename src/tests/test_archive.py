@@ -555,3 +555,62 @@ def test_svg_icons_accessibility():
     ])
     assert 'aria-hidden="true"' in html_out
     assert '<span class="sr-only">' in html_out
+
+
+# --- Story Continuity & Updates Archive Tests ---
+
+def test_archive_timeline_and_update_badges():
+    entries = [
+        {
+            "url": "https://example.com/orig",
+            "title": "Major Model Announced",
+            "published_at": "2026-10-16T10:00:00Z",
+            "entry_kind": "original",
+            "story_fingerprint": "fp_model_1",
+            "posts": {"bluesky": {"uri": "at://orig_bsky", "receipt_uri": "https://bsky.app/orig"}},
+        },
+        {
+            "url": "https://example.com/update1",
+            "title": "Model Now Available to All Devs",
+            "published_at": "2026-10-16T14:00:00Z",
+            "entry_kind": "update",
+            "parent_story_fingerprint": "fp_model_1",
+            "update_number": 1,
+            "posts": {"mastodon": {"id": "masto_up1", "url": "https://masto.example/up1"}},
+        },
+        {
+            "url": "https://example.com/update2",
+            "title": "Model Benchmark Released",
+            "published_at": "2026-10-16T18:00:00Z",
+            "entry_kind": "update",
+            "parent_story_fingerprint": "fp_model_1",
+            "update_number": 2,
+            "posts": {"threads": {"id": "threads_up2", "url": "https://threads.net/up2"}},
+        },
+        {
+            "url": "https://example.com/legacy_story",
+            "title": "Legacy Story With Malformed Metadata",
+            "published_at": "2026-10-15T09:00:00Z",
+            # No entry_kind or story_fingerprint
+        }
+    ]
+    html_out = build_html(entries)
+
+    # Check update badge and numbers
+    assert "badge-update" in html_out
+    assert "Update 1" in html_out
+    assert "Update 2" in html_out
+
+    # Check story timeline elements
+    assert "card-timeline" in html_out
+    assert "Update to:" in html_out
+    assert "Story timeline:" in html_out
+
+    # Check platform links for mastodon and threads
+    assert "https://masto.example/up1" in html_out
+    assert "https://threads.net/up2" in html_out
+
+    # Legacy story should be handled safely without error and rendered cleanly
+    assert "Legacy Story With Malformed Metadata" in html_out
+
+

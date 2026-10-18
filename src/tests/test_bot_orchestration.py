@@ -502,3 +502,81 @@ async def test_settlement_occurs_before_telegram_notifications(monkeypatch, mock
 
     # Verify settle happened strictly before notify
     assert call_order == ["settle", "receipt", "notify"]
+
+
+@pytest.mark.asyncio
+async def test_bot_orchestration_confident_update_flow(monkeypatch, mocker):
+    """Verify confident match enters update mode, synthesizes update draft, reserves, and settles."""
+    import bot
+    from src.models import MatchDecision, EditorialDecision, PlatformDrafts
+
+    mock_settings = MagicMock()
+    mock_settings.is_dry_run = False
+    mock_settings.enable_telegram_approval = False
+    mock_settings.enable_interactions = False
+    mock_settings.gemini_model = "gemini-3.5-flash-lite"
+    mock_settings.image_provider = "pollinations"
+    mock_settings.enable_image_gen = False
+    mock_settings.story_update_detection_enabled = True
+    monkeypatch.setattr("bot.settings", mock_settings)
+
+    article = Article(
+        title="OpenAI Releases GPT-5 to All Devs",
+        link="https://example.com/gpt5-released",
+        summary="GPT-5 is now widely available.",
+        published="2026-10-18T10:00:00Z",
+        source="ArXiv",
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    drafts = PlatformDrafts(bluesky="Update: OpenAI has released GPT-5.", threads="Update: OpenAI released GPT-5.", mastodon="Update: GPT-5 available.")
+    synth_res = SynthesisResult(content="Fallback", lead_link="https://example.com/gpt5-released", topic="AI", drafts=drafts)
+
+    parent_entry = {
+        "title": "OpenAI Announces GPT-5 Preview",
+        "url": "https://example.com/gpt5-announced",
+        "story_fingerprint": "fp_gpt5",
+        "entry_kind": "original",
+        "update_number": 0,
+        "thread_roots": {"bluesky": {"uri": "at://orig", "cid": "cid_orig"}},
+    }
+    decision = EditorialDecision(
+        mode="update",
+        parent_fingerprint="fp_gpt5",
+        update_number=1,
+        confidence=MatchDecision.CONFIDENT_UPDATE.value,
+        explanation="Version released to all devs",
+        target_platform_roots={"bluesky": {"uri": "at://orig", "cid": "cid_orig"}},
+        parent_entry=parent_entry,
+    )
+
+
+    mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=(None, None))
+    mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation)
+    mocker.patch("src.curator.match_story_continuity", return_value=(MatchDecision.CONFIDENT_UPDATE, parent_entry, "Version released to all devs"))
+    mocker.patch("bot.load_seen_articles", return_value={"published_posts": [parent_entry], "pending_stories": []})
+
+    mock_synthesis = mocker.patch("bot.synthesis_stage", new_callable=AsyncMock, return_value=(synth_res, curation))
+    mocker.patch("bot.media_strategy_stage", new_callable=AsyncMock, return_value=None)
+    mock_reserve = mocker.patch("bot.reserve_pending_stage", new_callable=AsyncMock, return_value=({}, article))
+    mock_broadcast = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([bot.BroadcastResult("Bluesky", True, post_id="at://up1")], MagicMock()))
+    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock, return_value={})
+
+    mocker.patch("bot.source_receipt_stage", new_callable=AsyncMock, return_value=({}, []))
+    mocker.patch("bot.send_broadcast_platform_messages", new_callable=AsyncMock, return_value=True)
+    mocker.patch("bot.update_status_dashboard", new_callable=AsyncMock)
+    mocker.patch("bot.update_social_profiles", new_callable=AsyncMock)
+
+    await bot.main()
+
+    # Verified synthesis called with decision in update mode
+    call_kwargs = mock_synthesis.call_args.kwargs
+    assert call_kwargs["decision"].mode == "update"
+    assert call_kwargs["decision"].parent_fingerprint == "fp_gpt5"
+
+    # Verified reservation called with decision
+    assert mock_reserve.call_args.kwargs["decision"].mode == "update"
+    # Verified broadcast called with decision
+    assert mock_broadcast.call_args.kwargs["decision"].mode == "update"
+    # Verified settle called with decision
+    assert mock_settle.call_args.kwargs["decision"].mode == "update"
+

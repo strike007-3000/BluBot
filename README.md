@@ -143,6 +143,8 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ENABLE_SOURCE_RECEIPTS_BSKY` | `false` | Reply to corroborated Bluesky posts with up to two source links after durable settlement |
+| `STORY_UPDATE_DETECTION_ENABLED` | `false` | Enable automated story continuity detection and threaded update replies (Bluesky, Mastodon, Threads) |
+
 
 ## 🛡️ Resilience Architecture
 
@@ -199,7 +201,15 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.35.1 (Current)**: **Archive Visual Hierarchy & Filter Layout Refinements**.
+- **v3.36.0 (Current)**: **Story Continuity & Thread Updates**.
+  - Adds automated story continuity matching (`src/curator.py`) tracking 72-hour development timelines without duplicate posts.
+  - Detects meaningful changes (new versions, status changes, new publishers, releases/acquisitions) while rejecting syndicated clones, duplicate URLs, and generic recurring titles.
+  - Supports threaded update broadcasting on Bluesky, Mastodon, and Threads with root reply chaining.
+  - Extends durable ledger schema non-destructively (`entry_kind`, `story_fingerprint`, `parent_story_fingerprint`, `update_number`, `thread_roots`, `idempotency_key`) with safe legacy migration.
+  - Adds interactive archive timeline cards, update badges, and update filtering on the GitHub Pages site.
+  - Adds diagnostic mode (`--mode continuity`) and rollout feature flag `STORY_UPDATE_DETECTION_ENABLED` (default: `false`).
+- **v3.35.1**: **Archive Visual Hierarchy & Filter Layout Refinements**.
+
   - Shrinks the hero area substantially with crisp copy (“AI signals, with receipts”) getting readers to the archive faster.
   - Densifies the top KPI row with compact metrics, concise labels (`Published`, `Sources`, `Corroborated`, `Receipts`, `Engagement`), and tooltip disclosures for calculation definitions.
   - Fixes filter label collisions by using clean stacked labels above inputs in a dominant search grid (`minmax(260px, 1fr) repeat(3, 150px)` on desktop, full-width stacked on mobile).

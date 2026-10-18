@@ -86,33 +86,41 @@ def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs"
 
     return InlineKeyboardMarkup([tab_row, control_row, action_row, regen_row])
 
-def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: str = "tabs") -> str:
+def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: str = "tabs", decision: Optional[Any] = None) -> str:
     """Formats preview text ensuring strict compliance with Telegram caption / text budgets."""
     from src.models import PlatformDrafts
     if isinstance(drafts, str):
         drafts = PlatformDrafts.from_single(drafts)
+
+    update_banner = ""
+    if decision and getattr(decision, "mode", None) == "update":
+        up_num = getattr(decision, "update_number", 1)
+        parent_title = ""
+        if getattr(decision, "parent_entry", None) and isinstance(decision.parent_entry, dict):
+            parent_title = f"\nParent: <i>{escape(str(decision.parent_entry.get('title', ''))[:60])}</i>"
+        update_banner = f"🔄 <b>THREAD UPDATE #{up_num}</b>{parent_title}\n\n"
 
     if view_mode == "tabs":
         tab_content = drafts.get(current_tab)
         limit = 290 if current_tab == "bluesky" else (490 if current_tab == "threads" else 485)
         title_map = {"bluesky": "🔵 Bluesky View", "threads": "🧵 Threads View", "mastodon": "🐘 Mastodon View"}
         title = title_map.get(current_tab, "Draft View")
-        return f"📝 <b>DRAFT POST ({title})</b>:\n\n{escape(tab_content)}\n\n<code>[{len(tab_content)}/{limit} chars]</code>"
+        return f"{update_banner}📝 <b>DRAFT POST ({title})</b>:\n\n{escape(tab_content)}\n\n<code>[{len(tab_content)}/{limit} chars]</code>"
     else:
         return (
-            "📝 <b>MULTI-PLATFORM DRAFTS</b>:\n\n"
+            f"{update_banner}📝 <b>MULTI-PLATFORM DRAFTS</b>:\n\n"
             f"🔵 <b>Bluesky</b> ({len(drafts.bluesky)}/290):\n{escape(drafts.bluesky)}\n\n"
             f"🧵 <b>Threads</b> ({len(drafts.threads)}/490):\n{escape(drafts.threads)}\n\n"
             f"🐘 <b>Mastodon</b> ({len(drafts.mastodon)}/485):\n{escape(drafts.mastodon)}"
         )
 
-def _get_caption_payload(drafts: Any, current_tab: str, view_mode: str) -> Tuple[str, Optional[str]]:
+def _get_caption_payload(drafts: Any, current_tab: str, view_mode: str, decision: Optional[Any] = None) -> Tuple[str, Optional[str]]:
     """
     Returns (primary_caption, optional_followup_text) for media messages.
     If view_mode is 'all' and full preview exceeds 950 characters (Telegram caption limit is 1024),
     splits into a concise primary caption and a full markdown follow-up message.
     """
-    preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode)
+    preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode, decision=decision)
     if view_mode == "all" and len(preview_text) > 950:
         concise_caption = "📝 <b>MULTI-PLATFORM DRAFTS</b>:\n(See full breakdown below)\n\n" + f"🔵 Bluesky: {escape(drafts.bluesky[:200])}..."
         return concise_caption, preview_text
@@ -170,7 +178,8 @@ async def send_draft_for_approval(
     client: Optional[httpx.AsyncClient] = None,
     genai_client: Optional[Any] = None,
     topic: str = "General",
-    text: Optional[str] = None  # Backward-compatible keyword alias
+    text: Optional[str] = None,  # Backward-compatible keyword alias
+    decision: Optional[Any] = None
 ) -> Tuple[Optional[Any], Optional[MediaAsset]]:
     """
     Sends generated post drafts and image to Telegram for approval.
@@ -200,13 +209,13 @@ async def send_draft_for_approval(
         remix_target = "bluesky"  # "bluesky" | "threads" | "mastodon" | "all"
 
         reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
-        preview_text = _format_preview_text(current_drafts, current_tab=current_tab, view_mode=view_mode)
+        preview_text = _format_preview_text(current_drafts, current_tab=current_tab, view_mode=view_mode, decision=decision)
 
         sent_message = None
         image_bytes = media.image_bytes if media else None
         if image_bytes:
             SafeLogger.info("Telegram: Sending draft and image for approval...")
-            caption, followup = _get_caption_payload(current_drafts, current_tab=current_tab, view_mode=view_mode)
+            caption, followup = _get_caption_payload(current_drafts, current_tab=current_tab, view_mode=view_mode, decision=decision)
             sent_message = await bot.send_photo(
                 chat_id=chat_id,
                 photo=image_bytes,
