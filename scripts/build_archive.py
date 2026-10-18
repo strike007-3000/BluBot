@@ -887,6 +887,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     .footer-note {{ margin: 0; }}
 
     @media (max-width: 900px) {{
+      html {{ scroll-padding-top: 5rem; }}
       .stats-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .archive-layout {{ grid-template-columns: 1fr; }}
       .dashboard {{ position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }}
