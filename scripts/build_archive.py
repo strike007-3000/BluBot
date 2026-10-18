@@ -226,8 +226,10 @@ def compute_trust_stats(entries: List[dict], now: Optional[datetime] = None) -> 
     - posts_last_7d: posts published within the last 7 days
     - unique_sources: count of distinct normalized lead-source domains (excluding unknown/internal)
     - corroborated_posts: posts with at least one public supporting domain distinct from the lead (excluding roundups)
+    - eligible_corroboration_count: non-roundup stories in the corroboration denominator
     - corroboration_rate: corroborated_posts / eligible_posts * 100 (excluding roundups from denominator)
     - source_receipts: posts eligible for a receipt that have posts.bluesky.receipt_uri
+    - eligible_receipt_count: corroborated Bluesky stories in the receipt denominator
     - receipt_coverage: source_receipts / eligible_posts * 100
     - cross_platform_posts: successful post IDs recorded for at least two platforms
     - top_sources: top 5 lead-source domains with count and percentage
@@ -328,8 +330,10 @@ def compute_trust_stats(entries: List[dict], now: Optional[datetime] = None) -> 
         "posts_last_7d": posts_last_7d,
         "unique_sources": len(unique_domains),
         "corroborated_posts": corroborated_posts,
+        "eligible_corroboration_count": eligible_corroboration_count,
         "corroboration_rate": corroboration_rate,
         "source_receipts": source_receipts,
+        "eligible_receipt_count": eligible_receipt_count,
         "receipt_coverage": receipt_coverage,
         "cross_platform_posts": cross_platform_posts,
         "top_sources": top_sources,
@@ -429,11 +433,13 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         cnt = src["count"]
         source_bars_html.append(f"""
         <div class="bar-row">
-          <span class="bar-label">{dom_esc}</span>
+          <div class="bar-label-line">
+            <span class="bar-label">{dom_esc}</span>
+            <span class="bar-value">{pct}% <span class="bar-count">({cnt})</span></span>
+          </div>
           <div class="bar-track" role="progressbar" aria-valuenow="{pct}" aria-valuemin="0" aria-valuemax="100" aria-label="{dom_esc} source percentage">
             <div class="bar-fill" style="width: {pct}%"></div>
           </div>
-          <span class="bar-value">{pct}% <span class="bar-count">({cnt})</span></span>
         </div>""")
     sources_distribution_html = "\n".join(source_bars_html) if source_bars_html else "<p class='empty-text'>No source data recorded yet.</p>"
 
@@ -585,6 +591,22 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
     most_engaged_option = '<option value="engagement">Most engaged (last 7 days)</option>' if has_metrics else ''
 
+    if stats["eligible_corroboration_count"]:
+        corroboration_value = f'{stats["corroboration_rate"]}%'
+        corroboration_desc = (
+            f'{stats["corroborated_posts"]} of {stats["eligible_corroboration_count"]} eligible stories'
+        )
+    else:
+        corroboration_value = "Not yet measured"
+        corroboration_desc = "No eligible non-roundup stories in the archive"
+
+    if stats["eligible_receipt_count"]:
+        receipt_value = f'{stats["receipt_coverage"]}%'
+        receipt_desc = f'{stats["source_receipts"]} of {stats["eligible_receipt_count"]} eligible Bluesky stories'
+    else:
+        receipt_value = "Not yet measured"
+        receipt_desc = "No corroborated Bluesky stories eligible for receipts"
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -592,76 +614,111 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="BluBot Signal Archive: AI developments and verified breakthrough stories checked against multiple sources.">
   <title>BluBot Signal Archive &amp; Source Trust Dashboard</title>
+  <script>
+    (function() {{
+      try {{
+        const savedTheme = localStorage.getItem('blubot-theme');
+        if (savedTheme === 'light' || savedTheme === 'dark') {{
+          document.documentElement.dataset.theme = savedTheme;
+          document.documentElement.style.colorScheme = savedTheme;
+        }}
+      }} catch (error) {{}}
+    }})();
+  </script>
   <style>
     :root {{
-      --bg: #07111f;
-      --surface: #0e1a2b;
-      --surface-raised: #132238;
-      --border: #24344a;
-      --text: #f5f7fa;
-      --muted: #94a3b8;
-      --signal: #38bdf8;
-      --trusted: #34d399;
-      --warning: #fbbf24;
-      --focus: #7dd3fc;
+      color-scheme: light;
+      --bg: #f7f6fa;
+      --header-bg: rgba(247, 246, 250, 0.92);
+      --surface: #ffffff;
+      --surface-raised: #f0eef6;
+      --border: #d9d5e2;
+      --border-strong: #bcb5ca;
+      --text: #19151f;
+      --muted: #625b6d;
+      --signal: #5b3fd3;
+      --signal-soft: #eeeafe;
+      --trusted: #137a55;
+      --trusted-soft: #e4f5ed;
+      --warning: #8a5200;
+      --warning-soft: #fff2d8;
+      --focus: #5b3fd3;
+      --shadow: 0 12px 34px rgba(35, 25, 55, 0.07);
       --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }}
 
-    *, *::before, *::after {{
-      box-sizing: border-box;
+    :root[data-theme="dark"] {{
+      color-scheme: dark;
+      --bg: #0b0910;
+      --header-bg: rgba(11, 9, 16, 0.9);
+      --surface: #141119;
+      --surface-raised: #1d1824;
+      --border: #37303f;
+      --border-strong: #51475d;
+      --text: #f7f3fb;
+      --muted: #aaa2b5;
+      --signal: #aa97ff;
+      --signal-soft: #27213e;
+      --trusted: #65ddb0;
+      --trusted-soft: #142e25;
+      --warning: #f5bf5b;
+      --warning-soft: #312614;
+      --focus: #c4b5fd;
+      --shadow: none;
     }}
 
+    @media (prefers-color-scheme: dark) {{
+      :root:not([data-theme="light"]) {{
+        color-scheme: dark;
+        --bg: #0b0910;
+        --header-bg: rgba(11, 9, 16, 0.9);
+        --surface: #141119;
+        --surface-raised: #1d1824;
+        --border: #37303f;
+        --border-strong: #51475d;
+        --text: #f7f3fb;
+        --muted: #aaa2b5;
+        --signal: #aa97ff;
+        --signal-soft: #27213e;
+        --trusted: #65ddb0;
+        --trusted-soft: #142e25;
+        --warning: #f5bf5b;
+        --warning-soft: #312614;
+        --focus: #c4b5fd;
+        --shadow: none;
+      }}
+    }}
+
+    *, *::before, *::after {{ box-sizing: border-box; }}
+    html {{ scroll-behavior: smooth; scroll-padding-top: 5rem; }}
     body {{
+      min-height: 100vh;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
       font-family: var(--font-stack);
       font-size: 16px;
       line-height: 1.5;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
     }}
+    a {{ color: var(--signal); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }}
+    a:hover {{ text-decoration: underline; }}
+    button, input, select {{ font: inherit; }}
+    :focus-visible {{ outline: 3px solid var(--focus); outline-offset: 3px; }}
 
-    /* Accessibility: Skip Link & Focus */
     .skip-link {{
-      position: absolute;
-      top: -40px;
-      left: 0;
-      background: var(--signal);
-      color: #04101e;
-      padding: 8px 16px;
+      position: fixed;
+      top: 0.5rem;
+      left: 0.5rem;
       z-index: 1000;
-      text-decoration: none;
-      font-weight: 600;
-      border-radius: 0 0 4px 0;
-      transition: top 150ms ease;
+      padding: 0.7rem 1rem;
+      border-radius: 0.4rem;
+      background: var(--signal);
+      color: var(--bg);
+      font-weight: 700;
+      transform: translateY(-160%);
+      transition: transform 150ms ease;
     }}
-    .skip-link:focus {{
-      top: 0;
-      outline: 3px solid var(--focus);
-    }}
-
-    :focus-visible {{
-      outline: 2px solid var(--focus);
-      outline-offset: 2px;
-    }}
-
-    .container {{
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 1.5rem 1rem 3rem 1rem;
-    }}
-
-    /* Typography & Base Links */
-    a {{
-      color: var(--signal);
-      text-decoration: none;
-      transition: color 150ms ease;
-    }}
-    a:hover {{
-      text-decoration: underline;
-    }}
-
+    .skip-link:focus {{ transform: translateY(0); }}
     .sr-only {{
       position: absolute;
       width: 1px;
@@ -673,581 +730,325 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       white-space: nowrap;
       border: 0;
     }}
+    .container {{ width: min(1120px, calc(100% - 2rem)); margin: 0 auto; }}
 
-    /* Masthead */
     .masthead {{
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1.25rem;
-      margin-bottom: 1.5rem;
-    }}
-    .masthead-inner {{
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-    }}
-    .brand {{
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }}
-    .brand-mark {{
-      color: var(--signal);
-      display: flex;
-      align-items: center;
-    }}
-    .brand-title {{
-      margin: 0;
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.01em;
-    }}
-    .brand-sub {{
-      margin: 0.2rem 0 0 0;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }}
-    .masthead-nav {{
-      display: flex;
-      gap: 1.25rem;
-      align-items: center;
-    }}
-    .nav-link {{
-      color: var(--text);
-      font-weight: 500;
-      font-size: 0.95rem;
-    }}
-    .nav-link:hover {{
-      color: var(--signal);
-      text-decoration: none;
-    }}
-
-    /* Dashboard Grid */
-    .dashboard {{
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.25rem;
-      margin-bottom: 1.75rem;
-    }}
-    .dashboard-title {{
-      font-size: 1.1rem;
-      margin: 0 0 1rem 0;
-      color: #ffffff;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }}
-    .stats-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }}
-    .stat-card {{
-      background: var(--surface-raised);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem;
-    }}
-    .stat-label {{
-      font-size: 0.85rem;
-      color: var(--muted);
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }}
-    .stat-value {{
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin: 0.25rem 0;
-    }}
-    .stat-desc {{
-      font-size: 0.8rem;
-      color: var(--muted);
-      line-height: 1.4;
-    }}
-
-    /* Distributions Section */
-    .distributions {{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.25rem;
-      margin-bottom: 1.25rem;
-    }}
-    @media (min-width: 768px) {{
-      .distributions {{
-        grid-template-columns: 1fr 1fr;
-      }}
-    }}
-    .dist-panel {{
-      background: var(--surface-raised);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem;
-    }}
-    .dist-heading {{
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin: 0 0 0.85rem 0;
-      color: #ffffff;
-    }}
-    .bar-row {{
-      display: grid;
-      grid-template-columns: 130px 1fr 70px;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      font-size: 0.85rem;
-    }}
-    .bar-label {{
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }}
-    .bar-track {{
-      background: #091322;
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }}
-    .bar-fill {{
-      background: var(--signal);
-      height: 100%;
-      border-radius: 4px;
-      min-width: 2px;
-    }}
-    .bar-value {{
-      text-align: right;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }}
-    .bar-count {{
-      font-size: 0.75rem;
-    }}
-
-    .categories-list {{
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 0.5rem;
-    }}
-    .category-stat {{
-      background: #091322;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.85rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }}
-    .cat-name {{
-      color: var(--text);
-    }}
-    .cat-numbers {{
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-      font-size: 0.8rem;
-    }}
-    .cat-pct {{
-      font-size: 0.75rem;
-    }}
-
-    /* Trust Explanation Details */
-    .trust-disclosure {{
-      margin-top: 1rem;
-      border-top: 1px solid var(--border);
-      padding-top: 0.75rem;
-    }}
-    .trust-disclosure summary {{
-      cursor: pointer;
-      color: var(--signal);
-      font-size: 0.9rem;
-      font-weight: 500;
-    }}
-    .trust-disclosure summary:hover {{
-      text-decoration: underline;
-    }}
-    .trust-explanation {{
-      font-size: 0.85rem;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-top: 0.5rem;
-    }}
-
-    /* Sticky Toolbar */
-    .toolbar {{
       position: sticky;
       top: 0;
-      z-index: 50;
-      background: var(--bg);
+      z-index: 100;
       border-bottom: 1px solid var(--border);
-      padding: 0.75rem 0;
-      margin-bottom: 1.5rem;
+      background: var(--header-bg);
+      backdrop-filter: blur(14px);
     }}
-    .toolbar-inner {{
+    .masthead-inner {{
+      min-height: 64px;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
       align-items: center;
       justify-content: space-between;
+      gap: 1rem;
     }}
-    .toolbar-search {{
-      flex: 1 1 240px;
-    }}
-    .toolbar-search input {{
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 0.5rem 0.75rem;
-      font-size: 0.9rem;
-      font-family: inherit;
-    }}
-    .toolbar-filters {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
+    .brand {{ display: flex; align-items: center; gap: 0.65rem; color: var(--text); font-weight: 700; }}
+    .brand-mark {{ display: flex; color: var(--signal); }}
+    .brand-mark .icon-logo {{ width: 24px; height: 24px; }}
+    .masthead-actions, .masthead-nav {{ display: flex; align-items: center; gap: 0.4rem; }}
+    .nav-link {{
+      min-height: 44px;
+      display: inline-flex;
       align-items: center;
-    }}
-    .control-group {{
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-    }}
-    .control-label {{
-      font-size: 0.8rem;
+      padding: 0 0.55rem;
       color: var(--muted);
-      font-weight: 500;
+      font-size: 0.875rem;
+      font-weight: 650;
+      text-decoration: none;
     }}
-    .control-select {{
-      background: var(--surface);
+    .nav-link:hover {{ color: var(--signal); text-decoration: none; }}
+    .theme-toggle {{
+      min-height: 44px;
+      padding: 0 0.75rem;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 999px;
+      background: var(--surface);
       color: var(--text);
-      padding: 0.45rem 0.65rem;
-      font-size: 0.85rem;
-      font-family: inherit;
       cursor: pointer;
-    }}
-    .results-status {{
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 1rem;
-      min-height: 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
     }}
 
-    /* Card Grid & Cards */
-    .cards-grid {{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }}
-    .card {{
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.1rem;
-      transition: border-color 150ms ease;
-    }}
-    .card:hover {{
-      border-color: #3b4e6b;
-    }}
-    .card-header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.4rem;
-    }}
-    .card-badges {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-    }}
-    .badge {{
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
+    .hero {{ padding: clamp(3rem, 7vw, 5.25rem) 0 1.5rem; }}
+    .eyebrow {{
+      margin: 0 0 0.6rem;
+      color: var(--signal);
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 750;
+      letter-spacing: 0.09em;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
     }}
-    .badge-type {{
-      background: var(--surface-raised);
-      color: var(--signal);
-      border: 1px solid #1e385b;
+    .hero h1 {{
+      max-width: 780px;
+      margin: 0;
+      font-size: clamp(2.35rem, 6vw, 4.5rem);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+      font-weight: 720;
     }}
-    .badge-trust {{
-      border: 1px solid transparent;
+    .hero-copy {{ max-width: 720px; margin: 1rem 0 0; color: var(--muted); font-size: 1.0625rem; }}
+
+    .stats-grid {{
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 1.25rem 0 2rem;
     }}
-    .badge-receipt {{
-      background: rgba(52, 211, 153, 0.15);
-      color: var(--trusted);
-      border-color: rgba(52, 211, 153, 0.3);
+    .stat-card {{ min-width: 0; padding: 0.9rem; border: 1px solid var(--border); border-radius: 0.55rem; background: var(--surface); }}
+    .stat-label {{ color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.055em; text-transform: uppercase; }}
+    .stat-value {{ margin: 0.25rem 0; color: var(--text); font-size: clamp(1.35rem, 2.5vw, 1.85rem); font-weight: 720; letter-spacing: -0.035em; overflow-wrap: anywhere; }}
+    .stat-desc {{ color: var(--muted); font-size: 0.75rem; line-height: 1.35; }}
+
+    .archive-layout {{ display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 1.5rem; align-items: start; }}
+    .dashboard {{
+      position: sticky;
+      top: 80px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.7rem;
+      background: var(--surface);
+      box-shadow: var(--shadow);
     }}
-    .badge-corroborated {{
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--signal);
-      border-color: rgba(56, 189, 248, 0.3);
+    .dashboard-title {{ margin: 0 0 1rem; font-size: 1rem; letter-spacing: -0.015em; }}
+    .dist-panel + .dist-panel {{ margin-top: 1.35rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }}
+    .dist-heading {{ margin: 0 0 0.75rem; color: var(--muted); font-size: 0.75rem; font-weight: 750; letter-spacing: 0.055em; text-transform: uppercase; }}
+    .bar-row {{ margin-bottom: 0.7rem; font-size: 0.8125rem; }}
+    .bar-row:last-child {{ margin-bottom: 0; }}
+    .bar-label-line {{ display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }}
+    .bar-label {{ min-width: 0; overflow: hidden; color: var(--text); text-overflow: ellipsis; white-space: nowrap; }}
+    .bar-track {{ height: 6px; overflow: hidden; border-radius: 999px; background: var(--surface-raised); }}
+    .bar-fill {{ min-width: 2px; height: 100%; border-radius: inherit; background: var(--signal); }}
+    .bar-value, .cat-numbers {{ color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }}
+    .categories-list {{ display: grid; gap: 0.25rem; }}
+    .category-stat {{ display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.8125rem; }}
+    .trust-disclosure {{ margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }}
+    .trust-disclosure summary {{ min-height: 44px; display: flex; align-items: center; color: var(--signal); cursor: pointer; font-size: 0.8125rem; font-weight: 700; }}
+    .trust-explanation {{ color: var(--muted); font-size: 0.8125rem; }}
+    .trust-explanation p:last-child {{ margin-bottom: 0; }}
+    .empty-text {{ margin: 0; color: var(--muted); font-size: 0.8125rem; }}
+
+    .archive-panel {{ min-width: 0; }}
+    .archive-heading {{ margin: 0 0 0.75rem; font-size: 1.35rem; letter-spacing: -0.025em; }}
+    .toolbar {{
+      position: sticky;
+      top: 64px;
+      z-index: 50;
+      margin: 0 -0.35rem 0.75rem;
+      padding: 0.6rem 0.35rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
     }}
-    .badge-single {{
-      background: rgba(251, 191, 36, 0.12);
-      color: var(--warning);
-      border-color: rgba(251, 191, 36, 0.25);
-    }}
-    .badge-roundup {{
-      background: rgba(167, 139, 250, 0.15);
-      color: #c4b5fd;
-      border-color: rgba(167, 139, 250, 0.3);
-    }}
-    .card-date {{
-      font-size: 0.8rem;
-      color: var(--muted);
-      white-space: nowrap;
-    }}
-    .card-title {{
-      margin: 0.3rem 0 0.5rem 0;
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: #ffffff;
-      line-height: 1.35;
-      overflow-wrap: anywhere;
-    }}
-    .card-meta {{
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }}
-    .source-info {{
-      font-weight: 500;
+    .toolbar-inner {{ display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center; }}
+    .toolbar-search {{ flex: 1 1 230px; }}
+    .toolbar-search input, .control-select {{
+      min-height: 44px;
+      border: 1px solid var(--border-strong);
+      border-radius: 0.5rem;
+      background: var(--surface);
       color: var(--text);
     }}
-    .card-support {{
-      font-size: 0.825rem;
-      color: var(--muted);
-      margin-bottom: 0.65rem;
-    }}
-    .card-metrics {{
-      font-size: 0.8rem;
-      color: var(--signal);
-      margin-bottom: 0.65rem;
-    }}
-    .card-actions {{
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
-      padding-top: 0.5rem;
-      border-top: 1px solid #162438;
-      font-size: 0.85rem;
-    }}
-    .action-link {{
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-weight: 500;
-    }}
-    .action-receipt {{
-      color: var(--trusted);
-    }}
-    .link-sep {{
-      color: var(--border);
-    }}
+    .toolbar-search input {{ width: 100%; padding: 0.55rem 0.75rem; }}
+    .toolbar-filters {{ display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: 0.45rem; }}
+    .control-group {{ position: relative; flex: 1 1 135px; }}
+    .control-label {{ position: absolute; left: 0.65rem; top: 0.25rem; z-index: 1; color: var(--muted); font-size: 0.75rem; font-weight: 700; line-height: 1; text-transform: uppercase; }}
+    .control-select {{ width: 100%; padding: 0.8rem 1.8rem 0.15rem 0.6rem; cursor: pointer; font-size: 0.8125rem; }}
+    .results-status {{ min-height: 1.5rem; margin-bottom: 0.6rem; color: var(--muted); font-size: 0.8125rem; }}
 
-    /* Footer */
-    footer {{
-      margin-top: 3rem;
-      border-top: 1px solid var(--border);
-      padding-top: 1.5rem;
-      font-size: 0.85rem;
-      color: var(--muted);
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 1rem;
-    }}
-    .footer-note {{
-      margin: 0;
-    }}
+    .cards-grid {{ display: grid; gap: 0.7rem; }}
+    .card {{ padding: 0.95rem 1rem; border: 1px solid var(--border); border-radius: 0.6rem; background: var(--surface); transition: border-color 150ms ease, transform 150ms ease; }}
+    .card:hover {{ border-color: var(--border-strong); transform: translateY(-1px); }}
+    .card-header {{ display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }}
+    .card-badges {{ display: flex; flex-wrap: wrap; gap: 0.35rem; }}
+    .badge {{ display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.45rem; border: 1px solid var(--border); border-radius: 999px; font-size: 0.75rem; font-weight: 700; line-height: 1.35; }}
+    .badge-type {{ color: var(--signal); background: var(--signal-soft); }}
+    .badge-receipt, .badge-corroborated {{ color: var(--trusted); background: var(--trusted-soft); }}
+    .badge-single {{ color: var(--warning); background: var(--warning-soft); }}
+    .badge-roundup {{ color: var(--signal); background: var(--signal-soft); }}
+    .card-date {{ flex: 0 0 auto; color: var(--muted); font-size: 0.75rem; white-space: nowrap; }}
+    .card-title {{ margin: 0.55rem 0 0.35rem; color: var(--text); font-size: 1.0625rem; line-height: 1.35; letter-spacing: -0.018em; overflow-wrap: anywhere; }}
+    .card-meta {{ display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-bottom: 0.3rem; color: var(--muted); font-size: 0.8125rem; }}
+    .source-info {{ color: var(--text); font-weight: 650; }}
+    .card-support {{ margin-bottom: 0.45rem; color: var(--muted); font-size: 0.8125rem; }}
+    .card-metrics {{ margin-bottom: 0.45rem; color: var(--signal); font-size: 0.8125rem; }}
+    .card-actions {{ display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; padding-top: 0.45rem; border-top: 1px solid var(--border); font-size: 0.8125rem; }}
+    .action-link {{ min-height: 44px; display: inline-flex; align-items: center; gap: 0.25rem; font-weight: 650; }}
+    .action-receipt {{ color: var(--trusted); }}
+    .link-sep {{ color: var(--border-strong); }}
+    .icon {{ flex-shrink: 0; vertical-align: middle; }}
+    .empty-state {{ padding: 2.5rem 1rem; border: 1px solid var(--border); border-radius: 0.6rem; background: var(--surface); color: var(--muted); text-align: center; }}
+    .hidden {{ display: none !important; }}
 
-    /* SVGs */
-    .icon {{
-      display: inline-block;
-      vertical-align: middle;
-      flex-shrink: 0;
-    }}
+    footer {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding: 1.5rem 0 2.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8125rem; }}
+    .footer-note {{ margin: 0; }}
 
-    /* Empty state */
-    .empty-state {{
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+    @media (max-width: 900px) {{
+      html {{ scroll-padding-top: 5rem; }}
+      .stats-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .archive-layout {{ grid-template-columns: 1fr; }}
+      .dashboard {{ position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }}
+      .dashboard-title, .trust-disclosure {{ grid-column: 1 / -1; }}
+      .dist-panel + .dist-panel {{ margin: 0; padding: 0; border: 0; }}
     }}
-    .hidden {{
-      display: none !important;
+    @media (max-width: 680px) {{
+      html {{ scroll-padding-top: 6.75rem; }}
+      .container {{ width: min(100% - 1.25rem, 1120px); }}
+      .masthead-inner {{ flex-wrap: wrap; align-items: flex-start; padding: 0.55rem 0; }}
+      .masthead-actions {{ width: 100%; justify-content: space-between; }}
+      .masthead-nav {{ gap: 0; }}
+      .nav-link {{ padding: 0 0.45rem; font-size: 0.8125rem; }}
+      .hero {{ padding-top: 2.75rem; }}
+      .hero h1 {{ font-size: clamp(2.25rem, 13vw, 3.4rem); }}
+      .stats-grid {{ gap: 0.55rem; }}
+      .stat-card {{ padding: 0.75rem; }}
+      .stats-grid .stat-card:last-child:nth-child(odd) {{ grid-column: 1 / -1; }}
+      .dashboard {{ grid-template-columns: 1fr; }}
+      .dashboard-title, .trust-disclosure {{ grid-column: auto; }}
+      .toolbar {{ top: 104px; }}
+      .toolbar-search, .toolbar-filters {{ flex-basis: 100%; }}
+      .card-header {{ align-items: flex-start; flex-direction: column; gap: 0.4rem; }}
+      .card-date {{ white-space: normal; }}
     }}
-
     @media (prefers-reduced-motion: reduce) {{
-      *, *::before, *::after {{
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }}
+      html {{ scroll-behavior: auto; }}
+      *, *::before, *::after {{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }}
     }}
   </style>
 </head>
 <body>
   <a href="#stories" class="skip-link">Skip to stories</a>
-  <div class="container">
-    <header class="masthead">
-      <div class="masthead-inner">
-        <div class="brand">
-          <div class="brand-mark">{render_svg_icon("logo")}</div>
-          <div>
-            <h1 class="brand-title">BluBot Signal Archive</h1>
-            <p class="brand-sub">AI developments, checked against multiple sources</p>
-          </div>
-        </div>
-        <nav class="masthead-nav" aria-label="Main Navigation">
-          <a href="#stories" class="nav-link">Archive</a>
-          <a href="#trust-dashboard" class="nav-link">Source trust</a>
+  <header class="masthead">
+    <div class="container masthead-inner">
+      <div class="brand">
+        <span class="brand-mark">{render_svg_icon("logo")}</span>
+        <span>BluBot Signal Archive</span>
+      </div>
+      <div class="masthead-actions">
+        <nav class="masthead-nav" aria-label="Main navigation">
+          <a href="#stories" class="nav-link">Stories</a>
+          <a href="#trust-dashboard" class="nav-link">Source Trust</a>
           <a href="feed.xml" class="nav-link">RSS</a>
         </nav>
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch to dark theme" hidden>Dark mode</button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <!-- Source Trust Dashboard -->
-      <section id="trust-dashboard" class="dashboard" aria-labelledby="dashboard-heading">
-        <h2 id="dashboard-heading" class="dashboard-title">Source Trust &amp; Editorial Intelligence</h2>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Published stories</div>
-            <div class="stat-value">{stats['total_posts']}</div>
-            <div class="stat-desc">Total verified editorial entries curated in durable ledger</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Unique sources</div>
-            <div class="stat-value">{stats['unique_sources']}</div>
-            <div class="stat-desc">Distinct normalized primary publication domains</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Corroborated percentage</div>
-            <div class="stat-value">{stats['corroboration_rate']}%</div>
-            <div class="stat-desc">{stats['corroborated_posts']} stories backed by independent corroborating links</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Source receipts</div>
-            <div class="stat-value">{stats['receipt_coverage']}%</div>
-            <div class="stat-desc">{stats['source_receipts']} posts linked to public proof thread on Bluesky</div>
-          </div>
-          {engagement_card_html}
-        </div>
+  <main class="container">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Source Trust &amp; Editorial Intelligence</p>
+      <h1 id="page-title">AI developments, checked against multiple sources</h1>
+      <p class="hero-copy">A durable archive of BluBot’s published reports, with source context, public receipts, and transparent trust calculations.</p>
+    </section>
 
-        <div class="distributions">
-          <div class="dist-panel">
-            <h3 class="dist-heading">Top Primary Sources</h3>
-            <div class="sources-list">
-              {sources_distribution_html}
-            </div>
-          </div>
-          <div class="dist-panel">
-            <h3 class="dist-heading">Coverage by Category</h3>
-            <div class="categories-list">
-              {coverage_distribution_html}
-            </div>
-          </div>
-        </div>
+    <section class="stats-grid" aria-label="Archive overview">
+      <div class="stat-card">
+        <div class="stat-label">Published stories</div>
+        <div class="stat-value">{stats['total_posts']}</div>
+        <div class="stat-desc">Verified entries in the durable ledger</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Unique sources</div>
+        <div class="stat-value">{stats['unique_sources']}</div>
+        <div class="stat-desc">Distinct primary publication domains</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Corroborated</div>
+        <div class="stat-value">{corroboration_value}</div>
+        <div class="stat-desc">{corroboration_desc}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Source receipts</div>
+        <div class="stat-value">{receipt_value}</div>
+        <div class="stat-desc">{receipt_desc}</div>
+      </div>
+      {engagement_card_html}
+    </section>
 
+    <div class="archive-layout">
+      <aside id="trust-dashboard" class="dashboard" aria-labelledby="dashboard-heading">
+        <h2 id="dashboard-heading" class="dashboard-title">Source Trust</h2>
+        <section class="dist-panel" aria-labelledby="sources-heading">
+          <h3 id="sources-heading" class="dist-heading">Top Primary Sources</h3>
+          <div class="sources-list">{sources_distribution_html}</div>
+        </section>
+        <section class="dist-panel" aria-labelledby="categories-heading">
+          <h3 id="categories-heading" class="dist-heading">Coverage by Category</h3>
+          <div class="categories-list">{coverage_distribution_html}</div>
+        </section>
         <div class="trust-disclosure">
           <details>
             <summary>How this is calculated</summary>
             <div class="trust-explanation">
-              <p>Corroborated means BluBot recorded at least one independent supporting source. Source receipts link those supporting reports beneath the original Bluesky post.</p>
-              <p>Weekly roundups synthesize community highlights and are included in total counts as their own content type, but excluded from corroboration rate denominators. Metrics are read directly from public decentralized endpoints with zero tracking or user profiling.</p>
+              <p>Corroborated means BluBot recorded at least one independent supporting source. Source receipts link those reports beneath the original Bluesky post.</p>
+              <p>Weekly roundups count as stories but are excluded from corroboration denominators. Receipt coverage only includes corroborated stories posted to Bluesky. Public metrics use decentralized endpoints with no tracking or user profiling.</p>
             </div>
           </details>
         </div>
-      </section>
+      </aside>
 
-      <!-- Search, Filtering, and Sorting Controls -->
-      <div class="toolbar" role="region" aria-label="Archive filtering controls">
-        <div class="toolbar-inner">
-          <div class="toolbar-search">
-            <label for="search-input" class="sr-only">Search stories</label>
-            <input type="search" id="search-input" placeholder="Search by title, source, domain, or topic…" autocomplete="off">
-          </div>
-          <div class="toolbar-filters">
-            <div class="control-group">
-              <label for="filter-type" class="control-label">Type:</label>
-              <select id="filter-type" class="control-select">
-                <option value="all">All</option>
-                <option value="news">News</option>
-                <option value="repositories">Repositories</option>
-                <option value="models">Models</option>
-                <option value="roundups">Roundups</option>
-                <option value="follow-ups">Follow-ups</option>
-              </select>
+      <section class="archive-panel" aria-labelledby="stories-heading">
+        <h2 id="stories-heading" class="archive-heading">Published stories</h2>
+        <div class="toolbar" role="region" aria-label="Archive filtering controls">
+          <div class="toolbar-inner">
+            <div class="toolbar-search">
+              <label for="search-input" class="sr-only">Search stories</label>
+              <input type="search" id="search-input" placeholder="Search title, source, or topic…" autocomplete="off">
             </div>
-            <div class="control-group">
-              <label for="filter-trust" class="control-label">Trust:</label>
-              <select id="filter-trust" class="control-select">
-                <option value="all">All</option>
-                <option value="corroborated">Corroborated</option>
-                <option value="receipt">Receipt available</option>
-                <option value="single-source">Single-source</option>
-              </select>
-            </div>
-            <div class="control-group">
-              <label for="sort-select" class="control-label">Sort:</label>
-              <select id="sort-select" class="control-select">
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="corroborated">Most corroborated</option>
-                {most_engaged_option}
-              </select>
+            <div class="toolbar-filters">
+              <div class="control-group">
+                <label for="filter-type" class="control-label">Type</label>
+                <select id="filter-type" class="control-select">
+                  <option value="all">All types</option>
+                  <option value="news">News</option>
+                  <option value="repositories">Repositories</option>
+                  <option value="models">Models</option>
+                  <option value="roundups">Roundups</option>
+                  <option value="follow-ups">Follow-ups</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="filter-trust" class="control-label">Trust</label>
+                <select id="filter-trust" class="control-select">
+                  <option value="all">All trust levels</option>
+                  <option value="corroborated">Corroborated</option>
+                  <option value="receipt">Receipt available</option>
+                  <option value="single-source">Single-source</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="sort-select" class="control-label">Sort</label>
+                <select id="sort-select" class="control-select">
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="corroborated">Most corroborated</option>
+                  {most_engaged_option}
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div id="results-count" class="results-status" aria-live="polite">
-        Showing all {stats['total_posts']} published stories
-      </div>
-
-      <!-- Story Cards -->
-      <section id="stories" class="cards-grid" aria-label="Published Stories Archive">
-        {rendered_items}
+        <div id="results-count" class="results-status" aria-live="polite">Showing all {stats['total_posts']} published stories</div>
+        <div id="stories" class="cards-grid">{rendered_items}</div>
+        <div id="no-results-msg" class="empty-state hidden"><p>No stories match your search and filters.</p></div>
       </section>
-      <div id="no-results-msg" class="empty-state hidden">
-        <p>No stories match your search and filter criteria.</p>
-      </div>
-    </main>
+    </div>
+  </main>
 
-    <footer>
-      <p class="footer-note">{ARCHIVE_CAP_NOTICE}</p>
-      <p class="footer-note">Built with zero external runtime dependencies · Fully static editorial product</p>
-    </footer>
-  </div>
+  <footer class="container">
+    <p class="footer-note">{ARCHIVE_CAP_NOTICE}</p>
+    <p class="footer-note">System fonts · Zero external runtime dependencies · <a href="feed.xml">RSS feed</a></p>
+  </footer>
 
   <script>
     (function() {{
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('theme-toggle');
       const searchInput = document.getElementById('search-input');
       const filterType = document.getElementById('filter-type');
       const filterTrust = document.getElementById('filter-trust');
@@ -1255,9 +1056,34 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       const container = document.getElementById('stories');
       const noResultsMsg = document.getElementById('no-results-msg');
       const statusEl = document.getElementById('results-count');
+      const colorPreference = window.matchMedia('(prefers-color-scheme: dark)');
 
-      if (!container || !searchInput) return;
+      function currentTheme() {{
+        return root.dataset.theme || (colorPreference.matches ? 'dark' : 'light');
+      }}
 
+      function updateThemeButton(theme) {{
+        const isDark = theme === 'dark';
+        themeToggle.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+        themeToggle.textContent = isDark ? 'Light mode' : 'Dark mode';
+      }}
+
+      if (themeToggle) {{
+        themeToggle.hidden = false;
+        updateThemeButton(currentTheme());
+        themeToggle.addEventListener('click', function() {{
+          const theme = currentTheme() === 'dark' ? 'light' : 'dark';
+          root.dataset.theme = theme;
+          root.style.colorScheme = theme;
+          try {{ localStorage.setItem('blubot-theme', theme); }} catch (error) {{}}
+          updateThemeButton(theme);
+        }});
+        colorPreference.addEventListener('change', function() {{
+          if (!root.dataset.theme) updateThemeButton(currentTheme());
+        }});
+      }}
+
+      if (!container || !searchInput || !filterType || !filterTrust || !sortSelect) return;
       const cards = Array.from(container.querySelectorAll('.card'));
       const totalStories = cards.length;
 
@@ -1266,7 +1092,6 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         const typeVal = filterType.value;
         const trustVal = filterTrust.value;
         const sortVal = sortSelect.value;
-
         let visibleCount = 0;
 
         cards.forEach(card => {{
@@ -1274,66 +1099,41 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
           const cardType = card.getAttribute('data-content-type') || '';
           const cardTrust = card.getAttribute('data-trust') || '';
           const isRecent = card.getAttribute('data-recent') === 'true';
-
           const matchesSearch = !query || searchContent.includes(query);
-          const matchesType = (typeVal === 'all') || (cardType === typeVal);
-          
+          const matchesType = typeVal === 'all' || cardType === typeVal;
           let matchesTrust = true;
+
           if (trustVal === 'corroborated') {{
-            matchesTrust = (cardTrust === 'corroborated' || cardTrust === 'receipt');
+            matchesTrust = cardTrust === 'corroborated' || cardTrust === 'receipt';
           }} else if (trustVal === 'receipt') {{
-            matchesTrust = (cardTrust === 'receipt');
+            matchesTrust = cardTrust === 'receipt';
           }} else if (trustVal === 'single-source') {{
-            matchesTrust = (cardTrust === 'single-source');
+            matchesTrust = cardTrust === 'single-source';
           }}
 
           const matchesEngagementWindow = (sortVal !== 'engagement') || isRecent;
           const isVisible = matchesSearch && matchesType && matchesTrust && matchesEngagementWindow;
-          if (isVisible) {{
-            card.classList.remove('hidden');
-            visibleCount++;
-          }} else {{
-            card.classList.add('hidden');
-          }}
+          card.classList.toggle('hidden', !isVisible);
+          if (isVisible) visibleCount++;
         }});
 
-        // Sort visible cards
-        const sorted = cards.slice().sort((a, b) => {{
+        cards.slice().sort((a, b) => {{
           if (sortVal === 'oldest') {{
-            const da = a.getAttribute('data-published') || '';
-            const db = b.getAttribute('data-published') || '';
-            return da.localeCompare(db);
-          }} else if (sortVal === 'corroborated') {{
-            const ca = parseInt(a.getAttribute('data-corroborated') || '0', 10);
-            const cb = parseInt(b.getAttribute('data-corroborated') || '0', 10);
-            return cb - ca;
-          }} else if (sortVal === 'engagement') {{
-            const ea = parseInt(a.getAttribute('data-engagement') || '0', 10);
-            const eb = parseInt(b.getAttribute('data-engagement') || '0', 10);
-            return eb - ea;
-          }} else {{
-            // Default newest
-            const da = a.getAttribute('data-published') || '';
-            const db = b.getAttribute('data-published') || '';
-            return db.localeCompare(da);
+            return (a.getAttribute('data-published') || '').localeCompare(b.getAttribute('data-published') || '');
           }}
-        }});
-
-        sorted.forEach(card => container.appendChild(card));
-
-        if (visibleCount === 0) {{
-          noResultsMsg.classList.remove('hidden');
-        }} else {{
-          noResultsMsg.classList.add('hidden');
-        }}
-
-        if (statusEl) {{
-          if (visibleCount === totalStories) {{
-            statusEl.textContent = 'Showing all ' + totalStories + ' published stories';
-          }} else {{
-            statusEl.textContent = 'Showing ' + visibleCount + ' of ' + totalStories + ' stories';
+          if (sortVal === 'corroborated') {{
+            return parseInt(b.getAttribute('data-corroborated') || '0', 10) - parseInt(a.getAttribute('data-corroborated') || '0', 10);
           }}
-        }}
+          if (sortVal === 'engagement') {{
+            return parseInt(b.getAttribute('data-engagement') || '0', 10) - parseInt(a.getAttribute('data-engagement') || '0', 10);
+          }}
+          return (b.getAttribute('data-published') || '').localeCompare(a.getAttribute('data-published') || '');
+        }}).forEach(card => container.appendChild(card));
+
+        noResultsMsg.classList.toggle('hidden', visibleCount !== 0);
+        statusEl.textContent = visibleCount === totalStories
+          ? 'Showing all ' + totalStories + ' published stories'
+          : 'Showing ' + visibleCount + ' of ' + totalStories + ' stories';
       }}
 
       searchInput.addEventListener('input', updateArchive);

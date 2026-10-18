@@ -154,8 +154,10 @@ def test_trust_stat_calculations():
     assert stats["posts_last_7d"] == 2
     assert stats["unique_sources"] == 2
     assert stats["corroborated_posts"] == 1
+    assert stats["eligible_corroboration_count"] == 2
     assert stats["corroboration_rate"] == 50.0
     assert stats["source_receipts"] == 1
+    assert stats["eligible_receipt_count"] == 1
     assert stats["receipt_coverage"] == 100.0
 
 
@@ -283,6 +285,39 @@ def test_search_filter_controls_and_accessible_labels():
     assert '<label for="filter-trust"' in html_out
     assert 'id="sort-select"' in html_out
     assert '<label for="sort-select"' in html_out
+
+
+def test_editorial_navigation_uses_real_destinations():
+    html_out = build_html([])
+    assert '<a href="#stories" class="nav-link">Stories</a>' in html_out
+    assert '<a href="#trust-dashboard" class="nav-link">Source Trust</a>' in html_out
+    assert '<a href="feed.xml" class="nav-link">RSS</a>' in html_out
+    assert 'href="#"' not in html_out
+
+
+def test_theme_toggle_is_accessible_persistent_and_no_js_safe():
+    html_out = build_html([])
+    assert 'id="theme-toggle"' in html_out
+    assert 'aria-pressed' not in html_out
+    assert 'aria-label="Switch to dark theme"' in html_out
+    assert 'hidden>Dark mode</button>' in html_out
+    assert "localStorage.getItem('blubot-theme')" in html_out
+    assert "localStorage.setItem('blubot-theme', theme)" in html_out
+    assert "matchMedia('(prefers-color-scheme: dark)')" in html_out
+    assert "colorPreference.addEventListener('change'" in html_out
+    assert 'root.style.colorScheme = theme;' in html_out
+    assert ':root[data-theme="dark"]' in html_out
+    assert '@media (prefers-color-scheme: dark)' in html_out
+    assert 'scroll-padding-top: 5rem;' in html_out
+    assert 'flex-wrap: wrap;' in html_out
+
+
+def test_zero_eligible_kpis_are_not_rendered_as_failure_percentages():
+    html_out = build_html([])
+    assert html_out.count('<div class="stat-value">Not yet measured</div>') == 2
+    assert "No eligible non-roundup stories in the archive" in html_out
+    assert "No corroborated Bluesky stories eligible for receipts" in html_out
+    assert '<div class="stat-value">0.0%</div>' not in html_out
 
 
 # --- Required Coverage 14: No raw ISO timestamps appear in rendered cards ---
@@ -484,7 +519,8 @@ def test_page_contains_skip_link_and_focus_styles():
     html_out = build_html([])
     assert '<a href="#stories" class="skip-link">Skip to stories</a>' in html_out
     assert ':focus-visible' in html_out
-    assert '--focus: #7dd3fc' in html_out
+    assert '--focus: #5b3fd3' in html_out
+    assert '@media (prefers-reduced-motion: reduce)' in html_out
 
 
 # --- Required Coverage 22: Search-result status uses aria-live ---

@@ -199,7 +199,12 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.34.0 (Current)**: **Source Trust Dashboard & Editorial Pages Redesign**.
+- **v3.35.0 (Current)**: **Editorial Archive Theme & Accessible Color Modes**.
+  - Refines the archive into a compact editorial layout with a restrained KPI row, two-column source-trust sidebar and story feed, denser story cards, real section navigation, and a responsive violet-accent visual system.
+  - Adds an accessible light/dark mode control using system color preference by default and persisted explicit choices, while keeping the fully rendered archive usable without JavaScript.
+  - Clarifies trust KPI denominators: archives with no eligible stories now report “Not yet measured” instead of a misleading 0%.
+  - Preserves the existing zero-dependency search, filters, sorting, RSS, trust calculations, and seven-day-only “Most engaged” view.
+- **v3.34.0**: **Source Trust Dashboard & Editorial Pages Redesign**.
   - Redesigns the static GitHub Pages archive (`index.html`) into an editorial signal intelligence product with zero external runtime dependencies, fonts, or scripts.
   - Adds the **Source Trust Dashboard**: primary metrics (Published stories, Unique sources, Corroborated percentage, Source receipts, and optional 7-Day engagement), horizontal source distribution bars, coverage distribution by category, and an accessible calculation disclosure. Corroboration counts only unique public supporting domains distinct from the lead source.
   - Extends `append_published_post()` to persist optional `source`, `source_id`, `category`, and `supporting_sources` only when supplied, preserving full backwards compatibility with historical ledger entries without migration.
