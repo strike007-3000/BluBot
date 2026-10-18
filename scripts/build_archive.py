@@ -790,7 +790,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       margin: 1rem 0 1.5rem;
     }}
     .stat-card {{ min-width: 0; padding: 0.65rem 0.8rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); }}
-    .stat-label {{ color: var(--muted); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }}
+    .stat-label {{ color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }}
     .stat-value {{ margin: 0.15rem 0 0; color: var(--text); font-size: clamp(1.15rem, 2vw, 1.45rem); font-weight: 700; letter-spacing: -0.025em; overflow-wrap: anywhere; }}
 
     .archive-layout {{ display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1.25rem; align-items: start; }}
@@ -850,7 +850,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     .dashboard-summary:hover {{ color: var(--signal); }}
     .toolbar-field {{ display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }}
     .field-label {{
-      font-size: 0.6875rem;
+      font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -931,7 +931,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       .stats-grid .stat-card:last-child:nth-child(odd) {{ grid-column: 1 / -1; }}
       .toolbar {{ top: 104px; }}
       .toolbar-inner {{
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 0.5rem;
       }}
       .toolbar-search {{
@@ -993,7 +993,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
     <div class="archive-layout">
       <aside id="trust-dashboard" class="dashboard" aria-labelledby="dashboard-heading">
-        <details class="dashboard-details" open>
+        <details class="dashboard-details">
           <summary class="dashboard-summary"><span class="summary-text">Source Trust · {stats['unique_sources']} domains · {stats['corroborated_posts']} corroborated</span></summary>
           <div class="dashboard-body">
             <h2 id="dashboard-heading" class="dashboard-title">Source Trust</h2>

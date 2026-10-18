@@ -320,6 +320,16 @@ def test_zero_eligible_kpis_are_not_rendered_as_failure_percentages():
     assert '<div class="stat-value">0.0%</div>' not in html_out
 
 
+def test_source_trust_is_collapsed_and_mobile_filters_stack():
+    html_out = build_html([])
+    assert '<details class="dashboard-details">' in html_out
+    assert '<details class="dashboard-details" open>' not in html_out
+    assert '@media (max-width: 680px)' in html_out
+    assert 'grid-template-columns: 1fr;' in html_out
+    assert '.stat-label { color: var(--muted); font-size: 0.75rem;' in html_out
+    assert '.field-label {' in html_out
+
+
 # --- Required Coverage 14: No raw ISO timestamps appear in rendered cards ---
 def test_no_raw_iso_timestamps_in_rendered_cards():
     entries = [
