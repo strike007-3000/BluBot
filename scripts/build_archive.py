@@ -523,16 +523,18 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         # Content type badge
         content_badge = f'<span class="badge badge-type badge-type-{content_type_attr}">{html.escape(content_type)}</span>'
 
-        # Supporting text
+        # Supporting text (omit single-source noise)
         if is_roundup:
             support_desc = "Weekly digest synthesized from community breakthroughs"
+            support_html = f'<div class="card-support">{html.escape(support_desc)}</div>'
         elif is_corroborated:
             num_sup = num_corroborating
             sup_word = "source" if num_sup == 1 else "sources"
             sources_str = ", ".join(support_domains[:3])
             support_desc = f"Supported by {num_sup} additional {sup_word} ({sources_str})"
+            support_html = f'<div class="card-support">{html.escape(support_desc)}</div>'
         else:
-            support_desc = "Single lead report"
+            support_html = ""
 
         # Action links
         actions = []
@@ -578,7 +580,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
             <span class="meta-dot" aria-hidden="true">·</span>
             <span class="topic">{html.escape(display_category)}</span>
           </div>
-          <div class="card-support">{html.escape(support_desc)}</div>
+          {support_html}
           {metrics_html}
           <div class="card-actions">
             {actions_html}
@@ -832,10 +834,20 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     }}
     .toolbar-inner {{
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) repeat(3, 150px);
+      grid-template-columns: minmax(240px, 1fr) repeat(3, 140px);
       gap: 0.65rem;
       align-items: end;
     }}
+    .dashboard-summary {{
+      display: none;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--muted);
+      padding: 0.4rem 0.2rem;
+      user-select: none;
+    }}
+    .dashboard-summary:hover {{ color: var(--signal); }}
     .toolbar-field {{ display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }}
     .field-label {{
       font-size: 0.6875rem;
@@ -890,14 +902,20 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     footer {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding: 1.5rem 0 2.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8125rem; }}
     .footer-note {{ margin: 0; }}
 
+    @media (max-width: 1040px) {{
+      .stats-grid {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+      .archive-layout {{ display: flex; flex-direction: column; }}
+      .archive-panel {{ order: 1; width: 100%; }}
+      .dashboard {{ order: 2; width: 100%; position: static; }}
+      .dashboard-summary {{ display: flex; align-items: center; justify-content: space-between; }}
+      .dashboard-title {{ display: none; }}
+      .dashboard-body {{ margin-top: 0.75rem; }}
+      .toolbar-inner {{ grid-template-columns: 1fr repeat(3, 140px); }}
+    }}
     @media (max-width: 900px) {{
       html {{ scroll-padding-top: 5rem; }}
       .stats-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-      .archive-layout {{ grid-template-columns: 1fr; }}
-      .dashboard {{ position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }}
-      .dashboard-title, .trust-disclosure {{ grid-column: 1 / -1; }}
-      .dist-panel + .dist-panel {{ margin: 0; padding: 0; border: 0; }}
-      .toolbar-inner {{ grid-template-columns: 1fr repeat(3, 130px); }}
+      .toolbar-inner {{ grid-template-columns: 1fr repeat(3, 125px); }}
     }}
     @media (max-width: 680px) {{
       html {{ scroll-padding-top: 6.75rem; }}
@@ -911,10 +929,14 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       .stats-grid {{ gap: 0.45rem; }}
       .stat-card {{ padding: 0.55rem 0.65rem; }}
       .stats-grid .stat-card:last-child:nth-child(odd) {{ grid-column: 1 / -1; }}
-      .dashboard {{ grid-template-columns: 1fr; }}
-      .dashboard-title, .trust-disclosure {{ grid-column: auto; }}
       .toolbar {{ top: 104px; }}
-      .toolbar-inner {{ grid-template-columns: 1fr; gap: 0.5rem; }}
+      .toolbar-inner {{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.5rem;
+      }}
+      .toolbar-search {{
+        grid-column: 1 / -1;
+      }}
       .card-header {{ align-items: flex-start; flex-direction: column; gap: 0.4rem; }}
       .card-date {{ white-space: normal; }}
     }}
@@ -951,7 +973,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
     <section class="stats-grid" aria-label="Archive overview">
       <div class="stat-card" title="Verified entries in the durable ledger">
-        <div class="stat-label">Published</div>
+        <div class="stat-label">Stories</div>
         <div class="stat-value">{stats['total_posts']}</div>
       </div>
       <div class="stat-card" title="Distinct primary publication domains">
@@ -971,24 +993,31 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
     <div class="archive-layout">
       <aside id="trust-dashboard" class="dashboard" aria-labelledby="dashboard-heading">
-        <h2 id="dashboard-heading" class="dashboard-title">Source Trust</h2>
-        <section class="dist-panel" aria-labelledby="sources-heading">
-          <h3 id="sources-heading" class="dist-heading">Top Primary Sources</h3>
-          <div class="sources-list">{sources_distribution_html}</div>
-        </section>
-        <section class="dist-panel" aria-labelledby="categories-heading">
-          <h3 id="categories-heading" class="dist-heading">Coverage by Category</h3>
-          <div class="categories-list">{coverage_distribution_html}</div>
-        </section>
+        <details class="dashboard-details" open>
+          <summary class="dashboard-summary"><span class="summary-text">Source Trust · {stats['unique_sources']} domains · {stats['corroborated_posts']} corroborated</span></summary>
+          <div class="dashboard-body">
+            <h2 id="dashboard-heading" class="dashboard-title">Source Trust</h2>
+            <section class="dist-panel" aria-labelledby="sources-heading">
+              <h3 id="sources-heading" class="dist-heading">Top Primary Sources</h3>
+              <div class="sources-list">{sources_distribution_html}</div>
+            </section>
+            <section class="dist-panel" aria-labelledby="categories-heading">
+              <h3 id="categories-heading" class="dist-heading">Coverage by Category</h3>
+              <div class="categories-list">{coverage_distribution_html}</div>
+            </section>
         <div class="trust-disclosure">
           <details>
             <summary>How this is calculated</summary>
             <div class="trust-explanation">
-              <p>Corroborated means BluBot recorded at least one independent supporting source. Source receipts link those reports beneath the original Bluesky post.</p>
-              <p>Weekly roundups count as stories but are excluded from corroboration denominators. Receipt coverage only includes corroborated stories posted to Bluesky. Public metrics use decentralized endpoints with no tracking or user profiling.</p>
+              <p><strong>Stories:</strong> {stats['total_posts']} verified entries in durable ledger. <strong>Sources:</strong> {stats['unique_sources']} distinct primary domains.</p>
+              <p><strong>Corroborated:</strong> {corroboration_desc}. BluBot records independent supporting reporting from distinct publishers.</p>
+              <p><strong>Receipts:</strong> {receipt_desc}.</p>
+              <p>Weekly roundups count as stories but are excluded from corroboration denominators. Receipt coverage only includes corroborated stories posted to Bluesky. Public metrics use decentralized endpoints with zero tracking.</p>
             </div>
           </details>
         </div>
+          </div>
+        </details>
       </aside>
 
       <section class="archive-panel" aria-labelledby="stories-heading">
