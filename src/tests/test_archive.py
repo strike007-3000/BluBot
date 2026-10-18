@@ -340,7 +340,7 @@ def test_metrics_render_when_supplied():
     assert "12 reposts" in html_out
     assert "5 replies" in html_out
     assert "7-Day Engagement" in html_out
-    assert '<option value="engagement">Most engaged</option>' in html_out
+    assert '<option value="engagement">Most engaged (last 7 days)</option>' in html_out
 
 
 # --- Required Coverage 17: Metrics absence does not break HTML generation ---
@@ -356,7 +356,28 @@ def test_metrics_absence_does_not_break_html_generation():
     html_out = build_html(entries, metrics=None)
     assert "No Metrics Post" in html_out
     assert "7-Day Engagement" not in html_out
-    assert '<option value="engagement">Most engaged</option>' not in html_out
+    assert '<option value="engagement">Most engaged (last 7 days)</option>' not in html_out
+
+
+def test_engagement_sort_limits_results_to_recent_stories():
+    entries = [
+        {
+            "url": "https://example.com/recent",
+            "title": "Recent",
+            "published_at": datetime.now(timezone.utc).isoformat(),
+            "posts": {"bluesky": {"uri": "at://recent"}},
+        },
+        {
+            "url": "https://example.com/old",
+            "title": "Old",
+            "published_at": "2020-01-01T00:00:00Z",
+            "posts": {"bluesky": {"uri": "at://old"}},
+        },
+    ]
+    html_out = build_html(entries, metrics={"at://recent": {"likes": 1, "reposts": 0, "replies": 0}})
+    assert 'data-recent="true"' in html_out
+    assert 'data-recent="false"' in html_out
+    assert "const matchesEngagementWindow = (sortVal !== 'engagement') || isRecent;" in html_out
 
 
 def test_metrics_fetch_is_limited_to_recent_entries():

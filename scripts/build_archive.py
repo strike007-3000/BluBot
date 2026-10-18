@@ -458,6 +458,8 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         raw_url = str(e.get("url") or "")
         pub_at_iso = str(e.get("published_at") or "")
         human_date = html.escape(format_human_date(pub_at_iso))
+        published_dt = parse_date_safe(pub_at_iso)
+        is_recent = bool(published_dt and published_dt >= cutoff_7d)
 
         content_type = classify_content_type(e)
         display_category = get_display_category(e)
@@ -557,7 +559,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         corroboration_sort_score = 0 if is_roundup else num_corroborating
 
         card_html = f"""
-        <article class="card" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
+        <article class="card" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-recent="{str(is_recent).lower()}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
           <header class="card-header">
             <div class="card-badges">
               {content_badge}
@@ -581,7 +583,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
     rendered_items = "\n".join(items_html) if items_html else "<div class='empty-state'><p>No published stories yet.</p></div>"
 
-    most_engaged_option = '<option value="engagement">Most engaged</option>' if has_metrics else ''
+    most_engaged_option = '<option value="engagement">Most engaged (last 7 days)</option>' if has_metrics else ''
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1271,6 +1273,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
           const searchContent = card.getAttribute('data-search') || '';
           const cardType = card.getAttribute('data-content-type') || '';
           const cardTrust = card.getAttribute('data-trust') || '';
+          const isRecent = card.getAttribute('data-recent') === 'true';
 
           const matchesSearch = !query || searchContent.includes(query);
           const matchesType = (typeVal === 'all') || (cardType === typeVal);
@@ -1284,7 +1287,8 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
             matchesTrust = (cardTrust === 'single-source');
           }}
 
-          const isVisible = matchesSearch && matchesType && matchesTrust;
+          const matchesEngagementWindow = (sortVal !== 'engagement') || isRecent;
+          const isVisible = matchesSearch && matchesType && matchesTrust && matchesEngagementWindow;
           if (isVisible) {{
             card.classList.remove('hidden');
             visibleCount++;
