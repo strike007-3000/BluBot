@@ -298,7 +298,7 @@ def test_editorial_navigation_uses_real_destinations():
 def test_theme_toggle_is_accessible_persistent_and_no_js_safe():
     html_out = build_html([])
     assert 'id="theme-toggle"' in html_out
-    assert 'aria-pressed="false"' in html_out
+    assert 'aria-pressed' not in html_out
     assert 'aria-label="Switch to dark theme"' in html_out
     assert 'hidden>Dark mode</button>' in html_out
     assert "localStorage.getItem('blubot-theme')" in html_out
@@ -308,6 +308,8 @@ def test_theme_toggle_is_accessible_persistent_and_no_js_safe():
     assert 'root.style.colorScheme = theme;' in html_out
     assert ':root[data-theme="dark"]' in html_out
     assert '@media (prefers-color-scheme: dark)' in html_out
+    assert 'scroll-padding-top: 5rem;' in html_out
+    assert 'flex-wrap: wrap;' in html_out
 
 
 def test_zero_eligible_kpis_are_not_rendered_as_failure_percentages():

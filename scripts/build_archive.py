@@ -690,7 +690,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     }}
 
     *, *::before, *::after {{ box-sizing: border-box; }}
-    html {{ scroll-behavior: smooth; }}
+    html {{ scroll-behavior: smooth; scroll-padding-top: 5rem; }}
     body {{
       min-height: 100vh;
       margin: 0;
@@ -894,8 +894,9 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       .dist-panel + .dist-panel {{ margin: 0; padding: 0; border: 0; }}
     }}
     @media (max-width: 680px) {{
+      html {{ scroll-padding-top: 6.75rem; }}
       .container {{ width: min(100% - 1.25rem, 1120px); }}
-      .masthead-inner {{ align-items: flex-start; padding: 0.55rem 0; }}
+      .masthead-inner {{ flex-wrap: wrap; align-items: flex-start; padding: 0.55rem 0; }}
       .masthead-actions {{ width: 100%; justify-content: space-between; }}
       .masthead-nav {{ gap: 0; }}
       .nav-link {{ padding: 0 0.45rem; font-size: 0.8125rem; }}
@@ -906,7 +907,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       .stats-grid .stat-card:last-child:nth-child(odd) {{ grid-column: 1 / -1; }}
       .dashboard {{ grid-template-columns: 1fr; }}
       .dashboard-title, .trust-disclosure {{ grid-column: auto; }}
-      .toolbar {{ top: 108px; }}
+      .toolbar {{ top: 104px; }}
       .toolbar-search, .toolbar-filters {{ flex-basis: 100%; }}
       .card-header {{ align-items: flex-start; flex-direction: column; gap: 0.4rem; }}
       .card-date {{ white-space: normal; }}
@@ -931,7 +932,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
           <a href="#trust-dashboard" class="nav-link">Source Trust</a>
           <a href="feed.xml" class="nav-link">RSS</a>
         </nav>
-        <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" aria-label="Switch to dark theme" hidden>Dark mode</button>
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch to dark theme" hidden>Dark mode</button>
       </div>
     </div>
   </header>
@@ -1062,7 +1063,6 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
       function updateThemeButton(theme) {{
         const isDark = theme === 'dark';
-        themeToggle.setAttribute('aria-pressed', String(isDark));
         themeToggle.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
         themeToggle.textContent = isDark ? 'Light mode' : 'Dark mode';
       }}
