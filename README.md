@@ -199,7 +199,12 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.35.0 (Current)**: **Editorial Archive Theme & Accessible Color Modes**.
+- **v3.35.1 (Current)**: **Archive Visual Hierarchy & Filter Layout Refinements**.
+  - Shrinks the hero area substantially with crisp copy (“AI signals, with receipts”) getting readers to the archive faster.
+  - Densifies the top KPI row with compact metrics, concise labels (`Published`, `Sources`, `Corroborated`, `Receipts`, `Engagement`), and tooltip disclosures for calculation definitions.
+  - Fixes filter label collisions by using clean stacked labels above inputs in a dominant search grid (`minmax(260px, 1fr) repeat(3, 150px)` on desktop, full-width stacked on mobile).
+  - Softens the Source Trust sidebar styling and collapses calculation disclosures by default to keep visual focus on curated stories.
+- **v3.35.0**: **Editorial Archive Theme & Accessible Color Modes**.
   - Refines the archive into a compact editorial layout with a restrained KPI row, two-column source-trust sidebar and story feed, denser story cards, real section navigation, and a responsive violet-accent visual system.
   - Adds an accessible light/dark mode control using system color preference by default and persisted explicit choices, while keeping the fully rendered archive usable without JavaScript.
   - Clarifies trust KPI denominators: archives with no eligible stories now report “Not yet measured” instead of a misleading 0%.
