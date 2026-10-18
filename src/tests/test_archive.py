@@ -324,6 +324,8 @@ def test_source_trust_is_collapsed_and_mobile_filters_stack():
     html_out = build_html([])
     assert '<details class="dashboard-details">' in html_out
     assert '<details class="dashboard-details" open>' not in html_out
+    assert '.dashboard-summary {' in html_out
+    assert 'display: flex;' in html_out
     assert '@media (max-width: 680px)' in html_out
     assert 'grid-template-columns: 1fr;' in html_out
     assert '.stat-label { color: var(--muted); font-size: 0.75rem;' in html_out

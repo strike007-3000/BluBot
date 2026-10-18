@@ -839,7 +839,9 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       align-items: end;
     }}
     .dashboard-summary {{
-      display: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       cursor: pointer;
       font-size: 0.8125rem;
       font-weight: 700;
@@ -907,7 +909,6 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
       .archive-layout {{ display: flex; flex-direction: column; }}
       .archive-panel {{ order: 1; width: 100%; }}
       .dashboard {{ order: 2; width: 100%; position: static; }}
-      .dashboard-summary {{ display: flex; align-items: center; justify-content: space-between; }}
       .dashboard-title {{ display: none; }}
       .dashboard-body {{ margin-top: 0.75rem; }}
       .toolbar-inner {{ grid-template-columns: 1fr repeat(3, 140px); }}
