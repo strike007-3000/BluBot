@@ -1241,6 +1241,33 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
           : 'Showing ' + visibleCount + ' of ' + totalStories + ' stories';
       }}
 
+      function navigateToStory(hash) {{
+        if (!hash || !hash.startsWith('#story-')) return;
+        const targetCard = document.querySelector(hash);
+        if (targetCard) {{
+          if (filterType.value !== 'all' || filterTrust.value !== 'all' || searchInput.value !== '') {{
+            filterType.value = 'all';
+            filterTrust.value = 'all';
+            searchInput.value = '';
+            updateArchive();
+          }}
+          targetCard.classList.remove('hidden');
+          targetCard.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+          targetCard.focus();
+        }}
+      }}
+
+      document.addEventListener('click', function(e) {{
+        const link = e.target.closest('.card-timeline a');
+        if (link && link.getAttribute('href') && link.getAttribute('href').startsWith('#story-')) {{
+          navigateToStory(link.getAttribute('href'));
+        }}
+      }});
+
+      window.addEventListener('hashchange', function() {{
+        navigateToStory(window.location.hash);
+      }});
+
       searchInput.addEventListener('input', updateArchive);
       filterType.addEventListener('change', updateArchive);
       filterTrust.addEventListener('change', updateArchive);

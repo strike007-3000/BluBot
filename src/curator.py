@@ -598,6 +598,24 @@ _EVENT_VERBS = {
     "fixes", "fixed", "fixing"
 }
 
+def _truncate_with_preserved_link(text: str, link: str, limit: int) -> str:
+    """Safely truncates text so the total length including link does not exceed limit."""
+    from src.utils import smart_truncate
+    link_clean = (link or "").strip()
+    if not link_clean:
+        return smart_truncate(text, limit)
+    text_clean = (text or "").strip()
+    if text_clean.endswith(link_clean):
+        prose = text_clean[:-len(link_clean)].strip()
+    else:
+        prose = text_clean
+
+    available_prose_chars = limit - len(link_clean) - 1
+    if available_prose_chars <= 10:
+        return f"{link_clean[:limit]}"
+    truncated_prose = smart_truncate(prose, available_prose_chars)
+    return f"{truncated_prose} {link_clean}".strip()
+
 _GENERIC_HEADLINES = {
     "weekly update", "ai weekly", "daily digest", "tech news",
     "top ai tools", "ai roundup", "weekly recap", "morning brief"
@@ -663,31 +681,34 @@ def detect_meaningful_change(
     if new_event_verbs:
         reasons.append(f"new event action: {', '.join(sorted(new_event_verbs))}")
 
-    # 3. New publisher/domain reporting new information
-    is_new_source = bool(c_domain and p_domain and c_domain != p_domain and c_source_name != p_source_name)
-    if is_new_source:
-        reasons.append(f"new source/domain: {c_domain or c_source_name}")
-
-    # 4. New supporting evidence or corroborating sources
+    # 3. New supporting evidence or corroborating sources
     p_supp = set(str(s).lower() for s in parent_entry.get("supporting_sources", []))
     c_supp = set(str(s).lower() for s in (candidate_supporting_sources or []))
     new_evidence = c_supp - p_supp
     if new_evidence:
         reasons.append(f"new supporting evidence: {', '.join(sorted(new_evidence))}")
 
-    # 5. Materially different article summary (informative content)
+    # 4. Materially different article summary (informative content)
     c_sum = (candidate_summary or "").strip().lower()
     p_sum = str(parent_entry.get("summary", "")).strip().lower()
+    has_summary_diff = False
     if c_sum and len(c_sum) > 30 and p_sum and len(p_sum) > 30:
         c_sum_words = set(re.findall(r'\b[a-zA-Z0-9]{3,}\b', c_sum))
         p_sum_words = set(re.findall(r'\b[a-zA-Z0-9]{3,}\b', p_sum))
         if c_sum_words and p_sum_words:
             overlap = len(c_sum_words & p_sum_words) / len(c_sum_words | p_sum_words)
             if overlap < 0.20:
+                has_summary_diff = True
                 reasons.append("materially different article summary")
 
-    # Reject syndicated copies: identical or nearly identical content from same source
-    if not is_new_source and not new_event_verbs and not new_evidence and not (c_versions and not p_versions):
+    # 5. New publisher/domain reporting new information
+    is_new_source = bool(c_domain and p_domain and c_domain != p_domain and c_source_name != p_source_name)
+    if is_new_source:
+        reasons.append(f"new source/domain: {c_domain or c_source_name}")
+
+    # Reject if no factual development occurred (a new domain alone without new facts is insufficient)
+    has_fact_change = bool(new_event_verbs or new_evidence or (c_versions and not p_versions) or has_summary_diff)
+    if not has_fact_change:
         return False, "rejected: syndicated copy or no identifiable new fact"
 
     if reasons:
@@ -805,6 +826,7 @@ def match_story_continuity(
             if sim_val > best_similarity_score:
                 best_similarity_score = sim_val
                 best_match_entry = entry
+                best_explanation = change_explanation
         else:
             if not possible_match_candidate:
                 possible_match_candidate = entry
@@ -816,7 +838,7 @@ def match_story_continuity(
         parent_fp = parent_root.get("story_fingerprint")
         if parent_fp in fp_to_original:
             parent_root = fp_to_original[parent_fp]
-        return MatchDecision.CONFIDENT_UPDATE.value, parent_root, f"confident update: {change_explanation}"
+        return MatchDecision.CONFIDENT_UPDATE.value, parent_root, f"confident update: {best_explanation}"
 
     if possible_match_candidate:
         return MatchDecision.POSSIBLE_MATCH.value, possible_match_candidate, f"possible match: {possible_explanation}"
@@ -952,7 +974,20 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
 
     if story_state:
         from src.utils import is_story_semantic_duplicate
-        entries = [e for e in entries if not is_story_semantic_duplicate(e.get("title", ""), story_state)]
+        from src.models import MatchDecision
+        pub_ledger = story_state.get("published_posts", [])
+        filtered_entries = []
+        for e in entries:
+            is_dup = is_story_semantic_duplicate(e.get("title", ""), story_state)
+            if is_dup:
+                if settings.story_update_detection_enabled and pub_ledger:
+                    match_type, _, _ = match_story_continuity(e, pub_ledger, now_utc=now_utc)
+                    if match_type in (MatchDecision.CONFIDENT_UPDATE.value, MatchDecision.POSSIBLE_MATCH.value):
+                        filtered_entries.append(e)
+                        continue
+                continue
+            filtered_entries.append(e)
+        entries = filtered_entries
 
     # Enforce policy: The lead article (index 0) cannot be from a "critical" category
     # unless all available entries are critical.
@@ -1499,9 +1534,9 @@ async def summarize_update(
                         m_text = f"{m_text} {c_link}"
 
                 final_drafts = PlatformDrafts(
-                    bluesky=smart_truncate(b_text, 280),
-                    threads=smart_truncate(t_text, 480),
-                    mastodon=smart_truncate(m_text, 480)
+                    bluesky=_truncate_with_preserved_link(b_text, c_link, 280),
+                    threads=_truncate_with_preserved_link(t_text, c_link, 480),
+                    mastodon=_truncate_with_preserved_link(m_text, c_link, 480)
                 )
                 is_failover = (idx > 0)
                 SafeLogger.info(f"Update synthesis successful via {model_id}.")
@@ -1517,9 +1552,9 @@ async def summarize_update(
             SafeLogger.warn(f"Update synthesis {model_id} unexpected error: {e}")
 
     # Fallback deterministic update draft
-    fallback_b = smart_truncate(f"Update: {c_title}. Reporting new findings from {c_source}. Earlier: {p_title}. {c_link}", 280)
-    fallback_t = smart_truncate(f"Update: {c_title}. {c_source} reports new developments following earlier coverage of {p_title}. {c_link}", 450)
-    fallback_m = smart_truncate(f"Update: {c_title}. Following earlier report on {p_title}, {c_source} has confirmed new details. {c_link} #AI #TechUpdate", 450)
+    fallback_b = _truncate_with_preserved_link(f"Update: {c_title}. Reporting new findings from {c_source}. Earlier: {p_title}.", c_link, 280)
+    fallback_t = _truncate_with_preserved_link(f"Update: {c_title}. {c_source} reports new developments following earlier coverage of {p_title}.", c_link, 450)
+    fallback_m = _truncate_with_preserved_link(f"Update: {c_title}. Following earlier report on {p_title}, {c_source} has confirmed new details. #AI #TechUpdate", c_link, 450)
     fallback_drafts = PlatformDrafts(bluesky=fallback_b, threads=fallback_t, mastodon=fallback_m)
     return fallback_drafts.bluesky, c_link, p_topic, False, "UPDATE", fallback_drafts
 

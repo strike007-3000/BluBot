@@ -329,6 +329,7 @@ def append_published_post(
     source_url: Optional[str] = None,
     thread_roots: Optional[dict] = None,
     idempotency_key: Optional[str] = None,
+    summary: Optional[str] = None,
 ) -> dict:
     """Append an entry to the published_posts ledger and enforce the capacity limit."""
     pub_time = published_at if published_at is not None else datetime.now(timezone.utc).isoformat()
@@ -369,6 +370,8 @@ def append_published_post(
         "thread_roots": t_roots,
         "idempotency_key": idem_key,
     }
+    if summary and isinstance(summary, str) and summary.strip():
+        entry["summary"] = summary.strip()
     if week is not None:
         entry["week"] = week
 

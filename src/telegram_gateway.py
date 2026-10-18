@@ -134,7 +134,8 @@ async def _render_and_update_preview(
     current_tab: str,
     view_mode: str,
     reply_markup: InlineKeyboardMarkup,
-    image_bytes: Optional[bytes]
+    image_bytes: Optional[bytes],
+    decision: Optional[Any] = None
 ) -> bool:
     """
     Renders preview text and updates the authoritative Telegram preview message.
@@ -144,7 +145,7 @@ async def _render_and_update_preview(
     """
     try:
         if image_bytes:
-            caption, followup = _get_caption_payload(drafts, current_tab=current_tab, view_mode=view_mode)
+            caption, followup = _get_caption_payload(drafts, current_tab=current_tab, view_mode=view_mode, decision=decision)
             await bot.edit_message_caption(
                 chat_id=chat_id, message_id=sent_message.message_id,
                 caption=caption, reply_markup=reply_markup, parse_mode="HTML"
@@ -162,7 +163,7 @@ async def _render_and_update_preview(
                     except Exception:
                         pass
         else:
-            preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode)
+            preview_text = _format_preview_text(drafts, current_tab=current_tab, view_mode=view_mode, decision=decision)
             await bot.edit_message_text(
                 chat_id=chat_id, message_id=sent_message.message_id,
                 text=preview_text, reply_markup=reply_markup, parse_mode="HTML"
@@ -294,7 +295,8 @@ async def send_draft_for_approval(
                             success = await _render_and_update_preview(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
                                 drafts=current_drafts, current_tab=target_tab, view_mode="tabs",
-                                reply_markup=reply_markup, image_bytes=image_bytes
+                                reply_markup=reply_markup, image_bytes=image_bytes,
+                                decision=decision
                             )
                             if success:
                                 current_tab = target_tab
@@ -309,7 +311,8 @@ async def send_draft_for_approval(
                             success = await _render_and_update_preview(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
                                 drafts=current_drafts, current_tab=current_tab, view_mode=target_view,
-                                reply_markup=reply_markup, image_bytes=image_bytes
+                                reply_markup=reply_markup, image_bytes=image_bytes,
+                                decision=decision
                             )
                             if success:
                                 view_mode = target_view
@@ -492,7 +495,8 @@ async def send_draft_for_approval(
                                 update_ok = await _render_and_update_preview(
                                     bot=bot, chat_id=chat_id, sent_message=sent_message,
                                     drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,
-                                    reply_markup=reply_markup, image_bytes=image_bytes
+                                    reply_markup=reply_markup, image_bytes=image_bytes,
+                                    decision=decision
                                 )
 
                                 if remix_ok and update_ok:
@@ -534,7 +538,8 @@ async def send_draft_for_approval(
                                 update_ok = await _render_and_update_preview(
                                     bot=bot, chat_id=chat_id, sent_message=sent_message,
                                     drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,
-                                    reply_markup=reply_markup, image_bytes=image_bytes
+                                    reply_markup=reply_markup, image_bytes=image_bytes,
+                                    decision=decision
                                 )
                                 if update_ok:
                                     current_drafts = candidate_drafts

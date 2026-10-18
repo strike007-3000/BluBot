@@ -541,6 +541,7 @@ async def test_tab_switching_callback_updates_caption(monkeypatch, mocker):
 
     mock_bot = MagicMock()
     mock_bot.send_photo = AsyncMock()
+    mock_bot.send_message = AsyncMock()
     mock_bot.edit_message_caption = AsyncMock()
     mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot)
 

@@ -679,7 +679,7 @@ async def reserve_pending_stage(
     curation: CurationResult,
     synthesis: SynthesisResult,
     decision: Optional[Any] = None
-) -> Tuple[dict, Article]:
+) -> Tuple[Optional[dict], Article]:
     """Resolves lead article and writes pending reservation (original or update) to state."""
     import hashlib
     canonical_lead = None
@@ -716,11 +716,16 @@ async def reserve_pending_stage(
 
     idempotency_key = f"update:{parent_fp}:{canonical_lead}" if is_update_mode else f"original:{compute_story_fingerprint(matched_article.title)}:{canonical_lead}"
 
-    # Idempotency check: if reservation or ledger with this key exists, abort or skip duplicate
+    # Idempotency check: if reservation or published post with this key exists, abort or skip duplicate
     for ps in state.get("pending_stories", []):
         if ps.get("idempotency_key") == idempotency_key or (is_update_mode and ps.get("url") == canonical_lead and ps.get("parent_story_fingerprint") == parent_fp):
-            SafeLogger.warn(f"Duplicate reservation detected ({idempotency_key}). Skipping duplicate update.")
-            return state, matched_article
+            SafeLogger.warn(f"Duplicate reservation detected ({idempotency_key}). Skipping duplicate broadcast.")
+            return None, matched_article
+
+    for pub in state.get("published_posts", []):
+        if pub.get("idempotency_key") == idempotency_key or (is_update_mode and pub.get("url") == canonical_lead and pub.get("parent_story_fingerprint") == parent_fp):
+            SafeLogger.warn(f"Duplicate published story detected ({idempotency_key}). Skipping duplicate broadcast.")
+            return None, matched_article
 
     pending_entry = {
         "url": canonical_lead,
@@ -827,6 +832,7 @@ async def settle_persistence_stage(
             update_number=update_num,
             source_url=canonical_lead,
             thread_roots=thread_roots,
+            summary=matched_article.summary,
         )
 
         state.setdefault("links", [])
@@ -849,6 +855,7 @@ async def settle_persistence_stage(
         state["total_posts_curated"] = state.get("total_posts_curated", 0) + 1
         state["last_dialect"] = curation.last_dialect
         state["links"] = state["links"][-500:]
+        state.setdefault("recent_topics", [])
         state["recent_topics"] = state["recent_topics"][-20:]
 
         settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
@@ -1443,7 +1450,19 @@ async def main():
             dec_type, parent_entry, explanation = match_story_continuity(lead_dict, published_ledger, now_utc=now)
 
             if dec_type == MatchDecision.CONFIDENT_UPDATE.value and parent_entry and settings.story_update_detection_enabled:
-                parent_fp = parent_entry.get("story_fingerprint")
+                from src.utils import compute_story_fingerprint
+                parent_fp = parent_entry.get("story_fingerprint") or compute_story_fingerprint(parent_entry.get("title", ""))
+                # Derive thread roots from parent posts if thread_roots is empty
+                p_roots = dict(parent_entry.get("thread_roots") or {})
+                if not p_roots and isinstance(parent_entry.get("posts"), dict):
+                    posts = parent_entry["posts"]
+                    if "bluesky" in posts and isinstance(posts["bluesky"], dict):
+                        p_roots["bluesky"] = {"uri": posts["bluesky"].get("uri"), "cid": posts["bluesky"].get("cid")}
+                    if "mastodon" in posts and isinstance(posts["mastodon"], dict):
+                        p_roots["mastodon"] = {"id": posts["mastodon"].get("id"), "url": posts["mastodon"].get("url")}
+                    if "threads" in posts and isinstance(posts["threads"], dict):
+                        p_roots["threads"] = {"id": posts["threads"].get("id"), "url": posts["threads"].get("url")}
+
                 prior_updates = [
                     p for p in published_ledger
                     if p.get("entry_kind") == "update" and p.get("parent_story_fingerprint") == parent_fp
@@ -1455,15 +1474,17 @@ async def main():
                     update_number=up_num,
                     confidence=dec_type,
                     explanation=explanation,
-                    target_platform_roots=parent_entry.get("thread_roots", {}),
+                    target_platform_roots=p_roots,
                     parent_entry=parent_entry
                 )
                 SafeLogger.info(f"Continuity Matcher: CONFIDENT_UPDATE identified for '{parent_entry.get('title', '')}' (Update #{up_num}). Roots: {list(decision.target_platform_roots.keys())}")
             else:
                 SafeLogger.info(f"Continuity Matcher: Evaluated as {dec_type} ({explanation}). Proceeding with normal standalone post.")
+                from src.utils import compute_story_fingerprint
+                parent_fp_standalone = (parent_entry.get("story_fingerprint") or compute_story_fingerprint(parent_entry.get("title", ""))) if parent_entry else None
                 decision = EditorialDecision(
                     mode="original",
-                    parent_fingerprint=parent_entry.get("story_fingerprint") if parent_entry else None,
+                    parent_fingerprint=parent_fp_standalone,
                     update_number=0,
                     confidence=dec_type,
                     explanation=explanation
@@ -1529,6 +1550,9 @@ async def main():
 
         # 2.8 Pre-Broadcast Lead Resolution & Reservation Contract
         state, matched_article = await reserve_pending_stage(curation, synthesis, decision=decision)
+        if state is None:
+            SafeLogger.warn("Reservation skipped duplicate candidate; halting broadcast pipeline.")
+            return
 
         # 3. Broadcast
         t0 = time.monotonic()

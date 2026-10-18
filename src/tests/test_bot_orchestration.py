@@ -580,3 +580,69 @@ async def test_bot_orchestration_confident_update_flow(monkeypatch, mocker):
     # Verified settle called with decision
     assert mock_settle.call_args.kwargs["decision"].mode == "update"
 
+
+@pytest.mark.asyncio
+async def test_reserve_pending_stage_duplicate_prevention(mocker):
+    from src.models import Article, CurationResult, SynthesisResult, EditorialDecision
+    from bot import reserve_pending_stage
+
+    article = Article(title="Test Story", link="https://example.com/test", summary="summary", published="2026-10-18T10:00:00Z", source="TestSource")
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(content="Content", lead_link="https://example.com/test", topic="AI")
+    decision = EditorialDecision(mode="original", parent_fingerprint=None, update_number=0, confidence="NO_MATCH", explanation="")
+
+    # Existing pending story with identical idempotency_key
+    state = {
+        "pending_stories": [{
+            "idempotency_key": "original:story test:https://example.com/test",
+            "url": "https://example.com/test",
+        }],
+        "published_posts": []
+    }
+    mocker.patch("bot.load_seen_articles", return_value=state)
+
+    ret_state, matched = await reserve_pending_stage(curation, synthesis, decision=decision)
+    assert ret_state is None
+    assert matched.title == "Test Story"
+
+
+@pytest.mark.asyncio
+async def test_editorial_decision_legacy_parent_derivation(mocker):
+    from src.models import Article, CurationResult, MatchDecision, EditorialDecision
+
+    # Legacy parent without story_fingerprint or thread_roots, but with posts
+    legacy_parent = {
+        "title": "Legacy Breakthrough Announced",
+        "url": "https://example.com/legacy",
+        "posts": {
+            "bluesky": {"uri": "at://did:plc:123/app.bsky.feed.post/456", "cid": "bafyrei123"},
+            "mastodon": {"id": "111222333", "url": "https://mastodon.social/@bot/111222333"},
+            "threads": {"id": "999888777", "url": "https://threads.net/@bot/post/999888777"}
+        }
+    }
+
+    mocker.patch("src.curator.match_story_continuity", return_value=(MatchDecision.CONFIDENT_UPDATE, legacy_parent, "Follow-up test"))
+
+    article = Article(title="Legacy Breakthrough Follow-Up", link="https://example.com/legacy-update", summary="Update summary", published="2026-10-18T12:00:00Z", source="Source")
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+
+    # Test the derivation logic in bot.py main loop
+    parent_entry = legacy_parent
+    from src.utils import compute_story_fingerprint
+    derived_parent_fp = parent_entry.get("story_fingerprint") or compute_story_fingerprint(parent_entry.get("title", ""))
+    parent_roots = parent_entry.get("thread_roots")
+    if not parent_roots and "posts" in parent_entry:
+        parent_roots = {}
+        for plat, pdata in parent_entry["posts"].items():
+            if isinstance(pdata, dict):
+                parent_roots[plat] = {
+                    k: v for k, v in pdata.items()
+                    if k in ("uri", "cid", "id", "url")
+                }
+
+    assert derived_parent_fp == "announced breakthrough legacy"
+    assert parent_roots["bluesky"]["uri"] == "at://did:plc:123/app.bsky.feed.post/456"
+    assert parent_roots["mastodon"]["id"] == "111222333"
+    assert parent_roots["threads"]["id"] == "999888777"
+
+

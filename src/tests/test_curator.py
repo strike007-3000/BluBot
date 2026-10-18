@@ -1345,3 +1345,43 @@ def test_continuity_matcher_version_conflict_and_change_detection():
     # Crucial: Parent must be the original story, not prior_update
     assert matched["entry_kind"] == "original"
     assert matched["url"] == orig_entry["url"]
+
+def test_meaningful_change_requires_factual_development():
+    from src.curator import detect_meaningful_change
+    orig_entry = {
+        "title": "Anthropic Announces Claude 3.5 Sonnet",
+        "url": "https://anthropic.com/news/claude-3-5-sonnet",
+        "summary": "Anthropic introduces Claude 3.5 Sonnet with enhanced vision and reasoning benchmarks.",
+        "source": "Anthropic",
+    }
+
+    # Different source and modified phrasing alone without new verbs/evidence/version/summary-diff is rejected
+    has_change, exp = detect_meaningful_change(
+        candidate_title="Anthropic Announces Claude 3.5 Sonnet Model Details",
+        candidate_summary="Anthropic introduces Claude 3.5 Sonnet with enhanced vision and reasoning benchmarks.",
+        candidate_url="https://theverge.com/news/claude-3-5",
+        candidate_source="The Verge",
+        parent_entry=orig_entry
+    )
+    assert has_change is False
+    assert "syndicated copy" in exp or "no identifiable new fact" in exp
+
+    # Factual development (e.g. new action verb / release) is accepted
+    has_change_fact, exp_fact = detect_meaningful_change(
+        candidate_title="Anthropic Deploys Claude 3.5 Sonnet to Enterprise Workspaces with Pricing",
+        candidate_summary="Anthropic deploys Claude 3.5 Sonnet with new API availability and benchmark results.",
+        candidate_url="https://theverge.com/news/claude-3-5-pricing",
+        candidate_source="The Verge",
+        parent_entry=orig_entry
+    )
+    assert has_change_fact is True
+    assert "new event action" in exp_fact
+
+def test_truncate_with_preserved_link():
+    from src.curator import _truncate_with_preserved_link
+    url = "https://example.com/very/long/path/to/story"
+    text = "This is a detailed lead sentence explaining something important. " * 5
+    result = _truncate_with_preserved_link(text, url, limit=100)
+    assert url in result
+    assert len(result) <= 100
+    assert result.endswith(url)

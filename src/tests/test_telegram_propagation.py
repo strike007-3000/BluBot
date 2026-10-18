@@ -25,7 +25,9 @@ async def test_telegram_approval_image_url_propagation_changed(monkeypatch, mock
     # Mock top-level functions in bot.py to isolate Telegram approval logic
     mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
     mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=None)
-    
+    mocker.patch("bot.load_seen_articles", return_value={"pending_stories": [], "published_posts": []})
+    mocker.patch("bot.save_seen_articles", return_value=(True, {"pending_stories": [], "published_posts": []}))
+
     from src.models import Article
     curation_mock = CurationResult(top_articles=[Article(title="Lead", link="https://example.com", summary="", published="", source="")], seen_links=[], recent_topics=[])
     mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation_mock)
@@ -94,7 +96,9 @@ async def test_telegram_approval_image_url_propagation_unchanged(monkeypatch, mo
 
     mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
     mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=None)
-    
+    mocker.patch("bot.load_seen_articles", return_value={"pending_stories": [], "published_posts": []})
+    mocker.patch("bot.save_seen_articles", return_value=(True, {"pending_stories": [], "published_posts": []}))
+
     from src.models import Article
     curation_mock = CurationResult(top_articles=[Article(title="Lead", link="https://example.com", summary="", published="", source="")], seen_links=[], recent_topics=[])
     mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation_mock)
