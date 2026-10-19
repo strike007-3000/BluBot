@@ -303,6 +303,33 @@ def test_atomic_reservation_rejects_key_claimed_after_stale_load(mocker, tmp_pat
     assert ok is False
     assert current["revision"] == 2
     assert current["pending_stories"] == [claimed]
+    assert current["_reservation_conflict"] is True
+
+
+def test_atomic_reservation_merges_different_concurrent_claims(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    first = {"url": "https://example.com/one", "idempotency_key": "original:one"}
+    second = {"url": "https://example.com/two", "idempotency_key": "original:two"}
+    src.utils.save_json_state(test_file, {"revision": 2, "pending_stories": [first]})
+
+    ok, merged = save_seen_articles(
+        {"revision": 1, "pending_stories": [second]},
+        is_reservation=True,
+        reservation_key=second["idempotency_key"],
+    )
+
+    assert ok is True
+    assert {entry["idempotency_key"] for entry in merged["pending_stories"]} == {
+        "original:one", "original:two"
+    }
 
 def test_dry_run_makes_no_state_writes(mocker):
     """Verify that dry-run returns True immediately without making Gist or local disk writes."""

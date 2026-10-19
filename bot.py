@@ -753,8 +753,7 @@ async def reserve_pending_stage(
         reservation_key=idempotency_key,
     )
     if not res_ok:
-        existing = updated_state.get("pending_stories", []) + updated_state.get("published_posts", [])
-        if any(entry.get("idempotency_key") == idempotency_key for entry in existing if isinstance(entry, dict)):
+        if updated_state.get("_reservation_conflict"):
             SafeLogger.warn(f"Duplicate reservation won concurrent claim ({idempotency_key}). Skipping duplicate broadcast.")
             return None, matched_article
         SafeLogger.error("CRITICAL: Authoritative pending reservation failed on configured state storage. Aborting publication.")

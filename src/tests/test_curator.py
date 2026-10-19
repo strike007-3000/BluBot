@@ -218,6 +218,11 @@ def test_headline_normalization():
     _, count_versions = normalize_headline("Service reaches 100 customers")
     assert count_versions == set()
 
+    _, ios_18 = normalize_headline("Apple releases iOS 18 security update")
+    _, ios_19 = normalize_headline("Apple releases iOS 19 security update")
+    assert ios_18 == {"18"}
+    assert ios_19 == {"19"}
+
 def test_title_similarity_matching():
     # Same announcement with different titles
     t1, v1 = normalize_headline("Meta Unveils Llama 4 Open Model")
@@ -1430,3 +1435,23 @@ def test_truncate_with_preserved_link():
     assert unfit_url not in unfit_result
     assert not unfit_result.endswith(unfit_url[:50])
     assert len(unfit_result) <= 50
+
+
+def test_event_verb_inflections_are_not_meaningful_changes():
+    from src.curator import detect_meaningful_change
+
+    changed, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5",
+        candidate_summary="OpenAI introduced GPT-5 to developers today.",
+        candidate_url="https://example.net/gpt-5",
+        candidate_source="Example",
+        parent_entry={
+            "title": "OpenAI Announces GPT-5",
+            "summary": "OpenAI introduced GPT-5 to developers today.",
+            "url": "https://example.com/gpt-5",
+            "source": "Example",
+        },
+    )
+
+    assert changed is False
+    assert "no identifiable new fact" in explanation

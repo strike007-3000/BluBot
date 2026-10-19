@@ -633,3 +633,29 @@ def test_archive_rejects_unsafe_platform_urls_and_reveals_timeline_targets():
     assert "targetCard.classList.remove('hidden')" in html_out
 
 
+def test_archive_derives_legacy_parent_fingerprint_for_timeline():
+    from src.utils import compute_story_fingerprint
+
+    legacy_title = "Legacy Model Release"
+    entries = [
+        {
+            "url": "https://example.com/original",
+            "title": legacy_title,
+            "published_at": "2026-10-17T10:00:00Z",
+        },
+        {
+            "url": "https://example.com/update",
+            "title": "Legacy Model Release Expands",
+            "published_at": "2026-10-18T10:00:00Z",
+            "entry_kind": "update",
+            "parent_story_fingerprint": compute_story_fingerprint(legacy_title),
+            "update_number": 1,
+        },
+    ]
+
+    html_out = build_html(entries)
+
+    assert "Update to:" in html_out
+    assert "Story timeline:" in html_out
+
+

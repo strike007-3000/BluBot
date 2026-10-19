@@ -745,29 +745,47 @@ def save_seen_articles(
         return True, data
 
     state = sanitize_and_migrate_state(data)
-    state["revision"] += 1
-    state["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     with FileLock(SEEN_FILE_PATH):
-        if is_reservation and reservation_key:
-            current_states = []
-            if settings.gist_id and settings.gist_token:
-                gist_raw = _load_gist_state("seen_articles.json")
-                if isinstance(gist_raw, dict):
-                    current_states.append(sanitize_and_migrate_state(gist_raw))
-            if os.path.exists(SEEN_FILE_PATH):
-                try:
-                    local_raw = load_json_state(SEEN_FILE_PATH)
-                    if isinstance(local_raw, dict):
-                        current_states.append(sanitize_and_migrate_state(local_raw))
-                except Exception as exc:
-                    SafeLogger.warn(f"Could not re-read reservation state: {exc}")
+        current_states = []
+        if settings.gist_id and settings.gist_token:
+            gist_raw = _load_gist_state("seen_articles.json")
+            if isinstance(gist_raw, dict):
+                current_states.append(sanitize_and_migrate_state(gist_raw))
+        if os.path.exists(SEEN_FILE_PATH):
+            try:
+                local_raw = load_json_state(SEEN_FILE_PATH)
+                if isinstance(local_raw, dict):
+                    current_states.append(sanitize_and_migrate_state(local_raw))
+            except Exception as exc:
+                SafeLogger.warn(f"Could not re-read persistence state: {exc}")
 
+        if is_reservation and reservation_key:
             for current in current_states:
                 existing = current.get("pending_stories", []) + current.get("published_posts", [])
                 if any(entry.get("idempotency_key") == reservation_key for entry in existing if isinstance(entry, dict)):
                     SafeLogger.warn(f"Atomic reservation rejected duplicate key: {reservation_key}")
-                    return False, current
+                    conflict = dict(current)
+                    conflict["_reservation_conflict"] = True
+                    return False, conflict
+
+        if current_states:
+            current = current_states[0]
+            for other in current_states[1:]:
+                current = _merge_publication_states(current, other)
+            state = _merge_publication_states(state, current)
+
+            if not is_reservation:
+                published = state.get("published_posts", [])
+                settled_keys = {p.get("idempotency_key") for p in published if isinstance(p, dict) and p.get("idempotency_key")}
+                settled_urls = {p.get("url") for p in published if isinstance(p, dict) and p.get("url")}
+                state["pending_stories"] = [
+                    pending for pending in state.get("pending_stories", [])
+                    if pending.get("idempotency_key") not in settled_keys and pending.get("url") not in settled_urls
+                ]
+
+        state["revision"] = max([state.get("revision", 1)] + [current.get("revision", 1) for current in current_states]) + 1
+        state["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         gist_success = True
         if settings.gist_id and settings.gist_token:

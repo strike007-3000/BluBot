@@ -21,7 +21,7 @@ if BASE_DIR not in sys.path:
 
 from src.logger import SafeLogger
 from src.settings import settings
-from src.utils import _is_public_ip, _load_gist_state_with_status, sanitize_and_migrate_state
+from src.utils import _is_public_ip, _load_gist_state_with_status, compute_story_fingerprint, sanitize_and_migrate_state
 
 ARCHIVE_CAP_NOTICE = "Archive displays up to the last 500 published stories from the durable ledger."
 FEED_MAX_ITEMS = 50
@@ -462,7 +462,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     updates_by_parent_fp = {}
     for entry in sorted_entries:
         kind = entry.get("entry_kind", "original")
-        fp = entry.get("story_fingerprint")
+        fp = entry.get("story_fingerprint") or compute_story_fingerprint(entry.get("title", ""))
         p_fp = entry.get("parent_story_fingerprint")
         if kind == "original" and fp:
             originals_by_fp[fp] = entry
@@ -577,7 +577,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
               <span class="timeline-title">Update to:</span> <a href="#story-{orig_guid}">{orig_title_esc}</a>
             </div>"""
         elif not is_update:
-            fp = e.get("story_fingerprint")
+            fp = e.get("story_fingerprint") or compute_story_fingerprint(e.get("title", ""))
             child_updates = updates_by_parent_fp.get(fp, []) if fp else []
             if child_updates:
                 up_links = []

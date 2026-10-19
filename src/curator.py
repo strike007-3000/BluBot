@@ -546,7 +546,7 @@ _VERSION_RE = re.compile(
     re.IGNORECASE,
 )
 _NAMED_VERSION_RE = re.compile(
-    r'\b(?:gpt|claude|llama|large|gemini|mistral|qwen|phi|deepseek|mixtral)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\b',
+    r'\b(?:gpt|claude|llama|large|gemini|mistral|qwen|phi|deepseek|mixtral|ios|macos|android|windows|ubuntu|python|node(?:\.js)?|java|react|next(?:\.js)?|chrome|firefox|safari|cuda|pytorch|tensorflow)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\b',
     re.IGNORECASE,
 )
 
@@ -588,22 +588,26 @@ def calculate_title_similarity(tokens1: set, versions1: set, tokens2: set, versi
     return jaccard >= 0.25 and uncommon_matches >= 2
 
 
-_EVENT_VERBS = {
-    "launches", "launched", "launching",
-    "acquires", "acquired", "acquiring",
-    "releases", "released", "releasing",
-    "recalls", "recalled", "recalling",
-    "updates", "updated", "updating",
-    "deploys", "deployed", "deploying",
-    "announces", "announced", "announcing",
-    "open-sources", "open-sourced", "opensources",
-    "patches", "patched", "patching",
-    "unveils", "unveiled", "unveiling",
-    "deprecates", "deprecated", "deprecating",
-    "halts", "halted", "halting",
-    "cancels", "cancelled", "cancelling",
-    "rolls", "expands", "expanded", "expanding",
-    "fixes", "fixed", "fixing"
+_EVENT_VERB_ROOTS = {
+    form: root
+    for root, forms in {
+        "launch": ("launches", "launched", "launching"),
+        "acquire": ("acquires", "acquired", "acquiring"),
+        "release": ("releases", "released", "releasing"),
+        "recall": ("recalls", "recalled", "recalling"),
+        "update": ("updates", "updated", "updating"),
+        "deploy": ("deploys", "deployed", "deploying"),
+        "announce": ("announces", "announced", "announcing"),
+        "open-source": ("open-sources", "open-sourced", "opensources"),
+        "patch": ("patches", "patched", "patching"),
+        "unveil": ("unveils", "unveiled", "unveiling"),
+        "deprecate": ("deprecates", "deprecated", "deprecating"),
+        "halt": ("halts", "halted", "halting"),
+        "cancel": ("cancels", "cancelled", "cancelling"),
+        "expand": ("expands", "expanded", "expanding"),
+        "fix": ("fixes", "fixed", "fixing"),
+    }.items()
+    for form in forms
 }
 
 def _truncate_with_preserved_link(text: str, link: str, limit: int) -> str:
@@ -680,7 +684,9 @@ def detect_meaningful_change(
     # 2. Event verbs indicating status changes or actions
     c_words = set(re.findall(r'\b[a-zA-Z\-]+\b', c_title_clean.lower()))
     p_words = set(re.findall(r'\b[a-zA-Z\-]+\b', p_title_clean.lower()))
-    new_event_verbs = (c_words - p_words) & _EVENT_VERBS
+    c_events = {_EVENT_VERB_ROOTS[word] for word in c_words if word in _EVENT_VERB_ROOTS}
+    p_events = {_EVENT_VERB_ROOTS[word] for word in p_words if word in _EVENT_VERB_ROOTS}
+    new_event_verbs = c_events - p_events
     if new_event_verbs:
         reasons.append(f"new event action: {', '.join(sorted(new_event_verbs))}")
 

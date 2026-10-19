@@ -644,6 +644,34 @@ async def test_reserve_pending_stage_duplicate_prevention(mocker):
 
 
 @pytest.mark.asyncio
+async def test_reservation_persistence_failure_is_not_treated_as_duplicate(mocker):
+    from bot import reserve_pending_stage
+    from src.models import Article, CurationResult, SynthesisResult
+
+    article = Article(
+        title="Persistence Failure",
+        link="https://example.com/failure",
+        summary="summary",
+        published="2026-10-18T10:00:00Z",
+        source="TestSource",
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(
+        content="Content",
+        lead_link=article.link,
+        topic="AI",
+    )
+    mocker.patch("bot.load_seen_articles", return_value={"revision": 1, "pending_stories": []})
+    mocker.patch("bot.save_seen_articles", side_effect=lambda data, **_: (False, data))
+    mocker.patch("sys.exit", side_effect=SystemExit(1))
+
+    with pytest.raises(SystemExit) as exc_info:
+        await reserve_pending_stage(curation, synthesis)
+
+    assert exc_info.value.code == 1
+
+
+@pytest.mark.asyncio
 async def test_editorial_decision_legacy_parent_derivation(mocker):
     from src.models import Article, CurationResult, MatchDecision, EditorialDecision
 
