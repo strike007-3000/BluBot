@@ -215,6 +215,9 @@ def test_headline_normalization():
     assert ver_hyphen == {"5"}
     assert "gpt-5" in tokens_hyphen or "gpt" in tokens_hyphen
 
+    _, count_versions = normalize_headline("Service reaches 100 customers")
+    assert count_versions == set()
+
 def test_title_similarity_matching():
     # Same announcement with different titles
     t1, v1 = normalize_headline("Meta Unveils Llama 4 Open Model")
@@ -1421,3 +1424,9 @@ def test_truncate_with_preserved_link():
     assert url in result
     assert len(result) <= 100
     assert result.endswith(url)
+
+    unfit_url = "https://example.com/" + ("x" * 100)
+    unfit_result = _truncate_with_preserved_link("Update details", unfit_url, limit=50)
+    assert unfit_url not in unfit_result
+    assert not unfit_result.endswith(unfit_url[:50])
+    assert len(unfit_result) <= 50

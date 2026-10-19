@@ -729,7 +729,11 @@ def load_seen_articles() -> dict:
 
         return sanitize_and_migrate_state({})
 
-def save_seen_articles(data: dict, is_reservation: bool = False) -> Tuple[bool, dict]:
+def save_seen_articles(
+    data: dict,
+    is_reservation: bool = False,
+    reservation_key: Optional[str] = None,
+) -> Tuple[bool, dict]:
     """
     Persists state with revision incrementing and updated_at assignment.
     Returns (success_flag, updated_state).
@@ -745,6 +749,26 @@ def save_seen_articles(data: dict, is_reservation: bool = False) -> Tuple[bool, 
     state["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     with FileLock(SEEN_FILE_PATH):
+        if is_reservation and reservation_key:
+            current_states = []
+            if settings.gist_id and settings.gist_token:
+                gist_raw = _load_gist_state("seen_articles.json")
+                if isinstance(gist_raw, dict):
+                    current_states.append(sanitize_and_migrate_state(gist_raw))
+            if os.path.exists(SEEN_FILE_PATH):
+                try:
+                    local_raw = load_json_state(SEEN_FILE_PATH)
+                    if isinstance(local_raw, dict):
+                        current_states.append(sanitize_and_migrate_state(local_raw))
+                except Exception as exc:
+                    SafeLogger.warn(f"Could not re-read reservation state: {exc}")
+
+            for current in current_states:
+                existing = current.get("pending_stories", []) + current.get("published_posts", [])
+                if any(entry.get("idempotency_key") == reservation_key for entry in existing if isinstance(entry, dict)):
+                    SafeLogger.warn(f"Atomic reservation rejected duplicate key: {reservation_key}")
+                    return False, current
+
         gist_success = True
         if settings.gist_id and settings.gist_token:
             # A successful upload is authoritative, so clear the recovery marker

@@ -273,6 +273,37 @@ def test_gist_success_local_write_failure_returns_false(mocker, tmp_path):
     assert ok is False
     assert state["revision"] == 6
 
+
+def test_atomic_reservation_rejects_key_claimed_after_stale_load(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    claimed = {"idempotency_key": "update:parent:https://example.com/new"}
+    src.utils.save_json_state(test_file, {
+        "revision": 2,
+        "pending_stories": [claimed],
+    })
+    stale_state = {
+        "revision": 1,
+        "pending_stories": [claimed],
+    }
+
+    ok, current = save_seen_articles(
+        stale_state,
+        is_reservation=True,
+        reservation_key=claimed["idempotency_key"],
+    )
+
+    assert ok is False
+    assert current["revision"] == 2
+    assert current["pending_stories"] == [claimed]
+
 def test_dry_run_makes_no_state_writes(mocker):
     """Verify that dry-run returns True immediately without making Gist or local disk writes."""
     import src.utils

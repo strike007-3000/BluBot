@@ -541,7 +541,14 @@ _STOPWORDS = {
 }
 
 _PUBLISHER_SUFFIX_RE = re.compile(r'\s+[\-\|\:\•]\s+([A-Za-z0-9\s]+)$')
-_VERSION_RE = re.compile(r'\b(v?\d+(?:\.\d+)*[a-z]?)\b', re.IGNORECASE)
+_VERSION_RE = re.compile(
+    r'(?:\bv\d+(?:\.\d+)*[a-z]?\b|(?<=[A-Za-z]-)\d+(?:\.\d+)*[a-z]?\b|(?<![$\d])\b\d+\.\d+(?:\.\d+)*[a-z]?\b)',
+    re.IGNORECASE,
+)
+_NAMED_VERSION_RE = re.compile(
+    r'\b(?:gpt|claude|llama|large|gemini|mistral|qwen|phi|deepseek|mixtral)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\b',
+    re.IGNORECASE,
+)
 
 def normalize_headline(title: str) -> Tuple[set, set]:
     """Normalizes a headline into token sets and extracted version numbers."""
@@ -553,7 +560,8 @@ def normalize_headline(title: str) -> Tuple[set, set]:
     if match:
         cleaned = cleaned[:match.start()].strip()
 
-    versions = set(m.lower() for m in _VERSION_RE.findall(cleaned))
+    versions = {m.lower().lstrip("v") for m in _VERSION_RE.findall(cleaned)}
+    versions.update(m.lower() for m in _NAMED_VERSION_RE.findall(cleaned))
     words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
     tokens = {w for w in words if w not in _STOPWORDS and len(w) > 1}
     return tokens, versions
@@ -600,21 +608,16 @@ _EVENT_VERBS = {
 
 def _truncate_with_preserved_link(text: str, link: str, limit: int) -> str:
     """Safely truncates text so the total length including link does not exceed limit."""
-    from src.utils import smart_truncate
     link_clean = (link or "").strip()
     if not link_clean:
+        from src.utils import smart_truncate
         return smart_truncate(text, limit)
     text_clean = (text or "").strip()
     if text_clean.endswith(link_clean):
         prose = text_clean[:-len(link_clean)].strip()
     else:
         prose = text_clean
-
-    available_prose_chars = limit - len(link_clean) - 1
-    if available_prose_chars <= 10:
-        return f"{link_clean[:limit]}"
-    truncated_prose = smart_truncate(prose, available_prose_chars)
-    return f"{truncated_prose} {link_clean}".strip()
+    return _repair_text_url_safe(f"{prose} {link_clean}".strip(), limit, "story update")
 
 _GENERIC_HEADLINES = {
     "weekly update", "ai weekly", "daily digest", "tech news",

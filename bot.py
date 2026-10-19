@@ -746,8 +746,17 @@ async def reserve_pending_stage(
     }
     state.setdefault("pending_stories", []).append(pending_entry)
 
-    res_ok, updated_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=True)
+    res_ok, updated_state = await asyncio.to_thread(
+        save_seen_articles,
+        state,
+        is_reservation=True,
+        reservation_key=idempotency_key,
+    )
     if not res_ok:
+        existing = updated_state.get("pending_stories", []) + updated_state.get("published_posts", [])
+        if any(entry.get("idempotency_key") == idempotency_key for entry in existing if isinstance(entry, dict)):
+            SafeLogger.warn(f"Duplicate reservation won concurrent claim ({idempotency_key}). Skipping duplicate broadcast.")
+            return None, matched_article
         SafeLogger.error("CRITICAL: Authoritative pending reservation failed on configured state storage. Aborting publication.")
         sys.exit(1)
 
