@@ -608,16 +608,18 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         # Mastodon & Threads thread root links
         thread_roots = e.get("thread_roots") if isinstance(e.get("thread_roots"), dict) else {}
         masto_info = thread_roots.get("mastodon") if isinstance(thread_roots.get("mastodon"), dict) else (e.get("posts") or {}).get("mastodon", {})
-        if isinstance(masto_info, dict) and masto_info.get("url"):
+        masto_url = masto_info.get("url") if isinstance(masto_info, dict) else None
+        if is_valid_public_http_url(masto_url):
             actions.append(
-                f'<a href="{html.escape(masto_info["url"])}" target="_blank" rel="noopener noreferrer" class="action-link">'
+                f'<a href="{html.escape(masto_url)}" target="_blank" rel="noopener noreferrer" class="action-link">'
                 f'View Mastodon <span class="sr-only">thread for {title}</span>{render_svg_icon("external")}</a>'
             )
 
         threads_info = thread_roots.get("threads") if isinstance(thread_roots.get("threads"), dict) else (e.get("posts") or {}).get("threads", {})
-        if isinstance(threads_info, dict) and threads_info.get("url"):
+        threads_url = threads_info.get("url") if isinstance(threads_info, dict) else None
+        if is_valid_public_http_url(threads_url):
             actions.append(
-                f'<a href="{html.escape(threads_info["url"])}" target="_blank" rel="noopener noreferrer" class="action-link">'
+                f'<a href="{html.escape(threads_url)}" target="_blank" rel="noopener noreferrer" class="action-link">'
                 f'View Threads <span class="sr-only">thread for {title}</span>{render_svg_icon("external")}</a>'
             )
 

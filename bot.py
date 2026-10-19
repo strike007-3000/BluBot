@@ -650,22 +650,20 @@ async def broadcast_stage(
     for (name, _), res in zip(tasks, results):
         if isinstance(res, Exception):
             report.append(BroadcastResult(platform=name, success=False, error=str(res)))
-        elif res is False:
+        elif not res:
             report.append(BroadcastResult(platform=name, success=False, error="Platform skipped or failed internally"))
         else:
-            post_id = getattr(res, "uri", res)
-            post_id_str = str(post_id) if post_id else None
             post_url = None
+            if name in {"Mastodon", "Threads"} and isinstance(res, tuple):
+                post_id, post_url = res
+            else:
+                post_id = getattr(res, "uri", res)
+            post_id_str = str(post_id) if post_id else None
             if post_id_str:
                 if name == "Bluesky" and post_id_str.startswith("at://"):
                     parts = post_id_str[5:].split("/")
                     if len(parts) >= 3 and parts[1] == "app.bsky.feed.post":
                         post_url = f"https://bsky.app/profile/{parts[0]}/post/{parts[2]}"
-                elif name == "Mastodon" and settings.mastodon_base_url:
-                    base = settings.mastodon_base_url.rstrip("/")
-                    post_url = f"{base}/@{settings.bsky_handle or 'bot'}/{post_id_str}"
-                elif name == "Threads":
-                    post_url = f"https://threads.net/post/{post_id_str}"
 
             report.append(BroadcastResult(
                 platform=name, success=True,

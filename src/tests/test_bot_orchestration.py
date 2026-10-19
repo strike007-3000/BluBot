@@ -321,6 +321,43 @@ async def test_broadcaster_routes_three_distinct_platform_payloads(mocker):
     mock_post_threads.assert_called_once()
     assert mock_post_threads.call_args[0][1] == "Distinct Threads Narrative"
 
+
+@pytest.mark.asyncio
+async def test_broadcast_stage_preserves_platform_permalinks(mocker):
+    import bot
+    import httpx
+    from src.models import PlatformDrafts, SynthesisResult
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "bsky_handle", None)
+    object.__setattr__(settings, "mastodon_token", "m_tok")
+    object.__setattr__(settings, "mastodon_base_url", "https://mastodon.example")
+    object.__setattr__(settings, "threads_token", "t_tok")
+    object.__setattr__(settings, "threads_user_id", "t_user")
+    mocker.patch(
+        "bot.post_to_mastodon",
+        new_callable=AsyncMock,
+        return_value=("101", "https://mastodon.example/@actual/101"),
+    )
+    mocker.patch(
+        "bot.post_to_threads",
+        new_callable=AsyncMock,
+        return_value=("202", "https://www.threads.net/@actual/post/shortcode"),
+    )
+    synthesis = SynthesisResult(
+        content="Post",
+        lead_link="https://example.com/story",
+        topic="AI",
+        drafts=PlatformDrafts.from_single("Post"),
+    )
+
+    async with httpx.AsyncClient() as client:
+        results, _ = await bot.broadcast_stage(client, synthesis)
+
+    by_platform = {result.platform: result for result in results}
+    assert by_platform["Mastodon"].post_url == "https://mastodon.example/@actual/101"
+    assert by_platform["Threads"].post_url == "https://www.threads.net/@actual/post/shortcode"
+
 @pytest.mark.asyncio
 async def test_full_multiplatform_orchestration_flow(mocker):
     """Verify end-to-end multi-platform orchestration from curation through synthesis, approval, reservation, and broadcast."""

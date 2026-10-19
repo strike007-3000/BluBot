@@ -152,6 +152,42 @@ async def test_fetch_news_refills_after_semantic_history_filter(mock_httpx_clien
     assert titles[-1] in [article["title"] for article in articles]
     assert articles[0]["source_id"] == "standard_feed"
 
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("match_decision,expected_count", [
+    ("POSSIBLE_MATCH", 0),
+    ("CONFIDENT_UPDATE", 1),
+])
+async def test_fetch_news_only_preserves_confirmed_updates(
+    mock_httpx_client, mocker, match_decision, expected_count
+):
+    from src.settings import settings
+
+    item = {
+        "title": "OpenAI Releases GPT-5!",
+        "link": "https://example.com/new-coverage",
+        "summary": "Coverage of the same event.",
+        "source": "Source",
+        "source_id": "standard_feed",
+        "published": "2026-10-18T00:00:00+00:00",
+        "score": 100,
+    }
+    object.__setattr__(settings, "story_update_detection_enabled", True)
+    mocker.patch("src.curator.fetch_single_feed", return_value=("f1", [item], True, None))
+    mocker.patch("src.utils.is_story_semantic_duplicate", return_value=True)
+    mocker.patch(
+        "src.curator.match_story_continuity",
+        return_value=(match_decision, {"title": "OpenAI Releases GPT-5"}, "test"),
+    )
+
+    articles, _ = await fetch_news(
+        mock_httpx_client,
+        feed_list=["f1"],
+        story_state={"published_posts": [{"title": "OpenAI Releases GPT-5"}]},
+    )
+
+    assert len(articles) == expected_count
+
 @pytest.mark.asyncio
 async def test_fetch_news_deduplicates_canonical_urls(mock_httpx_client, mocker):
     items = [

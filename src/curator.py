@@ -982,7 +982,7 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
             if is_dup:
                 if settings.story_update_detection_enabled and pub_ledger:
                     match_type, _, _ = match_story_continuity(e, pub_ledger, now_utc=now_utc)
-                    if match_type in (MatchDecision.CONFIDENT_UPDATE.value, MatchDecision.POSSIBLE_MATCH.value):
+                    if match_type == MatchDecision.CONFIDENT_UPDATE.value:
                         filtered_entries.append(e)
                         continue
                 continue

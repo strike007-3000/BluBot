@@ -209,7 +209,7 @@ async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None, re
             SafeLogger.warn(f"Mastodon media failed: {e}")
 
     prev_id = reply_to_id
-    root_post_id = None
+    root_status = None
 
     @retry_with_backoff
     async def _send_mastodon_status(status_text, chunk_media_ids, in_reply_to):
@@ -237,10 +237,10 @@ async def post_to_mastodon(text, media=None, max_parts: Optional[int] = None, re
         )
         prev_id = status['id']
         if i == 0:
-            root_post_id = prev_id
+            root_status = status
 
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Mastodon!")
-    return root_post_id
+    return (root_status['id'], root_status.get('url')) if root_status else None
 
 async def post_to_threads(client, text, media=None, max_parts: Optional[int] = None, reply_to_id: Optional[str] = None):
     """Posts to Threads with Conditional Multi-Post Threading (The Weaver). Retries per thread part."""
@@ -340,7 +340,19 @@ async def post_to_threads(client, text, media=None, max_parts: Optional[int] = N
         chain_parent_id = part_post_id
 
     SafeLogger.info(f"Successfully posted {len(chunks)}-part thread to Threads!")
-    return root_post_id
+    permalink = None
+    if root_post_id:
+        try:
+            post_res = await client.get(
+                f"https://graph.threads.net/v1.0/{root_post_id}",
+                params={"fields": "id,permalink", "access_token": settings.threads_token},
+                timeout=20,
+            )
+            post_res.raise_for_status()
+            permalink = post_res.json().get("permalink")
+        except Exception as exc:
+            SafeLogger.warn(f"Threads permalink lookup failed: {type(exc).__name__}")
+    return (root_post_id, permalink) if root_post_id else None
 
 async def fetch_bluesky_mentions(bsky_client):
     """Fetches recent mentions and replies from Bluesky within 24 hours."""

@@ -614,3 +614,22 @@ def test_archive_timeline_and_update_badges():
     assert "Legacy Story With Malformed Metadata" in html_out
 
 
+def test_archive_rejects_unsafe_platform_urls_and_reveals_timeline_targets():
+    entries = [{
+        "url": "https://example.com/story",
+        "title": "Unsafe roots",
+        "published_at": "2026-10-18T10:00:00Z",
+        "thread_roots": {
+            "mastodon": {"url": "javascript:alert(1)"},
+            "threads": {"url": 123},
+        },
+    }]
+
+    html_out = build_html(entries)
+
+    assert "javascript:alert(1)" not in html_out
+    assert "function navigateToStory(hash)" in html_out
+    assert "filterType.value = 'all'" in html_out
+    assert "targetCard.classList.remove('hidden')" in html_out
+
+
