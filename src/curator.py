@@ -801,7 +801,7 @@ def match_story_continuity(
     - rejects conflicting version numbers;
     - rejects the same canonical URL;
     - requires a new source or meaningful new information;
-    - ignores previous update entries as possible parents;
+    - compares against previous updates for novelty while returning the original parent;
     - always selects the original story as the parent;
     - returns (decision, parent_entry, explanation).
     Decisions: NO_MATCH, POSSIBLE_MATCH, CONFIDENT_UPDATE.
@@ -821,6 +821,15 @@ def match_story_continuity(
 
     c_norm_url = normalize_url(c_link)
     c_tokens, c_versions = normalize_headline(c_title)
+    candidate_pub_dt = None
+    candidate_pub_at = candidate_article.get("published") or candidate_article.get("published_at")
+    if candidate_pub_at:
+        try:
+            candidate_pub_dt = datetime.fromisoformat(str(candidate_pub_at).replace("Z", "+00:00"))
+            if candidate_pub_dt.tzinfo is None:
+                candidate_pub_dt = candidate_pub_dt.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            candidate_pub_dt = None
 
     best_match_entry = None
     best_similarity_score = 0.0
@@ -838,6 +847,36 @@ def match_story_continuity(
             if fp:
                 fp_to_original[fp] = entry
 
+    # A candidate repeating an already-published update is not novel even when
+    # it still differs from the older original story.
+    prior_updates = sorted(
+        (entry for entry in published_entries if isinstance(entry, dict) and entry.get("entry_kind") == "update"),
+        key=lambda entry: str(entry.get("published_at", "")),
+        reverse=True,
+    )
+    for entry in prior_updates:
+        try:
+            update_dt = datetime.fromisoformat(str(entry.get("published_at", "")).replace("Z", "+00:00"))
+            if update_dt.tzinfo is None:
+                update_dt = update_dt.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            continue
+        if update_dt < cutoff_72h or (candidate_pub_dt and candidate_pub_dt <= update_dt):
+            continue
+        p_tokens, p_versions = normalize_headline(entry.get("title", ""))
+        if not calculate_title_similarity(c_tokens, c_versions, p_tokens, p_versions):
+            continue
+        has_change, explanation = detect_meaningful_change(
+            candidate_title=c_title,
+            candidate_summary=c_summary,
+            candidate_url=c_link,
+            candidate_source=c_source,
+            parent_entry=entry,
+        )
+        if not has_change:
+            root = fp_to_original.get(entry.get("parent_story_fingerprint"))
+            return MatchDecision.POSSIBLE_MATCH.value, root or entry, f"possible match: {explanation}"
+
     for entry in published_entries:
         if not isinstance(entry, dict):
             continue
@@ -854,6 +893,8 @@ def match_story_continuity(
             if pub_dt.tzinfo is None:
                 pub_dt = pub_dt.replace(tzinfo=timezone.utc)
             if pub_dt < cutoff_72h:
+                continue
+            if candidate_pub_dt and candidate_pub_dt <= pub_dt:
                 continue
         except Exception:
             continue

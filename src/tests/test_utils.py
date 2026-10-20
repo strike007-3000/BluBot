@@ -332,6 +332,44 @@ def test_atomic_reservation_merges_different_concurrent_claims(mocker, tmp_path)
     }
 
 
+def test_atomic_reservation_preserves_fresh_scalar_state(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    src.utils.save_json_state(test_file, {
+        "revision": 3,
+        "total_posts_curated": 8,
+        "recent_categories": ["fresh"],
+        "recent_styles": ["direct"],
+        "recent_topics": ["Fresh Topic"],
+        "last_dialect": "witty",
+    })
+    claim = {"url": "https://example.com/new", "idempotency_key": "original:new"}
+
+    ok, merged = save_seen_articles({
+        "revision": 2,
+        "pending_stories": [claim],
+        "total_posts_curated": 7,
+        "recent_categories": ["stale"],
+        "recent_styles": ["formal"],
+        "recent_topics": ["Stale Topic"],
+        "last_dialect": "formal",
+    }, is_reservation=True, reservation_key=claim["idempotency_key"])
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 8
+    assert merged["recent_categories"] == ["fresh"]
+    assert merged["recent_styles"] == ["direct"]
+    assert merged["recent_topics"] == ["Fresh Topic"]
+    assert merged["last_dialect"] == "witty"
+
+
 def test_atomic_reservation_allocates_update_number_and_caps_links(mocker, tmp_path):
     import src.utils
     from src.settings import settings

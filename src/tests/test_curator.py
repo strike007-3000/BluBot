@@ -1399,6 +1399,26 @@ def test_continuity_matcher_version_conflict_and_change_detection():
     assert matched["entry_kind"] == "original"
     assert matched["url"] == orig_entry["url"]
 
+    # Repeated coverage of the already-published update is not another update.
+    repeated_update = {
+        "title": "Mistral Large 2 Benchmarks Beat Competitors",
+        "link": "https://example.net/repeated-benchmarks",
+        "source": "Other",
+        "summary": "Mistral Large 2 benchmarks beat competitors.",
+        "published": "2026-10-18T09:00:00Z",
+    }
+    decision, matched, exp = match_story_continuity(repeated_update, published, now_utc=now)
+    assert decision == MatchDecision.POSSIBLE_MATCH.value
+    assert matched["url"] == orig_entry["url"]
+
+    # Delayed older coverage cannot become an update to a newer parent.
+    predating_candidate = {
+        **cand_valid_update,
+        "published": "2026-10-18T05:00:00Z",
+    }
+    decision, matched, exp = match_story_continuity(predating_candidate, [orig_entry], now_utc=now)
+    assert decision == MatchDecision.NO_MATCH.value
+
 def test_meaningful_change_requires_factual_development():
     from src.curator import detect_meaningful_change
     orig_entry = {

@@ -884,6 +884,7 @@ async def settle_persistence_stage(
                 "category": published_category,
                 "style": synthesis.writing_style,
                 "topic": synthesis.topic if synthesis.topic != "General" else None,
+                "last_dialect": curation.last_dialect,
             },
         )
         if not settle_ok:

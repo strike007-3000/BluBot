@@ -779,6 +779,11 @@ def save_seen_articles(
             for other in current_states[1:]:
                 current = _merge_publication_states(current, other)
             state = _merge_publication_states(state, current)
+            for field in (
+                "total_posts_curated", "recent_categories", "recent_styles",
+                "recent_topics", "last_dialect",
+            ):
+                state[field] = current.get(field)
 
             if is_reservation and reservation_key:
                 claim = next(
@@ -814,12 +819,8 @@ def save_seen_articles(
                     if topic and topic not in topics:
                         topics = topics + [topic]
                     state["recent_topics"] = topics[-20:]
-                else:
-                    for field in (
-                        "total_posts_curated", "recent_categories", "recent_styles",
-                        "recent_topics", "last_dialect",
-                    ):
-                        state[field] = current.get(field)
+                    if "last_dialect" in settlement_delta:
+                        state["last_dialect"] = settlement_delta["last_dialect"]
                 published = state.get("published_posts", [])
                 settled_keys = {p.get("idempotency_key") for p in published if isinstance(p, dict) and p.get("idempotency_key")}
                 settled_urls = {p.get("url") for p in published if isinstance(p, dict) and p.get("url")}
