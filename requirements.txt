@@ -47,7 +47,7 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.29.0
+google-genai==2.31.0
     # via -r requirements.in
 h11==0.16.0
     # via httpcore
