@@ -721,6 +721,20 @@ def detect_meaningful_change(
             for number, unit in re.findall(quantity_pattern, text.lower())
         }
 
+    def quantity_facts(text: str) -> list:
+        """Return normalized quantities paired with their nearest subject word."""
+        facts = []
+        ignored_context = {"up", "from", "to", "in", "on", "at", "last", "this", "the"}
+        for match in re.finditer(quantity_pattern, text.lower()):
+            number, unit = match.groups()
+            following = re.findall(r'\b[a-zA-Z][a-zA-Z-]*\b', text[match.end():].lower())
+            preceding = re.findall(r'\b[a-zA-Z][a-zA-Z-]*\b', text[:match.start()].lower())
+            context = next((word for word in following if word not in ignored_context), "")
+            if not context:
+                context = next((word for word in reversed(preceding) if word not in ignored_context), "")
+            facts.append((number.replace(",", ""), "percent" if unit else "", context))
+        return facts
+
     c_numbers = quantities(c_title_clean)
     p_numbers = quantities(p_title_clean)
     changed_numbers = bool(c_numbers and p_numbers and c_numbers != p_numbers)
@@ -736,11 +750,14 @@ def detect_meaningful_change(
     if c_sum and len(c_sum) > 30 and p_sum and len(p_sum) > 30:
         c_sum_nums = quantities(c_sum)
         p_sum_nums = quantities(p_sum)
-        same_quantity_shape = (
-            len(c_sum_nums) == len(p_sum_nums)
-            and sorted(unit for _, unit in c_sum_nums) == sorted(unit for _, unit in p_sum_nums)
+        c_sum_facts = quantity_facts(c_sum)
+        p_sum_facts = quantity_facts(p_sum)
+        changed_quantity_fact = any(
+            c_value != p_value and c_unit == p_unit and c_context == p_context and bool(c_context)
+            for p_value, p_unit, p_context in p_sum_facts
+            for c_value, c_unit, c_context in c_sum_facts
         )
-        if c_sum_nums and p_sum_nums and same_quantity_shape and c_sum_nums != p_sum_nums:
+        if changed_quantity_fact:
             has_summary_diff = True
             reasons.append(f"summary factual quantity change: {sorted(p_sum_nums)} to {sorted(c_sum_nums)}")
         else:

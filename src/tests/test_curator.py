@@ -1536,6 +1536,21 @@ def test_rollout_is_a_meaningful_event_but_new_publishers_are_not():
     assert changed_quantity is True
     assert "summary factual quantity change" in explanation_quantity
 
+    changed_with_baseline, explanation_baseline = detect_meaningful_change(
+        candidate_title="Service Customer Growth Report",
+        candidate_summary="The service now has 200 customers, up from 100 last quarter.",
+        candidate_url="https://example.net/customer-growth-baseline",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Growth Report for Customers",
+            "summary": "The service now has 100 customers across its active accounts.",
+            "url": "https://example.com/customer-growth",
+            "source": "Example",
+        },
+    )
+    assert changed_with_baseline is True
+    assert "summary factual quantity change" in explanation_baseline
+
 
 
 def test_base_event_verbs_and_changed_numeric_facts_are_meaningful():
