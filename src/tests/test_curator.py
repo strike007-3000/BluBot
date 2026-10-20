@@ -1508,6 +1508,34 @@ def test_rollout_is_a_meaningful_event_but_new_publishers_are_not():
     assert paraphrased is False
     assert "no identifiable new fact" in explanation_para
 
+    background_number, explanation_background = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5 API",
+        candidate_summary="OpenAI announced GPT-5 API access. The company was founded in 2015.",
+        candidate_url="https://example.net/background",
+        candidate_source="Other",
+        parent_entry={
+            **parent,
+            "summary": "OpenAI announced GPT-5 API access for developers.",
+        },
+    )
+    assert background_number is False
+    assert "no identifiable new fact" in explanation_background
+
+    changed_quantity, explanation_quantity = detect_meaningful_change(
+        candidate_title="Service Customer Growth Report",
+        candidate_summary="The service now has 200 customers across its active accounts.",
+        candidate_url="https://example.net/customer-growth",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Growth Report for Customers",
+            "summary": "The service now has 100 customers across its active accounts.",
+            "url": "https://example.com/customer-growth",
+            "source": "Example",
+        },
+    )
+    assert changed_quantity is True
+    assert "summary factual quantity change" in explanation_quantity
+
 
 
 def test_base_event_verbs_and_changed_numeric_facts_are_meaningful():

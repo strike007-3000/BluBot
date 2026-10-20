@@ -736,7 +736,11 @@ def detect_meaningful_change(
     if c_sum and len(c_sum) > 30 and p_sum and len(p_sum) > 30:
         c_sum_nums = quantities(c_sum)
         p_sum_nums = quantities(p_sum)
-        if c_sum_nums and p_sum_nums and c_sum_nums != p_sum_nums:
+        same_quantity_shape = (
+            len(c_sum_nums) == len(p_sum_nums)
+            and sorted(unit for _, unit in c_sum_nums) == sorted(unit for _, unit in p_sum_nums)
+        )
+        if c_sum_nums and p_sum_nums and same_quantity_shape and c_sum_nums != p_sum_nums:
             has_summary_diff = True
             reasons.append(f"summary factual quantity change: {sorted(p_sum_nums)} to {sorted(c_sum_nums)}")
         else:
