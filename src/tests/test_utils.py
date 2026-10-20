@@ -395,32 +395,40 @@ def test_settlement_preserves_concurrent_counters_and_histories(mocker, tmp_path
     object.__setattr__(settings, "gist_token", None)
     first = {"url": "https://example.com/one", "published_at": "2026-10-20T10:00:00Z"}
     second = {"url": "https://example.com/two", "published_at": "2026-10-20T10:01:00Z"}
+    old_entries = [
+        {"url": f"https://example.com/old-{index}", "published_at": f"2026-10-19T{index // 60:02d}:{index % 60:02d}:00Z"}
+        for index in range(500)
+    ]
     src.utils.save_json_state(test_file, {
         "revision": 2,
-        "published_posts": [first],
+        "published_posts": old_entries[:-1] + [first],
         "total_posts_curated": 11,
-        "recent_categories": ["ai", "security"],
-        "recent_styles": ["analytical", "direct"],
+        "recent_categories": [f"saved-{index}" for index in range(9)] + ["security"],
+        "recent_styles": [f"saved-{index}" for index in range(9)] + ["direct"],
         "recent_topics": ["AI", "Security"],
     })
 
     ok, merged = save_seen_articles({
         "revision": 1,
-        "published_posts": [second],
+        "published_posts": old_entries[1:] + [second],
         "total_posts_curated": 11,
-        "recent_categories": ["ai", "products"],
-        "recent_styles": ["analytical", "conversational"],
+        "recent_categories": [f"stale-{index}" for index in range(9)] + ["products"],
+        "recent_styles": [f"stale-{index}" for index in range(9)] + ["conversational"],
         "recent_topics": ["AI", "Products"],
-    }, is_reservation=False)
+    }, is_reservation=False, settlement_delta={
+        "posts_curated": 1,
+        "category": "products",
+        "style": "conversational",
+        "topic": "Products",
+    })
 
     assert ok is True
     assert merged["total_posts_curated"] == 12
-    assert merged["recent_categories"] == ["ai", "security", "products"]
-    assert merged["recent_styles"] == ["analytical", "direct", "conversational"]
+    assert merged["recent_categories"] == [f"saved-{index}" for index in range(1, 9)] + ["security", "products"]
+    assert merged["recent_styles"] == [f"saved-{index}" for index in range(1, 9)] + ["direct", "conversational"]
     assert merged["recent_topics"] == ["AI", "Security", "Products"]
-    assert {entry["url"] for entry in merged["published_posts"]} == {
-        first["url"], second["url"]
-    }
+    assert len(merged["published_posts"]) == 500
+    assert merged["published_posts"][-1]["url"] == second["url"]
 
 def test_dry_run_makes_no_state_writes(mocker):
     """Verify that dry-run returns True immediately without making Gist or local disk writes."""

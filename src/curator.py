@@ -549,6 +549,10 @@ _NAMED_VERSION_RE = re.compile(
     r'\b(?:gpt|claude|llama|large|gemini|mistral|qwen|phi|deepseek|mixtral|ios|macos|android|windows|ubuntu|python|node(?:\.js)?|java|react|next(?:\.js)?|chrome|firefox|safari|cuda|pytorch|tensorflow)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\b',
     re.IGNORECASE,
 )
+_MODEL_VERSION_RE = re.compile(
+    r'\b[A-Za-z][A-Za-z0-9.-]*\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+models?\b',
+    re.IGNORECASE,
+)
 
 def normalize_headline(title: str) -> Tuple[set, set]:
     """Normalizes a headline into token sets and extracted version numbers."""
@@ -562,6 +566,7 @@ def normalize_headline(title: str) -> Tuple[set, set]:
 
     versions = {m.lower().lstrip("v") for m in _VERSION_RE.findall(cleaned)}
     versions.update(m.lower() for m in _NAMED_VERSION_RE.findall(cleaned))
+    versions.update(m.lower() for m in _MODEL_VERSION_RE.findall(cleaned))
     words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
     tokens = {w for w in words if w not in _STOPWORDS and len(w) > 1}
     return tokens, versions
@@ -692,12 +697,19 @@ def detect_meaningful_change(
 
     # Ordinary quantities are stripped from story fingerprints, so compare them
     # here before semantic-duplicate filtering can hide a real development.
-    c_numbers = set(re.findall(r'(?<![\w.])\d[\d,]*(?:\.\d+)?%?(?![\w.])', c_title_clean))
-    p_numbers = set(re.findall(r'(?<![\w.])\d[\d,]*(?:\.\d+)?%?(?![\w.])', p_title_clean))
+    quantity_pattern = r'(?<![\w.])(\d[\d,]*(?:\.\d+)?)(?:\s*(%|percent|percentage))?(?![\w.])'
+    def quantities(text: str) -> set:
+        return {
+            (number.replace(",", ""), "percent" if unit else "")
+            for number, unit in re.findall(quantity_pattern, text.lower())
+        }
+
+    c_numbers = quantities(c_title_clean)
+    p_numbers = quantities(p_title_clean)
     changed_numbers = bool(c_numbers and p_numbers and c_numbers != p_numbers)
     if changed_numbers:
         reasons.append(
-            f"changed numeric fact: {', '.join(sorted(p_numbers))} to {', '.join(sorted(c_numbers))}"
+            f"changed numeric fact: {sorted(p_numbers)} to {sorted(c_numbers)}"
         )
 
     # 3. Materially different article summary (informative content)

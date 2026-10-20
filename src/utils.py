@@ -504,22 +504,6 @@ def _merge_publication_states(state1: dict, state2: dict) -> dict:
 
     return merged
 
-def _merge_recent_history(caller_values: list, current_values: list, limit: int) -> list:
-    """Preserve both suffixes when concurrent runs extend the same history."""
-    common = 0
-    for caller_value, current_value in zip(caller_values, current_values):
-        if caller_value != current_value:
-            break
-        common += 1
-    return (current_values + caller_values[common:])[-limit:]
-
-def _publication_identities(state: dict) -> set:
-    return {
-        (entry.get("url"), str(entry.get("published_at", "")))
-        for entry in state.get("published_posts", [])
-        if isinstance(entry, dict) and entry.get("url")
-    }
-
 _FP_STOPWORDS = {
     "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with",
     "by", "from", "up", "about", "into", "over", "after", "is", "are", "was", "were",
@@ -749,6 +733,7 @@ def save_seen_articles(
     data: dict,
     is_reservation: bool = False,
     reservation_key: Optional[str] = None,
+    settlement_delta: Optional[dict] = None,
 ) -> Tuple[bool, dict]:
     """
     Persists state with revision incrementing and updated_at assignment.
@@ -789,7 +774,6 @@ def save_seen_articles(
             current = current_states[0]
             for other in current_states[1:]:
                 current = _merge_publication_states(current, other)
-            caller = state
             state = _merge_publication_states(state, current)
 
             if is_reservation and reservation_key:
@@ -810,21 +794,22 @@ def save_seen_articles(
                     claim["update_number"] = max(prior_numbers, default=0) + 1
 
             if not is_reservation:
-                caller_ids = _publication_identities(caller)
-                current_ids = _publication_identities(current)
-                state["total_posts_curated"] = max(
-                    caller.get("total_posts_curated", 0) + len(current_ids - caller_ids),
-                    current.get("total_posts_curated", 0) + len(caller_ids - current_ids),
-                )
-                state["recent_categories"] = _merge_recent_history(
-                    caller.get("recent_categories", []), current.get("recent_categories", []), 10
-                )
-                state["recent_styles"] = _merge_recent_history(
-                    caller.get("recent_styles", []), current.get("recent_styles", []), 10
-                )
-                state["recent_topics"] = list(dict.fromkeys(
-                    current.get("recent_topics", []) + caller.get("recent_topics", [])
-                ))[-20:]
+                if settlement_delta:
+                    state["total_posts_curated"] = (
+                        current.get("total_posts_curated", 0)
+                        + int(settlement_delta.get("posts_curated", 0))
+                    )
+                    category = settlement_delta.get("category")
+                    if category:
+                        state["recent_categories"] = (current.get("recent_categories", []) + [category])[-10:]
+                    style = settlement_delta.get("style")
+                    if style:
+                        state["recent_styles"] = (current.get("recent_styles", []) + [style])[-10:]
+                    topic = settlement_delta.get("topic")
+                    topics = current.get("recent_topics", [])
+                    if topic and topic not in topics:
+                        topics = topics + [topic]
+                    state["recent_topics"] = topics[-20:]
                 published = state.get("published_posts", [])
                 settled_keys = {p.get("idempotency_key") for p in published if isinstance(p, dict) and p.get("idempotency_key")}
                 settled_urls = {p.get("url") for p in published if isinstance(p, dict) and p.get("url")}

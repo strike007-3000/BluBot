@@ -875,7 +875,17 @@ async def settle_persistence_stage(
         state.setdefault("recent_topics", [])
         state["recent_topics"] = state["recent_topics"][-20:]
 
-        settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+        settle_ok, final_state = await asyncio.to_thread(
+            save_seen_articles,
+            state,
+            is_reservation=False,
+            settlement_delta={
+                "posts_curated": 1,
+                "category": published_category,
+                "style": synthesis.writing_style,
+                "topic": synthesis.topic if synthesis.topic != "General" else None,
+            },
+        )
         if not settle_ok:
             SafeLogger.error("Post-broadcast settlement failed to save on configured state storage.")
             sys.exit(1)

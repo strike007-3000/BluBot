@@ -1516,3 +1516,35 @@ def test_base_event_verbs_and_changed_numeric_facts_are_meaningful():
     )
     assert grew is True
     assert "changed numeric fact" in explanation
+
+    equivalent, explanation = detect_meaningful_change(
+        candidate_title="Acme Revenue Grows 50% This Quarter",
+        candidate_summary="",
+        candidate_url="https://example.net/revenue",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Acme Revenue Grows 50 Percent",
+            "url": "https://example.com/revenue",
+            "source": "Example",
+        },
+    )
+    assert equivalent is False
+    assert "no identifiable new fact" in explanation
+
+
+def test_generic_model_versions_remain_separate_stories():
+    from src.curator import detect_meaningful_change
+
+    changed, explanation = detect_meaningful_change(
+        candidate_title="xAI Releases Grok 4 Model",
+        candidate_summary="",
+        candidate_url="https://example.net/grok-4",
+        candidate_source="Other",
+        parent_entry={
+            "title": "xAI Releases Grok 3 Model",
+            "url": "https://example.com/grok-3",
+            "source": "Example",
+        },
+    )
+    assert changed is False
+    assert "conflicting version numbers" in explanation
