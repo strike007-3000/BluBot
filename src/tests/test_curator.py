@@ -1455,3 +1455,32 @@ def test_event_verb_inflections_are_not_meaningful_changes():
 
     assert changed is False
     assert "no identifiable new fact" in explanation
+
+
+def test_rollout_is_a_meaningful_event_but_new_publishers_are_not():
+    from src.curator import detect_meaningful_change
+
+    parent = {
+        "title": "OpenAI Announces GPT-5 API",
+        "url": "https://example.com/announcement",
+        "source": "Example",
+    }
+    rollout, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Rolls Out GPT-5 API Worldwide",
+        candidate_summary="",
+        candidate_url="https://example.net/rollout",
+        candidate_source="Other",
+        parent_entry=parent,
+    )
+    assert rollout is True
+    assert "rollout" in explanation
+
+    syndicated, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5 API",
+        candidate_summary="Same report without a new fact.",
+        candidate_url="https://example.net/copy",
+        candidate_source="Other",
+        parent_entry={**parent, "summary": "Same report without a new fact."},
+    )
+    assert syndicated is False
+    assert "no identifiable new fact" in explanation

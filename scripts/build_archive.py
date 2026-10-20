@@ -1245,7 +1245,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
       function navigateToStory(hash) {{
         if (!hash || !hash.startsWith('#story-')) return;
-        const targetCard = document.querySelector(hash);
+        const targetCard = document.getElementById(hash.slice(1));
         if (targetCard) {{
           if (filterType.value !== 'all' || filterTrust.value !== 'all' || searchInput.value !== '') {{
             filterType.value = 'all';

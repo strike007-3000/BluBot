@@ -672,6 +672,41 @@ async def test_reservation_persistence_failure_is_not_treated_as_duplicate(mocke
 
 
 @pytest.mark.asyncio
+async def test_settlement_uses_atomically_reserved_update_number(mocker):
+    from bot import settle_persistence_stage
+    from src.models import Article, BroadcastResult, CurationResult, EditorialDecision, SynthesisResult
+
+    article = Article(
+        title="Concurrent Update",
+        link="https://example.com/update",
+        summary="summary",
+        published="2026-10-18T10:00:00Z",
+        source="TestSource",
+    )
+    state = {
+        "pending_stories": [{
+            "url": article.link,
+            "parent_story_fingerprint": "parent",
+            "update_number": 3,
+        }],
+        "published_posts": [],
+    }
+    decision = EditorialDecision(mode="update", parent_fingerprint="parent", update_number=2)
+    mocker.patch("bot.save_seen_articles", side_effect=lambda data, **_: (True, data))
+
+    settled = await settle_persistence_stage(
+        state,
+        CurationResult(top_articles=[article], seen_links=[], recent_topics=[]),
+        SynthesisResult(content="Update", lead_link=article.link, topic="AI"),
+        article,
+        [BroadcastResult("Bluesky", True, post_id="at://root", post_cid="cid")],
+        decision=decision,
+    )
+
+    assert settled["published_posts"][-1]["update_number"] == 3
+
+
+@pytest.mark.asyncio
 async def test_editorial_decision_legacy_parent_derivation(mocker):
     from src.models import Article, CurationResult, MatchDecision, EditorialDecision
 

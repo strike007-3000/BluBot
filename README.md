@@ -203,7 +203,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 - **v3.37.0 (Current)**: **Story Continuity & Thread Updates**.
   - Adds automated story continuity matching (`src/curator.py`) tracking 72-hour development timelines without duplicate posts.
-  - Detects meaningful changes (new versions, status changes, new publishers, releases/acquisitions) while rejecting syndicated clones, duplicate URLs, and generic recurring titles.
+  - Detects meaningful changes (new versions, status changes, releases/acquisitions, or materially different reporting) while rejecting publisher-only syndication, duplicate URLs, and generic recurring titles.
   - Supports threaded update broadcasting on Bluesky, Mastodon, and Threads with root reply chaining.
   - Extends durable ledger schema non-destructively (`entry_kind`, `story_fingerprint`, `parent_story_fingerprint`, `update_number`, `thread_roots`, `idempotency_key`) with safe legacy migration.
   - Adds interactive archive timeline cards, update badges, and update filtering on the GitHub Pages site.

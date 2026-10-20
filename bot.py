@@ -777,6 +777,17 @@ async def settle_persistence_stage(
     parent_fp = getattr(decision, "parent_fingerprint", None) if is_update_mode else None
     update_num = getattr(decision, "update_number", 0) if is_update_mode else 0
 
+    reserved_entry = next(
+        (
+            pending for pending in state.get("pending_stories", [])
+            if pending.get("url") == canonical_lead
+            and (not is_update_mode or pending.get("parent_story_fingerprint") == parent_fp)
+        ),
+        None,
+    )
+    if reserved_entry:
+        update_num = reserved_entry.get("update_number", update_num)
+
     if any_success:
         # Success policy: remove pending reservation when successful
         state["pending_stories"] = [

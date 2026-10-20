@@ -331,6 +331,57 @@ def test_atomic_reservation_merges_different_concurrent_claims(mocker, tmp_path)
         "original:one", "original:two"
     }
 
+
+def test_atomic_reservation_allocates_update_number_and_caps_links(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    parent_fp = "parent"
+    existing = {
+        "url": "https://example.com/update-2",
+        "idempotency_key": "update:parent:update-2",
+        "entry_kind": "update",
+        "parent_story_fingerprint": parent_fp,
+        "update_number": 2,
+    }
+    src.utils.save_json_state(test_file, {
+        "revision": 2,
+        "links": [f"https://example.com/{index}" for index in range(500)],
+        "pending_stories": [existing],
+    })
+    claim = {
+        "url": "https://example.com/update-3",
+        "idempotency_key": "update:parent:update-3",
+        "entry_kind": "update",
+        "parent_story_fingerprint": parent_fp,
+        "update_number": 2,
+    }
+
+    ok, merged = save_seen_articles(
+        {
+            "revision": 1,
+            "links": [f"https://example.com/{index}" for index in range(1, 501)],
+            "pending_stories": [claim],
+        },
+        is_reservation=True,
+        reservation_key=claim["idempotency_key"],
+    )
+
+    assert ok is True
+    saved_claim = next(
+        entry for entry in merged["pending_stories"]
+        if entry["idempotency_key"] == claim["idempotency_key"]
+    )
+    assert saved_claim["update_number"] == 3
+    assert len(merged["links"]) == 500
+    assert "https://example.com/500" in merged["links"]
+
 def test_dry_run_makes_no_state_writes(mocker):
     """Verify that dry-run returns True immediately without making Gist or local disk writes."""
     import src.utils

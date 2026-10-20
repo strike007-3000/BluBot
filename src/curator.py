@@ -604,6 +604,7 @@ _EVENT_VERB_ROOTS = {
         "deprecate": ("deprecates", "deprecated", "deprecating"),
         "halt": ("halts", "halted", "halting"),
         "cancel": ("cancels", "cancelled", "cancelling"),
+        "rollout": ("rolls", "rolled", "rolling"),
         "expand": ("expands", "expanded", "expanding"),
         "fix": ("fixes", "fixed", "fixing"),
     }.items()
@@ -634,7 +635,6 @@ def detect_meaningful_change(
     candidate_url: str,
     candidate_source: str,
     parent_entry: dict,
-    candidate_supporting_sources: Optional[List[str]] = None
 ) -> Tuple[bool, str]:
     """
     Deterministic check for meaningful developments between a candidate article and an original parent story.
@@ -690,14 +690,7 @@ def detect_meaningful_change(
     if new_event_verbs:
         reasons.append(f"new event action: {', '.join(sorted(new_event_verbs))}")
 
-    # 3. New supporting evidence or corroborating sources
-    p_supp = set(str(s).lower() for s in parent_entry.get("supporting_sources", []))
-    c_supp = set(str(s).lower() for s in (candidate_supporting_sources or []))
-    new_evidence = c_supp - p_supp
-    if new_evidence:
-        reasons.append(f"new supporting evidence: {', '.join(sorted(new_evidence))}")
-
-    # 4. Materially different article summary (informative content)
+    # 3. Materially different article summary (informative content)
     c_sum = (candidate_summary or "").strip().lower()
     p_sum = str(parent_entry.get("summary", "")).strip().lower()
     has_summary_diff = False
@@ -716,7 +709,7 @@ def detect_meaningful_change(
         reasons.append(f"new source/domain: {c_domain or c_source_name}")
 
     # Reject if no factual development occurred (a new domain alone without new facts is insufficient)
-    has_fact_change = bool(new_event_verbs or new_evidence or (c_versions and not p_versions) or has_summary_diff)
+    has_fact_change = bool(new_event_verbs or (c_versions and not p_versions) or has_summary_diff)
     if not has_fact_change:
         return False, "rejected: syndicated copy or no identifiable new fact"
 
@@ -754,8 +747,6 @@ def match_story_continuity(
     c_link = candidate_article.get("link") or candidate_article.get("url", "")
     c_summary = candidate_article.get("summary", "")
     c_source = candidate_article.get("source", "")
-    c_supp = candidate_article.get("supporting_sources", [])
-
     if not c_title or not c_link:
         return MatchDecision.NO_MATCH.value, None, "missing title or link"
 
@@ -828,7 +819,6 @@ def match_story_continuity(
             candidate_url=c_link,
             candidate_source=c_source,
             parent_entry=entry,
-            candidate_supporting_sources=c_supp
         )
 
         if has_change:

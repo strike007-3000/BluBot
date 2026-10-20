@@ -775,6 +775,23 @@ def save_seen_articles(
                 current = _merge_publication_states(current, other)
             state = _merge_publication_states(state, current)
 
+            if is_reservation and reservation_key:
+                claim = next(
+                    (entry for entry in state.get("pending_stories", []) if entry.get("idempotency_key") == reservation_key),
+                    None,
+                )
+                if claim and claim.get("entry_kind") == "update" and claim.get("parent_story_fingerprint"):
+                    parent_fp = claim["parent_story_fingerprint"]
+                    prior_numbers = []
+                    for entry in state.get("pending_stories", []) + state.get("published_posts", []):
+                        if entry is claim or entry.get("parent_story_fingerprint") != parent_fp:
+                            continue
+                        try:
+                            prior_numbers.append(int(entry.get("update_number", 0)))
+                        except (TypeError, ValueError):
+                            continue
+                    claim["update_number"] = max(prior_numbers, default=0) + 1
+
             if not is_reservation:
                 published = state.get("published_posts", [])
                 settled_keys = {p.get("idempotency_key") for p in published if isinstance(p, dict) and p.get("idempotency_key")}
@@ -783,6 +800,9 @@ def save_seen_articles(
                     pending for pending in state.get("pending_stories", [])
                     if pending.get("idempotency_key") not in settled_keys and pending.get("url") not in settled_urls
                 ]
+
+        state["links"] = state.get("links", [])[-500:]
+        state["recent_stories"] = state.get("recent_stories", [])[-500:]
 
         state["revision"] = max([state.get("revision", 1)] + [current.get("revision", 1) for current in current_states]) + 1
         state["updated_at"] = datetime.now(timezone.utc).isoformat()

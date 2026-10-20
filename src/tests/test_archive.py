@@ -629,6 +629,8 @@ def test_archive_rejects_unsafe_platform_urls_and_reveals_timeline_targets():
 
     assert "javascript:alert(1)" not in html_out
     assert "function navigateToStory(hash)" in html_out
+    assert "document.getElementById(hash.slice(1))" in html_out
+    assert "document.querySelector(hash)" not in html_out
     assert "filterType.value = 'all'" in html_out
     assert "targetCard.classList.remove('hidden')" in html_out
 
