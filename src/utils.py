@@ -771,6 +771,10 @@ def save_seen_articles(
                     return False, conflict
 
         if current_states:
+            current_states.sort(
+                key=lambda item: (item.get("revision", 1), str(item.get("updated_at", ""))),
+                reverse=True,
+            )
             current = current_states[0]
             for other in current_states[1:]:
                 current = _merge_publication_states(current, other)
@@ -810,6 +814,12 @@ def save_seen_articles(
                     if topic and topic not in topics:
                         topics = topics + [topic]
                     state["recent_topics"] = topics[-20:]
+                else:
+                    for field in (
+                        "total_posts_curated", "recent_categories", "recent_styles",
+                        "recent_topics", "last_dialect",
+                    ):
+                        state[field] = current.get(field)
                 published = state.get("published_posts", [])
                 settled_keys = {p.get("idempotency_key") for p in published if isinstance(p, dict) and p.get("idempotency_key")}
                 settled_urls = {p.get("url") for p in published if isinstance(p, dict) and p.get("url")}

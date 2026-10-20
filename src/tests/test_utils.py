@@ -430,6 +430,75 @@ def test_settlement_preserves_concurrent_counters_and_histories(mocker, tmp_path
     assert len(merged["published_posts"]) == 500
     assert merged["published_posts"][-1]["url"] == second["url"]
 
+
+def test_non_settlement_write_preserves_newer_saved_scalar_state(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    src.utils.save_json_state(test_file, {
+        "revision": 4,
+        "total_posts_curated": 14,
+        "recent_categories": ["new-category"],
+        "recent_styles": ["new-style"],
+        "recent_topics": ["New Topic"],
+        "last_dialect": "witty",
+    })
+
+    ok, merged = save_seen_articles({
+        "revision": 3,
+        "total_posts_curated": 13,
+        "recent_categories": ["stale-category"],
+        "recent_styles": ["stale-style"],
+        "recent_topics": ["Stale Topic"],
+        "last_dialect": "formal",
+    }, is_reservation=False)
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 14
+    assert merged["recent_categories"] == ["new-category"]
+    assert merged["recent_styles"] == ["new-style"]
+    assert merged["recent_topics"] == ["New Topic"]
+    assert merged["last_dialect"] == "witty"
+
+
+def test_settlement_uses_highest_revision_recovery_state(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", "gist")
+    object.__setattr__(settings, "gist_token", "token")
+    mocker.patch.object(src.utils, "_load_gist_state", return_value={
+        "revision": 4,
+        "total_posts_curated": 10,
+        "recent_categories": ["remote-stale"],
+    })
+    mocker.patch.object(src.utils, "_save_gist_state", return_value=True)
+    src.utils.save_json_state(test_file, {
+        "revision": 5,
+        "total_posts_curated": 11,
+        "recent_categories": ["local-recovered"],
+    })
+
+    ok, merged = save_seen_articles(
+        {"revision": 4, "total_posts_curated": 11},
+        is_reservation=False,
+        settlement_delta={"posts_curated": 1, "category": "new"},
+    )
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 12
+    assert merged["recent_categories"] == ["local-recovered", "new"]
+
 def test_dry_run_makes_no_state_writes(mocker):
     """Verify that dry-run returns True immediately without making Gist or local disk writes."""
     import src.utils

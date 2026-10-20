@@ -550,7 +550,7 @@ _NAMED_VERSION_RE = re.compile(
     re.IGNORECASE,
 )
 _MODEL_VERSION_RE = re.compile(
-    r'\b[A-Za-z][A-Za-z0-9.-]*\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+models?\b',
+    r'\b[A-Za-z][A-Za-z0-9.-]*\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+model\b',
     re.IGNORECASE,
 )
 

@@ -1548,3 +1548,17 @@ def test_generic_model_versions_remain_separate_stories():
     )
     assert changed is False
     assert "conflicting version numbers" in explanation
+
+    count_changed, explanation = detect_meaningful_change(
+        candidate_title="Acme Now Supports 20 Models",
+        candidate_summary="",
+        candidate_url="https://example.net/models-20",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Acme Now Supports 10 Models",
+            "url": "https://example.com/models-10",
+            "source": "Example",
+        },
+    )
+    assert count_changed is True
+    assert "changed numeric fact" in explanation
