@@ -382,6 +382,46 @@ def test_atomic_reservation_allocates_update_number_and_caps_links(mocker, tmp_p
     assert len(merged["links"]) == 500
     assert "https://example.com/500" in merged["links"]
 
+
+def test_settlement_preserves_concurrent_counters_and_histories(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    first = {"url": "https://example.com/one", "published_at": "2026-10-20T10:00:00Z"}
+    second = {"url": "https://example.com/two", "published_at": "2026-10-20T10:01:00Z"}
+    src.utils.save_json_state(test_file, {
+        "revision": 2,
+        "published_posts": [first],
+        "total_posts_curated": 11,
+        "recent_categories": ["ai", "security"],
+        "recent_styles": ["analytical", "direct"],
+        "recent_topics": ["AI", "Security"],
+    })
+
+    ok, merged = save_seen_articles({
+        "revision": 1,
+        "published_posts": [second],
+        "total_posts_curated": 11,
+        "recent_categories": ["ai", "products"],
+        "recent_styles": ["analytical", "conversational"],
+        "recent_topics": ["AI", "Products"],
+    }, is_reservation=False)
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 12
+    assert merged["recent_categories"] == ["ai", "security", "products"]
+    assert merged["recent_styles"] == ["analytical", "direct", "conversational"]
+    assert merged["recent_topics"] == ["AI", "Security", "Products"]
+    assert {entry["url"] for entry in merged["published_posts"]} == {
+        first["url"], second["url"]
+    }
+
 def test_dry_run_makes_no_state_writes(mocker):
     """Verify that dry-run returns True immediately without making Gist or local disk writes."""
     import src.utils

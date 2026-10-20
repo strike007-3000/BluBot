@@ -608,7 +608,7 @@ _EVENT_VERB_ROOTS = {
         "expand": ("expands", "expanded", "expanding"),
         "fix": ("fixes", "fixed", "fixing"),
     }.items()
-    for form in forms
+    for form in (root, *forms)
 }
 
 def _truncate_with_preserved_link(text: str, link: str, limit: int) -> str:
@@ -690,6 +690,16 @@ def detect_meaningful_change(
     if new_event_verbs:
         reasons.append(f"new event action: {', '.join(sorted(new_event_verbs))}")
 
+    # Ordinary quantities are stripped from story fingerprints, so compare them
+    # here before semantic-duplicate filtering can hide a real development.
+    c_numbers = set(re.findall(r'(?<![\w.])\d[\d,]*(?:\.\d+)?%?(?![\w.])', c_title_clean))
+    p_numbers = set(re.findall(r'(?<![\w.])\d[\d,]*(?:\.\d+)?%?(?![\w.])', p_title_clean))
+    changed_numbers = bool(c_numbers and p_numbers and c_numbers != p_numbers)
+    if changed_numbers:
+        reasons.append(
+            f"changed numeric fact: {', '.join(sorted(p_numbers))} to {', '.join(sorted(c_numbers))}"
+        )
+
     # 3. Materially different article summary (informative content)
     c_sum = (candidate_summary or "").strip().lower()
     p_sum = str(parent_entry.get("summary", "")).strip().lower()
@@ -709,7 +719,9 @@ def detect_meaningful_change(
         reasons.append(f"new source/domain: {c_domain or c_source_name}")
 
     # Reject if no factual development occurred (a new domain alone without new facts is insufficient)
-    has_fact_change = bool(new_event_verbs or (c_versions and not p_versions) or has_summary_diff)
+    has_fact_change = bool(
+        new_event_verbs or changed_numbers or (c_versions and not p_versions) or has_summary_diff
+    )
     if not has_fact_change:
         return False, "rejected: syndicated copy or no identifiable new fact"
 

@@ -1484,3 +1484,35 @@ def test_rollout_is_a_meaningful_event_but_new_publishers_are_not():
     )
     assert syndicated is False
     assert "no identifiable new fact" in explanation
+
+
+def test_base_event_verbs_and_changed_numeric_facts_are_meaningful():
+    from src.curator import detect_meaningful_change
+
+    released, explanation = detect_meaningful_change(
+        candidate_title="Developers Release Acme Model Publicly",
+        candidate_summary="",
+        candidate_url="https://example.net/release",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Developers Announce Acme Model Preview",
+            "url": "https://example.com/preview",
+            "source": "Example",
+        },
+    )
+    assert released is True
+    assert "release" in explanation
+
+    grew, explanation = detect_meaningful_change(
+        candidate_title="Service Reaches 200 Customers",
+        candidate_summary="",
+        candidate_url="https://example.net/200",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Reaches 100 Customers",
+            "url": "https://example.com/100",
+            "source": "Example",
+        },
+    )
+    assert grew is True
+    assert "changed numeric fact" in explanation
