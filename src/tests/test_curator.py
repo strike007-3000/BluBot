@@ -1419,6 +1419,15 @@ def test_continuity_matcher_version_conflict_and_change_detection():
     decision, matched, exp = match_story_continuity(predating_candidate, [orig_entry], now_utc=now)
     assert decision == MatchDecision.NO_MATCH.value
 
+    source_older_parent = {
+        **orig_entry,
+        "source_published_at": "2026-10-18T04:00:00Z",
+    }
+    decision, matched, exp = match_story_continuity(
+        predating_candidate, [source_older_parent], now_utc=now
+    )
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+
 def test_meaningful_change_requires_factual_development():
     from src.curator import detect_meaningful_change
     orig_entry = {
@@ -1570,6 +1579,21 @@ def test_rollout_is_a_meaningful_event_but_new_publishers_are_not():
     )
     assert changed_with_baseline is True
     assert "summary factual quantity change" in explanation_baseline
+
+    unchanged_multiple, explanation_multiple = detect_meaningful_change(
+        candidate_title="Service Customer Distribution Report",
+        candidate_summary="The service has 100 customers locally and 200 customers overseas.",
+        candidate_url="https://example.net/customer-distribution",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Distribution Report for Customers",
+            "summary": "The service has 100 customers locally and 200 customers overseas.",
+            "url": "https://example.com/customer-distribution",
+            "source": "Example",
+        },
+    )
+    assert unchanged_multiple is False
+    assert "no identifiable new fact" in explanation_multiple
 
 
 

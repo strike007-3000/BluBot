@@ -205,6 +205,7 @@ async def test_reservation_and_settlement_revision_advancement(mocker, tmp_path)
     assert final_state["recent_stories"][0]["stage"] == "published"
     assert final_state["recent_stories"][0]["source_published_at"] == article.published
     assert final_state["recent_stories"][0]["published_at"] != article.published
+    assert final_state["published_posts"][0]["source_published_at"] == article.published
 
 @pytest.mark.asyncio
 async def test_all_broadcast_targets_fail_retains_uncertain_reservation(mocker, tmp_path):

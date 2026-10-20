@@ -70,11 +70,12 @@ def is_valid_public_http_url(url: Optional[str]) -> bool:
 
 
 def compute_guid(entry: dict) -> str:
-    """Stable GUID: Bluesky AT URI or sha256(url + published_at)."""
+    """Stable, HTML-safe GUID derived from the strongest available identity."""
     bsky_uri = ((entry.get("posts") or {}).get("bluesky") or {}).get("uri")
     if isinstance(bsky_uri, str) and bsky_uri.startswith("at://"):
-        return bsky_uri
-    key = f"{entry.get('url', '')}_{entry.get('published_at', '')}"
+        key = bsky_uri
+    else:
+        key = f"{entry.get('url', '')}_{entry.get('published_at', '')}"
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 

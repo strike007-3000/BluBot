@@ -521,9 +521,19 @@ def test_compute_guid_is_stable():
         "posts": {"bluesky": {"uri": "at://did:plc:x/app.bsky.feed.post/123"}},
     }
     without_uri = {"url": "https://example.com/test", "published_at": "2026-10-17T12:00:00Z"}
-    assert compute_guid(with_uri) == "at://did:plc:x/app.bsky.feed.post/123"
+    assert len(compute_guid(with_uri)) == 64
+    assert compute_guid(with_uri) == compute_guid(with_uri)
     assert compute_guid(without_uri) == compute_guid(without_uri)
     assert len(compute_guid(without_uri)) == 64
+
+
+def test_compute_guid_hashes_malformed_at_uri_for_safe_html_ids():
+    entry = {"posts": {"bluesky": {"uri": 'at://did:plc:x/app/post/\" onfocus=alert(1)'}}}
+    guid = compute_guid(entry)
+
+    assert len(guid) == 64
+    assert '"' not in guid
+    assert "at://" not in guid
 
 
 # --- Required Coverage 21: The page contains a skip link and visible focus styles ---

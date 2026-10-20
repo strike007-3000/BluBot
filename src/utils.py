@@ -330,6 +330,7 @@ def append_published_post(
     thread_roots: Optional[dict] = None,
     idempotency_key: Optional[str] = None,
     summary: Optional[str] = None,
+    source_published_at: Optional[str] = None,
 ) -> dict:
     """Append an entry to the published_posts ledger and enforce the capacity limit."""
     pub_time = published_at if published_at is not None else datetime.now(timezone.utc).isoformat()
@@ -370,6 +371,8 @@ def append_published_post(
         "thread_roots": t_roots,
         "idempotency_key": idem_key,
     }
+    if isinstance(source_published_at, str) and source_published_at.strip():
+        entry["source_published_at"] = source_published_at.strip()
     if summary and isinstance(summary, str) and summary.strip():
         entry["summary"] = summary.strip()
     if week is not None:
@@ -513,6 +516,19 @@ _FP_STOPWORDS = {
 
 _FP_PUBLISHER_SUFFIX_RE = re.compile(r'\s+[\-\|\:\•]\s+([A-Za-z0-9\s]+)$')
 _FP_VERSION_RE = re.compile(r'(?:v\d+(?:\.\d+)*|(?<![\$\d])\b[1-9]\d*\.\d+(?:\.\d+)*[a-z]?\b)', re.IGNORECASE)
+_FP_MODEL_VERSION_RE = re.compile(
+    r'\b([A-Za-z][A-Za-z0-9.-]*)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+models?\b',
+    re.IGNORECASE,
+)
+_FP_MODEL_COUNT_VERBS = {
+    "support", "supports", "supported", "supporting", "add", "adds", "added", "adding",
+    "host", "hosts", "hosted", "hosting", "run", "runs", "ran", "running",
+    "test", "tests", "tested", "testing", "offer", "offers", "offered", "offering",
+    "feature", "features", "featured", "featuring", "include", "includes", "included",
+    "including", "train", "trains", "trained", "training", "benchmark", "benchmarks",
+    "benchmarked", "compare", "compares", "compared", "comparing", "evaluate",
+    "evaluates", "evaluated", "across", "over", "than", "top", "best",
+}
 
 def compute_story_fingerprint(title: str) -> str:
     """
@@ -534,6 +550,9 @@ def compute_story_fingerprint(title: str) -> str:
         if not v_norm.startswith('v'):
             v_norm = f"v{v_norm}"
         versions.add(v_norm)
+    for prefix, version in _FP_MODEL_VERSION_RE.findall(cleaned):
+        if prefix.lower() not in _FP_MODEL_COUNT_VERBS:
+            versions.add(f"v{version.lower().lstrip('v')}")
 
     words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
     tokens = set()
@@ -572,8 +591,8 @@ def are_story_fingerprints_similar(fp1: str, fp2: str) -> bool:
     if len(t1) < 2 or len(t2) < 2:
         return False
 
-    v1 = {t for t in t1 if t.startswith('v') and re.match(r'^v\d+(\.\d+)+', t)}
-    v2 = {t for t in t2 if t.startswith('v') and re.match(r'^v\d+(\.\d+)+', t)}
+    v1 = {t for t in t1 if re.match(r'^v\d+(?:\.\d+)*', t)}
+    v2 = {t for t in t2 if re.match(r'^v\d+(?:\.\d+)*', t)}
 
     if v1 and v2 and v1 != v2:
         return False

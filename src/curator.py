@@ -752,10 +752,13 @@ def detect_meaningful_change(
         p_sum_nums = quantities(p_sum)
         c_sum_facts = quantity_facts(c_sum)
         p_sum_facts = quantity_facts(p_sum)
-        changed_quantity_fact = any(
-            c_value != p_value and c_unit == p_unit and c_context == p_context and bool(c_context)
-            for p_value, p_unit, p_context in p_sum_facts
-            for c_value, c_unit, c_context in c_sum_facts
+        changed_quantity_fact = (
+            c_sum_nums != p_sum_nums
+            and any(
+                c_value != p_value and c_unit == p_unit and c_context == p_context and bool(c_context)
+                for p_value, p_unit, p_context in p_sum_facts
+                for c_value, c_unit, c_context in c_sum_facts
+            )
         )
         if changed_quantity_fact:
             has_summary_diff = True
@@ -856,7 +859,8 @@ def match_story_continuity(
     )
     for entry in prior_updates:
         try:
-            update_dt = datetime.fromisoformat(str(entry.get("published_at", "")).replace("Z", "+00:00"))
+            update_time = entry.get("source_published_at") or entry.get("published_at", "")
+            update_dt = datetime.fromisoformat(str(update_time).replace("Z", "+00:00"))
             if update_dt.tzinfo is None:
                 update_dt = update_dt.replace(tzinfo=timezone.utc)
         except (TypeError, ValueError):
@@ -885,7 +889,7 @@ def match_story_continuity(
         if entry.get("entry_kind") == "update":
             continue
 
-        pub_at_str = entry.get("published_at")
+        pub_at_str = entry.get("source_published_at") or entry.get("published_at")
         if not pub_at_str:
             continue
         try:

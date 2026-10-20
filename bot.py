@@ -850,6 +850,7 @@ async def settle_persistence_stage(
             source_url=canonical_lead,
             thread_roots=thread_roots,
             summary=matched_article.summary,
+            source_published_at=matched_article.published,
         )
 
         state.setdefault("links", [])

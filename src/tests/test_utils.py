@@ -566,6 +566,21 @@ def test_compute_story_fingerprint_normalizes_headlines():
     assert "anthropic" in fp1
     assert "sonnet" in fp1
 
+
+def test_story_fingerprint_preserves_integer_model_versions_not_counts():
+    from src.utils import compute_story_fingerprint
+
+    grok_3 = compute_story_fingerprint("xAI releases Grok 3 model")
+    grok_4 = compute_story_fingerprint("xAI releases Grok 4 model")
+    count_10 = compute_story_fingerprint("Acme supports 10 models")
+    count_20 = compute_story_fingerprint("Acme supports 20 models")
+
+    assert "v3" in grok_3
+    assert "v4" in grok_4
+    assert grok_3 != grok_4
+    assert "v10" not in count_10
+    assert "v20" not in count_20
+
 def test_story_fingerprint_version_boundary_enforcement():
     """Verify version boundary check: v3.6 vs v3.7 returns False, v3.7 vs v3.7 returns True."""
     from src.utils import compute_story_fingerprint, are_story_fingerprints_similar
