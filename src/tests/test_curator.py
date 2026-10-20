@@ -1494,6 +1494,21 @@ def test_rollout_is_a_meaningful_event_but_new_publishers_are_not():
     assert syndicated is False
     assert "no identifiable new fact" in explanation
 
+    # Paraphrased summary vocabulary alone must not constitute a new factual development
+    paraphrased, explanation_para = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5 API",
+        candidate_summary="The San Francisco artificial intelligence lab showcased its newest next-generation flagship frontier foundation system.",
+        candidate_url="https://example.net/paraphrase",
+        candidate_source="Other",
+        parent_entry={
+            **parent,
+            "summary": "OpenAI revealed GPT-5 today with enhanced coding capabilities, faster inference, and comprehensive benchmark gains across reasoning tasks.",
+        },
+    )
+    assert paraphrased is False
+    assert "no identifiable new fact" in explanation_para
+
+
 
 def test_base_event_verbs_and_changed_numeric_facts_are_meaningful():
     from src.curator import detect_meaningful_change

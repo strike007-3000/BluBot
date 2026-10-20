@@ -729,18 +729,25 @@ def detect_meaningful_change(
             f"changed numeric fact: {sorted(p_numbers)} to {sorted(c_numbers)}"
         )
 
-    # 3. Materially different article summary (informative content)
+    # 3. Material factual differences in summary (new event verbs, numbers/quantities, or versions)
     c_sum = (candidate_summary or "").strip().lower()
     p_sum = str(parent_entry.get("summary", "")).strip().lower()
     has_summary_diff = False
     if c_sum and len(c_sum) > 30 and p_sum and len(p_sum) > 30:
-        c_sum_words = set(re.findall(r'\b[a-zA-Z0-9]{3,}\b', c_sum))
-        p_sum_words = set(re.findall(r'\b[a-zA-Z0-9]{3,}\b', p_sum))
-        if c_sum_words and p_sum_words:
-            overlap = len(c_sum_words & p_sum_words) / len(c_sum_words | p_sum_words)
-            if overlap < 0.20:
+        c_sum_nums = quantities(c_sum)
+        p_sum_nums = quantities(p_sum)
+        if c_sum_nums and p_sum_nums and c_sum_nums != p_sum_nums:
+            has_summary_diff = True
+            reasons.append(f"summary factual quantity change: {sorted(p_sum_nums)} to {sorted(c_sum_nums)}")
+        else:
+            c_sum_words = set(re.findall(r'\b[a-zA-Z\-]+\b', c_sum))
+            p_sum_words = set(re.findall(r'\b[a-zA-Z\-]+\b', p_sum))
+            c_sum_events = {_EVENT_VERB_ROOTS[word] for word in c_sum_words if word in _EVENT_VERB_ROOTS}
+            p_sum_events = {_EVENT_VERB_ROOTS[word] for word in p_sum_words if word in _EVENT_VERB_ROOTS}
+            new_sum_events = c_sum_events - p_sum_events
+            if new_sum_events:
                 has_summary_diff = True
-                reasons.append("materially different article summary")
+                reasons.append(f"summary new event action: {', '.join(sorted(new_sum_events))}")
 
     # 5. New publisher/domain reporting new information
     is_new_source = bool(c_domain and p_domain and c_domain != p_domain and c_source_name != p_source_name)
