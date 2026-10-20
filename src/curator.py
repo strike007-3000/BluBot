@@ -550,9 +550,24 @@ _NAMED_VERSION_RE = re.compile(
     re.IGNORECASE,
 )
 _MODEL_VERSION_RE = re.compile(
-    r'\b[A-Za-z][A-Za-z0-9.-]*\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+model\b',
+    r'\b([A-Za-z][A-Za-z0-9.-]*)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+models?\b',
     re.IGNORECASE,
 )
+_MODEL_COUNT_VERBS = {
+    "support", "supports", "supported", "supporting",
+    "add", "adds", "added", "adding",
+    "host", "hosts", "hosted", "hosting",
+    "run", "runs", "ran", "running",
+    "test", "tests", "tested", "testing",
+    "offer", "offers", "offered", "offering",
+    "feature", "features", "featured", "featuring",
+    "include", "includes", "included", "including",
+    "train", "trains", "trained", "training",
+    "benchmark", "benchmarks", "benchmarked",
+    "compare", "compares", "compared", "comparing",
+    "evaluate", "evaluates", "evaluated",
+    "across", "over", "than", "top", "best",
+}
 
 def normalize_headline(title: str) -> Tuple[set, set]:
     """Normalizes a headline into token sets and extracted version numbers."""
@@ -566,7 +581,9 @@ def normalize_headline(title: str) -> Tuple[set, set]:
 
     versions = {m.lower().lstrip("v") for m in _VERSION_RE.findall(cleaned)}
     versions.update(m.lower() for m in _NAMED_VERSION_RE.findall(cleaned))
-    versions.update(m.lower() for m in _MODEL_VERSION_RE.findall(cleaned))
+    for prefix, version in _MODEL_VERSION_RE.findall(cleaned):
+        if prefix.lower() not in _MODEL_COUNT_VERBS:
+            versions.add(version.lower())
     words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
     tokens = {w for w in words if w not in _STOPWORDS and len(w) > 1}
     return tokens, versions

@@ -248,6 +248,15 @@ def test_cluster_articles_corroboration():
     clusters_same = cluster_articles(raw_same_domain)
     assert len(clusters_same) == 1
     assert clusters_same[0]["consensus_synergy"] is False
+
+    # Plural product models with conflicting versions do not merge into a single cluster
+    raw_plural_models = [
+        {"title": "xAI releases Grok 3 models", "link": "https://example.com/grok-3", "source": "News1", "source_id": "news1", "score": 20},
+        {"title": "xAI releases Grok 4 models", "link": "https://example.com/grok-4", "source": "News2", "source_id": "news2", "score": 20},
+    ]
+    clusters_plural = cluster_articles(raw_plural_models)
+    assert len(clusters_plural) == 2
+
     assert clusters_same[0]["supporting_sources"] == ["Anthropic"]
     assert clusters_same[0]["score"] == 20
 
@@ -1548,6 +1557,21 @@ def test_generic_model_versions_remain_separate_stories():
     )
     assert changed is False
     assert "conflicting version numbers" in explanation
+
+    # Plural product naming ("Grok 4 models") must extract versions so separate releases are not merged
+    changed_plural, explanation_plural = detect_meaningful_change(
+        candidate_title="xAI releases Grok 4 models",
+        candidate_summary="",
+        candidate_url="https://example.net/grok-4-models",
+        candidate_source="Other",
+        parent_entry={
+            "title": "xAI releases Grok 3 models",
+            "url": "https://example.com/grok-3-models",
+            "source": "Example",
+        },
+    )
+    assert changed_plural is False
+    assert "conflicting version numbers" in explanation_plural
 
     count_changed, explanation = detect_meaningful_change(
         candidate_title="Acme Now Supports 20 Models",
