@@ -1783,6 +1783,13 @@ def test_event_synonyms_only_suppress_same_described_release():
     )
     assert same_release is False
 
+    empty_summaries, _ = detect_meaningful_change(
+        candidate_title="Acme Releases Atlas Model", candidate_summary="",
+        candidate_url="https://other.example/atlas-release", candidate_source="Other",
+        parent_entry={"title": "Acme Launches Atlas Model", "summary": "", "url": "https://example.com/atlas-launch", "source": "Example"},
+    )
+    assert empty_summaries is False
+
 
 def test_delayed_distinct_fact_can_match_original_after_newer_update():
     from src.curator import match_story_continuity
@@ -1796,3 +1803,30 @@ def test_delayed_distinct_fact_can_match_original_after_newer_update():
     decision, matched, _ = match_story_continuity(candidate, [root, update], now_utc=now)
     assert decision == MatchDecision.CONFIDENT_UPDATE.value
     assert matched is root
+
+
+def test_delayed_older_count_cannot_reverse_story_progress():
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+
+    now = datetime(2026, 10, 21, 12, 0, tzinfo=timezone.utc)
+    parent = {
+        "url": "https://example.com/200-customers",
+        "title": "Acme Service Reaches 200 Customers",
+        "summary": "Acme now serves 200 customers worldwide.",
+        "source": "Acme",
+        "published_at": "2026-10-20T11:00:00Z",
+        "source_published_at": "2026-10-20T10:00:00Z",
+        "entry_kind": "original",
+        "story_fingerprint": "acme customers service",
+    }
+    delayed = {
+        "title": "Acme Service Reaches 100 Customers",
+        "summary": "Acme now serves 100 customers worldwide.",
+        "link": "https://other.example/100-customers",
+        "source": "Other",
+        "published": "2026-10-20T08:00:00Z",
+    }
+
+    decision, _, _ = match_story_continuity(delayed, [parent], now_utc=now)
+    assert decision == MatchDecision.NO_MATCH.value

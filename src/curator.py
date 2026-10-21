@@ -717,7 +717,6 @@ def detect_meaningful_change(
         and p_events <= launch_synonyms
         and {word for word in c_words if word not in _EVENT_VERB_ROOTS}
         == {word for word in p_words if word not in _EVENT_VERB_ROOTS}
-        and bool((candidate_summary or "").strip())
         and (candidate_summary or "").strip().lower()
         == str(parent_entry.get("summary", "")).strip().lower()
     ):
@@ -947,17 +946,6 @@ def match_story_continuity(
         if not is_similar:
             continue
 
-        if is_out_of_order:
-            delayed_change, _ = detect_meaningful_change(
-                candidate_title=c_title,
-                candidate_summary=c_summary,
-                candidate_url=c_link,
-                candidate_source=c_source,
-                parent_entry=entry,
-            )
-            if not delayed_change:
-                continue
-
         # Compute token overlap jaccard for ranking
         all_c = c_tokens | c_versions
         all_p = p_tokens | p_versions
@@ -972,7 +960,7 @@ def match_story_continuity(
             parent_entry=entry,
         )
 
-        if is_out_of_order and not has_change:
+        if is_out_of_order and "new event action:" not in change_explanation:
             continue
 
         if has_change:
