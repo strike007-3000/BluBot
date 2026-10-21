@@ -118,6 +118,23 @@ class SynthesisResult:
                 return val
         return self.content
 
+class MatchDecision(str, Enum):
+    NO_MATCH = "NO_MATCH"
+    POSSIBLE_MATCH = "POSSIBLE_MATCH"
+    CONFIDENT_UPDATE = "CONFIDENT_UPDATE"
+
+@dataclass(frozen=True)
+class EditorialDecision:
+    """Editorial routing decision between original story post and thread update."""
+    mode: str = "original"  # "original" | "update"
+    parent_fingerprint: Optional[str] = None
+    parent_story_id: Optional[str] = None
+    update_number: int = 0
+    confidence: str = MatchDecision.NO_MATCH.value
+    explanation: str = "Standalone post"
+    target_platform_roots: dict = field(default_factory=dict)
+    parent_entry: Optional[dict] = None
+
 @dataclass(frozen=True)
 class BroadcastResult:
     """Status details per platform after broadcasting."""
@@ -127,6 +144,7 @@ class BroadcastResult:
     post_id: Optional[str] = None      # Bluesky root URI, Mastodon/Threads root ID
     post_cid: Optional[str] = None     # Bluesky root CID (needed for replies)
     receipt_id: Optional[str] = None   # Bluesky source-receipt reply URI
+    post_url: Optional[str] = None     # Public URL of the post
 
 @dataclass(frozen=True)
 class InteractionNote:

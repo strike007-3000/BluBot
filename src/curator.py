@@ -541,7 +541,33 @@ _STOPWORDS = {
 }
 
 _PUBLISHER_SUFFIX_RE = re.compile(r'\s+[\-\|\:\•]\s+([A-Za-z0-9\s]+)$')
-_VERSION_RE = re.compile(r'\b(v?\d+(?:\.\d+)*[a-z]?)\b', re.IGNORECASE)
+_VERSION_RE = re.compile(
+    r'(?:\bv\d+(?:\.\d+)*[a-z]?\b|(?<=[A-Za-z]-)\d+(?:\.\d+)*[a-z]?\b|(?<![$\d])\b\d+\.\d+(?:\.\d+)*[a-z]?\b)',
+    re.IGNORECASE,
+)
+_NAMED_VERSION_RE = re.compile(
+    r'\b(?:gpt|claude|llama|large|gemini|mistral|qwen|phi|deepseek|mixtral|ios|macos|android|windows|ubuntu|python|node(?:\.js)?|java|react|next(?:\.js)?|chrome|firefox|safari|cuda|pytorch|tensorflow)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\b',
+    re.IGNORECASE,
+)
+_MODEL_VERSION_RE = re.compile(
+    r'\b([A-Za-z][A-Za-z0-9.-]*)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+models?\b',
+    re.IGNORECASE,
+)
+_MODEL_COUNT_VERBS = {
+    "support", "supports", "supported", "supporting",
+    "add", "adds", "added", "adding",
+    "host", "hosts", "hosted", "hosting",
+    "run", "runs", "ran", "running",
+    "test", "tests", "tested", "testing",
+    "offer", "offers", "offered", "offering",
+    "feature", "features", "featured", "featuring",
+    "include", "includes", "included", "including",
+    "train", "trains", "trained", "training",
+    "benchmark", "benchmarks", "benchmarked",
+    "compare", "compares", "compared", "comparing",
+    "evaluate", "evaluates", "evaluated",
+    "across", "over", "than", "top", "best",
+}
 
 def normalize_headline(title: str) -> Tuple[set, set]:
     """Normalizes a headline into token sets and extracted version numbers."""
@@ -553,7 +579,11 @@ def normalize_headline(title: str) -> Tuple[set, set]:
     if match:
         cleaned = cleaned[:match.start()].strip()
 
-    versions = set(m.lower() for m in _VERSION_RE.findall(cleaned))
+    versions = {m.lower().lstrip("v") for m in _VERSION_RE.findall(cleaned)}
+    versions.update(m.lower() for m in _NAMED_VERSION_RE.findall(cleaned))
+    for prefix, version in _MODEL_VERSION_RE.findall(cleaned):
+        if prefix.lower() not in _MODEL_COUNT_VERBS:
+            versions.add(version.lower())
     words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
     tokens = {w for w in words if w not in _STOPWORDS and len(w) > 1}
     return tokens, versions
@@ -578,6 +608,383 @@ def calculate_title_similarity(tokens1: set, versions1: set, tokens2: set, versi
     uncommon_matches = len(intersection)
 
     return jaccard >= 0.25 and uncommon_matches >= 2
+
+
+_EVENT_VERB_ROOTS = {
+    form: root
+    for root, forms in {
+        "launch": ("launches", "launched", "launching"),
+        "acquire": ("acquires", "acquired", "acquiring"),
+        "release": ("releases", "released", "releasing"),
+        "recall": ("recalls", "recalled", "recalling"),
+        "update": ("updates", "updated", "updating"),
+        "deploy": ("deploys", "deployed", "deploying"),
+        "announce": ("announces", "announced", "announcing"),
+        "open-source": ("open-sources", "open-sourced", "opensources"),
+        "patch": ("patches", "patched", "patching"),
+        "unveil": ("unveils", "unveiled", "unveiling"),
+        "deprecate": ("deprecates", "deprecated", "deprecating"),
+        "halt": ("halts", "halted", "halting"),
+        "cancel": ("cancels", "cancelled", "cancelling"),
+        "rollout": ("rolls", "rolled", "rolling"),
+        "expand": ("expands", "expanded", "expanding"),
+        "fix": ("fixes", "fixed", "fixing"),
+    }.items()
+    for form in (root, *forms)
+}
+
+def _truncate_with_preserved_link(text: str, link: str, limit: int) -> str:
+    """Safely truncates text so the total length including link does not exceed limit."""
+    link_clean = (link or "").strip()
+    if not link_clean:
+        from src.utils import smart_truncate
+        return smart_truncate(text, limit)
+    text_clean = (text or "").strip()
+    if text_clean.endswith(link_clean):
+        prose = text_clean[:-len(link_clean)].strip()
+    else:
+        prose = text_clean
+    return _repair_text_url_safe(f"{prose} {link_clean}".strip(), limit, "story update")
+
+_GENERIC_HEADLINES = {
+    "weekly update", "ai weekly", "daily digest", "tech news",
+    "top ai tools", "ai roundup", "weekly recap", "morning brief"
+}
+
+def detect_meaningful_change(
+    candidate_title: str,
+    candidate_summary: str,
+    candidate_url: str,
+    candidate_source: str,
+    parent_entry: dict,
+) -> Tuple[bool, str]:
+    """
+    Deterministic check for meaningful developments between a candidate article and an original parent story.
+    Returns (has_meaningful_change, explanation).
+    """
+    from src.utils import compute_story_id, normalize_url
+
+    c_url_norm = normalize_url(candidate_url)
+    p_url_norm = normalize_url(parent_entry.get("url", ""))
+    p_src_norm = normalize_url(parent_entry.get("source_url", parent_entry.get("url", "")))
+
+    if c_url_norm and (c_url_norm == p_url_norm or c_url_norm == p_src_norm):
+        return False, "rejected: same canonical URL"
+
+    c_title_clean = candidate_title.strip()
+    p_title_clean = str(parent_entry.get("title", "")).strip()
+
+    # Reject generic recurring headlines
+    if c_title_clean.lower() in _GENERIC_HEADLINES or p_title_clean.lower() in _GENERIC_HEADLINES:
+        return False, "rejected: generic recurring headline"
+
+    # Punctuation-only title changes
+    c_nopunct = re.sub(r'[^\w\s]', '', c_title_clean.lower())
+    p_nopunct = re.sub(r'[^\w\s]', '', p_title_clean.lower())
+    if c_nopunct == p_nopunct:
+        return False, "rejected: punctuation-only title change"
+
+    c_tokens, c_versions = normalize_headline(c_title_clean)
+    p_tokens, p_versions = normalize_headline(p_title_clean)
+
+    # Version check: if versions differ, reject version conflict
+    if c_versions and p_versions and c_versions != p_versions:
+        return False, f"rejected: conflicting version numbers ({c_versions} vs {p_versions})"
+
+    # Domain / publisher comparison
+    c_domain = urlparse(candidate_url).netloc.lower() if candidate_url else ""
+    p_domain = urlparse(parent_entry.get("source_url", parent_entry.get("url", ""))).netloc.lower()
+    c_source_name = (candidate_source or "").strip().lower()
+    p_source_name = str(parent_entry.get("source", "")).strip().lower()
+
+    reasons = []
+
+    # 1. New version number introduced
+    if c_versions and not p_versions:
+        reasons.append(f"new version {', '.join(sorted(c_versions))}")
+
+    # 2. Event verbs indicating status changes or actions
+    c_words = set(re.findall(r'\b[a-zA-Z\-]+\b', c_title_clean.lower()))
+    p_words = set(re.findall(r'\b[a-zA-Z\-]+\b', p_title_clean.lower()))
+    c_events = {_EVENT_VERB_ROOTS[word] for word in c_words if word in _EVENT_VERB_ROOTS}
+    p_events = {_EVENT_VERB_ROOTS[word] for word in p_words if word in _EVENT_VERB_ROOTS}
+    new_event_verbs = c_events - p_events
+    launch_synonyms = {"launch", "release", "unveil"}
+    if (
+        bool(p_events)
+        and
+        c_events <= launch_synonyms
+        and p_events <= launch_synonyms
+        and {word for word in c_words if word not in _EVENT_VERB_ROOTS}
+        == {word for word in p_words if word not in _EVENT_VERB_ROOTS}
+        and (candidate_summary or "").strip().lower()
+        == str(parent_entry.get("summary", "")).strip().lower()
+    ):
+        new_event_verbs = set()
+    if new_event_verbs:
+        reasons.append(f"new event action: {', '.join(sorted(new_event_verbs))}")
+
+    # Ordinary quantities are stripped from story fingerprints, so compare them
+    # here before semantic-duplicate filtering can hide a real development.
+    quantity_pattern = r'(?<![\w.])(\d[\d,]*(?:\.\d+)?)(?:\s*(%|percent|percentage))?(?![\w.])'
+    def quantities(text: str) -> set:
+        return {
+            (number.replace(",", ""), "percent" if unit else "")
+            for number, unit in re.findall(quantity_pattern, text.lower())
+        }
+
+    def quantity_facts(text: str) -> list:
+        """Return normalized quantities paired with their nearest subject word."""
+        facts = []
+        ignored_context = {"up", "from", "to", "in", "on", "at", "last", "this", "the"}
+        for match in re.finditer(quantity_pattern, text.lower()):
+            number, unit = match.groups()
+            following = re.findall(r'\b[a-zA-Z][a-zA-Z-]*\b', text[match.end():].lower())
+            preceding = re.findall(r'\b[a-zA-Z][a-zA-Z-]*\b', text[:match.start()].lower())
+            context = next((word for word in following if word not in ignored_context), "")
+            if not context:
+                context = next((word for word in reversed(preceding) if word not in ignored_context), "")
+            facts.append((number.replace(",", ""), "percent" if unit else "", context))
+        return facts
+
+    def quantities_by_subject(text: str) -> dict:
+        facts = {}
+        for value, unit, subject in quantity_facts(text):
+            if subject:
+                facts.setdefault((unit, subject), set()).add(value)
+        return facts
+
+    c_numbers = quantities(c_title_clean)
+    p_numbers = quantities(p_title_clean)
+    changed_numbers = bool(c_numbers and p_numbers and c_numbers != p_numbers)
+    if changed_numbers:
+        reasons.append(
+            f"changed numeric fact: {sorted(p_numbers)} to {sorted(c_numbers)}"
+        )
+
+    # 3. Material factual differences in summary (new event verbs, numbers/quantities, or versions)
+    c_sum = (candidate_summary or "").strip().lower()
+    p_sum = str(parent_entry.get("summary", "")).strip().lower()
+    has_summary_diff = False
+    if c_sum and len(c_sum) > 30 and p_sum and len(p_sum) > 30:
+        c_sum_nums = quantities(c_sum)
+        p_sum_nums = quantities(p_sum)
+        c_sum_facts = quantities_by_subject(c_sum)
+        p_sum_facts = quantities_by_subject(p_sum)
+        changed_quantity_fact = any(
+            subject in c_sum_facts and values != c_sum_facts[subject]
+            for subject, values in p_sum_facts.items()
+        )
+        if changed_quantity_fact:
+            has_summary_diff = True
+            reasons.append(f"summary factual quantity change: {sorted(p_sum_nums)} to {sorted(c_sum_nums)}")
+        else:
+            c_sum_words = set(re.findall(r'\b[a-zA-Z\-]+\b', c_sum))
+            p_sum_words = set(re.findall(r'\b[a-zA-Z\-]+\b', p_sum))
+            c_sum_events = {_EVENT_VERB_ROOTS[word] for word in c_sum_words if word in _EVENT_VERB_ROOTS}
+            p_sum_events = {_EVENT_VERB_ROOTS[word] for word in p_sum_words if word in _EVENT_VERB_ROOTS}
+            new_sum_events = c_sum_events - p_sum_events
+            if new_sum_events and c_sum != p_sum:
+                has_summary_diff = True
+                reasons.append(f"summary new event action: {', '.join(sorted(new_sum_events))}")
+
+    # 5. New publisher/domain reporting new information
+    is_new_source = bool(c_domain and p_domain and c_domain != p_domain and c_source_name != p_source_name)
+    if is_new_source:
+        reasons.append(f"new source/domain: {c_domain or c_source_name}")
+
+    # Reject if no factual development occurred (a new domain alone without new facts is insufficient)
+    has_fact_change = bool(
+        new_event_verbs or changed_numbers or (c_versions and not p_versions) or has_summary_diff
+    )
+    if not has_fact_change:
+        return False, "rejected: syndicated copy or no identifiable new fact"
+
+    if reasons:
+        return True, "; ".join(reasons)
+
+    return False, "rejected: no identifiable new fact"
+
+
+def match_story_continuity(
+    candidate_article: dict,
+    published_entries: List[dict],
+    now_utc: Optional[datetime] = None
+) -> Tuple[str, Optional[dict], str]:
+    """
+    Phase 2 continuity matcher.
+    - reads only the last 72 hours of published entries;
+    - compares normalized title tokens;
+    - reuses calculate_title_similarity;
+    - rejects conflicting version numbers;
+    - rejects the same canonical URL;
+    - requires a new source or meaningful new information;
+    - compares against previous updates for novelty while returning the original parent;
+    - always selects the original story as the parent;
+    - returns (decision, parent_entry, explanation).
+    Decisions: NO_MATCH, POSSIBLE_MATCH, CONFIDENT_UPDATE.
+    """
+    from src.models import MatchDecision
+    from src.utils import compute_story_id, normalize_url
+
+    ref_time = now_utc or datetime.now(timezone.utc)
+    cutoff_72h = ref_time - timedelta(hours=72)
+
+    c_title = candidate_article.get("title", "")
+    c_link = candidate_article.get("link") or candidate_article.get("url", "")
+    c_summary = candidate_article.get("summary", "")
+    c_source = candidate_article.get("source", "")
+    if not c_title or not c_link:
+        return MatchDecision.NO_MATCH.value, None, "missing title or link"
+
+    c_norm_url = normalize_url(c_link)
+    c_tokens, c_versions = normalize_headline(c_title)
+    candidate_pub_dt = None
+    candidate_pub_at = candidate_article.get("published") or candidate_article.get("published_at")
+    if candidate_pub_at:
+        try:
+            candidate_pub_dt = datetime.fromisoformat(str(candidate_pub_at).replace("Z", "+00:00"))
+            if candidate_pub_dt.tzinfo is None:
+                candidate_pub_dt = candidate_pub_dt.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            candidate_pub_dt = None
+
+    best_match_entry = None
+    best_similarity_score = 0.0
+    possible_match_candidate = None
+    possible_explanation = ""
+
+    # Map fingerprints to original root entries
+    fp_to_original = {}
+    for entry in published_entries:
+        if not isinstance(entry, dict):
+            continue
+        e_kind = entry.get("entry_kind", "original")
+        if e_kind == "original":
+            fp = entry.get("story_fingerprint")
+            if fp:
+                fp_to_original[fp] = entry
+            fp_to_original[compute_story_id(entry)] = entry
+
+    # A candidate repeating an already-published update is not novel even when
+    # it still differs from the older original story.
+    prior_updates = sorted(
+        (entry for entry in published_entries if isinstance(entry, dict) and entry.get("entry_kind") == "update"),
+        key=lambda entry: str(entry.get("published_at", "")),
+        reverse=True,
+    )
+    for entry in prior_updates:
+        try:
+            ledger_dt = datetime.fromisoformat(str(entry.get("published_at", "")).replace("Z", "+00:00"))
+            if ledger_dt.tzinfo is None:
+                ledger_dt = ledger_dt.replace(tzinfo=timezone.utc)
+            update_time = entry.get("source_published_at") or entry.get("published_at", "")
+            update_dt = datetime.fromisoformat(str(update_time).replace("Z", "+00:00"))
+            if update_dt.tzinfo is None:
+                update_dt = update_dt.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            continue
+        if ledger_dt < cutoff_72h:
+            continue
+        p_tokens, p_versions = normalize_headline(entry.get("title", ""))
+        if not calculate_title_similarity(c_tokens, c_versions, p_tokens, p_versions):
+            continue
+        has_change, explanation = detect_meaningful_change(
+            candidate_title=c_title,
+            candidate_summary=c_summary,
+            candidate_url=c_link,
+            candidate_source=c_source,
+            parent_entry=entry,
+        )
+        if candidate_pub_dt and candidate_pub_dt <= update_dt:
+            root = fp_to_original.get(entry.get("parent_story_id") or entry.get("parent_story_fingerprint"))
+            return MatchDecision.POSSIBLE_MATCH.value, root or entry, "possible match: candidate does not advance the published timeline"
+        if not has_change:
+            root = fp_to_original.get(entry.get("parent_story_id") or entry.get("parent_story_fingerprint"))
+            return MatchDecision.POSSIBLE_MATCH.value, root or entry, f"possible match: {explanation}"
+
+    for entry in published_entries:
+        if not isinstance(entry, dict):
+            continue
+
+        # Ignore previous update entries as possible parents (always select original story root)
+        if entry.get("entry_kind") == "update":
+            continue
+
+        ledger_at = entry.get("published_at")
+        source_at = entry.get("source_published_at") or ledger_at
+        if not ledger_at or not source_at:
+            continue
+        try:
+            ledger_dt = datetime.fromisoformat(str(ledger_at).replace("Z", "+00:00"))
+            source_dt = datetime.fromisoformat(str(source_at).replace("Z", "+00:00"))
+            if ledger_dt.tzinfo is None:
+                ledger_dt = ledger_dt.replace(tzinfo=timezone.utc)
+            if source_dt.tzinfo is None:
+                source_dt = source_dt.replace(tzinfo=timezone.utc)
+            if ledger_dt < cutoff_72h:
+                continue
+            is_out_of_order = bool(candidate_pub_dt and candidate_pub_dt <= source_dt)
+        except Exception:
+            continue
+
+        # Reject same canonical URL
+        p_url = entry.get("url", "")
+        p_src_url = entry.get("source_url", "")
+        if c_norm_url and (normalize_url(p_url) == c_norm_url or normalize_url(p_src_url) == c_norm_url):
+            continue
+
+        p_title = entry.get("title", "")
+        p_tokens, p_versions = normalize_headline(p_title)
+
+        # Reject conflicting version numbers
+        if c_versions and p_versions and c_versions != p_versions:
+            continue
+
+        # Check title similarity
+        is_similar = calculate_title_similarity(c_tokens, c_versions, p_tokens, p_versions)
+        if not is_similar:
+            continue
+
+        # Compute token overlap jaccard for ranking
+        all_c = c_tokens | c_versions
+        all_p = p_tokens | p_versions
+        sim_val = len(all_c & all_p) / len(all_c | all_p) if (all_c | all_p) else 0.0
+
+        # Check for meaningful change
+        has_change, change_explanation = detect_meaningful_change(
+            candidate_title=c_title,
+            candidate_summary=c_summary,
+            candidate_url=c_link,
+            candidate_source=c_source,
+            parent_entry=entry,
+        )
+
+        if is_out_of_order and "new event action:" not in change_explanation:
+            continue
+
+        if has_change:
+            if sim_val > best_similarity_score:
+                best_similarity_score = sim_val
+                best_match_entry = entry
+                best_explanation = change_explanation
+        else:
+            if not possible_match_candidate:
+                possible_match_candidate = entry
+                possible_explanation = change_explanation
+
+    if best_match_entry:
+        parent_root = best_match_entry
+        # If best_match_entry had a parent fingerprint, resolve to original
+        parent_fp = parent_root.get("story_fingerprint")
+        if parent_fp in fp_to_original:
+            parent_root = fp_to_original[parent_fp]
+        return MatchDecision.CONFIDENT_UPDATE.value, parent_root, f"confident update: {best_explanation}"
+
+    if possible_match_candidate:
+        return MatchDecision.POSSIBLE_MATCH.value, possible_match_candidate, f"possible match: {possible_explanation}"
+
+    return MatchDecision.NO_MATCH.value, None, "no matching parent story within 72h"
 
 def cluster_articles(raw_entries: List[dict]) -> List[dict]:
     """Clusters articles by title similarity and domain corroboration."""
@@ -708,7 +1115,20 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
 
     if story_state:
         from src.utils import is_story_semantic_duplicate
-        entries = [e for e in entries if not is_story_semantic_duplicate(e.get("title", ""), story_state)]
+        from src.models import MatchDecision
+        pub_ledger = story_state.get("published_posts", [])
+        filtered_entries = []
+        for e in entries:
+            is_dup = is_story_semantic_duplicate(e.get("title", ""), story_state)
+            if is_dup:
+                if settings.story_update_detection_enabled and pub_ledger:
+                    match_type, _, _ = match_story_continuity(e, pub_ledger, now_utc=now_utc)
+                    if match_type == MatchDecision.CONFIDENT_UPDATE.value:
+                        filtered_entries.append(e)
+                        continue
+                continue
+            filtered_entries.append(e)
+        entries = filtered_entries
 
     # Enforce policy: The lead article (index 0) cannot be from a "critical" category
     # unless all available entries are critical.
@@ -1133,6 +1553,152 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
 
     from src.models import PlatformDrafts
     return None, None, "General", False, None, PlatformDrafts.from_single("")
+
+async def summarize_update(
+    new_article: dict,
+    parent_entry: dict,
+    context: dict,
+    writing_style: Optional[str] = None
+) -> Tuple[Optional[str], Optional[str], str, bool, Optional[str], "PlatformDrafts"]:
+    """
+    Dedicated AI synthesis for story updates.
+    Requirements:
+    - begin with Update:;
+    - state what changed;
+    - connect it briefly to the earlier story;
+    - name the new source or evidence;
+    - avoid repeating the original post;
+    - include the new source link;
+    - fit each platform's limits;
+    - avoid forced questions or engagement bait.
+    """
+    from src.models import PlatformDrafts
+    from src.utils import smart_truncate
+
+    c_title = new_article.get("title", "")
+    c_link = new_article.get("link") or new_article.get("url", "")
+    c_source = new_article.get("source", "Source")
+    c_summary = new_article.get("summary", "")
+
+    p_title = parent_entry.get("title", "")
+    p_source = parent_entry.get("source", "")
+    p_topic = parent_entry.get("topic", "General")
+
+    if settings.is_dry_run:
+        SafeLogger.info("Dry run: Bypassing Gemini update synthesis call.")
+        bsky_text = f"Update: {c_title}. Connects to earlier report from {p_source}. Verified by {c_source}. {c_link}"
+        mock_drafts = PlatformDrafts(
+            bluesky=smart_truncate(bsky_text, 280),
+            threads=smart_truncate(f"Update: {c_title}. Building on our previous coverage of {p_title}, {c_source} reports new developments. {c_link}", 450),
+            mastodon=smart_truncate(f"Update: {c_title}. Earlier report: {p_title}. New findings confirmed by {c_source}: {c_link} #AI #Update", 450)
+        )
+        return mock_drafts.bluesky, c_link, p_topic, False, "UPDATE", mock_drafts
+
+    client = genai.Client(api_key=settings.gemini_key)
+    update_instruction = (
+        "You are an elite, objective technology journalist writing a real-time STORY UPDATE.\n"
+        "Your update will be published as a reply/continuation to the original story thread.\n\n"
+        "CRITICAL EDITORIAL RULES:\n"
+        "1. Every platform post MUST begin with 'Update: '.\n"
+        "2. State precisely what changed or what new event occurred.\n"
+        "3. Connect it briefly and directly to the earlier story.\n"
+        "4. Name the new source or corroborating evidence.\n"
+        "5. Do NOT repeat the background or entire premise of the original post.\n"
+        "6. Include the new source link provided.\n"
+        "7. Avoid forced questions, hollow rhetorical hooks, or engagement bait.\n"
+        "8. Adhere strictly to length budgets:\n"
+        "   - Bluesky: target <= 280 chars (no hashtags).\n"
+        "   - Threads: target <= 450 chars (conversational, no forced question).\n"
+        "   - Mastodon: target <= 450 chars (technical with relevant hashtags).\n\n"
+        "OUTPUT FORMAT INSTRUCTION:\n"
+        "Output valid JSON only:\n"
+        "```json\n"
+        "{\n"
+        f'  "topic": "{p_topic}",\n'
+        '  "bluesky": "Update: ...",\n'
+        '  "threads": "Update: ...",\n'
+        '  "mastodon": "Update: ..."\n'
+        "}\n"
+        "```"
+    )
+
+    user_prompt = (
+        f"EARLIER ORIGINAL STORY:\n"
+        f"Title: {p_title}\n"
+        f"Publisher: {p_source}\n"
+        f"Topic: {p_topic}\n\n"
+        f"NEW ARTICLE / UPDATE EVIDENCE:\n"
+        f"Title: {c_title}\n"
+        f"Publisher: {c_source}\n"
+        f"New Link: {c_link}\n"
+        f"Summary: {c_summary}\n"
+    )
+
+    for idx, model_id in enumerate(GEMINI_MODEL_PRIORITY):
+        try:
+            SafeLogger.info(f"Synthesizing update via {model_id}...")
+            config_args = {
+                "system_instruction": update_instruction,
+                "automatic_function_calling": types.AutomaticFunctionCallingConfig(disable=True),
+            }
+            normalized = normalize_gemini_model_id(model_id)
+            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+                config_args["temperature"] = 0.5
+
+            response = await client.aio.models.generate_content(
+                model=model_id, contents=user_prompt,
+                config=types.GenerateContentConfig(**config_args)
+            )
+
+            raw_text = (response.text or "").strip()
+            parsed_drafts = parse_platform_drafts(raw_text)
+
+            if parsed_drafts and len(parsed_drafts.bluesky) > 20:
+                # Ensure each starts with Update:
+                b_text = parsed_drafts.bluesky.strip()
+                t_text = parsed_drafts.threads.strip()
+                m_text = parsed_drafts.mastodon.strip()
+                if not b_text.lower().startswith("update:"):
+                    b_text = f"Update: {b_text}"
+                if not t_text.lower().startswith("update:"):
+                    t_text = f"Update: {t_text}"
+                if not m_text.lower().startswith("update:"):
+                    m_text = f"Update: {m_text}"
+
+                # Ensure source link is included if missing
+                if c_link:
+                    if c_link not in b_text:
+                        b_text = f"{b_text} {c_link}"
+                    if c_link not in t_text:
+                        t_text = f"{t_text} {c_link}"
+                    if c_link not in m_text:
+                        m_text = f"{m_text} {c_link}"
+
+                final_drafts = PlatformDrafts(
+                    bluesky=_truncate_with_preserved_link(b_text, c_link, 280),
+                    threads=_truncate_with_preserved_link(t_text, c_link, 480),
+                    mastodon=_truncate_with_preserved_link(m_text, c_link, 480)
+                )
+                is_failover = (idx > 0)
+                SafeLogger.info(f"Update synthesis successful via {model_id}.")
+                return final_drafts.bluesky, c_link, p_topic, is_failover, "UPDATE", final_drafts
+
+        except errors.APIError as e:
+            code = getattr(e, "code", "unknown")
+            msg_snippet = (getattr(e, "message", None) or str(e))[:80].replace("\n", " ")
+            SafeLogger.warn(f"Update synthesis model {model_id} APIError ({code}): {msg_snippet}")
+            if code in (401, 403):
+                break
+        except Exception as e:
+            SafeLogger.warn(f"Update synthesis {model_id} unexpected error: {e}")
+
+    # Fallback deterministic update draft
+    fallback_b = _truncate_with_preserved_link(f"Update: {c_title}. Reporting new findings from {c_source}. Earlier: {p_title}.", c_link, 280)
+    fallback_t = _truncate_with_preserved_link(f"Update: {c_title}. {c_source} reports new developments following earlier coverage of {p_title}.", c_link, 450)
+    fallback_m = _truncate_with_preserved_link(f"Update: {c_title}. Following earlier report on {p_title}, {c_source} has confirmed new details. #AI #TechUpdate", c_link, 450)
+    fallback_drafts = PlatformDrafts(bluesky=fallback_b, threads=fallback_t, mastodon=fallback_m)
+    return fallback_drafts.bluesky, c_link, p_topic, False, "UPDATE", fallback_drafts
+
 
 async def remix_platform_draft(
     genai_client,

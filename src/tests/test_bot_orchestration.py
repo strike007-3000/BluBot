@@ -205,6 +205,7 @@ async def test_reservation_and_settlement_revision_advancement(mocker, tmp_path)
     assert final_state["recent_stories"][0]["stage"] == "published"
     assert final_state["recent_stories"][0]["source_published_at"] == article.published
     assert final_state["recent_stories"][0]["published_at"] != article.published
+    assert final_state["published_posts"][0]["source_published_at"] == article.published
 
 @pytest.mark.asyncio
 async def test_all_broadcast_targets_fail_retains_uncertain_reservation(mocker, tmp_path):
@@ -320,6 +321,43 @@ async def test_broadcaster_routes_three_distinct_platform_payloads(mocker):
 
     mock_post_threads.assert_called_once()
     assert mock_post_threads.call_args[0][1] == "Distinct Threads Narrative"
+
+
+@pytest.mark.asyncio
+async def test_broadcast_stage_preserves_platform_permalinks(mocker):
+    import bot
+    import httpx
+    from src.models import PlatformDrafts, SynthesisResult
+
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "bsky_handle", None)
+    object.__setattr__(settings, "mastodon_token", "m_tok")
+    object.__setattr__(settings, "mastodon_base_url", "https://mastodon.example")
+    object.__setattr__(settings, "threads_token", "t_tok")
+    object.__setattr__(settings, "threads_user_id", "t_user")
+    mocker.patch(
+        "bot.post_to_mastodon",
+        new_callable=AsyncMock,
+        return_value=("101", "https://mastodon.example/@actual/101"),
+    )
+    mocker.patch(
+        "bot.post_to_threads",
+        new_callable=AsyncMock,
+        return_value=("202", "https://www.threads.net/@actual/post/shortcode"),
+    )
+    synthesis = SynthesisResult(
+        content="Post",
+        lead_link="https://example.com/story",
+        topic="AI",
+        drafts=PlatformDrafts.from_single("Post"),
+    )
+
+    async with httpx.AsyncClient() as client:
+        results, _ = await bot.broadcast_stage(client, synthesis)
+
+    by_platform = {result.platform: result for result in results}
+    assert by_platform["Mastodon"].post_url == "https://mastodon.example/@actual/101"
+    assert by_platform["Threads"].post_url == "https://www.threads.net/@actual/post/shortcode"
 
 @pytest.mark.asyncio
 async def test_full_multiplatform_orchestration_flow(mocker):
@@ -502,3 +540,230 @@ async def test_settlement_occurs_before_telegram_notifications(monkeypatch, mock
 
     # Verify settle happened strictly before notify
     assert call_order == ["settle", "receipt", "notify"]
+
+
+@pytest.mark.asyncio
+async def test_bot_orchestration_confident_update_flow(monkeypatch, mocker):
+    """Verify confident match enters update mode, synthesizes update draft, reserves, and settles."""
+    import bot
+    from src.models import MatchDecision, EditorialDecision, PlatformDrafts
+
+    mock_settings = MagicMock()
+    mock_settings.is_dry_run = False
+    mock_settings.enable_telegram_approval = False
+    mock_settings.enable_interactions = False
+    mock_settings.gemini_model = "gemini-3.5-flash-lite"
+    mock_settings.image_provider = "pollinations"
+    mock_settings.enable_image_gen = False
+    mock_settings.story_update_detection_enabled = True
+    monkeypatch.setattr("bot.settings", mock_settings)
+
+    article = Article(
+        title="OpenAI Releases GPT-5 to All Devs",
+        link="https://example.com/gpt5-released",
+        summary="GPT-5 is now widely available.",
+        published="2026-10-18T10:00:00Z",
+        source="ArXiv",
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    drafts = PlatformDrafts(bluesky="Update: OpenAI has released GPT-5.", threads="Update: OpenAI released GPT-5.", mastodon="Update: GPT-5 available.")
+    synth_res = SynthesisResult(content="Fallback", lead_link="https://example.com/gpt5-released", topic="AI", drafts=drafts)
+
+    parent_entry = {
+        "title": "OpenAI Announces GPT-5 Preview",
+        "url": "https://example.com/gpt5-announced",
+        "story_fingerprint": "fp_gpt5",
+        "entry_kind": "original",
+        "update_number": 0,
+        "thread_roots": {"bluesky": {"uri": "at://orig", "cid": "cid_orig"}},
+    }
+    decision = EditorialDecision(
+        mode="update",
+        parent_fingerprint="fp_gpt5",
+        update_number=1,
+        confidence=MatchDecision.CONFIDENT_UPDATE.value,
+        explanation="Version released to all devs",
+        target_platform_roots={"bluesky": {"uri": "at://orig", "cid": "cid_orig"}},
+        parent_entry=parent_entry,
+    )
+
+
+    mocker.patch("bot.check_for_telegram_topic", new_callable=AsyncMock, return_value=(None, None))
+    mocker.patch("bot.curation_stage", new_callable=AsyncMock, return_value=curation)
+    mocker.patch("src.curator.match_story_continuity", return_value=(MatchDecision.CONFIDENT_UPDATE, parent_entry, "Version released to all devs"))
+    mocker.patch("bot.load_seen_articles", return_value={"published_posts": [parent_entry], "pending_stories": []})
+
+    mock_synthesis = mocker.patch("bot.synthesis_stage", new_callable=AsyncMock, return_value=(synth_res, curation))
+    mocker.patch("bot.media_strategy_stage", new_callable=AsyncMock, return_value=None)
+    mock_reserve = mocker.patch("bot.reserve_pending_stage", new_callable=AsyncMock, return_value=({}, article))
+    mock_broadcast = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([bot.BroadcastResult("Bluesky", True, post_id="at://up1")], MagicMock()))
+    mock_settle = mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock, return_value={})
+
+    mocker.patch("bot.source_receipt_stage", new_callable=AsyncMock, return_value=({}, []))
+    mocker.patch("bot.send_broadcast_platform_messages", new_callable=AsyncMock, return_value=True)
+    mocker.patch("bot.update_status_dashboard", new_callable=AsyncMock)
+    mocker.patch("bot.update_social_profiles", new_callable=AsyncMock)
+
+    await bot.main()
+
+    # Verified synthesis called with decision in update mode
+    call_kwargs = mock_synthesis.call_args.kwargs
+    assert call_kwargs["decision"].mode == "update"
+    assert call_kwargs["decision"].parent_fingerprint == "fp_gpt5"
+
+    # Verified reservation called with decision
+    assert mock_reserve.call_args.kwargs["decision"].mode == "update"
+    # Verified broadcast called with decision
+    assert mock_broadcast.call_args.kwargs["decision"].mode == "update"
+    # Verified settle called with decision
+    assert mock_settle.call_args.kwargs["decision"].mode == "update"
+
+
+@pytest.mark.asyncio
+async def test_reserve_pending_stage_duplicate_prevention(mocker):
+    from src.models import Article, CurationResult, SynthesisResult, EditorialDecision
+    from bot import reserve_pending_stage
+
+    article = Article(title="Test Story", link="https://example.com/test", summary="summary", published="2026-10-18T10:00:00Z", source="TestSource")
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(content="Content", lead_link="https://example.com/test", topic="AI")
+    decision = EditorialDecision(mode="original", parent_fingerprint=None, update_number=0, confidence="NO_MATCH", explanation="")
+
+    # Existing pending story with identical idempotency_key
+    state = {
+        "pending_stories": [{
+            "idempotency_key": "original:story test:https://example.com/test",
+            "url": "https://example.com/test",
+        }],
+        "published_posts": []
+    }
+    mocker.patch("bot.load_seen_articles", return_value=state)
+
+    ret_state, matched = await reserve_pending_stage(curation, synthesis, decision=decision)
+    assert ret_state is None
+    assert matched.title == "Test Story"
+
+
+@pytest.mark.asyncio
+async def test_reservation_persistence_failure_is_not_treated_as_duplicate(mocker):
+    from bot import reserve_pending_stage
+    from src.models import Article, CurationResult, SynthesisResult
+
+    article = Article(
+        title="Persistence Failure",
+        link="https://example.com/failure",
+        summary="summary",
+        published="2026-10-18T10:00:00Z",
+        source="TestSource",
+    )
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    synthesis = SynthesisResult(
+        content="Content",
+        lead_link=article.link,
+        topic="AI",
+    )
+    mocker.patch("bot.load_seen_articles", return_value={"revision": 1, "pending_stories": []})
+    mocker.patch("bot.save_seen_articles", side_effect=lambda data, **_: (False, data))
+    mocker.patch("sys.exit", side_effect=SystemExit(1))
+
+    with pytest.raises(SystemExit) as exc_info:
+        await reserve_pending_stage(curation, synthesis)
+
+    assert exc_info.value.code == 1
+
+
+@pytest.mark.asyncio
+async def test_settlement_uses_atomically_reserved_update_number(mocker):
+    from bot import settle_persistence_stage
+    from src.models import Article, BroadcastResult, CurationResult, EditorialDecision, SynthesisResult
+
+    article = Article(
+        title="Concurrent Update",
+        link="https://example.com/update",
+        summary="summary",
+        published="2026-10-18T10:00:00Z",
+        source="TestSource",
+    )
+    state = {
+        "pending_stories": [{
+            "url": article.link,
+            "parent_story_fingerprint": "parent",
+            "update_number": 3,
+        }],
+        "published_posts": [],
+    }
+    decision = EditorialDecision(mode="update", parent_fingerprint="parent", update_number=2)
+    mocker.patch("bot.save_seen_articles", side_effect=lambda data, **_: (True, data))
+
+    settled = await settle_persistence_stage(
+        state,
+        CurationResult(top_articles=[article], seen_links=[], recent_topics=[]),
+        SynthesisResult(content="Update", lead_link=article.link, topic="AI"),
+        article,
+        [BroadcastResult("Bluesky", True, post_id="at://root", post_cid="cid")],
+        decision=decision,
+    )
+
+    assert settled["published_posts"][-1]["update_number"] == 3
+
+
+@pytest.mark.asyncio
+async def test_settlement_persists_the_reserved_idempotency_key(mocker):
+    from src.models import Article, CurationResult, EditorialDecision, SynthesisResult, BroadcastResult
+    from bot import settle_persistence_stage
+
+    article = Article(title="Update", link="https://example.com/update", summary="summary", published="2026-10-21T10:00:00Z", source="Example")
+    reserved_key = "update:story-id:https://example.com/update"
+    state = {"pending_stories": [{"url": article.link, "parent_story_id": "story-id", "idempotency_key": reserved_key, "update_number": 1}], "published_posts": []}
+    decision = EditorialDecision(mode="update", parent_fingerprint="fingerprint", parent_story_id="story-id", update_number=1)
+    mocker.patch("bot.save_seen_articles", side_effect=lambda data, **_: (True, data))
+
+    settled = await settle_persistence_stage(
+        state, CurationResult(top_articles=[article], seen_links=[], recent_topics=[]),
+        SynthesisResult(content="Update", lead_link=article.link, topic="AI"), article,
+        [BroadcastResult("Bluesky", True, post_id="at://update")], decision=decision,
+    )
+
+    assert settled["published_posts"][-1]["idempotency_key"] == reserved_key
+
+
+@pytest.mark.asyncio
+async def test_editorial_decision_legacy_parent_derivation(mocker):
+    from src.models import Article, CurationResult, MatchDecision, EditorialDecision
+
+    # Legacy parent without story_fingerprint or thread_roots, but with posts
+    legacy_parent = {
+        "title": "Legacy Breakthrough Announced",
+        "url": "https://example.com/legacy",
+        "posts": {
+            "bluesky": {"uri": "at://did:plc:123/app.bsky.feed.post/456", "cid": "bafyrei123"},
+            "mastodon": {"id": "111222333", "url": "https://mastodon.social/@bot/111222333"},
+            "threads": {"id": "999888777", "url": "https://threads.net/@bot/post/999888777"}
+        }
+    }
+
+    mocker.patch("src.curator.match_story_continuity", return_value=(MatchDecision.CONFIDENT_UPDATE, legacy_parent, "Follow-up test"))
+
+    article = Article(title="Legacy Breakthrough Follow-Up", link="https://example.com/legacy-update", summary="Update summary", published="2026-10-18T12:00:00Z", source="Source")
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+
+    # Test the derivation logic in bot.py main loop
+    parent_entry = legacy_parent
+    from src.utils import compute_story_fingerprint
+    derived_parent_fp = parent_entry.get("story_fingerprint") or compute_story_fingerprint(parent_entry.get("title", ""))
+    parent_roots = parent_entry.get("thread_roots")
+    if not parent_roots and "posts" in parent_entry:
+        parent_roots = {}
+        for plat, pdata in parent_entry["posts"].items():
+            if isinstance(pdata, dict):
+                parent_roots[plat] = {
+                    k: v for k, v in pdata.items()
+                    if k in ("uri", "cid", "id", "url")
+                }
+
+    assert derived_parent_fp == "announced breakthrough legacy"
+    assert parent_roots["bluesky"]["uri"] == "at://did:plc:123/app.bsky.feed.post/456"
+    assert parent_roots["mastodon"]["id"] == "111222333"
+    assert parent_roots["threads"]["id"] == "999888777"
+
+

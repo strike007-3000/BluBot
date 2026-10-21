@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 from typing import Optional, List, Set, Tuple
 import asyncio
 import functools
@@ -296,14 +297,24 @@ LEGACY_DEFAULT_UPDATED_AT = "1970-01-01T00:00:00Z"
 PUBLISHED_POSTS_CAP = 500  # Durable ledger: count-capped only, never time-pruned.
 
 def _sanitize_published_posts(entries: list) -> list:
-    """Return valid ledger entries ordered oldest-to-newest and count-capped."""
-    valid = [
-        entry for entry in entries
-        if isinstance(entry, dict)
-        and isinstance(entry.get("url"), str)
-        and entry["url"].strip()
-    ]
+    """Return valid ledger entries ordered oldest-to-newest and count-capped. Interprets legacy entries as original."""
+    valid = []
+    for entry in entries:
+        if not (isinstance(entry, dict) and isinstance(entry.get("url"), str) and entry["url"].strip()):
+            continue
+        valid.append(entry)
+
     return sorted(valid, key=lambda entry: str(entry.get("published_at", "")))[-PUBLISHED_POSTS_CAP:]
+
+
+def compute_story_id(entry: dict) -> str:
+    """Return the stable identity of one ledger occurrence of a story."""
+    existing = entry.get("story_id")
+    if isinstance(existing, str) and existing:
+        return existing
+    identity = f"{entry.get('url', '')}|{entry.get('published_at', '')}"
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
 
 
 def append_published_post(
@@ -321,9 +332,40 @@ def append_published_post(
     source_id: Optional[str] = None,
     category: Optional[str] = None,
     supporting_sources: Optional[List[str]] = None,
+    entry_kind: str = "original",
+    story_fingerprint: Optional[str] = None,
+    parent_story_fingerprint: Optional[str] = None,
+    parent_story_id: Optional[str] = None,
+    update_number: Optional[int] = None,
+    source_url: Optional[str] = None,
+    thread_roots: Optional[dict] = None,
+    idempotency_key: Optional[str] = None,
+    summary: Optional[str] = None,
+    source_published_at: Optional[str] = None,
 ) -> dict:
     """Append an entry to the published_posts ledger and enforce the capacity limit."""
     pub_time = published_at if published_at is not None else datetime.now(timezone.utc).isoformat()
+    fp = story_fingerprint or compute_story_fingerprint(title)
+    src_u = source_url or url
+    up_num = update_number if update_number is not None else (1 if entry_kind == "update" else 0)
+
+    # Derive thread roots from posts if not explicitly provided
+    t_roots = dict(thread_roots) if thread_roots is not None else {}
+    if not t_roots and isinstance(posts, dict):
+        if "bluesky" in posts and isinstance(posts["bluesky"], dict):
+            t_roots["bluesky"] = {"uri": posts["bluesky"].get("uri"), "cid": posts["bluesky"].get("cid")}
+        if "mastodon" in posts and isinstance(posts["mastodon"], dict):
+            t_roots["mastodon"] = {"id": posts["mastodon"].get("id"), "url": posts["mastodon"].get("url")}
+        if "threads" in posts and isinstance(posts["threads"], dict):
+            t_roots["threads"] = {"id": posts["threads"].get("id"), "url": posts["threads"].get("url")}
+
+    idem_key = idempotency_key
+    if not idem_key:
+        if entry_kind == "update" and parent_story_fingerprint:
+            idem_key = f"update:{parent_story_fingerprint}:{src_u}"
+        else:
+            idem_key = f"original:{fp}:{src_u}"
+
     entry = {
         "url": url,
         "title": title,
@@ -332,7 +374,21 @@ def append_published_post(
         "published_at": pub_time,
         "posts": posts if posts is not None else {},
         "kind": kind,
+        "entry_kind": entry_kind,
+        "story_fingerprint": fp,
+        "parent_story_fingerprint": parent_story_fingerprint,
+        "parent_story_id": parent_story_id,
+        "update_number": up_num,
+        "source_url": src_u,
+        "thread_roots": t_roots,
+        "idempotency_key": idem_key,
     }
+    if entry_kind == "original":
+        entry["story_id"] = compute_story_id(entry)
+    if isinstance(source_published_at, str) and source_published_at.strip():
+        entry["source_published_at"] = source_published_at.strip()
+    if summary and isinstance(summary, str) and summary.strip():
+        entry["summary"] = summary.strip()
     if week is not None:
         entry["week"] = week
 
@@ -474,6 +530,19 @@ _FP_STOPWORDS = {
 
 _FP_PUBLISHER_SUFFIX_RE = re.compile(r'\s+[\-\|\:\•]\s+([A-Za-z0-9\s]+)$')
 _FP_VERSION_RE = re.compile(r'(?:v\d+(?:\.\d+)*|(?<![\$\d])\b[1-9]\d*\.\d+(?:\.\d+)*[a-z]?\b)', re.IGNORECASE)
+_FP_MODEL_VERSION_RE = re.compile(
+    r'\b([A-Za-z][A-Za-z0-9.-]*)\s*-?\s*(\d+(?:\.\d+)*[a-z]?)\s+models?\b',
+    re.IGNORECASE,
+)
+_FP_MODEL_COUNT_VERBS = {
+    "support", "supports", "supported", "supporting", "add", "adds", "added", "adding",
+    "host", "hosts", "hosted", "hosting", "run", "runs", "ran", "running",
+    "test", "tests", "tested", "testing", "offer", "offers", "offered", "offering",
+    "feature", "features", "featured", "featuring", "include", "includes", "included",
+    "including", "train", "trains", "trained", "training", "benchmark", "benchmarks",
+    "benchmarked", "compare", "compares", "compared", "comparing", "evaluate",
+    "evaluates", "evaluated", "across", "over", "than", "top", "best",
+}
 
 def compute_story_fingerprint(title: str) -> str:
     """
@@ -495,6 +564,9 @@ def compute_story_fingerprint(title: str) -> str:
         if not v_norm.startswith('v'):
             v_norm = f"v{v_norm}"
         versions.add(v_norm)
+    for prefix, version in _FP_MODEL_VERSION_RE.findall(cleaned):
+        if prefix.lower() not in _FP_MODEL_COUNT_VERBS:
+            versions.add(f"v{version.lower().lstrip('v')}")
 
     words = re.findall(r'\b[a-zA-Z0-9\-\.]+\b', cleaned.lower())
     tokens = set()
@@ -533,8 +605,8 @@ def are_story_fingerprints_similar(fp1: str, fp2: str) -> bool:
     if len(t1) < 2 or len(t2) < 2:
         return False
 
-    v1 = {t for t in t1 if t.startswith('v') and re.match(r'^v\d+(\.\d+)+', t)}
-    v2 = {t for t in t2 if t.startswith('v') and re.match(r'^v\d+(\.\d+)+', t)}
+    v1 = {t for t in t1 if re.match(r'^v\d+(?:\.\d+)*', t)}
+    v2 = {t for t in t2 if re.match(r'^v\d+(?:\.\d+)*', t)}
 
     if v1 and v2 and v1 != v2:
         return False
@@ -690,7 +762,12 @@ def load_seen_articles() -> dict:
 
         return sanitize_and_migrate_state({})
 
-def save_seen_articles(data: dict, is_reservation: bool = False) -> Tuple[bool, dict]:
+def save_seen_articles(
+    data: dict,
+    is_reservation: bool = False,
+    reservation_key: Optional[str] = None,
+    settlement_delta: Optional[dict] = None,
+) -> Tuple[bool, dict]:
     """
     Persists state with revision incrementing and updated_at assignment.
     Returns (success_flag, updated_state).
@@ -702,10 +779,95 @@ def save_seen_articles(data: dict, is_reservation: bool = False) -> Tuple[bool, 
         return True, data
 
     state = sanitize_and_migrate_state(data)
-    state["revision"] += 1
-    state["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     with FileLock(SEEN_FILE_PATH):
+        current_states = []
+        if settings.gist_id and settings.gist_token:
+            gist_raw = _load_gist_state("seen_articles.json")
+            if isinstance(gist_raw, dict):
+                current_states.append(sanitize_and_migrate_state(gist_raw))
+        if os.path.exists(SEEN_FILE_PATH):
+            try:
+                local_raw = load_json_state(SEEN_FILE_PATH)
+                if isinstance(local_raw, dict):
+                    current_states.append(sanitize_and_migrate_state(local_raw))
+            except Exception as exc:
+                SafeLogger.warn(f"Could not re-read persistence state: {exc}")
+
+        if is_reservation and reservation_key:
+            for current in current_states:
+                existing = current.get("pending_stories", []) + current.get("published_posts", [])
+                if any(entry.get("idempotency_key") == reservation_key for entry in existing if isinstance(entry, dict)):
+                    SafeLogger.warn(f"Atomic reservation rejected duplicate key: {reservation_key}")
+                    conflict = dict(current)
+                    conflict["_reservation_conflict"] = True
+                    return False, conflict
+
+        if current_states:
+            current_states.sort(
+                key=lambda item: (item.get("revision", 1), str(item.get("updated_at", ""))),
+                reverse=True,
+            )
+            current = current_states[0]
+            for other in current_states[1:]:
+                current = _merge_publication_states(current, other)
+            state = _merge_publication_states(state, current)
+            for field in (
+                "total_posts_curated", "recent_categories", "recent_styles",
+                "recent_topics", "last_dialect",
+            ):
+                state[field] = current.get(field)
+
+            if is_reservation and reservation_key:
+                claim = next(
+                    (entry for entry in state.get("pending_stories", []) if entry.get("idempotency_key") == reservation_key),
+                    None,
+                )
+                if claim and claim.get("entry_kind") == "update" and (claim.get("parent_story_id") or claim.get("parent_story_fingerprint")):
+                    parent_fp = claim.get("parent_story_id") or claim["parent_story_fingerprint"]
+                    prior_numbers = []
+                    for entry in state.get("pending_stories", []) + state.get("published_posts", []):
+                        if entry is claim or (entry.get("parent_story_id") or entry.get("parent_story_fingerprint")) != parent_fp:
+                            continue
+                        try:
+                            prior_numbers.append(int(entry.get("update_number", 0)))
+                        except (TypeError, ValueError):
+                            continue
+                    claim["update_number"] = max(prior_numbers, default=0) + 1
+
+            if not is_reservation:
+                if settlement_delta:
+                    state["total_posts_curated"] = (
+                        current.get("total_posts_curated", 0)
+                        + int(settlement_delta.get("posts_curated", 0))
+                    )
+                    category = settlement_delta.get("category")
+                    if category:
+                        state["recent_categories"] = (current.get("recent_categories", []) + [category])[-10:]
+                    style = settlement_delta.get("style")
+                    if style:
+                        state["recent_styles"] = (current.get("recent_styles", []) + [style])[-10:]
+                    topic = settlement_delta.get("topic")
+                    topics = current.get("recent_topics", [])
+                    if topic and topic not in topics:
+                        topics = topics + [topic]
+                    state["recent_topics"] = topics[-20:]
+                    if "last_dialect" in settlement_delta:
+                        state["last_dialect"] = settlement_delta["last_dialect"]
+                published = state.get("published_posts", [])
+                settled_keys = {p.get("idempotency_key") for p in published if isinstance(p, dict) and p.get("idempotency_key")}
+                settled_urls = {p.get("url") for p in published if isinstance(p, dict) and p.get("url")}
+                state["pending_stories"] = [
+                    pending for pending in state.get("pending_stories", [])
+                    if pending.get("idempotency_key") not in settled_keys and pending.get("url") not in settled_urls
+                ]
+
+        state["links"] = state.get("links", [])[-500:]
+        state["recent_stories"] = state.get("recent_stories", [])[-500:]
+
+        state["revision"] = max([state.get("revision", 1)] + [current.get("revision", 1) for current in current_states]) + 1
+        state["updated_at"] = datetime.now(timezone.utc).isoformat()
+
         gist_success = True
         if settings.gist_id and settings.gist_token:
             # A successful upload is authoritative, so clear the recovery marker

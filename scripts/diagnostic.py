@@ -513,10 +513,41 @@ async def test_engagement():
         metrics = await fetch_bluesky_metrics(client, entries)
     print(f"\nEngagement (last 7 days, {len(entries)} posts)\n{render_table(metrics, entries)}")
 
+async def test_story_continuity_diagnostics():
+    """Continuity matcher and story update diagnostic."""
+    print(f"\n{'='*20}\nSTORY CONTINUITY MATCHER DIAGNOSTIC (v{VERSION})\n{'='*20}")
+    import httpx
+    from src.curator import match_story_continuity
+    from src.utils import load_seen_articles
+
+    state = load_seen_articles()
+    published_entries = state.get("published_posts", [])
+    print(f"Loaded {len(published_entries)} published stories from ledger.")
+
+    async with httpx.AsyncClient() as client:
+        candidates, _ = await fetch_news(client, limit=5)
+
+    if not candidates:
+        print("No candidates available from live feeds.")
+        return
+
+    print(f"\nTesting {len(candidates)} candidates against published ledger (72-hour window):")
+    print("-" * 70)
+    for c in candidates:
+        dec, parent, exp = match_story_continuity(c, published_entries)
+        print(f"Candidate: {c.get('title')}")
+        print(f"  Source: {c.get('source')} | URL: {c.get('link')}")
+        print(f"  Decision: {dec}")
+        print(f"  Explanation: {exp}")
+        if parent:
+            print(f"  Matched Parent: {parent.get('title')} ({parent.get('published_at')})")
+        print("-" * 70)
+
 MODES = {"scoring": test_scoring, "dry-run": test_full_dry_run, "images": test_image_generation,
          "gist": test_gist_diagnostics, "gemini": test_gemini_model_discovery_and_multimodal_checks,
          "drafts": test_multiplatform_telegram_simulation, "hf": test_hf_trending_fetch,
-         "github": test_github_rising_fetch, "engagement": test_engagement}
+         "github": test_github_rising_fetch, "engagement": test_engagement,
+         "continuity": test_story_continuity_diagnostics}
 
 async def main():
     load_dotenv()
@@ -541,9 +572,10 @@ async def main():
     print("6. Multi-Platform Drafting & Telegram State Simulation")
     print("7. Hugging Face Trending Source Test")
     print("8. GitHub Fast-Rising Repositories Source Test")
+    print("9. Story Continuity & Update Matcher Test")
 
     try:
-        choice = input("\nEnter choice (1-8) or 'q' to quit: ").strip().lower()
+        choice = input("\nEnter choice (1-9) or 'q' to quit: ").strip().lower()
         if choice == "1":
             await test_scoring()
         elif choice == "2":
@@ -568,6 +600,8 @@ async def main():
             await test_hf_trending_fetch()
         elif choice == "8":
             await test_github_rising_fetch()
+        elif choice == "9":
+            await test_story_continuity_diagnostics()
         elif choice == "q":
             print("Exiting.")
         else:

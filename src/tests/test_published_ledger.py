@@ -181,10 +181,14 @@ async def test_mastodon_returns_first_status_id(mocker, set_setting):
     mocker.patch.object(broadcaster, "human_delay", AsyncMock())
     mocker.patch.object(broadcaster, "smart_split", return_value=["a", "b", "c"])
     api = MagicMock()
-    api.status_post.side_effect = [{"id": 101}, {"id": 102}, {"id": 103}]
+    api.status_post.side_effect = [
+        {"id": 101, "url": "https://m.example/@bot/101"},
+        {"id": 102, "url": "https://m.example/@bot/102"},
+        {"id": 103, "url": "https://m.example/@bot/103"},
+    ]
     mocker.patch.object(broadcaster, "Mastodon", return_value=api)
 
-    assert await broadcaster.post_to_mastodon("text") == 101
+    assert await broadcaster.post_to_mastodon("text") == (101, "https://m.example/@bot/101")
 
 
 @pytest.mark.asyncio
@@ -204,6 +208,69 @@ async def test_threads_returns_first_published_id(mocker, set_setting):
         resp({"id": "c1"}), resp({"id": "root"}),
         resp({"id": "c2"}), resp({"id": "child"}),
     ])
-    client.get = AsyncMock(return_value=resp({"status": "FINISHED"}))
+    client.get = AsyncMock(side_effect=[
+        resp({"status": "FINISHED"}),
+        resp({"status": "FINISHED"}),
+        resp({"id": "root", "permalink": "https://www.threads.net/@bot/post/abc"}),
+    ])
 
-    assert await broadcaster.post_to_threads(client, "text") == "root"
+    assert await broadcaster.post_to_threads(client, "text") == (
+        "root", "https://www.threads.net/@bot/post/abc"
+    )
+
+
+@pytest.mark.asyncio
+async def test_bluesky_reply_targeting(set_setting):
+    set_setting("bsky_handle", "user.bsky.social")
+    root = SimpleNamespace(uri="at://first-update", cid="cu0")
+    child = SimpleNamespace(uri="at://second-update", cid="cu1")
+    client = MagicMock(send_post=AsyncMock(side_effect=[root, child]))
+
+    reply_to = {"uri": "at://parent-root", "cid": "c-orig"}
+    res = await broadcaster.post_to_bluesky(client, None, "text", reply_to=reply_to)
+    assert res is root
+    # First chunk replies to target root
+    first_call = client.send_post.call_args_list[0]
+    assert first_call.kwargs["reply_to"].root.uri == "at://parent-root"
+    assert first_call.kwargs["reply_to"].parent.uri == "at://parent-root"
+
+
+@pytest.mark.asyncio
+async def test_mastodon_and_threads_reply_targeting(mocker, set_setting):
+    set_setting("mastodon_token", "t")
+    set_setting("mastodon_base_url", "https://m.example")
+    set_setting("threads_user_id", "u")
+    set_setting("threads_token", "t")
+    mocker.patch.object(broadcaster, "human_delay", AsyncMock())
+    mocker.patch.object(broadcaster, "smart_split", return_value=["update chunk"])
+
+    # Mastodon in_reply_to_id
+    api = MagicMock()
+    api.status_post.return_value = {"id": 202, "url": "https://m.example/@bot/202"}
+    mocker.patch.object(broadcaster, "Mastodon", return_value=api)
+
+    assert await broadcaster.post_to_mastodon("update chunk", reply_to_id=101) == (
+        202, "https://m.example/@bot/202"
+    )
+    assert api.status_post.call_args.kwargs["in_reply_to_id"] == 101
+
+    # Threads reply_to_id
+    def resp(payload):
+        r = MagicMock(status_code=200)
+        r.json.return_value = payload
+        return r
+
+    threads_client = MagicMock()
+    threads_client.post = AsyncMock(side_effect=[
+        resp({"id": "container_up"}), resp({"id": "published_up"})
+    ])
+    threads_client.get = AsyncMock(side_effect=[
+        resp({"status": "FINISHED"}),
+        resp({"id": "published_up", "permalink": "https://www.threads.net/@bot/post/up"}),
+    ])
+
+    published_id = await broadcaster.post_to_threads(threads_client, "update chunk", reply_to_id="root_threads_id")
+    assert published_id == ("published_up", "https://www.threads.net/@bot/post/up")
+    # Container creation call includes reply_to_id
+    container_call_data = threads_client.post.call_args_list[0].kwargs["data"]
+    assert container_call_data["reply_to_id"] == "root_threads_id"

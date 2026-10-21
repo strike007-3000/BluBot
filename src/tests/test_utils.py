@@ -273,6 +273,270 @@ def test_gist_success_local_write_failure_returns_false(mocker, tmp_path):
     assert ok is False
     assert state["revision"] == 6
 
+
+def test_atomic_reservation_rejects_key_claimed_after_stale_load(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    claimed = {"idempotency_key": "update:parent:https://example.com/new"}
+    src.utils.save_json_state(test_file, {
+        "revision": 2,
+        "pending_stories": [claimed],
+    })
+    stale_state = {
+        "revision": 1,
+        "pending_stories": [claimed],
+    }
+
+    ok, current = save_seen_articles(
+        stale_state,
+        is_reservation=True,
+        reservation_key=claimed["idempotency_key"],
+    )
+
+    assert ok is False
+    assert current["revision"] == 2
+    assert current["pending_stories"] == [claimed]
+    assert current["_reservation_conflict"] is True
+
+
+def test_atomic_reservation_merges_different_concurrent_claims(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    first = {"url": "https://example.com/one", "idempotency_key": "original:one"}
+    second = {"url": "https://example.com/two", "idempotency_key": "original:two"}
+    src.utils.save_json_state(test_file, {"revision": 2, "pending_stories": [first]})
+
+    ok, merged = save_seen_articles(
+        {"revision": 1, "pending_stories": [second]},
+        is_reservation=True,
+        reservation_key=second["idempotency_key"],
+    )
+
+    assert ok is True
+    assert {entry["idempotency_key"] for entry in merged["pending_stories"]} == {
+        "original:one", "original:two"
+    }
+
+
+def test_atomic_reservation_preserves_fresh_scalar_state(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    src.utils.save_json_state(test_file, {
+        "revision": 3,
+        "total_posts_curated": 8,
+        "recent_categories": ["fresh"],
+        "recent_styles": ["direct"],
+        "recent_topics": ["Fresh Topic"],
+        "last_dialect": "witty",
+    })
+    claim = {"url": "https://example.com/new", "idempotency_key": "original:new"}
+
+    ok, merged = save_seen_articles({
+        "revision": 2,
+        "pending_stories": [claim],
+        "total_posts_curated": 7,
+        "recent_categories": ["stale"],
+        "recent_styles": ["formal"],
+        "recent_topics": ["Stale Topic"],
+        "last_dialect": "formal",
+    }, is_reservation=True, reservation_key=claim["idempotency_key"])
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 8
+    assert merged["recent_categories"] == ["fresh"]
+    assert merged["recent_styles"] == ["direct"]
+    assert merged["recent_topics"] == ["Fresh Topic"]
+    assert merged["last_dialect"] == "witty"
+
+
+def test_atomic_reservation_allocates_update_number_and_caps_links(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    parent_fp = "parent"
+    existing = {
+        "url": "https://example.com/update-2",
+        "idempotency_key": "update:parent:update-2",
+        "entry_kind": "update",
+        "parent_story_fingerprint": parent_fp,
+        "update_number": 2,
+    }
+    src.utils.save_json_state(test_file, {
+        "revision": 2,
+        "links": [f"https://example.com/{index}" for index in range(500)],
+        "pending_stories": [existing],
+    })
+    claim = {
+        "url": "https://example.com/update-3",
+        "idempotency_key": "update:parent:update-3",
+        "entry_kind": "update",
+        "parent_story_fingerprint": parent_fp,
+        "update_number": 2,
+    }
+
+    ok, merged = save_seen_articles(
+        {
+            "revision": 1,
+            "links": [f"https://example.com/{index}" for index in range(1, 501)],
+            "pending_stories": [claim],
+        },
+        is_reservation=True,
+        reservation_key=claim["idempotency_key"],
+    )
+
+    assert ok is True
+    saved_claim = next(
+        entry for entry in merged["pending_stories"]
+        if entry["idempotency_key"] == claim["idempotency_key"]
+    )
+    assert saved_claim["update_number"] == 3
+    assert len(merged["links"]) == 500
+    assert "https://example.com/500" in merged["links"]
+
+
+def test_settlement_preserves_concurrent_counters_and_histories(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    first = {"url": "https://example.com/one", "published_at": "2026-10-20T10:00:00Z"}
+    second = {"url": "https://example.com/two", "published_at": "2026-10-20T10:01:00Z"}
+    old_entries = [
+        {"url": f"https://example.com/old-{index}", "published_at": f"2026-10-19T{index // 60:02d}:{index % 60:02d}:00Z"}
+        for index in range(500)
+    ]
+    src.utils.save_json_state(test_file, {
+        "revision": 2,
+        "published_posts": old_entries[:-1] + [first],
+        "total_posts_curated": 11,
+        "recent_categories": [f"saved-{index}" for index in range(9)] + ["security"],
+        "recent_styles": [f"saved-{index}" for index in range(9)] + ["direct"],
+        "recent_topics": ["AI", "Security"],
+    })
+
+    ok, merged = save_seen_articles({
+        "revision": 1,
+        "published_posts": old_entries[1:] + [second],
+        "total_posts_curated": 11,
+        "recent_categories": [f"stale-{index}" for index in range(9)] + ["products"],
+        "recent_styles": [f"stale-{index}" for index in range(9)] + ["conversational"],
+        "recent_topics": ["AI", "Products"],
+    }, is_reservation=False, settlement_delta={
+        "posts_curated": 1,
+        "category": "products",
+        "style": "conversational",
+        "topic": "Products",
+    })
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 12
+    assert merged["recent_categories"] == [f"saved-{index}" for index in range(1, 9)] + ["security", "products"]
+    assert merged["recent_styles"] == [f"saved-{index}" for index in range(1, 9)] + ["direct", "conversational"]
+    assert merged["recent_topics"] == ["AI", "Security", "Products"]
+    assert len(merged["published_posts"]) == 500
+    assert merged["published_posts"][-1]["url"] == second["url"]
+
+
+def test_non_settlement_write_preserves_newer_saved_scalar_state(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", None)
+    object.__setattr__(settings, "gist_token", None)
+    src.utils.save_json_state(test_file, {
+        "revision": 4,
+        "total_posts_curated": 14,
+        "recent_categories": ["new-category"],
+        "recent_styles": ["new-style"],
+        "recent_topics": ["New Topic"],
+        "last_dialect": "witty",
+    })
+
+    ok, merged = save_seen_articles({
+        "revision": 3,
+        "total_posts_curated": 13,
+        "recent_categories": ["stale-category"],
+        "recent_styles": ["stale-style"],
+        "recent_topics": ["Stale Topic"],
+        "last_dialect": "formal",
+    }, is_reservation=False)
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 14
+    assert merged["recent_categories"] == ["new-category"]
+    assert merged["recent_styles"] == ["new-style"]
+    assert merged["recent_topics"] == ["New Topic"]
+    assert merged["last_dialect"] == "witty"
+
+
+def test_settlement_uses_highest_revision_recovery_state(mocker, tmp_path):
+    import src.utils
+    from src.settings import settings
+    from src.utils import save_seen_articles
+
+    test_file = str(tmp_path / "seen_articles.json")
+    mocker.patch.object(src.utils, "SEEN_FILE_PATH", test_file)
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "gist_id", "gist")
+    object.__setattr__(settings, "gist_token", "token")
+    mocker.patch.object(src.utils, "_load_gist_state", return_value={
+        "revision": 4,
+        "total_posts_curated": 10,
+        "recent_categories": ["remote-stale"],
+    })
+    mocker.patch.object(src.utils, "_save_gist_state", return_value=True)
+    src.utils.save_json_state(test_file, {
+        "revision": 5,
+        "total_posts_curated": 11,
+        "recent_categories": ["local-recovered"],
+    })
+
+    ok, merged = save_seen_articles(
+        {"revision": 4, "total_posts_curated": 11},
+        is_reservation=False,
+        settlement_delta={"posts_curated": 1, "category": "new"},
+    )
+
+    assert ok is True
+    assert merged["total_posts_curated"] == 12
+    assert merged["recent_categories"] == ["local-recovered", "new"]
+
 def test_dry_run_makes_no_state_writes(mocker):
     """Verify that dry-run returns True immediately without making Gist or local disk writes."""
     import src.utils
@@ -301,6 +565,21 @@ def test_compute_story_fingerprint_normalizes_headlines():
     assert "v3.7" in fp1
     assert "anthropic" in fp1
     assert "sonnet" in fp1
+
+
+def test_story_fingerprint_preserves_integer_model_versions_not_counts():
+    from src.utils import compute_story_fingerprint
+
+    grok_3 = compute_story_fingerprint("xAI releases Grok 3 model")
+    grok_4 = compute_story_fingerprint("xAI releases Grok 4 model")
+    count_10 = compute_story_fingerprint("Acme supports 10 models")
+    count_20 = compute_story_fingerprint("Acme supports 20 models")
+
+    assert "v3" in grok_3
+    assert "v4" in grok_4
+    assert grok_3 != grok_4
+    assert "v10" not in count_10
+    assert "v20" not in count_20
 
 def test_story_fingerprint_version_boundary_enforcement():
     """Verify version boundary check: v3.6 vs v3.7 returns False, v3.7 vs v3.7 returns True."""

@@ -152,6 +152,42 @@ async def test_fetch_news_refills_after_semantic_history_filter(mock_httpx_clien
     assert titles[-1] in [article["title"] for article in articles]
     assert articles[0]["source_id"] == "standard_feed"
 
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("match_decision,expected_count", [
+    ("POSSIBLE_MATCH", 0),
+    ("CONFIDENT_UPDATE", 1),
+])
+async def test_fetch_news_only_preserves_confirmed_updates(
+    mock_httpx_client, mocker, match_decision, expected_count
+):
+    from src.settings import settings
+
+    item = {
+        "title": "OpenAI Releases GPT-5!",
+        "link": "https://example.com/new-coverage",
+        "summary": "Coverage of the same event.",
+        "source": "Source",
+        "source_id": "standard_feed",
+        "published": "2026-10-18T00:00:00+00:00",
+        "score": 100,
+    }
+    object.__setattr__(settings, "story_update_detection_enabled", True)
+    mocker.patch("src.curator.fetch_single_feed", return_value=("f1", [item], True, None))
+    mocker.patch("src.utils.is_story_semantic_duplicate", return_value=True)
+    mocker.patch(
+        "src.curator.match_story_continuity",
+        return_value=(match_decision, {"title": "OpenAI Releases GPT-5"}, "test"),
+    )
+
+    articles, _ = await fetch_news(
+        mock_httpx_client,
+        feed_list=["f1"],
+        story_state={"published_posts": [{"title": "OpenAI Releases GPT-5"}]},
+    )
+
+    assert len(articles) == expected_count
+
 @pytest.mark.asyncio
 async def test_fetch_news_deduplicates_canonical_urls(mock_httpx_client, mocker):
     items = [
@@ -179,6 +215,14 @@ def test_headline_normalization():
     assert ver_hyphen == {"5"}
     assert "gpt-5" in tokens_hyphen or "gpt" in tokens_hyphen
 
+    _, count_versions = normalize_headline("Service reaches 100 customers")
+    assert count_versions == set()
+
+    _, ios_18 = normalize_headline("Apple releases iOS 18 security update")
+    _, ios_19 = normalize_headline("Apple releases iOS 19 security update")
+    assert ios_18 == {"18"}
+    assert ios_19 == {"19"}
+
 def test_title_similarity_matching():
     # Same announcement with different titles
     t1, v1 = normalize_headline("Meta Unveils Llama 4 Open Model")
@@ -204,6 +248,15 @@ def test_cluster_articles_corroboration():
     clusters_same = cluster_articles(raw_same_domain)
     assert len(clusters_same) == 1
     assert clusters_same[0]["consensus_synergy"] is False
+
+    # Plural product models with conflicting versions do not merge into a single cluster
+    raw_plural_models = [
+        {"title": "xAI releases Grok 3 models", "link": "https://example.com/grok-3", "source": "News1", "source_id": "news1", "score": 20},
+        {"title": "xAI releases Grok 4 models", "link": "https://example.com/grok-4", "source": "News2", "source_id": "news2", "score": 20},
+    ]
+    clusters_plural = cluster_articles(raw_plural_models)
+    assert len(clusters_plural) == 2
+
     assert clusters_same[0]["supporting_sources"] == ["Anthropic"]
     assert clusters_same[0]["score"] == 20
 
@@ -1219,3 +1272,561 @@ def test_url_safe_truncation_retains_post_url_prose():
     # Verify post-URL text was not needlessly dropped
     assert "trailing" in repaired
     assert len(repaired) <= limit
+
+
+def test_continuity_matcher_72h_window_and_duplicate_url():
+    """Phase 11 Curator tests: match within 72h, reject outside 72h, reject duplicate URLs."""
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+    now = datetime(2026, 10, 18, 12, 0, 0, tzinfo=timezone.utc)
+
+    parent_recent = {
+        "url": "https://techcrunch.com/2026/10/17/openai-releases-gpt5",
+        "title": "OpenAI Releases GPT-5 to Early Testers",
+        "published_at": "2026-10-17T12:00:00Z",
+        "source": "TechCrunch",
+        "entry_kind": "original",
+        "story_fingerprint": "gpt-5 openai releases testers",
+        "thread_roots": {"bluesky": {"uri": "at://orig", "cid": "c0"}}
+    }
+    parent_old = {
+        "url": "https://techcrunch.com/2026/10/10/anthropic-announces-claude4",
+        "title": "Anthropic Announces Claude 4",
+        "published_at": "2026-10-10T12:00:00Z",
+        "source": "TechCrunch",
+        "entry_kind": "original",
+        "story_fingerprint": "announces anthropic claude-4",
+        "thread_roots": {"bluesky": {"uri": "at://old", "cid": "c0"}}
+    }
+    published = [parent_recent, parent_old]
+
+    # 1. Match within 72h with new source/action
+    cand_update = {
+        "title": "OpenAI Launches GPT-5 to All Developers Today",
+        "link": "https://theverge.com/2026/10/18/openai-gpt5-launch",
+        "source": "The Verge",
+        "summary": "Full public rollout of GPT-5 is now live for all developers with API access.",
+    }
+    decision, matched, exp = match_story_continuity(cand_update, published, now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    assert matched["title"] == parent_recent["title"]
+    assert "new source/domain" in exp or "new event action" in exp
+
+    # 2. Reject entries outside 72 hours
+    cand_old_target = {
+        "title": "Anthropic Claude 4 Model Launches Today",
+        "link": "https://theverge.com/2026/10/18/anthropic-claude4-launch",
+        "source": "The Verge",
+        "summary": "General release of Claude 4 begins today across all regions.",
+    }
+    decision, matched, exp = match_story_continuity(cand_old_target, published, now_utc=now)
+    assert decision == MatchDecision.NO_MATCH.value
+
+    # 3. Reject duplicate canonical URL
+    cand_dup_url = {
+        "title": "OpenAI Releases GPT-5 to Early Testers (Updated)",
+        "link": "https://techcrunch.com/2026/10/17/openai-releases-gpt5",
+        "source": "TechCrunch",
+        "summary": "Minor edits in TechCrunch article.",
+    }
+    decision, matched, exp = match_story_continuity(cand_dup_url, published, now_utc=now)
+    assert decision != MatchDecision.CONFIDENT_UPDATE.value
+
+
+def test_continuity_matcher_version_conflict_and_change_detection():
+    """Phase 11 Curator tests: reject version conflicts, reject syndicated copies, ignore update entries as parents."""
+    from src.curator import match_story_continuity, detect_meaningful_change
+    from src.models import MatchDecision
+    now = datetime(2026, 10, 18, 12, 0, 0, tzinfo=timezone.utc)
+
+    orig_entry = {
+        "url": "https://techcrunch.com/2026/10/18/mistral-large-2",
+        "title": "Mistral Releases Large 2 Model",
+        "published_at": "2026-10-18T06:00:00Z",
+        "source": "TechCrunch",
+        "entry_kind": "original",
+        "story_fingerprint": "large-2 mistral model releases",
+        "thread_roots": {"bluesky": {"uri": "at://root-mistral", "cid": "c0"}}
+    }
+    prior_update = {
+        "url": "https://venturebeat.com/2026/10/18/mistral-large-2-benchmark",
+        "title": "Mistral Large 2 Benchmarks Beat Competitors",
+        "published_at": "2026-10-18T08:00:00Z",
+        "source": "VentureBeat",
+        "entry_kind": "update",
+        "parent_story_fingerprint": orig_entry["story_fingerprint"],
+        "story_fingerprint": "benchmarks large-2 mistral",
+    }
+    published = [orig_entry, prior_update]
+
+    # Version conflict (e.g. Large 2 vs Large 3) rejects
+    cand_version_conflict = {
+        "title": "Mistral Releases Large 3 Model",
+        "link": "https://wired.com/2026/10/18/mistral-large-3",
+        "source": "Wired",
+        "summary": "Mistral has introduced Large 3 today.",
+    }
+    decision, matched, exp = match_story_continuity(cand_version_conflict, published, now_utc=now)
+    assert decision == MatchDecision.NO_MATCH.value
+
+    # Reject syndicated copy: same publisher, identical title without new facts
+    cand_syndicated = {
+        "title": "Mistral Releases Large 2 Model",
+        "link": "https://techcrunch.com/2026/10/18/mistral-large-2-mirror",
+        "source": "TechCrunch",
+        "summary": "Mistral Releases Large 2 Model for enterprise developers.",
+    }
+    has_change, chg_exp = detect_meaningful_change(
+        candidate_title=cand_syndicated["title"],
+        candidate_summary=cand_syndicated["summary"],
+        candidate_url=cand_syndicated["link"],
+        candidate_source=cand_syndicated["source"],
+        parent_entry=orig_entry
+    )
+    assert has_change is False
+    assert "syndicated" in chg_exp or "rejected" in chg_exp
+
+    # Candidate matches original root, ignoring prior_update as parent
+    cand_valid_update = {
+        "title": "Mistral Large 2 Open-Sources Weights and Launches Weights on Hugging Face",
+        "link": "https://huggingface.co/blog/mistral-large-2",
+        "source": "Hugging Face",
+        "summary": "Official open-weights release of Mistral Large 2 is now available.",
+    }
+    decision, matched, exp = match_story_continuity(cand_valid_update, published, now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    # Crucial: Parent must be the original story, not prior_update
+    assert matched["entry_kind"] == "original"
+    assert matched["url"] == orig_entry["url"]
+
+    # Repeated coverage of the already-published update is not another update.
+    repeated_update = {
+        "title": "Mistral Large 2 Benchmarks Beat Competitors",
+        "link": "https://example.net/repeated-benchmarks",
+        "source": "Other",
+        "summary": "Mistral Large 2 benchmarks beat competitors.",
+        "published": "2026-10-18T09:00:00Z",
+    }
+    decision, matched, exp = match_story_continuity(repeated_update, published, now_utc=now)
+    assert decision == MatchDecision.POSSIBLE_MATCH.value
+    assert matched["url"] == orig_entry["url"]
+
+    # Delayed coverage with a genuinely distinct fact can still advance the story.
+    predating_candidate = {
+        **cand_valid_update,
+        "published": "2026-10-18T05:00:00Z",
+    }
+    decision, matched, exp = match_story_continuity(predating_candidate, [orig_entry], now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+
+    source_older_parent = {
+        **orig_entry,
+        "source_published_at": "2026-10-18T04:00:00Z",
+    }
+    decision, matched, exp = match_story_continuity(
+        predating_candidate, [source_older_parent], now_utc=now
+    )
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+
+def test_meaningful_change_requires_factual_development():
+    from src.curator import detect_meaningful_change
+    orig_entry = {
+        "title": "Anthropic Announces Claude 3.5 Sonnet",
+        "url": "https://anthropic.com/news/claude-3-5-sonnet",
+        "summary": "Anthropic introduces Claude 3.5 Sonnet with enhanced vision and reasoning benchmarks.",
+        "source": "Anthropic",
+    }
+
+    # Different source and modified phrasing alone without new verbs/evidence/version/summary-diff is rejected
+    has_change, exp = detect_meaningful_change(
+        candidate_title="Anthropic Announces Claude 3.5 Sonnet Model Details",
+        candidate_summary="Anthropic introduces Claude 3.5 Sonnet with enhanced vision and reasoning benchmarks.",
+        candidate_url="https://theverge.com/news/claude-3-5",
+        candidate_source="The Verge",
+        parent_entry=orig_entry
+    )
+    assert has_change is False
+    assert "syndicated copy" in exp or "no identifiable new fact" in exp
+
+    # Factual development (e.g. new action verb / release) is accepted
+    has_change_fact, exp_fact = detect_meaningful_change(
+        candidate_title="Anthropic Deploys Claude 3.5 Sonnet to Enterprise Workspaces with Pricing",
+        candidate_summary="Anthropic deploys Claude 3.5 Sonnet with new API availability and benchmark results.",
+        candidate_url="https://theverge.com/news/claude-3-5-pricing",
+        candidate_source="The Verge",
+        parent_entry=orig_entry
+    )
+    assert has_change_fact is True
+    assert "new event action" in exp_fact
+
+def test_truncate_with_preserved_link():
+    from src.curator import _truncate_with_preserved_link
+    url = "https://example.com/very/long/path/to/story"
+    text = "This is a detailed lead sentence explaining something important. " * 5
+    result = _truncate_with_preserved_link(text, url, limit=100)
+    assert url in result
+    assert len(result) <= 100
+    assert result.endswith(url)
+
+    unfit_url = "https://example.com/" + ("x" * 100)
+    unfit_result = _truncate_with_preserved_link("Update details", unfit_url, limit=50)
+    assert unfit_url not in unfit_result
+    assert not unfit_result.endswith(unfit_url[:50])
+    assert len(unfit_result) <= 50
+
+
+def test_event_verb_inflections_are_not_meaningful_changes():
+    from src.curator import detect_meaningful_change
+
+    changed, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5",
+        candidate_summary="OpenAI introduced GPT-5 to developers today.",
+        candidate_url="https://example.net/gpt-5",
+        candidate_source="Example",
+        parent_entry={
+            "title": "OpenAI Announces GPT-5",
+            "summary": "OpenAI introduced GPT-5 to developers today.",
+            "url": "https://example.com/gpt-5",
+            "source": "Example",
+        },
+    )
+
+    assert changed is False
+    assert "no identifiable new fact" in explanation
+
+
+def test_rollout_is_a_meaningful_event_but_new_publishers_are_not():
+    from src.curator import detect_meaningful_change
+
+    parent = {
+        "title": "OpenAI Announces GPT-5 API",
+        "url": "https://example.com/announcement",
+        "source": "Example",
+    }
+    rollout, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Rolls Out GPT-5 API Worldwide",
+        candidate_summary="",
+        candidate_url="https://example.net/rollout",
+        candidate_source="Other",
+        parent_entry=parent,
+    )
+    assert rollout is True
+    assert "rollout" in explanation
+
+    syndicated, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5 API",
+        candidate_summary="Same report without a new fact.",
+        candidate_url="https://example.net/copy",
+        candidate_source="Other",
+        parent_entry={**parent, "summary": "Same report without a new fact."},
+    )
+    assert syndicated is False
+    assert "no identifiable new fact" in explanation
+
+    # Paraphrased summary vocabulary alone must not constitute a new factual development
+    paraphrased, explanation_para = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5 API",
+        candidate_summary="The San Francisco artificial intelligence lab showcased its newest next-generation flagship frontier foundation system.",
+        candidate_url="https://example.net/paraphrase",
+        candidate_source="Other",
+        parent_entry={
+            **parent,
+            "summary": "OpenAI revealed GPT-5 today with enhanced coding capabilities, faster inference, and comprehensive benchmark gains across reasoning tasks.",
+        },
+    )
+    assert paraphrased is False
+    assert "no identifiable new fact" in explanation_para
+
+    background_number, explanation_background = detect_meaningful_change(
+        candidate_title="OpenAI Announced GPT-5 API",
+        candidate_summary="OpenAI announced GPT-5 API access. The company was founded in 2015.",
+        candidate_url="https://example.net/background",
+        candidate_source="Other",
+        parent_entry={
+            **parent,
+            "summary": "OpenAI announced GPT-5 API access for developers.",
+        },
+    )
+    assert background_number is False
+    assert "no identifiable new fact" in explanation_background
+
+    changed_quantity, explanation_quantity = detect_meaningful_change(
+        candidate_title="Service Customer Growth Report",
+        candidate_summary="The service now has 200 customers across its active accounts.",
+        candidate_url="https://example.net/customer-growth",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Growth Report for Customers",
+            "summary": "The service now has 100 customers across its active accounts.",
+            "url": "https://example.com/customer-growth",
+            "source": "Example",
+        },
+    )
+    assert changed_quantity is True
+    assert "summary factual quantity change" in explanation_quantity
+
+    changed_with_baseline, explanation_baseline = detect_meaningful_change(
+        candidate_title="Service Customer Growth Report",
+        candidate_summary="The service now has 200 customers, up from 100 last quarter.",
+        candidate_url="https://example.net/customer-growth-baseline",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Growth Report for Customers",
+            "summary": "The service now has 100 customers across its active accounts.",
+            "url": "https://example.com/customer-growth",
+            "source": "Example",
+        },
+    )
+    assert changed_with_baseline is True
+    assert "summary factual quantity change" in explanation_baseline
+
+    unchanged_multiple, explanation_multiple = detect_meaningful_change(
+        candidate_title="Service Customer Distribution Report",
+        candidate_summary="The service has 100 customers locally and 200 customers overseas.",
+        candidate_url="https://example.net/customer-distribution",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Distribution Report for Customers",
+            "summary": "The service has 100 customers locally and 200 customers overseas.",
+            "url": "https://example.com/customer-distribution",
+            "source": "Example",
+        },
+    )
+    assert unchanged_multiple is False
+    assert "no identifiable new fact" in explanation_multiple
+
+
+
+def test_base_event_verbs_and_changed_numeric_facts_are_meaningful():
+    from src.curator import detect_meaningful_change
+
+    released, explanation = detect_meaningful_change(
+        candidate_title="Developers Release Acme Model Publicly",
+        candidate_summary="",
+        candidate_url="https://example.net/release",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Developers Announce Acme Model Preview",
+            "url": "https://example.com/preview",
+            "source": "Example",
+        },
+    )
+    assert released is True
+    assert "release" in explanation
+
+    grew, explanation = detect_meaningful_change(
+        candidate_title="Service Reaches 200 Customers",
+        candidate_summary="",
+        candidate_url="https://example.net/200",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Service Reaches 100 Customers",
+            "url": "https://example.com/100",
+            "source": "Example",
+        },
+    )
+    assert grew is True
+    assert "changed numeric fact" in explanation
+
+    equivalent, explanation = detect_meaningful_change(
+        candidate_title="Acme Revenue Grows 50% This Quarter",
+        candidate_summary="",
+        candidate_url="https://example.net/revenue",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Acme Revenue Grows 50 Percent",
+            "url": "https://example.com/revenue",
+            "source": "Example",
+        },
+    )
+    assert equivalent is False
+    assert "no identifiable new fact" in explanation
+
+
+def test_generic_model_versions_remain_separate_stories():
+    from src.curator import detect_meaningful_change
+
+    changed, explanation = detect_meaningful_change(
+        candidate_title="xAI Releases Grok 4 Model",
+        candidate_summary="",
+        candidate_url="https://example.net/grok-4",
+        candidate_source="Other",
+        parent_entry={
+            "title": "xAI Releases Grok 3 Model",
+            "url": "https://example.com/grok-3",
+            "source": "Example",
+        },
+    )
+    assert changed is False
+    assert "conflicting version numbers" in explanation
+
+    # Plural product naming ("Grok 4 models") must extract versions so separate releases are not merged
+    changed_plural, explanation_plural = detect_meaningful_change(
+        candidate_title="xAI releases Grok 4 models",
+        candidate_summary="",
+        candidate_url="https://example.net/grok-4-models",
+        candidate_source="Other",
+        parent_entry={
+            "title": "xAI releases Grok 3 models",
+            "url": "https://example.com/grok-3-models",
+            "source": "Example",
+        },
+    )
+    assert changed_plural is False
+    assert "conflicting version numbers" in explanation_plural
+
+    count_changed, explanation = detect_meaningful_change(
+        candidate_title="Acme Now Supports 20 Models",
+        candidate_summary="",
+        candidate_url="https://example.net/models-20",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Acme Now Supports 10 Models",
+            "url": "https://example.com/models-10",
+            "source": "Example",
+        },
+    )
+    assert count_changed is True
+    assert "changed numeric fact" in explanation
+
+
+def test_meaningful_change_tracks_quantities_by_subject_and_normalizes_synonyms():
+    from src.curator import detect_meaningful_change
+
+    swapped, _ = detect_meaningful_change(
+        candidate_title="Acme Service Metrics Report",
+        candidate_summary="The service currently has 200 customers and 100 servers in production.",
+        candidate_url="https://other.example/metrics",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Acme Service Metrics",
+            "summary": "The service currently has 100 customers and 200 servers in production.",
+            "url": "https://example.com/metrics",
+            "source": "Example",
+        },
+    )
+    assert swapped is True
+
+    syndicated, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Releases GPT-5",
+        candidate_summary="OpenAI makes GPT-5 available to developers worldwide today.",
+        candidate_url="https://other.example/gpt-5",
+        candidate_source="Other",
+        parent_entry={
+            "title": "OpenAI Launches GPT-5",
+            "summary": "OpenAI makes GPT-5 available to developers worldwide today.",
+            "url": "https://example.com/gpt-5",
+            "source": "Example",
+        },
+    )
+    assert syndicated is False
+    assert "no identifiable new fact" in explanation
+
+
+def test_continuity_uses_bot_time_for_window_and_rejects_delayed_updates():
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+
+    now = datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc)
+    original = {
+        "url": "https://example.com/original",
+        "title": "Acme Launches Atlas Model",
+        "summary": "Acme launched Atlas for selected developers in an early preview.",
+        "source": "Acme",
+        "published_at": "2026-10-19T12:00:00Z",
+        "source_published_at": "2026-10-17T11:00:00Z",
+        "entry_kind": "original",
+        "story_fingerprint": "acme atlas model",
+    }
+    prior_update = {
+        "url": "https://example.com/public",
+        "title": "Acme Expands Atlas Model Public Access",
+        "summary": "Acme expanded Atlas access to every developer at noon.",
+        "source": "Acme",
+        "published_at": "2026-10-20T12:00:00Z",
+        "source_published_at": "2026-10-20T10:00:00Z",
+        "entry_kind": "update",
+        "parent_story_fingerprint": "acme atlas model",
+    }
+    candidate = {
+        "title": "Acme Expands Atlas Model Preview Access",
+        "summary": "Acme expanded Atlas access to more preview developers.",
+        "link": "https://other.example/preview",
+        "source": "Other",
+        "published": "2026-10-20T09:00:00Z",
+    }
+
+    decision, matched, _ = match_story_continuity(candidate, [original], now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    assert matched is original
+
+    decision, matched, explanation = match_story_continuity(candidate, [original, prior_update], now_utc=now)
+    assert decision == MatchDecision.POSSIBLE_MATCH.value
+    assert matched is original
+    assert "does not advance" in explanation
+
+
+def test_event_synonyms_only_suppress_same_described_release():
+    from src.curator import detect_meaningful_change
+
+    no_parent_event, _ = detect_meaningful_change(
+        candidate_title="Acme Releases Atlas Model", candidate_summary="",
+        candidate_url="https://other.example/atlas", candidate_source="Other",
+        parent_entry={"title": "Acme Atlas Model", "summary": "", "url": "https://example.com/atlas", "source": "Example"},
+    )
+    assert no_parent_event is True
+
+    same_release, _ = detect_meaningful_change(
+        candidate_title="OpenAI Releases GPT-5", candidate_summary="OpenAI makes GPT-5 available worldwide.",
+        candidate_url="https://other.example/gpt5", candidate_source="Other",
+        parent_entry={"title": "OpenAI Launches GPT-5", "summary": "OpenAI makes GPT-5 available worldwide.", "url": "https://example.com/gpt5", "source": "Example"},
+    )
+    assert same_release is False
+
+    empty_summaries, _ = detect_meaningful_change(
+        candidate_title="Acme Releases Atlas Model", candidate_summary="",
+        candidate_url="https://other.example/atlas-release", candidate_source="Other",
+        parent_entry={"title": "Acme Launches Atlas Model", "summary": "", "url": "https://example.com/atlas-launch", "source": "Example"},
+    )
+    assert empty_summaries is False
+
+
+def test_delayed_distinct_fact_can_match_original_after_newer_update():
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+
+    now = datetime(2026, 10, 21, 12, 0, tzinfo=timezone.utc)
+    root = {"url":"https://example.com/root", "title":"Acme Atlas Model Rollout", "summary":"Acme rolled out Atlas in Europe at 10:00.", "source":"Acme", "published_at":"2026-10-20T10:00:00Z", "source_published_at":"2026-10-20T08:00:00Z", "entry_kind":"original", "story_fingerprint":"atlas"}
+    update = {"url":"https://example.com/rollout", "title":"Acme Expands Atlas Rollout in Europe", "summary":"Acme expanded Atlas rollout to Europe.", "source":"Acme", "published_at":"2026-10-20T12:00:00Z", "source_published_at":"2026-10-20T10:00:00Z", "entry_kind":"update", "parent_story_fingerprint":"atlas"}
+    candidate = {"title":"Acme Patches Atlas Model Security Flaw", "summary":"Acme patched a security flaw in Atlas, fixing 12 vulnerabilities.", "link":"https://other.example/atlas-patch", "source":"Other", "published":"2026-10-20T09:00:00Z"}
+
+    decision, matched, _ = match_story_continuity(candidate, [root, update], now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    assert matched is root
+
+
+def test_delayed_older_count_cannot_reverse_story_progress():
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+
+    now = datetime(2026, 10, 21, 12, 0, tzinfo=timezone.utc)
+    parent = {
+        "url": "https://example.com/200-customers",
+        "title": "Acme Service Reaches 200 Customers",
+        "summary": "Acme now serves 200 customers worldwide.",
+        "source": "Acme",
+        "published_at": "2026-10-20T11:00:00Z",
+        "source_published_at": "2026-10-20T10:00:00Z",
+        "entry_kind": "original",
+        "story_fingerprint": "acme customers service",
+    }
+    delayed = {
+        "title": "Acme Service Reaches 100 Customers",
+        "summary": "Acme now serves 100 customers worldwide.",
+        "link": "https://other.example/100-customers",
+        "source": "Other",
+        "published": "2026-10-20T08:00:00Z",
+    }
+
+    decision, _, _ = match_story_continuity(delayed, [parent], now_utc=now)
+    assert decision == MatchDecision.NO_MATCH.value

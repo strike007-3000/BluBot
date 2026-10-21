@@ -15,6 +15,7 @@ from scripts.build_archive import (
     build_rss,
     classify_content_type,
     compute_guid,
+    compute_html_id,
     compute_trust_stats,
     extract_display_domain,
     fetch_metrics_best_effort,
@@ -522,8 +523,18 @@ def test_compute_guid_is_stable():
     }
     without_uri = {"url": "https://example.com/test", "published_at": "2026-10-17T12:00:00Z"}
     assert compute_guid(with_uri) == "at://did:plc:x/app.bsky.feed.post/123"
+    assert compute_guid(with_uri) == compute_guid(with_uri)
     assert compute_guid(without_uri) == compute_guid(without_uri)
     assert len(compute_guid(without_uri)) == 64
+
+
+def test_compute_html_id_hashes_malformed_at_uri():
+    entry = {"posts": {"bluesky": {"uri": 'at://did:plc:x/app/post/\" onfocus=alert(1)'}}}
+    guid = compute_html_id(entry)
+
+    assert len(guid) == 64
+    assert '"' not in guid
+    assert "at://" not in guid
 
 
 # --- Required Coverage 21: The page contains a skip link and visible focus styles ---
@@ -555,3 +566,151 @@ def test_svg_icons_accessibility():
     ])
     assert 'aria-hidden="true"' in html_out
     assert '<span class="sr-only">' in html_out
+
+
+# --- Story Continuity & Updates Archive Tests ---
+
+def test_archive_timeline_and_update_badges():
+    entries = [
+        {
+            "url": "https://example.com/orig",
+            "title": "Major Model Announced",
+            "published_at": "2026-10-16T10:00:00Z",
+            "entry_kind": "original",
+            "story_fingerprint": "fp_model_1",
+            "posts": {"bluesky": {"uri": "at://orig_bsky", "receipt_uri": "https://bsky.app/orig"}},
+        },
+        {
+            "url": "https://example.com/update1",
+            "title": "Model Now Available to All Devs",
+            "published_at": "2026-10-16T14:00:00Z",
+            "entry_kind": "update",
+            "parent_story_fingerprint": "fp_model_1",
+            "update_number": 1,
+            "posts": {"mastodon": {"id": "masto_up1", "url": "https://masto.example/up1"}},
+        },
+        {
+            "url": "https://example.com/update2",
+            "title": "Model Benchmark Released",
+            "published_at": "2026-10-16T18:00:00Z",
+            "entry_kind": "update",
+            "parent_story_fingerprint": "fp_model_1",
+            "update_number": 2,
+            "posts": {"threads": {"id": "threads_up2", "url": "https://threads.net/up2"}},
+        },
+        {
+            "url": "https://example.com/legacy_story",
+            "title": "Legacy Story With Malformed Metadata",
+            "published_at": "2026-10-15T09:00:00Z",
+            # No entry_kind or story_fingerprint
+        }
+    ]
+    html_out = build_html(entries)
+
+    # Check update badge and numbers
+    assert "badge-update" in html_out
+    assert "Update 1" in html_out
+    assert "Update 2" in html_out
+
+    # Check story timeline elements
+    assert "card-timeline" in html_out
+    assert "Update to:" in html_out
+    assert "Story timeline:" in html_out
+
+    # Check platform links for mastodon and threads
+    assert "https://masto.example/up1" in html_out
+    assert "https://threads.net/up2" in html_out
+
+    # Legacy story should be handled safely without error and rendered cleanly
+    assert "Legacy Story With Malformed Metadata" in html_out
+
+
+def test_archive_rejects_unsafe_platform_urls_and_reveals_timeline_targets():
+    entries = [{
+        "url": "https://example.com/story",
+        "title": "Unsafe roots",
+        "published_at": "2026-10-18T10:00:00Z",
+        "thread_roots": {
+            "mastodon": {"url": "javascript:alert(1)"},
+            "threads": {"url": 123},
+        },
+    }]
+
+    html_out = build_html(entries)
+
+    assert "javascript:alert(1)" not in html_out
+    assert "function navigateToStory(hash)" in html_out
+    assert "document.getElementById(hash.slice(1))" in html_out
+    assert "document.querySelector(hash)" not in html_out
+    assert "filterType.value = 'all'" in html_out
+    assert "targetCard.classList.remove('hidden')" in html_out
+
+
+def test_archive_derives_legacy_parent_fingerprint_for_timeline():
+    from src.utils import compute_story_fingerprint
+
+    legacy_title = "Legacy Model Release"
+    entries = [
+        {
+            "url": "https://example.com/original",
+            "title": legacy_title,
+            "published_at": "2026-10-17T10:00:00Z",
+        },
+        {
+            "url": "https://example.com/update",
+            "title": "Legacy Model Release Expands",
+            "published_at": "2026-10-18T10:00:00Z",
+            "entry_kind": "update",
+            "parent_story_fingerprint": compute_story_fingerprint(legacy_title),
+            "update_number": 1,
+        },
+    ]
+
+    html_out = build_html(entries)
+
+    assert "Update to:" in html_out
+    assert "Story timeline:" in html_out
+
+
+def test_archive_preserves_rss_guids_and_sanitizes_update_numbers():
+    uri = "at://did:plc:x/app.bsky.feed.post/123"
+    entries = [{
+        "url": "https://example.com/update",
+        "title": "Unsafe update number",
+        "published_at": "2026-10-18T10:00:00Z",
+        "entry_kind": "update",
+        "update_number": '</span><script>alert(1)</script>',
+        "posts": {"bluesky": {"uri": uri}},
+    }]
+
+    rss_item = ET.fromstring(build_rss(entries)).find("channel/item")
+    assert rss_item.findtext("guid") == uri
+    html_out = build_html(entries)
+    assert "<script>alert(1)</script>" not in html_out
+    assert "Update 1" in html_out
+
+
+def test_archive_uses_unique_story_id_for_recurring_titles():
+    from src.utils import compute_story_fingerprint, compute_story_id
+
+    title = "Acme Quarterly Report"
+    first = {"url": "https://example.com/q1", "title": title, "published_at": "2026-04-01T10:00:00Z"}
+    second = {"url": "https://example.com/q2", "title": title, "published_at": "2026-07-01T10:00:00Z"}
+    for entry in (first, second):
+        entry["story_fingerprint"] = compute_story_fingerprint(title)
+        entry["story_id"] = compute_story_id(entry)
+    update = {
+        "url": "https://example.com/q2-update",
+        "title": "Acme Quarterly Report Revised",
+        "published_at": "2026-07-02T10:00:00Z",
+        "entry_kind": "update",
+        "parent_story_id": second["story_id"],
+        "parent_story_fingerprint": second["story_fingerprint"],
+        "update_number": 1,
+    }
+
+    html_out = build_html([first, second, update])
+    second_anchor = f'#story-{compute_html_id(second)}'
+    assert f'href="{second_anchor}"' in html_out
+
+

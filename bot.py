@@ -264,14 +264,38 @@ async def synthesis_stage(
     client: httpx.AsyncClient,
     genai_client: genai.Client,
     curation: CurationResult,
-    telegram_topic: Optional[str] = None
+    telegram_topic: Optional[str] = None,
+    decision: Optional[Any] = None
 ) -> Tuple[SynthesisResult, CurationResult]:
-    """Stage 2: Synthesize Raw News into an Elite Tech Insight Post."""
+    """Stage 2: Synthesize Raw News into an Elite Tech Insight Post or Thread Update."""
     context = get_temporal_context()
     news_count = len(curation.top_articles)
     SafeLogger.info(f"Synthesis Stage: Processing {news_count} curated articles.")
 
     summary, lead_link, topic, is_failover = None, None, "General", False
+
+    # Check for update mode synthesis
+    if decision and getattr(decision, "mode", None) == "update" and getattr(decision, "parent_entry", None):
+        lead_art = curation.top_articles[0] if curation.top_articles else None
+        if lead_art:
+            from src.curator import summarize_update
+            lead_dict = vars(lead_art)
+            SafeLogger.info(f"Synthesis Stage: Executing dedicated update synthesis for parent '{decision.parent_fingerprint}'")
+            up_res = await summarize_update(
+                new_article=lead_dict,
+                parent_entry=decision.parent_entry,
+                context=context
+            )
+            summary, lead_link, topic, is_failover, current_dialect, platform_drafts = up_res
+            return SynthesisResult(
+                content=summary,
+                lead_link=lead_link,
+                topic=topic,
+                is_failover=is_failover,
+                media=None,
+                writing_style="UPDATE",
+                drafts=platform_drafts
+            ), curation
 
     # Choose writing style from styles compatible with selected content
     from src.config import FEED_CATEGORY_MAP, STYLE_COMPATIBILITY, ALL_STYLES
@@ -553,7 +577,10 @@ async def media_strategy_stage(client, genai_client, synthesis: SynthesisResult,
     return media
 
 async def broadcast_stage(
-    client: httpx.AsyncClient, synthesis: SynthesisResult, max_parts: Optional[int] = None
+    client: httpx.AsyncClient,
+    synthesis: SynthesisResult,
+    max_parts: Optional[int] = None,
+    decision: Optional[Any] = None
 ) -> Tuple[List[BroadcastResult], Any]:
     """Stage 3: Multi-platform delivery."""
     if settings.is_dry_run:
@@ -562,9 +589,9 @@ async def broadcast_stage(
         if synthesis.media and synthesis.media.alt_text:
             SafeLogger.info(f"DRY RUN Image Alt Text: {synthesis.media.alt_text}")
         return [
-            BroadcastResult(platform="Bluesky", success=True),
-            BroadcastResult(platform="Mastodon", success=True),
-            BroadcastResult(platform="Threads", success=True)
+            BroadcastResult(platform="Bluesky", success=True, post_id="dry_run_bsky_id", post_url="https://bsky.app/profile/dryrun/post/dryrun"),
+            BroadcastResult(platform="Mastodon", success=True, post_id="dry_run_masto_id", post_url="https://mastodon.social/@blubot/dryrun"),
+            BroadcastResult(platform="Threads", success=True, post_id="dry_run_threads_id", post_url="https://threads.net/@blubot/post/dryrun")
         ], None
 
     # Bluesky Session Hardening
@@ -591,12 +618,27 @@ async def broadcast_stage(
     mastodon_content = synthesis.get_platform_content("mastodon")
     threads_content = synthesis.get_platform_content("threads")
 
+    # Extract target reply targets from decision if in update mode
+    target_roots = getattr(decision, "target_platform_roots", {}) if decision and getattr(decision, "mode", None) == "update" else {}
+    bsky_reply_target = target_roots.get("bluesky")
+    mastodon_reply_id = target_roots.get("mastodon", {}).get("id") if isinstance(target_roots.get("mastodon"), dict) else target_roots.get("mastodon")
+    threads_reply_id = target_roots.get("threads", {}).get("id") if isinstance(target_roots.get("threads"), dict) else target_roots.get("threads")
+
     if bsky_client and settings.bsky_handle:
-        tasks.append(("Bluesky", post_to_bluesky(bsky_client, client, bsky_content, synthesis.lead_link, synthesis.media, max_parts=max_parts)))
+        tasks.append(("Bluesky", post_to_bluesky(
+            bsky_client, client, bsky_content, synthesis.lead_link, synthesis.media,
+            max_parts=max_parts, reply_to=bsky_reply_target
+        )))
     if settings.mastodon_token and settings.mastodon_base_url:
-        tasks.append(("Mastodon", post_to_mastodon(mastodon_content, synthesis.media, max_parts=max_parts)))
+        tasks.append(("Mastodon", post_to_mastodon(
+            mastodon_content, synthesis.media,
+            max_parts=max_parts, reply_to_id=mastodon_reply_id
+        )))
     if settings.threads_token and settings.threads_user_id:
-        tasks.append(("Threads", post_to_threads(client, threads_content, synthesis.media, max_parts=max_parts)))
+        tasks.append(("Threads", post_to_threads(
+            client, threads_content, synthesis.media,
+            max_parts=max_parts, reply_to_id=threads_reply_id
+        )))
 
     if not tasks:
         SafeLogger.error("No configured broadcast targets available!")
@@ -608,19 +650,35 @@ async def broadcast_stage(
     for (name, _), res in zip(tasks, results):
         if isinstance(res, Exception):
             report.append(BroadcastResult(platform=name, success=False, error=str(res)))
-        elif res is False:
+        elif not res:
             report.append(BroadcastResult(platform=name, success=False, error="Platform skipped or failed internally"))
         else:
-            post_id = getattr(res, "uri", res)
+            post_url = None
+            if name in {"Mastodon", "Threads"} and isinstance(res, tuple):
+                post_id, post_url = res
+            else:
+                post_id = getattr(res, "uri", res)
+            post_id_str = str(post_id) if post_id else None
+            if post_id_str:
+                if name == "Bluesky" and post_id_str.startswith("at://"):
+                    parts = post_id_str[5:].split("/")
+                    if len(parts) >= 3 and parts[1] == "app.bsky.feed.post":
+                        post_url = f"https://bsky.app/profile/{parts[0]}/post/{parts[2]}"
+
             report.append(BroadcastResult(
                 platform=name, success=True,
-                post_id=str(post_id) if post_id else None,
+                post_id=post_id_str,
                 post_cid=getattr(res, "cid", None),
+                post_url=post_url,
             ))
     return report, bsky_client
 
-async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisResult) -> Tuple[dict, Article]:
-    """Resolves lead article and writes pending reservation to state."""
+async def reserve_pending_stage(
+    curation: CurationResult,
+    synthesis: SynthesisResult,
+    decision: Optional[Any] = None
+) -> Tuple[Optional[dict], Article]:
+    """Resolves lead article and writes pending reservation (original or update) to state."""
     import hashlib
     canonical_lead = None
     matched_article = None
@@ -649,55 +707,132 @@ async def reserve_pending_stage(curation: CurationResult, synthesis: SynthesisRe
 
     state = await asyncio.to_thread(load_seen_articles)
     from src.utils import compute_story_fingerprint
+
+    is_update_mode = bool(decision and getattr(decision, "mode", None) == "update")
+    parent_fp = getattr(decision, "parent_fingerprint", None) if is_update_mode else None
+    parent_story_id = getattr(decision, "parent_story_id", None) if is_update_mode else None
+    update_num = getattr(decision, "update_number", 0) if is_update_mode else 0
+
+    parent_key = parent_story_id or parent_fp
+    idempotency_key = f"update:{parent_key}:{canonical_lead}" if is_update_mode else f"original:{compute_story_fingerprint(matched_article.title)}:{canonical_lead}"
+
+    # Idempotency check: if reservation or published post with this key exists, abort or skip duplicate
+    for ps in state.get("pending_stories", []):
+        if ps.get("idempotency_key") == idempotency_key or (is_update_mode and ps.get("url") == canonical_lead and (ps.get("parent_story_id") or ps.get("parent_story_fingerprint")) == parent_key):
+            SafeLogger.warn(f"Duplicate reservation detected ({idempotency_key}). Skipping duplicate broadcast.")
+            return None, matched_article
+
+    for pub in state.get("published_posts", []):
+        if pub.get("idempotency_key") == idempotency_key or (is_update_mode and pub.get("url") == canonical_lead and (pub.get("parent_story_id") or pub.get("parent_story_fingerprint")) == parent_key):
+            SafeLogger.warn(f"Duplicate published story detected ({idempotency_key}). Skipping duplicate broadcast.")
+            return None, matched_article
+
     pending_entry = {
         "url": canonical_lead,
         "title": matched_article.title,
         "fingerprint": compute_story_fingerprint(matched_article.title),
         "stage": "pending",
         "source_published_at": matched_article.published,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "entry_kind": "update" if is_update_mode else "original",
+        "parent_story_fingerprint": parent_fp,
+        "parent_story_id": parent_story_id,
+        "update_number": update_num,
+        "idempotency_key": idempotency_key,
+        "target_platform_roots": getattr(decision, "target_platform_roots", {}) if is_update_mode else {},
+        "editorial_decision": {
+            "mode": getattr(decision, "mode", "original"),
+            "confidence": getattr(decision, "confidence", "NO_MATCH"),
+            "explanation": getattr(decision, "explanation", "")
+        } if decision else None,
+        "reservation_timestamp": datetime.now(timezone.utc).isoformat(),
     }
     state.setdefault("pending_stories", []).append(pending_entry)
 
-    res_ok, updated_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=True)
+    res_ok, updated_state = await asyncio.to_thread(
+        save_seen_articles,
+        state,
+        is_reservation=True,
+        reservation_key=idempotency_key,
+    )
     if not res_ok:
+        if updated_state.get("_reservation_conflict"):
+            SafeLogger.warn(f"Duplicate reservation won concurrent claim ({idempotency_key}). Skipping duplicate broadcast.")
+            return None, matched_article
         SafeLogger.error("CRITICAL: Authoritative pending reservation failed on configured state storage. Aborting publication.")
         sys.exit(1)
 
     return updated_state, matched_article
+
 
 async def settle_persistence_stage(
     state: dict,
     curation: CurationResult,
     synthesis: SynthesisResult,
     matched_article: Article,
-    results: List[BroadcastResult]
+    results: List[BroadcastResult],
+    decision: Optional[Any] = None
 ) -> dict:
     """Settles pending reservation to published (if any broadcast target succeeded) or retains as uncertain (if all failed)."""
     canonical_lead = normalize_url(synthesis.lead_link) if synthesis.lead_link else matched_article.link
     any_success = any(res.success for res in results)
+    is_update_mode = bool(decision and getattr(decision, "mode", None) == "update")
+    parent_fp = getattr(decision, "parent_fingerprint", None) if is_update_mode else None
+    parent_story_id = getattr(decision, "parent_story_id", None) if is_update_mode else None
+    parent_key = parent_story_id or parent_fp
+    update_num = getattr(decision, "update_number", 0) if is_update_mode else 0
+
+    reserved_entry = next(
+        (
+            pending for pending in state.get("pending_stories", [])
+            if pending.get("url") == canonical_lead
+            and (not is_update_mode or (pending.get("parent_story_id") or pending.get("parent_story_fingerprint")) == parent_key)
+        ),
+        None,
+    )
+    if reserved_entry:
+        update_num = reserved_entry.get("update_number", update_num)
 
     if any_success:
-        state["pending_stories"] = [ps for ps in state.get("pending_stories", []) if ps.get("url") != canonical_lead]
+        # Success policy: remove pending reservation when successful
+        state["pending_stories"] = [
+            ps for ps in state.get("pending_stories", [])
+            if not (ps.get("url") == canonical_lead and (not is_update_mode or (ps.get("parent_story_id") or ps.get("parent_story_fingerprint")) == parent_key))
+        ]
+
+        from src.utils import compute_story_fingerprint
+        fp = compute_story_fingerprint(matched_article.title)
         pub_entry = {
             "url": canonical_lead,
             "title": matched_article.title,
-            "fingerprint": compute_story_fingerprint(matched_article.title),
+            "fingerprint": fp,
             "supporting_links": [normalize_url(sl) for sl in (matched_article.supporting_links or []) if sl],
             "stage": "published",
             "source_published_at": matched_article.published,
-            "published_at": datetime.now(timezone.utc).isoformat()
+            "published_at": datetime.now(timezone.utc).isoformat(),
+            "entry_kind": "update" if is_update_mode else "original",
+            "parent_story_fingerprint": parent_fp,
+            "parent_story_id": parent_story_id,
+            "update_number": update_num,
         }
         state.setdefault("recent_stories", []).append(pub_entry)
 
         posts = {}
+        thread_roots = {}
         for res in results:
             if not (res.success and res.post_id):
                 continue
+            plat_key = res.platform.lower()
             if res.platform == "Bluesky":
                 posts["bluesky"] = {"uri": res.post_id, "cid": res.post_cid, "receipt_uri": res.receipt_id}
-            else:
-                posts[res.platform.lower()] = {"id": res.post_id}
+                thread_roots["bluesky"] = {"uri": res.post_id, "cid": res.post_cid}
+            elif res.platform == "Mastodon":
+                posts["mastodon"] = {"id": res.post_id, "url": res.post_url}
+                thread_roots["mastodon"] = {"id": res.post_id, "url": res.post_url}
+            elif res.platform == "Threads":
+                posts["threads"] = {"id": res.post_id, "url": res.post_url}
+                thread_roots["threads"] = {"id": res.post_id, "url": res.post_url}
+
         from src.config import FEED_CATEGORY_MAP
         published_category = FEED_CATEGORY_MAP.get(matched_article.source_id, "unknown")
 
@@ -714,7 +849,18 @@ async def settle_persistence_stage(
             source_id=matched_article.source_id,
             category=published_category,
             supporting_sources=matched_article.supporting_sources,
+            entry_kind="update" if is_update_mode else "original",
+            story_fingerprint=fp,
+            parent_story_fingerprint=parent_fp,
+            parent_story_id=parent_story_id,
+            idempotency_key=reserved_entry.get("idempotency_key") if reserved_entry else None,
+            update_number=update_num,
+            source_url=canonical_lead,
+            thread_roots=thread_roots,
+            summary=matched_article.summary,
+            source_published_at=matched_article.published,
         )
+
         state.setdefault("links", [])
         if canonical_lead not in state["links"]:
             state["links"].append(canonical_lead)
@@ -735,15 +881,27 @@ async def settle_persistence_stage(
         state["total_posts_curated"] = state.get("total_posts_curated", 0) + 1
         state["last_dialect"] = curation.last_dialect
         state["links"] = state["links"][-500:]
+        state.setdefault("recent_topics", [])
         state["recent_topics"] = state["recent_topics"][-20:]
 
-        settle_ok, final_state = await asyncio.to_thread(save_seen_articles, state, is_reservation=False)
+        settle_ok, final_state = await asyncio.to_thread(
+            save_seen_articles,
+            state,
+            is_reservation=False,
+            settlement_delta={
+                "posts_curated": 1,
+                "category": published_category,
+                "style": synthesis.writing_style,
+                "topic": synthesis.topic if synthesis.topic != "General" else None,
+                "last_dialect": curation.last_dialect,
+            },
+        )
         if not settle_ok:
             SafeLogger.error("Post-broadcast settlement failed to save on configured state storage.")
             sys.exit(1)
         return final_state
     else:
-        # Ambiguous Failure path: Retain reservation with stage='uncertain' so duplicate protection remains active
+        # Ambiguous Failure path: Retain reservation with stage='uncertain'
         for ps in state.get("pending_stories", []):
             if ps.get("url") == canonical_lead:
                 ps["stage"] = "uncertain"
@@ -1309,10 +1467,87 @@ async def main():
         curation = await curation_stage(client, telegram_topic=telegram_topic)
         SafeLogger.info(f"Curation Stage: Completed in {time.monotonic() - t0:.2f}s ({len(curation.top_articles)} candidates).")
 
+        # 1.5 Continuity Matching & Editorial Decision Orchestration
+        from src.models import MatchDecision, EditorialDecision
+        from src.curator import match_story_continuity
+
+        decision = EditorialDecision(
+            mode="original",
+            parent_fingerprint=None,
+            update_number=0,
+            confidence=MatchDecision.NO_MATCH.value,
+            explanation="Default original story"
+        )
+
+        lead_art = curation.top_articles[0] if curation.top_articles else None
+        if lead_art and not telegram_topic:
+            state_data = await asyncio.to_thread(load_seen_articles)
+            published_ledger = state_data.get("published_posts", [])
+            lead_dict = vars(lead_art)
+            dec_type, parent_entry, explanation = match_story_continuity(lead_dict, published_ledger, now_utc=now)
+
+            if dec_type == MatchDecision.CONFIDENT_UPDATE.value and parent_entry and settings.story_update_detection_enabled:
+                from src.utils import compute_story_fingerprint, compute_story_id
+                parent_fp = parent_entry.get("story_fingerprint") or compute_story_fingerprint(parent_entry.get("title", ""))
+                parent_story_id = compute_story_id(parent_entry)
+                # Derive thread roots from parent posts if thread_roots is empty
+                p_roots = dict(parent_entry.get("thread_roots") or {})
+                if not p_roots and isinstance(parent_entry.get("posts"), dict):
+                    posts = parent_entry["posts"]
+                    if "bluesky" in posts and isinstance(posts["bluesky"], dict):
+                        p_roots["bluesky"] = {"uri": posts["bluesky"].get("uri"), "cid": posts["bluesky"].get("cid")}
+                    if "mastodon" in posts and isinstance(posts["mastodon"], dict):
+                        p_roots["mastodon"] = {"id": posts["mastodon"].get("id"), "url": posts["mastodon"].get("url")}
+                    if "threads" in posts and isinstance(posts["threads"], dict):
+                        p_roots["threads"] = {"id": posts["threads"].get("id"), "url": posts["threads"].get("url")}
+
+                prior_updates = [
+                    p for p in published_ledger
+                    if p.get("entry_kind") == "update"
+                    and (p.get("parent_story_id") or p.get("parent_story_fingerprint")) in {parent_story_id, parent_fp}
+                ]
+                up_num = len(prior_updates) + 1
+                decision = EditorialDecision(
+                    mode="update",
+                    parent_fingerprint=parent_fp,
+                    parent_story_id=parent_story_id,
+                    update_number=up_num,
+                    confidence=dec_type,
+                    explanation=explanation,
+                    target_platform_roots=p_roots,
+                    parent_entry=parent_entry
+                )
+                SafeLogger.info(f"Continuity Matcher: CONFIDENT_UPDATE identified for '{parent_entry.get('title', '')}' (Update #{up_num}). Roots: {list(decision.target_platform_roots.keys())}")
+            else:
+                SafeLogger.info(f"Continuity Matcher: Evaluated as {dec_type} ({explanation}). Proceeding with normal standalone post.")
+                from src.utils import compute_story_fingerprint
+                parent_fp_standalone = (parent_entry.get("story_fingerprint") or compute_story_fingerprint(parent_entry.get("title", ""))) if parent_entry else None
+                decision = EditorialDecision(
+                    mode="original",
+                    parent_fingerprint=parent_fp_standalone,
+                    update_number=0,
+                    confidence=dec_type,
+                    explanation=explanation
+                )
+
+        if settings.is_dry_run:
+            SafeLogger.info(
+                f"DRY RUN Continuity Evaluation:\n"
+                f"→ candidate: {lead_art.title if lead_art else 'None'}\n"
+                f"→ matched original story: {decision.parent_entry.get('title') if decision.parent_entry else 'None'}\n"
+                f"→ confidence: {decision.confidence}\n"
+                f"→ reason: {decision.explanation}\n"
+                f"→ action: {'reply update' if decision.mode == 'update' else 'standalone post'}"
+            )
+
         # 2. Synthesis
         t0 = time.monotonic()
         context = get_temporal_context()
-        synthesis, curation = await synthesis_stage(client, genai_client, curation, telegram_topic=telegram_topic)
+        synthesis, curation = await synthesis_stage(
+            client, genai_client, curation,
+            telegram_topic=telegram_topic,
+            decision=decision
+        )
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
@@ -1334,7 +1569,8 @@ async def main():
                 media=synthesis.media,
                 client=client,
                 genai_client=genai_client,
-                topic=synthesis.topic
+                topic=synthesis.topic,
+                decision=decision
             )
             if final_drafts is None:
                 SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
@@ -1353,12 +1589,15 @@ async def main():
             SafeLogger.info("Telegram: Approval disabled or dry-run bypassed.")
 
         # 2.8 Pre-Broadcast Lead Resolution & Reservation Contract
-        state, matched_article = await reserve_pending_stage(curation, synthesis)
+        state, matched_article = await reserve_pending_stage(curation, synthesis, decision=decision)
+        if state is None:
+            SafeLogger.warn("Reservation skipped duplicate candidate; halting broadcast pipeline.")
+            return
 
         # 3. Broadcast
         t0 = time.monotonic()
-        SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic}")
-        results, bsky_client = await broadcast_stage(client, synthesis)
+        SafeLogger.info(f"Initiating elite broadcast for topic: {synthesis.topic} (Mode: {decision.mode})")
+        results, bsky_client = await broadcast_stage(client, synthesis, decision=decision)
         for res in results:
             if res.success:
                 SafeLogger.info(f"{res.platform} broadcast successful.")
@@ -1367,7 +1606,7 @@ async def main():
         SafeLogger.info(f"Broadcast Stage: Completed in {time.monotonic() - t0:.2f}s.")
 
         # 3.5 Immediate Post-Broadcast Settlement
-        state = await settle_persistence_stage(state, curation, synthesis, matched_article, results)
+        state = await settle_persistence_stage(state, curation, synthesis, matched_article, results, decision=decision)
         state, results = await source_receipt_stage(state, matched_article, results, bsky_client)
         SafeLogger.info(f"Total Pipeline Duration: {time.monotonic() - t_start:.2f}s.")
 
