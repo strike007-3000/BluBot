@@ -711,10 +711,13 @@ def detect_meaningful_change(
     new_event_verbs = c_events - p_events
     launch_synonyms = {"launch", "release", "unveil"}
     if (
+        bool(p_events)
+        and
         c_events <= launch_synonyms
         and p_events <= launch_synonyms
         and {word for word in c_words if word not in _EVENT_VERB_ROOTS}
         == {word for word in p_words if word not in _EVENT_VERB_ROOTS}
+        and bool((candidate_summary or "").strip())
         and (candidate_summary or "").strip().lower()
         == str(parent_entry.get("summary", "")).strip().lower()
     ):
@@ -887,9 +890,6 @@ def match_story_continuity(
         p_tokens, p_versions = normalize_headline(entry.get("title", ""))
         if not calculate_title_similarity(c_tokens, c_versions, p_tokens, p_versions):
             continue
-        if candidate_pub_dt and candidate_pub_dt <= update_dt:
-            root = fp_to_original.get(entry.get("parent_story_id") or entry.get("parent_story_fingerprint"))
-            return MatchDecision.POSSIBLE_MATCH.value, root or entry, "possible match: candidate does not advance the published timeline"
         has_change, explanation = detect_meaningful_change(
             candidate_title=c_title,
             candidate_summary=c_summary,
@@ -897,6 +897,9 @@ def match_story_continuity(
             candidate_source=c_source,
             parent_entry=entry,
         )
+        if candidate_pub_dt and candidate_pub_dt <= update_dt:
+            root = fp_to_original.get(entry.get("parent_story_id") or entry.get("parent_story_fingerprint"))
+            return MatchDecision.POSSIBLE_MATCH.value, root or entry, "possible match: candidate does not advance the published timeline"
         if not has_change:
             root = fp_to_original.get(entry.get("parent_story_id") or entry.get("parent_story_fingerprint"))
             return MatchDecision.POSSIBLE_MATCH.value, root or entry, f"possible match: {explanation}"
@@ -922,8 +925,7 @@ def match_story_continuity(
                 source_dt = source_dt.replace(tzinfo=timezone.utc)
             if ledger_dt < cutoff_72h:
                 continue
-            if candidate_pub_dt and candidate_pub_dt <= source_dt:
-                continue
+            is_out_of_order = bool(candidate_pub_dt and candidate_pub_dt <= source_dt)
         except Exception:
             continue
 
@@ -945,6 +947,17 @@ def match_story_continuity(
         if not is_similar:
             continue
 
+        if is_out_of_order:
+            delayed_change, _ = detect_meaningful_change(
+                candidate_title=c_title,
+                candidate_summary=c_summary,
+                candidate_url=c_link,
+                candidate_source=c_source,
+                parent_entry=entry,
+            )
+            if not delayed_change:
+                continue
+
         # Compute token overlap jaccard for ranking
         all_c = c_tokens | c_versions
         all_p = p_tokens | p_versions
@@ -958,6 +971,9 @@ def match_story_continuity(
             candidate_source=c_source,
             parent_entry=entry,
         )
+
+        if is_out_of_order and not has_change:
+            continue
 
         if has_change:
             if sim_val > best_similarity_score:

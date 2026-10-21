@@ -1411,13 +1411,13 @@ def test_continuity_matcher_version_conflict_and_change_detection():
     assert decision == MatchDecision.POSSIBLE_MATCH.value
     assert matched["url"] == orig_entry["url"]
 
-    # Delayed older coverage cannot become an update to a newer parent.
+    # Delayed coverage with a genuinely distinct fact can still advance the story.
     predating_candidate = {
         **cand_valid_update,
         "published": "2026-10-18T05:00:00Z",
     }
     decision, matched, exp = match_story_continuity(predating_candidate, [orig_entry], now_utc=now)
-    assert decision == MatchDecision.NO_MATCH.value
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
 
     source_older_parent = {
         **orig_entry,
@@ -1764,3 +1764,35 @@ def test_continuity_uses_bot_time_for_window_and_rejects_delayed_updates():
     assert decision == MatchDecision.POSSIBLE_MATCH.value
     assert matched is original
     assert "does not advance" in explanation
+
+
+def test_event_synonyms_only_suppress_same_described_release():
+    from src.curator import detect_meaningful_change
+
+    no_parent_event, _ = detect_meaningful_change(
+        candidate_title="Acme Releases Atlas Model", candidate_summary="",
+        candidate_url="https://other.example/atlas", candidate_source="Other",
+        parent_entry={"title": "Acme Atlas Model", "summary": "", "url": "https://example.com/atlas", "source": "Example"},
+    )
+    assert no_parent_event is True
+
+    same_release, _ = detect_meaningful_change(
+        candidate_title="OpenAI Releases GPT-5", candidate_summary="OpenAI makes GPT-5 available worldwide.",
+        candidate_url="https://other.example/gpt5", candidate_source="Other",
+        parent_entry={"title": "OpenAI Launches GPT-5", "summary": "OpenAI makes GPT-5 available worldwide.", "url": "https://example.com/gpt5", "source": "Example"},
+    )
+    assert same_release is False
+
+
+def test_delayed_distinct_fact_can_match_original_after_newer_update():
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+
+    now = datetime(2026, 10, 21, 12, 0, tzinfo=timezone.utc)
+    root = {"url":"https://example.com/root", "title":"Acme Atlas Model Rollout", "summary":"Acme rolled out Atlas in Europe at 10:00.", "source":"Acme", "published_at":"2026-10-20T10:00:00Z", "source_published_at":"2026-10-20T08:00:00Z", "entry_kind":"original", "story_fingerprint":"atlas"}
+    update = {"url":"https://example.com/rollout", "title":"Acme Expands Atlas Rollout in Europe", "summary":"Acme expanded Atlas rollout to Europe.", "source":"Acme", "published_at":"2026-10-20T12:00:00Z", "source_published_at":"2026-10-20T10:00:00Z", "entry_kind":"update", "parent_story_fingerprint":"atlas"}
+    candidate = {"title":"Acme Patches Atlas Model Security Flaw", "summary":"Acme patched a security flaw in Atlas, fixing 12 vulnerabilities.", "link":"https://other.example/atlas-patch", "source":"Other", "published":"2026-10-20T09:00:00Z"}
+
+    decision, matched, _ = match_story_continuity(candidate, [root, update], now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    assert matched is root

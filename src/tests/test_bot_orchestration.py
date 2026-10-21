@@ -708,6 +708,26 @@ async def test_settlement_uses_atomically_reserved_update_number(mocker):
 
 
 @pytest.mark.asyncio
+async def test_settlement_persists_the_reserved_idempotency_key(mocker):
+    from src.models import Article, CurationResult, EditorialDecision, SynthesisResult, BroadcastResult
+    from bot import settle_persistence_stage
+
+    article = Article(title="Update", link="https://example.com/update", summary="summary", published="2026-10-21T10:00:00Z", source="Example")
+    reserved_key = "update:story-id:https://example.com/update"
+    state = {"pending_stories": [{"url": article.link, "parent_story_id": "story-id", "idempotency_key": reserved_key, "update_number": 1}], "published_posts": []}
+    decision = EditorialDecision(mode="update", parent_fingerprint="fingerprint", parent_story_id="story-id", update_number=1)
+    mocker.patch("bot.save_seen_articles", side_effect=lambda data, **_: (True, data))
+
+    settled = await settle_persistence_stage(
+        state, CurationResult(top_articles=[article], seen_links=[], recent_topics=[]),
+        SynthesisResult(content="Update", lead_link=article.link, topic="AI"), article,
+        [BroadcastResult("Bluesky", True, post_id="at://update")], decision=decision,
+    )
+
+    assert settled["published_posts"][-1]["idempotency_key"] == reserved_key
+
+
+@pytest.mark.asyncio
 async def test_editorial_decision_legacy_parent_derivation(mocker):
     from src.models import Article, CurationResult, MatchDecision, EditorialDecision
 

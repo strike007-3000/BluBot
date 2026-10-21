@@ -853,6 +853,7 @@ async def settle_persistence_stage(
             story_fingerprint=fp,
             parent_story_fingerprint=parent_fp,
             parent_story_id=parent_story_id,
+            idempotency_key=reserved_entry.get("idempotency_key") if reserved_entry else None,
             update_number=update_num,
             source_url=canonical_lead,
             thread_roots=thread_roots,
