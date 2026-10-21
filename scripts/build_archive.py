@@ -21,7 +21,7 @@ if BASE_DIR not in sys.path:
 
 from src.logger import SafeLogger
 from src.settings import settings
-from src.utils import _is_public_ip, _load_gist_state_with_status, compute_story_fingerprint, sanitize_and_migrate_state
+from src.utils import _is_public_ip, _load_gist_state_with_status, compute_story_fingerprint, compute_story_id, sanitize_and_migrate_state
 
 ARCHIVE_CAP_NOTICE = "Archive displays up to the last 500 published stories from the durable ledger."
 FEED_MAX_ITEMS = 50
@@ -70,13 +70,17 @@ def is_valid_public_http_url(url: Optional[str]) -> bool:
 
 
 def compute_guid(entry: dict) -> str:
-    """Stable, HTML-safe GUID derived from the strongest available identity."""
+    """Stable RSS identity, preserving existing Bluesky URI GUIDs."""
     bsky_uri = ((entry.get("posts") or {}).get("bluesky") or {}).get("uri")
     if isinstance(bsky_uri, str) and bsky_uri.startswith("at://"):
-        key = bsky_uri
-    else:
-        key = f"{entry.get('url', '')}_{entry.get('published_at', '')}"
+        return bsky_uri
+    key = f"{entry.get('url', '')}_{entry.get('published_at', '')}"
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
+
+
+def compute_html_id(entry: dict) -> str:
+    """Return an HTML-safe hash without changing the public RSS identity."""
+    return hashlib.sha256(compute_guid(entry).encode("utf-8")).hexdigest()
 
 
 def parse_date_safe(date_str: Optional[str]) -> Optional[datetime]:
@@ -464,9 +468,10 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     for entry in sorted_entries:
         kind = entry.get("entry_kind", "original")
         fp = entry.get("story_fingerprint") or compute_story_fingerprint(entry.get("title", ""))
-        p_fp = entry.get("parent_story_fingerprint")
+        p_fp = entry.get("parent_story_id") or entry.get("parent_story_fingerprint")
         if kind == "original" and fp:
             originals_by_fp[fp] = entry
+            originals_by_fp[compute_story_id(entry)] = entry
         elif kind == "update" and p_fp:
             updates_by_parent_fp.setdefault(p_fp, []).append(entry)
 
@@ -487,8 +492,11 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
         e_kind = e.get("entry_kind", "original")
         is_update = (e_kind == "update")
-        update_num = e.get("update_number", 1) if is_update else 0
-        parent_fp = e.get("parent_story_fingerprint")
+        try:
+            update_num = max(1, int(e.get("update_number", 1))) if is_update else 0
+        except (TypeError, ValueError):
+            update_num = 1 if is_update else 0
+        parent_fp = e.get("parent_story_id") or e.get("parent_story_fingerprint")
 
         content_type = classify_content_type(e)
         display_category = get_display_category(e)
@@ -572,19 +580,22 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         if is_update and parent_fp and parent_fp in originals_by_fp:
             p_orig = originals_by_fp[parent_fp]
             orig_title_esc = html.escape(str(p_orig.get("title", "Original story")))
-            orig_guid = compute_guid(p_orig)
+            orig_guid = compute_html_id(p_orig)
             timeline_html = f"""
             <div class="card-timeline" aria-label="Story continuity timeline">
               <span class="timeline-title">Update to:</span> <a href="#story-{orig_guid}">{orig_title_esc}</a>
             </div>"""
         elif not is_update:
             fp = e.get("story_fingerprint") or compute_story_fingerprint(e.get("title", ""))
-            child_updates = updates_by_parent_fp.get(fp, []) if fp else []
+            child_updates = updates_by_parent_fp.get(compute_story_id(e), []) or (updates_by_parent_fp.get(fp, []) if fp else [])
             if child_updates:
                 up_links = []
                 for cu in child_updates:
-                    u_num = cu.get("update_number", 1)
-                    u_guid = compute_guid(cu)
+                    try:
+                        u_num = max(1, int(cu.get("update_number", 1)))
+                    except (TypeError, ValueError):
+                        u_num = 1
+                    u_guid = compute_html_id(cu)
                     up_links.append(f'<a href="#story-{u_guid}">Update {u_num}</a>')
                 timeline_html = f"""
                 <div class="card-timeline" aria-label="Story continuity timeline">
@@ -638,7 +649,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         search_terms = f"{raw_title} {source_name} {display_domain} {display_category} {content_type} {e_kind}".lower()
         corroboration_sort_score = 0 if is_roundup else num_corroborating
         card_class = "card card-update" if is_update else "card"
-        card_id = f"story-{compute_guid(e)}"
+        card_id = f"story-{compute_html_id(e)}"
 
         card_html = f"""
         <article id="{card_id}" class="{card_class}" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-recent="{str(is_recent).lower()}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">

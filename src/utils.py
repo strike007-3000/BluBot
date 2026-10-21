@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 from typing import Optional, List, Set, Tuple
 import asyncio
 import functools
@@ -306,6 +307,15 @@ def _sanitize_published_posts(entries: list) -> list:
     return sorted(valid, key=lambda entry: str(entry.get("published_at", "")))[-PUBLISHED_POSTS_CAP:]
 
 
+def compute_story_id(entry: dict) -> str:
+    """Return the stable identity of one ledger occurrence of a story."""
+    existing = entry.get("story_id")
+    if isinstance(existing, str) and existing:
+        return existing
+    identity = f"{entry.get('url', '')}|{entry.get('published_at', '')}"
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
+
 
 def append_published_post(
     state: dict,
@@ -325,6 +335,7 @@ def append_published_post(
     entry_kind: str = "original",
     story_fingerprint: Optional[str] = None,
     parent_story_fingerprint: Optional[str] = None,
+    parent_story_id: Optional[str] = None,
     update_number: Optional[int] = None,
     source_url: Optional[str] = None,
     thread_roots: Optional[dict] = None,
@@ -366,11 +377,14 @@ def append_published_post(
         "entry_kind": entry_kind,
         "story_fingerprint": fp,
         "parent_story_fingerprint": parent_story_fingerprint,
+        "parent_story_id": parent_story_id,
         "update_number": up_num,
         "source_url": src_u,
         "thread_roots": t_roots,
         "idempotency_key": idem_key,
     }
+    if entry_kind == "original":
+        entry["story_id"] = compute_story_id(entry)
     if isinstance(source_published_at, str) and source_published_at.strip():
         entry["source_published_at"] = source_published_at.strip()
     if summary and isinstance(summary, str) and summary.strip():
@@ -809,11 +823,11 @@ def save_seen_articles(
                     (entry for entry in state.get("pending_stories", []) if entry.get("idempotency_key") == reservation_key),
                     None,
                 )
-                if claim and claim.get("entry_kind") == "update" and claim.get("parent_story_fingerprint"):
-                    parent_fp = claim["parent_story_fingerprint"]
+                if claim and claim.get("entry_kind") == "update" and (claim.get("parent_story_id") or claim.get("parent_story_fingerprint")):
+                    parent_fp = claim.get("parent_story_id") or claim["parent_story_fingerprint"]
                     prior_numbers = []
                     for entry in state.get("pending_stories", []) + state.get("published_posts", []):
-                        if entry is claim or entry.get("parent_story_fingerprint") != parent_fp:
+                        if entry is claim or (entry.get("parent_story_id") or entry.get("parent_story_fingerprint")) != parent_fp:
                             continue
                         try:
                             prior_numbers.append(int(entry.get("update_number", 0)))

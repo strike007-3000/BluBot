@@ -15,6 +15,7 @@ from scripts.build_archive import (
     build_rss,
     classify_content_type,
     compute_guid,
+    compute_html_id,
     compute_trust_stats,
     extract_display_domain,
     fetch_metrics_best_effort,
@@ -521,15 +522,15 @@ def test_compute_guid_is_stable():
         "posts": {"bluesky": {"uri": "at://did:plc:x/app.bsky.feed.post/123"}},
     }
     without_uri = {"url": "https://example.com/test", "published_at": "2026-10-17T12:00:00Z"}
-    assert len(compute_guid(with_uri)) == 64
+    assert compute_guid(with_uri) == "at://did:plc:x/app.bsky.feed.post/123"
     assert compute_guid(with_uri) == compute_guid(with_uri)
     assert compute_guid(without_uri) == compute_guid(without_uri)
     assert len(compute_guid(without_uri)) == 64
 
 
-def test_compute_guid_hashes_malformed_at_uri_for_safe_html_ids():
+def test_compute_html_id_hashes_malformed_at_uri():
     entry = {"posts": {"bluesky": {"uri": 'at://did:plc:x/app/post/\" onfocus=alert(1)'}}}
-    guid = compute_guid(entry)
+    guid = compute_html_id(entry)
 
     assert len(guid) == 64
     assert '"' not in guid
@@ -669,5 +670,47 @@ def test_archive_derives_legacy_parent_fingerprint_for_timeline():
 
     assert "Update to:" in html_out
     assert "Story timeline:" in html_out
+
+
+def test_archive_preserves_rss_guids_and_sanitizes_update_numbers():
+    uri = "at://did:plc:x/app.bsky.feed.post/123"
+    entries = [{
+        "url": "https://example.com/update",
+        "title": "Unsafe update number",
+        "published_at": "2026-10-18T10:00:00Z",
+        "entry_kind": "update",
+        "update_number": '</span><script>alert(1)</script>',
+        "posts": {"bluesky": {"uri": uri}},
+    }]
+
+    rss_item = ET.fromstring(build_rss(entries)).find("channel/item")
+    assert rss_item.findtext("guid") == uri
+    html_out = build_html(entries)
+    assert "<script>alert(1)</script>" not in html_out
+    assert "Update 1" in html_out
+
+
+def test_archive_uses_unique_story_id_for_recurring_titles():
+    from src.utils import compute_story_fingerprint, compute_story_id
+
+    title = "Acme Quarterly Report"
+    first = {"url": "https://example.com/q1", "title": title, "published_at": "2026-04-01T10:00:00Z"}
+    second = {"url": "https://example.com/q2", "title": title, "published_at": "2026-07-01T10:00:00Z"}
+    for entry in (first, second):
+        entry["story_fingerprint"] = compute_story_fingerprint(title)
+        entry["story_id"] = compute_story_id(entry)
+    update = {
+        "url": "https://example.com/q2-update",
+        "title": "Acme Quarterly Report Revised",
+        "published_at": "2026-07-02T10:00:00Z",
+        "entry_kind": "update",
+        "parent_story_id": second["story_id"],
+        "parent_story_fingerprint": second["story_fingerprint"],
+        "update_number": 1,
+    }
+
+    html_out = build_html([first, second, update])
+    second_anchor = f'#story-{compute_html_id(second)}'
+    assert f'href="{second_anchor}"' in html_out
 
 

@@ -1688,3 +1688,79 @@ def test_generic_model_versions_remain_separate_stories():
     )
     assert count_changed is True
     assert "changed numeric fact" in explanation
+
+
+def test_meaningful_change_tracks_quantities_by_subject_and_normalizes_synonyms():
+    from src.curator import detect_meaningful_change
+
+    swapped, _ = detect_meaningful_change(
+        candidate_title="Acme Service Metrics Report",
+        candidate_summary="The service currently has 200 customers and 100 servers in production.",
+        candidate_url="https://other.example/metrics",
+        candidate_source="Other",
+        parent_entry={
+            "title": "Acme Service Metrics",
+            "summary": "The service currently has 100 customers and 200 servers in production.",
+            "url": "https://example.com/metrics",
+            "source": "Example",
+        },
+    )
+    assert swapped is True
+
+    syndicated, explanation = detect_meaningful_change(
+        candidate_title="OpenAI Releases GPT-5",
+        candidate_summary="OpenAI makes GPT-5 available to developers worldwide today.",
+        candidate_url="https://other.example/gpt-5",
+        candidate_source="Other",
+        parent_entry={
+            "title": "OpenAI Launches GPT-5",
+            "summary": "OpenAI makes GPT-5 available to developers worldwide today.",
+            "url": "https://example.com/gpt-5",
+            "source": "Example",
+        },
+    )
+    assert syndicated is False
+    assert "no identifiable new fact" in explanation
+
+
+def test_continuity_uses_bot_time_for_window_and_rejects_delayed_updates():
+    from src.curator import match_story_continuity
+    from src.models import MatchDecision
+
+    now = datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc)
+    original = {
+        "url": "https://example.com/original",
+        "title": "Acme Launches Atlas Model",
+        "summary": "Acme launched Atlas for selected developers in an early preview.",
+        "source": "Acme",
+        "published_at": "2026-10-19T12:00:00Z",
+        "source_published_at": "2026-10-17T11:00:00Z",
+        "entry_kind": "original",
+        "story_fingerprint": "acme atlas model",
+    }
+    prior_update = {
+        "url": "https://example.com/public",
+        "title": "Acme Expands Atlas Model Public Access",
+        "summary": "Acme expanded Atlas access to every developer at noon.",
+        "source": "Acme",
+        "published_at": "2026-10-20T12:00:00Z",
+        "source_published_at": "2026-10-20T10:00:00Z",
+        "entry_kind": "update",
+        "parent_story_fingerprint": "acme atlas model",
+    }
+    candidate = {
+        "title": "Acme Expands Atlas Model Preview Access",
+        "summary": "Acme expanded Atlas access to more preview developers.",
+        "link": "https://other.example/preview",
+        "source": "Other",
+        "published": "2026-10-20T09:00:00Z",
+    }
+
+    decision, matched, _ = match_story_continuity(candidate, [original], now_utc=now)
+    assert decision == MatchDecision.CONFIDENT_UPDATE.value
+    assert matched is original
+
+    decision, matched, explanation = match_story_continuity(candidate, [original, prior_update], now_utc=now)
+    assert decision == MatchDecision.POSSIBLE_MATCH.value
+    assert matched is original
+    assert "does not advance" in explanation

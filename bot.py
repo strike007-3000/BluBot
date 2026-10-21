@@ -710,18 +710,20 @@ async def reserve_pending_stage(
 
     is_update_mode = bool(decision and getattr(decision, "mode", None) == "update")
     parent_fp = getattr(decision, "parent_fingerprint", None) if is_update_mode else None
+    parent_story_id = getattr(decision, "parent_story_id", None) if is_update_mode else None
     update_num = getattr(decision, "update_number", 0) if is_update_mode else 0
 
-    idempotency_key = f"update:{parent_fp}:{canonical_lead}" if is_update_mode else f"original:{compute_story_fingerprint(matched_article.title)}:{canonical_lead}"
+    parent_key = parent_story_id or parent_fp
+    idempotency_key = f"update:{parent_key}:{canonical_lead}" if is_update_mode else f"original:{compute_story_fingerprint(matched_article.title)}:{canonical_lead}"
 
     # Idempotency check: if reservation or published post with this key exists, abort or skip duplicate
     for ps in state.get("pending_stories", []):
-        if ps.get("idempotency_key") == idempotency_key or (is_update_mode and ps.get("url") == canonical_lead and ps.get("parent_story_fingerprint") == parent_fp):
+        if ps.get("idempotency_key") == idempotency_key or (is_update_mode and ps.get("url") == canonical_lead and (ps.get("parent_story_id") or ps.get("parent_story_fingerprint")) == parent_key):
             SafeLogger.warn(f"Duplicate reservation detected ({idempotency_key}). Skipping duplicate broadcast.")
             return None, matched_article
 
     for pub in state.get("published_posts", []):
-        if pub.get("idempotency_key") == idempotency_key or (is_update_mode and pub.get("url") == canonical_lead and pub.get("parent_story_fingerprint") == parent_fp):
+        if pub.get("idempotency_key") == idempotency_key or (is_update_mode and pub.get("url") == canonical_lead and (pub.get("parent_story_id") or pub.get("parent_story_fingerprint")) == parent_key):
             SafeLogger.warn(f"Duplicate published story detected ({idempotency_key}). Skipping duplicate broadcast.")
             return None, matched_article
 
@@ -734,6 +736,7 @@ async def reserve_pending_stage(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "entry_kind": "update" if is_update_mode else "original",
         "parent_story_fingerprint": parent_fp,
+        "parent_story_id": parent_story_id,
         "update_number": update_num,
         "idempotency_key": idempotency_key,
         "target_platform_roots": getattr(decision, "target_platform_roots", {}) if is_update_mode else {},
@@ -775,13 +778,15 @@ async def settle_persistence_stage(
     any_success = any(res.success for res in results)
     is_update_mode = bool(decision and getattr(decision, "mode", None) == "update")
     parent_fp = getattr(decision, "parent_fingerprint", None) if is_update_mode else None
+    parent_story_id = getattr(decision, "parent_story_id", None) if is_update_mode else None
+    parent_key = parent_story_id or parent_fp
     update_num = getattr(decision, "update_number", 0) if is_update_mode else 0
 
     reserved_entry = next(
         (
             pending for pending in state.get("pending_stories", [])
             if pending.get("url") == canonical_lead
-            and (not is_update_mode or pending.get("parent_story_fingerprint") == parent_fp)
+            and (not is_update_mode or (pending.get("parent_story_id") or pending.get("parent_story_fingerprint")) == parent_key)
         ),
         None,
     )
@@ -792,7 +797,7 @@ async def settle_persistence_stage(
         # Success policy: remove pending reservation when successful
         state["pending_stories"] = [
             ps for ps in state.get("pending_stories", [])
-            if not (ps.get("url") == canonical_lead and (not is_update_mode or ps.get("parent_story_fingerprint") == parent_fp))
+            if not (ps.get("url") == canonical_lead and (not is_update_mode or (ps.get("parent_story_id") or ps.get("parent_story_fingerprint")) == parent_key))
         ]
 
         from src.utils import compute_story_fingerprint
@@ -807,6 +812,7 @@ async def settle_persistence_stage(
             "published_at": datetime.now(timezone.utc).isoformat(),
             "entry_kind": "update" if is_update_mode else "original",
             "parent_story_fingerprint": parent_fp,
+            "parent_story_id": parent_story_id,
             "update_number": update_num,
         }
         state.setdefault("recent_stories", []).append(pub_entry)
@@ -846,6 +852,7 @@ async def settle_persistence_stage(
             entry_kind="update" if is_update_mode else "original",
             story_fingerprint=fp,
             parent_story_fingerprint=parent_fp,
+            parent_story_id=parent_story_id,
             update_number=update_num,
             source_url=canonical_lead,
             thread_roots=thread_roots,
@@ -1479,8 +1486,9 @@ async def main():
             dec_type, parent_entry, explanation = match_story_continuity(lead_dict, published_ledger, now_utc=now)
 
             if dec_type == MatchDecision.CONFIDENT_UPDATE.value and parent_entry and settings.story_update_detection_enabled:
-                from src.utils import compute_story_fingerprint
+                from src.utils import compute_story_fingerprint, compute_story_id
                 parent_fp = parent_entry.get("story_fingerprint") or compute_story_fingerprint(parent_entry.get("title", ""))
+                parent_story_id = compute_story_id(parent_entry)
                 # Derive thread roots from parent posts if thread_roots is empty
                 p_roots = dict(parent_entry.get("thread_roots") or {})
                 if not p_roots and isinstance(parent_entry.get("posts"), dict):
@@ -1494,12 +1502,14 @@ async def main():
 
                 prior_updates = [
                     p for p in published_ledger
-                    if p.get("entry_kind") == "update" and p.get("parent_story_fingerprint") == parent_fp
+                    if p.get("entry_kind") == "update"
+                    and (p.get("parent_story_id") or p.get("parent_story_fingerprint")) in {parent_story_id, parent_fp}
                 ]
                 up_num = len(prior_updates) + 1
                 decision = EditorialDecision(
                     mode="update",
                     parent_fingerprint=parent_fp,
+                    parent_story_id=parent_story_id,
                     update_number=up_num,
                     confidence=dec_type,
                     explanation=explanation,

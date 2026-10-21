@@ -128,6 +128,7 @@ class EditorialDecision:
     """Editorial routing decision between original story post and thread update."""
     mode: str = "original"  # "original" | "update"
     parent_fingerprint: Optional[str] = None
+    parent_story_id: Optional[str] = None
     update_number: int = 0
     confidence: str = MatchDecision.NO_MATCH.value
     explanation: str = "Standalone post"

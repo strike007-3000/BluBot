@@ -662,7 +662,7 @@ def detect_meaningful_change(
     Deterministic check for meaningful developments between a candidate article and an original parent story.
     Returns (has_meaningful_change, explanation).
     """
-    from src.utils import normalize_url
+    from src.utils import compute_story_id, normalize_url
 
     c_url_norm = normalize_url(candidate_url)
     p_url_norm = normalize_url(parent_entry.get("url", ""))
@@ -709,6 +709,16 @@ def detect_meaningful_change(
     c_events = {_EVENT_VERB_ROOTS[word] for word in c_words if word in _EVENT_VERB_ROOTS}
     p_events = {_EVENT_VERB_ROOTS[word] for word in p_words if word in _EVENT_VERB_ROOTS}
     new_event_verbs = c_events - p_events
+    launch_synonyms = {"launch", "release", "unveil"}
+    if (
+        c_events <= launch_synonyms
+        and p_events <= launch_synonyms
+        and {word for word in c_words if word not in _EVENT_VERB_ROOTS}
+        == {word for word in p_words if word not in _EVENT_VERB_ROOTS}
+        and (candidate_summary or "").strip().lower()
+        == str(parent_entry.get("summary", "")).strip().lower()
+    ):
+        new_event_verbs = set()
     if new_event_verbs:
         reasons.append(f"new event action: {', '.join(sorted(new_event_verbs))}")
 
@@ -735,6 +745,13 @@ def detect_meaningful_change(
             facts.append((number.replace(",", ""), "percent" if unit else "", context))
         return facts
 
+    def quantities_by_subject(text: str) -> dict:
+        facts = {}
+        for value, unit, subject in quantity_facts(text):
+            if subject:
+                facts.setdefault((unit, subject), set()).add(value)
+        return facts
+
     c_numbers = quantities(c_title_clean)
     p_numbers = quantities(p_title_clean)
     changed_numbers = bool(c_numbers and p_numbers and c_numbers != p_numbers)
@@ -750,15 +767,11 @@ def detect_meaningful_change(
     if c_sum and len(c_sum) > 30 and p_sum and len(p_sum) > 30:
         c_sum_nums = quantities(c_sum)
         p_sum_nums = quantities(p_sum)
-        c_sum_facts = quantity_facts(c_sum)
-        p_sum_facts = quantity_facts(p_sum)
-        changed_quantity_fact = (
-            c_sum_nums != p_sum_nums
-            and any(
-                c_value != p_value and c_unit == p_unit and c_context == p_context and bool(c_context)
-                for p_value, p_unit, p_context in p_sum_facts
-                for c_value, c_unit, c_context in c_sum_facts
-            )
+        c_sum_facts = quantities_by_subject(c_sum)
+        p_sum_facts = quantities_by_subject(p_sum)
+        changed_quantity_fact = any(
+            subject in c_sum_facts and values != c_sum_facts[subject]
+            for subject, values in p_sum_facts.items()
         )
         if changed_quantity_fact:
             has_summary_diff = True
@@ -769,7 +782,7 @@ def detect_meaningful_change(
             c_sum_events = {_EVENT_VERB_ROOTS[word] for word in c_sum_words if word in _EVENT_VERB_ROOTS}
             p_sum_events = {_EVENT_VERB_ROOTS[word] for word in p_sum_words if word in _EVENT_VERB_ROOTS}
             new_sum_events = c_sum_events - p_sum_events
-            if new_sum_events:
+            if new_sum_events and c_sum != p_sum:
                 has_summary_diff = True
                 reasons.append(f"summary new event action: {', '.join(sorted(new_sum_events))}")
 
@@ -810,7 +823,7 @@ def match_story_continuity(
     Decisions: NO_MATCH, POSSIBLE_MATCH, CONFIDENT_UPDATE.
     """
     from src.models import MatchDecision
-    from src.utils import normalize_url
+    from src.utils import compute_story_id, normalize_url
 
     ref_time = now_utc or datetime.now(timezone.utc)
     cutoff_72h = ref_time - timedelta(hours=72)
@@ -849,6 +862,7 @@ def match_story_continuity(
             fp = entry.get("story_fingerprint")
             if fp:
                 fp_to_original[fp] = entry
+            fp_to_original[compute_story_id(entry)] = entry
 
     # A candidate repeating an already-published update is not novel even when
     # it still differs from the older original story.
@@ -859,17 +873,23 @@ def match_story_continuity(
     )
     for entry in prior_updates:
         try:
+            ledger_dt = datetime.fromisoformat(str(entry.get("published_at", "")).replace("Z", "+00:00"))
+            if ledger_dt.tzinfo is None:
+                ledger_dt = ledger_dt.replace(tzinfo=timezone.utc)
             update_time = entry.get("source_published_at") or entry.get("published_at", "")
             update_dt = datetime.fromisoformat(str(update_time).replace("Z", "+00:00"))
             if update_dt.tzinfo is None:
                 update_dt = update_dt.replace(tzinfo=timezone.utc)
         except (TypeError, ValueError):
             continue
-        if update_dt < cutoff_72h or (candidate_pub_dt and candidate_pub_dt <= update_dt):
+        if ledger_dt < cutoff_72h:
             continue
         p_tokens, p_versions = normalize_headline(entry.get("title", ""))
         if not calculate_title_similarity(c_tokens, c_versions, p_tokens, p_versions):
             continue
+        if candidate_pub_dt and candidate_pub_dt <= update_dt:
+            root = fp_to_original.get(entry.get("parent_story_id") or entry.get("parent_story_fingerprint"))
+            return MatchDecision.POSSIBLE_MATCH.value, root or entry, "possible match: candidate does not advance the published timeline"
         has_change, explanation = detect_meaningful_change(
             candidate_title=c_title,
             candidate_summary=c_summary,
@@ -878,7 +898,7 @@ def match_story_continuity(
             parent_entry=entry,
         )
         if not has_change:
-            root = fp_to_original.get(entry.get("parent_story_fingerprint"))
+            root = fp_to_original.get(entry.get("parent_story_id") or entry.get("parent_story_fingerprint"))
             return MatchDecision.POSSIBLE_MATCH.value, root or entry, f"possible match: {explanation}"
 
     for entry in published_entries:
@@ -889,16 +909,20 @@ def match_story_continuity(
         if entry.get("entry_kind") == "update":
             continue
 
-        pub_at_str = entry.get("source_published_at") or entry.get("published_at")
-        if not pub_at_str:
+        ledger_at = entry.get("published_at")
+        source_at = entry.get("source_published_at") or ledger_at
+        if not ledger_at or not source_at:
             continue
         try:
-            pub_dt = datetime.fromisoformat(str(pub_at_str).replace("Z", "+00:00"))
-            if pub_dt.tzinfo is None:
-                pub_dt = pub_dt.replace(tzinfo=timezone.utc)
-            if pub_dt < cutoff_72h:
+            ledger_dt = datetime.fromisoformat(str(ledger_at).replace("Z", "+00:00"))
+            source_dt = datetime.fromisoformat(str(source_at).replace("Z", "+00:00"))
+            if ledger_dt.tzinfo is None:
+                ledger_dt = ledger_dt.replace(tzinfo=timezone.utc)
+            if source_dt.tzinfo is None:
+                source_dt = source_dt.replace(tzinfo=timezone.utc)
+            if ledger_dt < cutoff_72h:
                 continue
-            if candidate_pub_dt and candidate_pub_dt <= pub_dt:
+            if candidate_pub_dt and candidate_pub_dt <= source_dt:
                 continue
         except Exception:
             continue
