@@ -26,7 +26,7 @@ To prevent supply-chain attacks via unvetted transitive dependencies, BluBot gen
 3. Commit both files.
 
 ### SSRF Protection
-The bot implements a **DNS Pinner** and **Public IP Validator** in `src/utils.py`. It refuses to fetch metadata or images from local or internal network addresses, thwarting potential exploits in ephemeral cloud runners.
+The bot implements a **IP Pinner** and **Public IP Validator** in `src/utils.py`. It refuses to fetch metadata or images from local or internal network addresses, thwarting potential exploits in ephemeral cloud runners.
 
 ### Secret Redaction
 The `SafeLogger` automatically redacts secrets based on both keyword matching and **statistical entropy analysis**, ensuring that accidentally logged tokens are masked before hitting CI logs.

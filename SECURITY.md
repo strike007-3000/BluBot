@@ -24,7 +24,7 @@ Our team will respond within 48 hours to acknowledge your report and provide a t
 
 The project is currently hardened against:
 
-- **SSRF Attacks**: Metadata fetching is protected by **DNS Pinning** and **IP Scoping** (RFC 1918 blocking), with automated regression tests in the CI suite (`src/tests/`).
+- **SSRF Attacks**: Metadata fetching is protected by **IP Pinning** (connections go to the validated IP with the original `Host` and TLS name) and **IP Scoping** (RFC 1918 blocking), with automated regression tests in the CI suite (`src/tests/`).
 - **Secret Leaks**: `SafeLogger` dynamically redacts API tokens and high-entropy strings from all log outputs. The typed `Settings` singleton ensures no raw environment variables are leaked into business logic layers.
 - **Dependency Exploits**: Core packages are pinned to specific versions via `uv` (`requirements.txt` is generated from `requirements.in`), preventing unvetted transitive dependency upgrades. Dependabot monitors the lockfile weekly. `cryptography` is constrained to `>=50.0.0,<51`, the compatible range that resolves CVE-2026-69247, CVE-2026-69248, and CVE-2026-69249.
 - **Data Corruption**: Atomic state persistence via cross-platform **Advisory File Locking** and `.tmp` swap logic prevents race conditions during concurrent CI and local runs.

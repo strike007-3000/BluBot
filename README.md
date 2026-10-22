@@ -45,7 +45,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield against decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
     - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) and uses safe lookups to survive malformed feed entries.
     - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity), fixing `TypeError` formatting bugs for non-string args.
-    - **SSRF Prevention Architecture**: Hardened the metadata scraper with **DNS Pinning** and **IP validation** to block all internal/private network requests.
+    - **SSRF Prevention Architecture**: Hardened the metadata scraper with **IP Pinning** (connects to the validated IP with the original `Host` and TLS name) and **IP validation** to block all internal/private network requests.
     - **Zero-Duplicate Threads Logic**: Implemented "Catch & Log" delivery validation to prevent duplicate posts during transient API failures.
 - **🧠 Natural Writing Engine**:
     - **Shared Editorial Voice**: Synthesis, mentor posts, remixes, replies, and briefings use one compact policy: source-grounded facts, direct verbs, plain language, varied sentence rhythm, and no forced questions, fake revelations, binary contrasts, or recap endings.
