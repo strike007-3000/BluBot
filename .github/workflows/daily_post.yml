@@ -16,11 +16,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Mask Session Metadata
-        run: |
-          echo "::add-mask::${{ github.run_id }}"
-          echo "::add-mask::${{ github.run_attempt }}"
-
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
@@ -68,11 +63,11 @@ jobs:
           STORY_UPDATE_DETECTION_ENABLED: ${{ vars.STORY_UPDATE_DETECTION_ENABLED || 'false' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_USER_ID }}
-          TELEGRAM_TIMEOUT_MINUTES: ${{ secrets.TELEGRAM_TIMEOUT_MINUTES || '5' }}
-          ENABLE_TELEGRAM_APPROVAL: ${{ secrets.ENABLE_TELEGRAM_APPROVAL || 'true' }}
-          ENABLE_HASHTAGS_BSKY: ${{ secrets.ENABLE_HASHTAGS_BSKY || 'false' }}
-          ENABLE_HASHTAGS_MASTODON: ${{ secrets.ENABLE_HASHTAGS_MASTODON || 'true' }}
-          ENABLE_HASHTAGS_THREADS: ${{ secrets.ENABLE_HASHTAGS_THREADS || 'true' }}
+          TELEGRAM_TIMEOUT_MINUTES: ${{ vars.TELEGRAM_TIMEOUT_MINUTES || secrets.TELEGRAM_TIMEOUT_MINUTES || '5' }}
+          ENABLE_TELEGRAM_APPROVAL: ${{ vars.ENABLE_TELEGRAM_APPROVAL || secrets.ENABLE_TELEGRAM_APPROVAL || 'true' }}
+          ENABLE_HASHTAGS_BSKY: ${{ vars.ENABLE_HASHTAGS_BSKY || secrets.ENABLE_HASHTAGS_BSKY || 'false' }}
+          ENABLE_HASHTAGS_MASTODON: ${{ vars.ENABLE_HASHTAGS_MASTODON || secrets.ENABLE_HASHTAGS_MASTODON || 'true' }}
+          ENABLE_HASHTAGS_THREADS: ${{ vars.ENABLE_HASHTAGS_THREADS || secrets.ENABLE_HASHTAGS_THREADS || 'true' }}
           LOG_FORMAT: pretty
         run: python bot.py
 

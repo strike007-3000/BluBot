@@ -723,3 +723,55 @@ def test_v3code_workspace_metadata_is_ignored():
         text=True,
     )
     assert res.returncode == 0
+
+@pytest.mark.asyncio
+async def test_safe_fetch_pins_ip_without_touching_global_resolver(mock_httpx_client, mocker):
+    """The request goes to the validated IP with Host/SNI set, and socket.getaddrinfo is never patched."""
+    import socket
+    from src.utils import get_with_safe_redirects
+
+    original = socket.getaddrinfo
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["93.184.216.34"])
+    seen_resolvers = []
+
+    async def fake_get(url, **kwargs):
+        seen_resolvers.append(socket.getaddrinfo)
+        return MagicMock(is_redirect=False, status_code=200, url=url, kwargs=kwargs)
+
+    mock_httpx_client.get = fake_get
+    resp = await get_with_safe_redirects(
+        mock_httpx_client, "https://Example.com:8443/a?b=1", headers={"host": "evil", "User-Agent": "x"}
+    )
+
+    assert resp.url == "https://93.184.216.34:8443/a?b=1"
+    assert resp.kwargs["headers"] == {"User-Agent": "x", "Host": "example.com:8443"}
+    assert resp.kwargs["extensions"] == {"sni_hostname": "example.com"}
+    assert seen_resolvers == [original] and socket.getaddrinfo is original
+
+@pytest.mark.asyncio
+async def test_safe_fetch_falls_back_to_next_ip_and_brackets_ipv6(mock_httpx_client, mocker):
+    from src.utils import get_with_safe_redirects
+
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["2606:4700::1", "1.1.1.1"])
+    urls = []
+
+    async def fake_get(url, **kwargs):
+        urls.append(url)
+        if len(urls) == 1:
+            raise RuntimeError("connect failed")
+        return MagicMock(is_redirect=False, status_code=200)
+
+    mock_httpx_client.get = fake_get
+    resp = await get_with_safe_redirects(mock_httpx_client, "http://example.com/x")
+    assert resp.status_code == 200
+    assert urls == ["http://[2606:4700::1]/x", "http://1.1.1.1/x"]
+
+def test_file_lock_closes_handle_even_if_unlock_fails(tmp_path, mocker):
+    from src.utils import FileLock
+
+    lock = FileLock(str(tmp_path / "state.json"))
+    lock.__enter__()
+    handle = lock.handle
+    mocker.patch("src.utils.fcntl.flock", side_effect=OSError("unlock failed"))
+    lock.__exit__(None, None, None)
+    assert handle.closed
