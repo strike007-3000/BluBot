@@ -864,7 +864,7 @@ async def test_safe_fetch_verifies_certificate_per_hostname_on_shared_ip(tmp_pat
     port = server.sockets[0].getsockname()[1]
     mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["127.0.0.1"])
     try:
-        async with httpx.AsyncClient(verify=str(cert_path)) as client:
+        async with httpx.AsyncClient(verify=ssl.create_default_context(cafile=str(cert_path))) as client:
             good = await get_with_safe_redirects(client, f"https://a.example:{port}/")
             bad = await get_with_safe_redirects(client, f"https://b.example:{port}/")
     finally:
