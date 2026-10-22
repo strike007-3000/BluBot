@@ -74,7 +74,7 @@ mastodon-py==2.2.2
     # via -r requirements.in
 packaging==26.2
     # via pytest
-pillow==12.3.0
+pillow==13.0.0
     # via -r requirements.in
 pluggy==1.6.0
     # via pytest

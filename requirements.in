@@ -10,7 +10,7 @@ requests==2.34.2
 Mastodon.py>=2.2.2
 beautifulsoup4>=4.15.0
 httpx>=0.28.0
-Pillow==12.3.0
+Pillow==13.0.0
 python-telegram-bot[ext]>=21.0
 
 # Security Hardening (Specific Transitive Pins)
