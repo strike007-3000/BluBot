@@ -1,6 +1,7 @@
 import pytest
 import ipaddress
 from unittest.mock import AsyncMock, MagicMock
+from src.utils import fcntl
 from src.utils import _is_public_ip, truncate_bytes, get_image_mime, compress_image, normalize_url
 
 def test_is_public_ip_validation():
@@ -744,7 +745,7 @@ async def test_safe_fetch_pins_ip_without_touching_global_resolver(mock_httpx_cl
     )
 
     assert resp.url == "https://93.184.216.34:8443/a?b=1"
-    assert resp.kwargs["headers"] == {"User-Agent": "x", "Host": "example.com:8443"}
+    assert resp.kwargs["headers"] == {"User-Agent": "x", "Host": "example.com:8443", "Connection": "close"}
     assert resp.kwargs["extensions"] == {"sni_hostname": "example.com"}
     assert seen_resolvers == [original] and socket.getaddrinfo is original
 
@@ -766,6 +767,7 @@ async def test_safe_fetch_falls_back_to_next_ip_and_brackets_ipv6(mock_httpx_cli
     assert resp.status_code == 200
     assert urls == ["http://[2606:4700::1]/x", "http://1.1.1.1/x"]
 
+@pytest.mark.skipif(fcntl is None, reason="exercises the fcntl lock backend")
 def test_file_lock_closes_handle_even_if_unlock_fails(tmp_path, mocker):
     from src.utils import FileLock
 
@@ -775,3 +777,40 @@ def test_file_lock_closes_handle_even_if_unlock_fails(tmp_path, mocker):
     mocker.patch("src.utils.fcntl.flock", side_effect=OSError("unlock failed"))
     lock.__exit__(None, None, None)
     assert handle.closed
+
+@pytest.mark.asyncio
+async def test_safe_fetch_never_reuses_a_connection_across_hostnames(mocker):
+    """Real httpx client: two hostnames pinned to the same IP:port must use separate TCP connections."""
+    import asyncio
+    import httpx
+    from src.utils import get_with_safe_redirects
+
+    connections, hosts = [], []
+
+    async def handle(reader, writer):
+        connections.append(1)
+        while True:
+            head = await reader.readuntil(b"\r\n\r\n") if not reader.at_eof() else b""
+            if not head:
+                break
+            hosts.append(next(l.split(b": ", 1)[1].decode() for l in head.split(b"\r\n") if l.lower().startswith(b"host:")))
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok")
+            await writer.drain()
+            if b"connection: close" in head.lower():
+                break
+        writer.close()
+
+    server = await asyncio.start_server(handle, "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["127.0.0.1"])
+    try:
+        async with httpx.AsyncClient() as client:
+            for name in ("a.example", "b.example"):
+                resp = await get_with_safe_redirects(client, f"http://{name}:{port}/")
+                assert resp.status_code == 200
+    finally:
+        server.close()
+        await server.wait_closed()
+
+    assert hosts == [f"a.example:{port}", f"b.example:{port}"]
+    assert len(connections) == 2

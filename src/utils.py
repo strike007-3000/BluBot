@@ -1044,8 +1044,11 @@ async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, he
         response = None
         for ip in ips:
             pinned_url, host_header = _pinned_request_target(current_url, ip)
-            pinned_headers = {k: v for k, v in (headers or {}).items() if k.lower() != "host"}
+            pinned_headers = {k: v for k, v in (headers or {}).items() if k.lower() not in ("host", "connection")}
             pinned_headers["Host"] = host_header
+            # The pool keys connections by the IP URL, so close after each response:
+            # otherwise another hostname on the same IP could reuse this TLS session.
+            pinned_headers["Connection"] = "close"
             try:
                 response = await client.get(
                     pinned_url,

@@ -201,7 +201,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.37.0 (Current)**: **Story Continuity & Thread Updates**.
+- **v3.37.1 (Current)**: **Security & Reliability Hardening**.
+  - SSRF-safe fetches now connect to the validated IP with the original `Host` header and TLS server name instead of patching the process-wide `socket.getaddrinfo`, and close each pinned connection so hostnames sharing an IP never reuse a TLS session.
+  - `FileLock` always closes its handle, even if unlocking fails.
+  - Warns on local runs against the live Gist; untracks generated files; daily workflow settings read `vars` first, then `secrets`.
+- **v3.37.0**: **Story Continuity & Thread Updates**.
   - Adds automated story continuity matching (`src/curator.py`) tracking 72-hour development timelines without duplicate posts.
   - Detects meaningful changes (new versions, changed numeric facts, status changes, releases/acquisitions, or materially different reporting) while rejecting publisher-only syndication, duplicate URLs, and generic recurring titles.
   - Supports threaded update broadcasting on Bluesky, Mastodon, and Threads with root reply chaining.
