@@ -45,7 +45,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Decompression Bomb Protection**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to shield against decompression-bomb denial-of-service (DoS) exploits when parsing media URLs.
     - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) and uses safe lookups to survive malformed feed entries.
     - **Structured JSON Logging**: Re-engineered `SafeLogger` to output machine-readable JSON with entropy-aware secret redaction (identifies keys by string-complexity), fixing `TypeError` formatting bugs for non-string args.
-    - **SSRF Prevention Architecture**: Hardened the metadata scraper with **DNS Pinning** and **IP validation** to block all internal/private network requests.
+    - **SSRF Prevention Architecture**: Hardened the metadata scraper with **IP Pinning** (connects to the validated IP with the original `Host` and TLS name) and **IP validation** to block all internal/private network requests.
     - **Zero-Duplicate Threads Logic**: Implemented "Catch & Log" delivery validation to prevent duplicate posts during transient API failures.
 - **🧠 Natural Writing Engine**:
     - **Shared Editorial Voice**: Synthesis, mentor posts, remixes, replies, and briefings use one compact policy: source-grounded facts, direct verbs, plain language, varied sentence rhythm, and no forced questions, fake revelations, binary contrasts, or recap endings.
@@ -173,7 +173,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
                  ──► If all platforms fail: Clear Pending Reservation & Exit Nonzero
 ```
 
-1. **Gist-Authoritative Runtime State**: When `GIST_ID` and `GIST_TOKEN` are set, GitHub Gist is loaded as the primary state source. State comparison uses `schema_version: 2`, `revision`, and `updated_at` timestamps to ensure stale local or branch data never overwrites newer Gist state.
+1. **Gist-Authoritative Runtime State**: When `GIST_ID` and `GIST_TOKEN` are set, GitHub Gist is loaded as the primary state source. State comparison uses `schema_version: 2`, `revision`, and `updated_at` timestamps to prefer newer Gist state over stale local or branch data. Writes are read-merge-write without a server-side version check: the Actions concurrency group serializes CI runs, but a local run against the live Gist can still overwrite a concurrent run's newer state, so use `DRY_RUN=true` locally.
 2. **Two-Phase Pre-Broadcast Reservation Protocol**: Before publishing, BluBot writes a `pending_stories` reservation to Gist and local state. If Gist reservation fails, publication is aborted. If broadcast succeeds, status transitions to `published`. If broadcast fails, pending reservation is cleared.
 3. **Local Primary & Backup Rotation**: Saves perform atomic writes (`.tmp` -> `seen_articles.json`) and rotate previous valid state to `.bak` under advisory `FileLock`. If Gist write fails during post-broadcast settlement, state is saved locally with `unsynced_gist: true` for recovery.
 4. **Durable Published-Post Ledger**: Each settled publication appends a `published_posts` entry (canonical URL, title, supporting links, `published_at`, and per-platform root post references: Bluesky `uri`/`cid`, Mastodon/Threads `id`). Only platforms that succeeded and returned an ID are recorded. Unlike the 14-day `recent_stories` duplicate window, the ledger is capped at 500 entries and never time-pruned.
@@ -201,7 +201,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.37.0 (Current)**: **Story Continuity & Thread Updates**.
+- **v3.37.1 (Current)**: **Security & Reliability Hardening**.
+  - SSRF-safe fetches now connect to the validated IP with the original `Host` header and TLS server name instead of patching the process-wide `socket.getaddrinfo`, and close each pinned connection so hostnames sharing an IP never reuse a TLS session.
+  - `FileLock` always closes its handle, even if unlocking fails.
+  - Warns on local runs against the live Gist; untracks generated files; daily workflow settings read `vars` first, then `secrets`.
+- **v3.37.0**: **Story Continuity & Thread Updates**.
   - Adds automated story continuity matching (`src/curator.py`) tracking 72-hour development timelines without duplicate posts.
   - Detects meaningful changes (new versions, changed numeric facts, status changes, releases/acquisitions, or materially different reporting) while rejecting publisher-only syndication, duplicate URLs, and generic recurring titles.
   - Supports threaded update broadcasting on Bluesky, Mastodon, and Threads with root reply chaining.

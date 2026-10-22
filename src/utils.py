@@ -10,7 +10,6 @@ import re
 import httpx
 import socket
 import ipaddress
-from contextlib import contextmanager
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urljoin, urlparse, urlunparse, parse_qs, urlencode
@@ -108,10 +107,14 @@ class FileLock:
 
     def __enter__(self):
         self.handle = open(self.lock_file, "w")
-        if fcntl:
-            fcntl.flock(self.handle, fcntl.LOCK_EX)
-        elif msvcrt:
-            msvcrt.locking(self.handle.fileno(), msvcrt.LK_LOCK, 1)
+        try:
+            if fcntl:
+                fcntl.flock(self.handle, fcntl.LOCK_EX)
+            elif msvcrt:
+                msvcrt.locking(self.handle.fileno(), msvcrt.LK_LOCK, 1)
+        except BaseException:
+            self.handle.close()
+            raise
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -120,9 +123,11 @@ class FileLock:
                 fcntl.flock(self.handle, fcntl.LOCK_UN)
             elif msvcrt:
                 msvcrt.locking(self.handle.fileno(), msvcrt.LK_UNLCK, 1)
-            self.handle.close()
         except Exception:
             pass
+        finally:
+            # Closing also drops the OS lock, so a failed unlock cannot leak it.
+            self.handle.close()
 
 def _load_gist_state_with_status(filename: str) -> Tuple[str, Optional[dict]]:
     """Helper to pull state from a private GitHub Gist with status categorization."""
@@ -1004,33 +1009,14 @@ def is_safe_url(url: str) -> bool:
     except Exception:
         return False
 
-@contextmanager
-def _resolver_pinned_to_ips(hostname: str, allowed_ips: List[str]):
-    """
-    Temporarily constrains DNS resolution for one hostname to a prevalidated set.
-    Prevents DNS rebinding attacks.
-    """
-    original_getaddrinfo = socket.getaddrinfo
-    canonical_hostname = hostname.lower()
-    allowed_set = set(allowed_ips)
-
-    def guarded_getaddrinfo(host: str, *args, **kwargs):
-        if str(host).lower() != canonical_hostname:
-            return original_getaddrinfo(host, *args, **kwargs)
-
-        current = original_getaddrinfo(host, *args, **kwargs)
-        current_ips = {entry[4][0] for entry in current}
-
-        if current_ips - allowed_set:
-            raise socket.gaierror(f"SSRF Prevention: Resolver returned unexpected address for {host}")
-
-        return [entry for entry in current if entry[4][0] in allowed_set]
-
-    socket.getaddrinfo = guarded_getaddrinfo
-    try:
-        yield
-    finally:
-        socket.getaddrinfo = original_getaddrinfo
+def _pinned_request_target(url: str, ip: str) -> Tuple[str, str]:
+    """Returns (url with the host swapped for a prevalidated IP, original Host header value)."""
+    parsed = urlparse(url)
+    name = f"[{parsed.hostname}]" if ":" in parsed.hostname else parsed.hostname
+    host_header = name if parsed.port is None else f"{name}:{parsed.port}"
+    ip_host = f"[{ip}]" if ":" in ip else ip
+    netloc = ip_host if parsed.port is None else f"{ip_host}:{parsed.port}"
+    return parsed._replace(netloc=netloc).geturl(), host_header
 
 async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, headers=None):
     """Fetches a URL while validating every hop in the redirect chain."""
@@ -1053,11 +1039,28 @@ async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, he
             SafeLogger.warn(f"SSRF Prevention: Blocked non-public or unresolvable host: {hostname}", "unsafe_url_blocked")
             return None
 
-        try:
-            with _resolver_pinned_to_ips(hostname, ips):
-                response = await client.get(current_url, timeout=timeout, follow_redirects=False, headers=headers)
-        except Exception as e:
-            SafeLogger.warn(f"Request blocked by safety guards: {e}", "unsafe_url_blocked")
+        # Connect to the validated IP itself so the socket can never be redirected by a
+        # second DNS lookup; Host and SNI keep virtual hosting and TLS verification intact.
+        response = None
+        for ip in ips:
+            pinned_url, host_header = _pinned_request_target(current_url, ip)
+            pinned_headers = {k: v for k, v in (headers or {}).items() if k.lower() not in ("host", "connection")}
+            pinned_headers["Host"] = host_header
+            # The pool keys connections by the IP URL, so close after each response:
+            # otherwise another hostname on the same IP could reuse this TLS session.
+            pinned_headers["Connection"] = "close"
+            try:
+                response = await client.get(
+                    pinned_url,
+                    timeout=timeout,
+                    follow_redirects=False,
+                    headers=pinned_headers,
+                    extensions={"sni_hostname": hostname},
+                )
+                break
+            except Exception as e:
+                SafeLogger.warn(f"Request to {hostname} via {ip} failed: {e}", "unsafe_url_blocked")
+        if response is None:
             return None
 
         if response.is_redirect:

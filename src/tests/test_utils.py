@@ -1,6 +1,7 @@
 import pytest
 import ipaddress
 from unittest.mock import AsyncMock, MagicMock
+from src.utils import fcntl
 from src.utils import _is_public_ip, truncate_bytes, get_image_mime, compress_image, normalize_url
 
 def test_is_public_ip_validation():
@@ -723,3 +724,152 @@ def test_v3code_workspace_metadata_is_ignored():
         text=True,
     )
     assert res.returncode == 0
+
+@pytest.mark.asyncio
+async def test_safe_fetch_pins_ip_without_touching_global_resolver(mock_httpx_client, mocker):
+    """The request goes to the validated IP with Host/SNI set, and socket.getaddrinfo is never patched."""
+    import socket
+    from src.utils import get_with_safe_redirects
+
+    original = socket.getaddrinfo
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["93.184.216.34"])
+    seen_resolvers = []
+
+    async def fake_get(url, **kwargs):
+        seen_resolvers.append(socket.getaddrinfo)
+        return MagicMock(is_redirect=False, status_code=200, url=url, kwargs=kwargs)
+
+    mock_httpx_client.get = fake_get
+    resp = await get_with_safe_redirects(
+        mock_httpx_client, "https://Example.com:8443/a?b=1", headers={"host": "evil", "User-Agent": "x"}
+    )
+
+    assert resp.url == "https://93.184.216.34:8443/a?b=1"
+    assert resp.kwargs["headers"] == {"User-Agent": "x", "Host": "example.com:8443", "Connection": "close"}
+    assert resp.kwargs["extensions"] == {"sni_hostname": "example.com"}
+    assert seen_resolvers == [original] and socket.getaddrinfo is original
+
+@pytest.mark.asyncio
+async def test_safe_fetch_falls_back_to_next_ip_and_brackets_ipv6(mock_httpx_client, mocker):
+    from src.utils import get_with_safe_redirects
+
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["2606:4700::1", "1.1.1.1"])
+    urls = []
+
+    async def fake_get(url, **kwargs):
+        urls.append(url)
+        if len(urls) == 1:
+            raise RuntimeError("connect failed")
+        return MagicMock(is_redirect=False, status_code=200)
+
+    mock_httpx_client.get = fake_get
+    resp = await get_with_safe_redirects(mock_httpx_client, "http://example.com/x")
+    assert resp.status_code == 200
+    assert urls == ["http://[2606:4700::1]/x", "http://1.1.1.1/x"]
+
+@pytest.mark.skipif(fcntl is None, reason="exercises the fcntl lock backend")
+def test_file_lock_closes_handle_even_if_unlock_fails(tmp_path, mocker):
+    from src.utils import FileLock
+
+    lock = FileLock(str(tmp_path / "state.json"))
+    lock.__enter__()
+    handle = lock.handle
+    mocker.patch("src.utils.fcntl.flock", side_effect=OSError("unlock failed"))
+    lock.__exit__(None, None, None)
+    assert handle.closed
+
+@pytest.mark.asyncio
+async def test_safe_fetch_never_reuses_a_connection_across_hostnames(mocker):
+    """Real httpx client: two hostnames pinned to the same IP:port must use separate TCP connections."""
+    import asyncio
+    import httpx
+    from src.utils import get_with_safe_redirects
+
+    connections, hosts = [], []
+
+    async def handle(reader, writer):
+        connections.append(1)
+        while True:
+            head = await reader.readuntil(b"\r\n\r\n") if not reader.at_eof() else b""
+            if not head:
+                break
+            hosts.append(next(l.split(b": ", 1)[1].decode() for l in head.split(b"\r\n") if l.lower().startswith(b"host:")))
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok")
+            await writer.drain()
+            if b"connection: close" in head.lower():
+                break
+        writer.close()
+
+    server = await asyncio.start_server(handle, "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["127.0.0.1"])
+    try:
+        async with httpx.AsyncClient() as client:
+            for name in ("a.example", "b.example"):
+                resp = await get_with_safe_redirects(client, f"http://{name}:{port}/")
+                assert resp.status_code == 200
+    finally:
+        server.close()
+        await server.wait_closed()
+
+    assert hosts == [f"a.example:{port}", f"b.example:{port}"]
+    assert len(connections) == 2
+
+@pytest.mark.asyncio
+async def test_safe_fetch_verifies_certificate_per_hostname_on_shared_ip(tmp_path, mocker):
+    """Real TLS: a warm connection for host A must not let host B (same IP:port) skip its own cert check."""
+    import asyncio
+    import datetime
+    import ssl
+    import httpx
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.x509.oid import NameOID
+    from src.utils import get_with_safe_redirects
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "a.example")])
+    now = datetime.datetime.now(datetime.timezone.utc)
+    cert = (
+        x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - datetime.timedelta(days=1)).not_valid_after(now + datetime.timedelta(days=1))
+        .add_extension(x509.SubjectAlternativeName([x509.DNSName("a.example")]), critical=False)
+        .sign(key, hashes.SHA256())
+    )
+    cert_path, key_path = tmp_path / "c.pem", tmp_path / "k.pem"
+    cert_path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+    key_path.write_bytes(key.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.TraditionalOpenSSL, serialization.NoEncryption()))
+
+    server_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    server_ctx.load_cert_chain(cert_path, key_path)
+
+    async def handle(reader, writer):
+        # Keep-alive: serve requests until the client closes, so reuse would be possible.
+        try:
+            while True:
+                head = await reader.readuntil(b"\r\n\r\n")
+                writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok")
+                await writer.drain()
+                if b"connection: close" in head.lower():
+                    break
+        except (asyncio.IncompleteReadError, ConnectionError, ssl.SSLError):
+            pass
+        finally:
+            writer.close()
+
+    server = await asyncio.start_server(handle, "127.0.0.1", 0, ssl=server_ctx)
+    port = server.sockets[0].getsockname()[1]
+    mocker.patch("src.utils._resolve_public_ip_candidates", return_value=["127.0.0.1"])
+    try:
+        async with httpx.AsyncClient(verify=ssl.create_default_context(cafile=str(cert_path))) as client:
+            good = await get_with_safe_redirects(client, f"https://a.example:{port}/")
+            bad = await get_with_safe_redirects(client, f"https://b.example:{port}/")
+    finally:
+        server.close()
+        await server.wait_closed()
+
+    assert good is not None and good.status_code == 200
+    assert bad is None  # certificate is not valid for b.example

@@ -13,3 +13,8 @@ graphify-out/
 seen_articles.json*
 broken_feeds.json*
 .freebuff/project-id
+.venv*/
+seen_interactions.json
+huggingface_test.png
+pollinations_test.png
+cloudflare_test.png

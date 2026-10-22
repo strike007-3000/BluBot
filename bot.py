@@ -1404,6 +1404,9 @@ async def main():
     if not settings.validate():
         return
 
+    if settings.gist_id and settings.gist_token and not settings.is_dry_run and os.getenv("GITHUB_ACTIONS") != "true":
+        SafeLogger.warn("Local run against the live Gist: the Actions concurrency group does not cover this machine, so an overlapping run can overwrite newer state. Use DRY_RUN=true to test.")
+
     # Weekend Rest logic
     now = datetime.now(timezone.utc)
     if now.weekday() >= 5 and now.hour >= 12 and not settings.should_bypass_rest:
