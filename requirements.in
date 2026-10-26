@@ -2,12 +2,12 @@
 # Use 'uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt'
 # to generate the Python 3.13 runtime lockfile.
 
-atproto>=0.0.72
-google-genai>=2.31.0
+atproto>=0.0.73
+google-genai>=2.33.0
 feedparser>=6.0.14
 python-dotenv>=1.2.4
 requests==2.34.2
-Mastodon.py>=2.2.2
+Mastodon.py>=2.3.3
 beautifulsoup4>=4.15.0
 httpx>=0.28.0
 Pillow==13.0.0
@@ -18,10 +18,10 @@ python-telegram-bot[ext]>=21.0
 cryptography>=50.0.0,<51
 urllib3==2.8.0
 anyio==4.15.1
-zipp==4.1.1
+zipp==4.1.2
 dnspython==2.9.0
 
 # Testing
 pytest>=9.1.1
 pytest-asyncio>=1.4.0
-pytest-mock>=3.16.0
+pytest-mock>=3.17.0

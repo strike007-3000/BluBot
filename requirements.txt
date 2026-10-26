@@ -11,7 +11,7 @@ anyio==4.15.1
     #   httpx
 apscheduler==3.11.2
     # via python-telegram-bot
-atproto==0.0.72
+atproto==0.0.73
     # via -r requirements.in
 beautifulsoup4==4.15.0
     # via -r requirements.in
@@ -47,7 +47,7 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.31.0
+google-genai==2.33.0
     # via -r requirements.in
 h11==0.16.0
     # via httpcore
@@ -70,7 +70,7 @@ iniconfig==2.3.0
     # via pytest
 libipld==3.4.1
     # via atproto
-mastodon-py==2.2.2
+mastodon-py==2.3.3
     # via -r requirements.in
 packaging==26.2
     # via pytest
@@ -99,7 +99,7 @@ pytest==9.1.1
     #   pytest-mock
 pytest-asyncio==1.4.0
     # via -r requirements.in
-pytest-mock==3.16.0
+pytest-mock==3.17.0
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via mastodon-py
@@ -121,6 +121,8 @@ soupsieve==2.9
     # via beautifulsoup4
 tenacity==9.1.4
     # via google-genai
+tlds==2026093003
+    # via atproto
 tornado==6.5.9
     # via python-telegram-bot
 typing-extensions==4.16.0
@@ -144,7 +146,7 @@ websockets==15.0.1
     # via
     #   atproto
     #   google-genai
-zipp==4.1.1
+zipp==4.1.2
     # via -r requirements.in
 zstandard==0.25.0
     # via atproto
