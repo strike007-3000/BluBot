@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-10-26 | 🔍 Evening Synthesis (Enterprise AI Transition to Autonomous Operations) |
+| **Broadcaster** | Operational | 2026-10-27 | 🔍 Midday Briefing (GPT-6.1 Terra and Model Selection Dynamics) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
