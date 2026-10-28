@@ -4,10 +4,10 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-10-28 | 🔍 Midday Briefing (Amazon Engineering Leadership AI Guidance) |
+| **Broadcaster** | Operational | 2026-10-28 | 🔍 Evening Synthesis (Agentic Engineering Surge and Benchmark Realities) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
-**Engagement (7d):** 14 posts · 5 likes · 0 reposts · 5 replies  
+**Engagement (7d):** 13 posts · 5 likes · 0 reposts · 5 replies  
 Top: OlmoEarth v1.3: State-of-the-art embeddings for the whole pl (1❤ 0🔁 1💬)
 <!-- ENGAGEMENT:END -->
