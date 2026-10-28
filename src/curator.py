@@ -2352,7 +2352,7 @@ async def generate_ai_image(client: httpx.AsyncClient, genai_client, prompt: str
     return None
 
 
-async def generate_interactive_reply(original_text, author, context):
+async def generate_interactive_reply(original_text, author, context, post_context=""):
     """Generates an AI reply for a social mention, maintaining the Sage persona."""
     try:
         genai_client = genai.Client(api_key=settings.gemini_key)
@@ -2373,6 +2373,8 @@ async def generate_interactive_reply(original_text, author, context):
             config_args["system_instruction"] = system_instruction
 
         prompt = f"User @{author} mentioned you: '{original_text}'. Respond insightfully as the Elite Sage."
+        if post_context:
+            prompt = f"They are replying to your post about: {post_context[:500]}\n{prompt}"
         contents = f"{system_instruction}\n\n{prompt}" if "gemma" in settings.gemini_model.lower() else prompt
 
         response = await genai_client.aio.models.generate_content(

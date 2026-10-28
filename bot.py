@@ -40,7 +40,7 @@ from src.broadcaster import (
     fetch_threads_replies
 )
 from src.telegram_gateway import (
-    send_draft_for_approval, check_for_telegram_topic,
+    send_draft_for_approval, format_score_receipt, check_for_telegram_topic,
     send_broadcast_platform_messages
 )
 from src.config import (
@@ -1287,10 +1287,21 @@ async def persistence_stage(curation: CurationResult, synthesis: SynthesisResult
     dummy_results = [BroadcastResult(platform="Bluesky", success=True)]
     return await settle_persistence_stage(state, curation, synthesis, matched, dummy_results)
 
+def _post_context(ledger: list, root_uri: Optional[str]) -> str:
+    """Title/summary/url of our post a reply belongs to, matched on any platform's thread root."""
+    if not root_uri:
+        return ""
+    for e in reversed(ledger):
+        roots = e.get("thread_roots") or {}
+        if any(root_uri in (r.get("uri"), r.get("id")) for r in roots.values() if isinstance(r, dict)):
+            return f"{e.get('title', '')} — {e.get('summary', '')} ({e.get('url', '')})".strip()
+    return ""
+
 async def interaction_stage(bsky_client, http_client, session_context: dict) -> InteractionResult:
     """Handles social interactions (mentions/replies) with humanized engagement."""
     SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
     seen_ids = await asyncio.to_thread(load_seen_interactions)
+    ledger = (await asyncio.to_thread(load_seen_articles)).get("published_posts", [])
     replied_ids = []
     errors = []
 
@@ -1323,7 +1334,7 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
 
         try:
             SafeLogger.info(f"Generating reply for @{mention.author} on {mention.platform}...")
-            reply_text = await generate_interactive_reply(mention.text, mention.author, session_context)
+            reply_text = await generate_interactive_reply(mention.text, mention.author, session_context, _post_context(ledger, mention.root_uri))
 
             if not reply_text:
                 continue
@@ -1573,7 +1584,8 @@ async def main():
                 client=client,
                 genai_client=genai_client,
                 topic=synthesis.topic,
-                decision=decision
+                decision=decision,
+                receipt=format_score_receipt(curation.top_articles[0]) if curation.top_articles else ""
             )
             if final_drafts is None:
                 SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
