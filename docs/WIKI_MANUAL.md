@@ -44,6 +44,7 @@ All text-generation paths reuse `NATURAL_WRITING_GUIDE`: daily synthesis, mentor
 - **Tab Navigation**: Interactive buttons (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) swap views in place with zero delay.
 - **Natural Language Remix**: Reply to remix prompt with instructions (e.g., *"make it punchier"*); Gemini rewrites the active tab (or all platforms via `/remix_all`) with link-safe deterministic truncation and fallback preservation.
 - **Safe Truncation**: Deterministic URL policy ensures links are never bisected. If a URL cannot fit within a platform's budget, it is safely omitted from post text and logged. For Bluesky, the source article reference remains available as an external link card via `lead_link`. Note that Mastodon and Threads publish text and media only (no standalone external link card), so omitted links will not be broadcast to those networks.
+- **Score Receipt**: After the draft preview, a separate message shows why the story was picked (`📊 Score 63 (Source +30, Momentum +18, corroborated by 3 sources)`) with links to the lead and supporting articles, built from `_score_debug`.
 - **Post-Broadcast Platform Notifications**: Immediately following broadcast, 3 dedicated plain-text messages are dispatched to Telegram (one each for Bluesky, Threads, and Mastodon). Each message independently reports delivery outcome (`✅ Published`, `❌ Failed (<error>)`, or `⚪ Not configured / not attempted`), the `Requested delivery` mode, and the approved post draft sent to that network. Failures on one network are isolated and do not prevent other network messages or pipeline settlement.
 
 ---
@@ -441,8 +442,9 @@ BluBot is no longer a broadcast-only curator. The **Interaction Engine** bridges
 The engine runs post-broadcast in `bot.py` and performs the following:
 1. **Mention & Comment Polling**: Scans notifications on Bluesky and Mastodon for reasons like `mention` or `reply`, and queries Threads recent posts and replies.
 2. **24-Hour Lookback Window**: Filters all comments and notifications to only process items published or indexed within the last 24 hours.
-3. **Selective Engagement**: To prevent bot-spam signaling, `MENTION_REPLY_PROB` (default 0.8) and `COMMENT_REPLY_PROB` (default 0.5) ensure the bot only engages with high-quality interactions.
-4. **Resilient Threading**:
+3. **Post Context**: When a reply's `root_uri` matches a `thread_roots` entry in the `published_posts` ledger, that post's title, summary, and URL are added to the reply prompt so answers are grounded in the original story. Unmatched replies use the plain prompt.
+4. **Selective Engagement**: To prevent bot-spam signaling, `MENTION_REPLY_PROB` (default 0.8) and `COMMENT_REPLY_PROB` (default 0.5) ensure the bot only engages with high-quality interactions.
+5. **Resilient Threading**:
    - **Bluesky**: Maintains the required `root` and `parent` references for reply chains.
    - **Mastodon**: Uses status-id reply chaining.
 
@@ -505,6 +507,7 @@ This ensures that the pagination markers (e.g., `(1/2)`) never push a post over 
 ### 1. Dynamic Keyword & Product Updates
 To prevent search terms from becoming outdated, BluBot utilizes `scripts/update_config_keywords.py` and a weekly GitHub Actions workflow `weekly_config_update.yml` running every Friday morning at 2:00 AM UTC.
 * **Functionality**: The script automatically fetches recent headlines from the feed network and calls Gemini to extract the top 10 momentum products and top 12 high-signal developer event/tech keywords.
+* **Cited-Domain Candidates**: The script also collects hosts linked from practitioner feed entries and lists those cited by 2 or more feeds (excluding registered sources and big platforms) under "Cited domains" in the PR body (`pr_body.md`). Nothing is added automatically; a human decides whether to register a feed. If the PR already exists, the workflow refreshes its body with `gh pr edit`.
 * **State Pull Request**: The workflow uses the `REPO_TOKEN` secret to update the `automated/config-update` branch and open or refresh a pull request. This non-default credential allows the pull-request event to trigger the normal required CI and CodeQL checks.
 
 ### 2. Friday Release Curation Focus
