@@ -1329,3 +1329,13 @@ async def test_send_broadcast_platform_messages_missing_credentials():
         synthesis=SynthesisResult(content="test", lead_link=None, topic="test")
     )
     assert res is False
+
+
+def test_score_receipt_lists_signals_and_links():
+    from src.telegram_gateway import format_score_receipt
+    art = {"score": 63, "source": "OpenAI", "link": "https://a.com/x?a=1&b=2",
+           "_score_debug": {"source": 30, "momentum": 18, "supporting_sources": ["Wired"]},
+           "supporting_sources": ["Wired"], "supporting_links": ["https://w.com/y"]}
+    out = format_score_receipt(art)
+    assert "Score 63" in out and "Source +30" in out and "Momentum +18" in out and "corroborated by 1 source" in out
+    assert 'href="https://a.com/x?a=1&amp;b=2"' in out and "https://w.com/y" in out

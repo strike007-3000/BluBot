@@ -767,3 +767,10 @@ async def test_editorial_decision_legacy_parent_derivation(mocker):
     assert parent_roots["threads"]["id"] == "999888777"
 
 
+
+
+def test_post_context_matches_thread_root():
+    import bot
+    ledger = [{"title": "T", "summary": "S", "url": "https://u", "thread_roots": {"bluesky": {"uri": "at://r"}, "mastodon": {"id": "42"}}}]
+    assert bot._post_context(ledger, "42").startswith("T — S")
+    assert bot._post_context(ledger, "nope") == "" and bot._post_context(ledger, None) == ""

@@ -114,6 +114,18 @@ def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: s
             f"🐘 <b>Mastodon</b> ({len(drafts.mastodon)}/485):\n{escape(drafts.mastodon)}"
         )
 
+def format_score_receipt(article: Any) -> str:
+    """One-line 'why this story' receipt with clickable lead and supporting links."""
+    g = (lambda k, d=None: article.get(k, d)) if isinstance(article, dict) else (lambda k, d=None: getattr(article, k, d))
+    dbg = g("_score_debug") or {}
+    parts = [f"{label} {dbg[key]:+g}" for key, label in (("source", "Source"), ("signal", "Signal"), ("momentum", "Momentum"), ("watchlist", "Watchlist")) if dbg.get(key)]
+    n = len(dbg.get("supporting_sources") or [])
+    if n:
+        parts.append(f"corroborated by {n} source{'s' if n != 1 else ''}")
+    pairs = [(g("source") or "Lead", g("link"))] + list(zip(g("supporting_sources") or [], g("supporting_links") or []))
+    links = [f'<a href="{escape(l, quote=True)}">{escape(name)}</a>' for name, l in pairs if l]
+    return f"📊 <b>Score {g('score') or 0}</b> ({escape(', '.join(parts) or 'no signals')})\n" + " · ".join(links)
+
 def _get_caption_payload(drafts: Any, current_tab: str, view_mode: str, decision: Optional[Any] = None) -> Tuple[str, Optional[str]]:
     """
     Returns (primary_caption, optional_followup_text) for media messages.
@@ -180,7 +192,8 @@ async def send_draft_for_approval(
     genai_client: Optional[Any] = None,
     topic: str = "General",
     text: Optional[str] = None,  # Backward-compatible keyword alias
-    decision: Optional[Any] = None
+    decision: Optional[Any] = None,
+    receipt: str = ""
 ) -> Tuple[Optional[Any], Optional[MediaAsset]]:
     """
     Sends generated post drafts and image to Telegram for approval.
@@ -234,6 +247,12 @@ async def send_draft_for_approval(
                 reply_markup=reply_markup,
                 parse_mode="HTML"
             )
+
+        if receipt:
+            try:
+                await bot.send_message(chat_id=chat_id, text=receipt, parse_mode="HTML", disable_web_page_preview=True)
+            except Exception as e:
+                SafeLogger.warn(f"Telegram: score receipt failed: {e}")
 
         updates = await bot.get_updates(limit=100)
         offset = updates[-1].update_id + 1 if updates else None

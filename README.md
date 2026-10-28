@@ -201,7 +201,11 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 
 ## 🗒️ Updates & History
 
-- **v3.37.1 (Current)**: **Security & Reliability Hardening**.
+- **v3.38.0 (Current)**: **Score Receipts, Reply Context & Feed Discovery Hints**.
+  - Telegram approvals send a one-line score receipt with links to the lead and supporting articles.
+  - Interaction replies now include the title/summary/url of the post being replied to.
+  - The weekly config PR body lists hosts cited by 2+ practitioner feeds as candidate feeds (human-gated).
+- **v3.37.1**: **Security & Reliability Hardening**.
   - SSRF-safe fetches now connect to the validated IP with the original `Host` header and TLS server name instead of patching the process-wide `socket.getaddrinfo`, and close each pinned connection so hostnames sharing an IP never reuse a TLS session.
   - `FileLock` always closes its handle, even if unlocking fails.
   - Warns on local runs against the live Gist; untracks generated files; daily workflow settings read `vars` first, then `secrets`.
