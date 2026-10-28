@@ -34,7 +34,7 @@ The Bot accesses platform APIs solely to:
   - Curated news article titles and summaries (for synthesis).
   - Images and their article or topic context (for alt-text generation via Gemini Vision).
   - `/topic` keywords and text-regeneration feedback from Telegram (when those features are used).
-  - When the Interaction Engine is enabled (`ENABLE_INTERACTIONS=true`, default), social mention and reply text — including the author's handle and post content — is sent to Gemini to generate a contextual reply.
+  - When the Interaction Engine is enabled (`ENABLE_INTERACTIONS=true`, default), social mention and reply text — including the author's handle and post content — is sent to Gemini to generate a contextual reply, together with the title, summary, and URL of the Bot's own published post being replied to.
 
   When generated images are needed, image prompts are sent to **Cloudflare Workers AI** by default. If that request fails or is unavailable, the same prompt may be sent to **Pollinations** and then **Hugging Face**. Selecting `IMAGE_PROVIDER=nvidia` sends image prompts to NVIDIA NIM; selecting `IMAGE_PROVIDER=imagen` sends them to Google Gemini. Refer to [Google's Privacy Policy](https://policies.google.com/privacy), [Cloudflare's Privacy Policy](https://www.cloudflare.com/privacypolicy/), [Pollinations' Privacy Policy](https://pollinations.ai/privacy), [Hugging Face's Privacy Policy](https://huggingface.co/privacy), and [NVIDIA's Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/) for details on how they handle API request data.
 
