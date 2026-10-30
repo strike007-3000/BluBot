@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-10-29 | 🔍 Evening Synthesis (Mistral Large 4 Open Weights) |
+| **Broadcaster** | Operational | 2026-10-30 | 🔍 Midday Briefing (OpenAI API credits for high-tier subscriptions) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
