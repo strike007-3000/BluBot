@@ -4,10 +4,10 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-10-30 | 🔍 Midday Briefing (OpenAI API credits for high-tier subscriptions) |
+| **Broadcaster** | Operational | 2026-10-30 | 🔍 Friday Roundup (Roundup 2026-W44) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
-**Engagement (7d):** 12 posts · 7 likes · 0 reposts · 4 replies  
+**Engagement (7d):** 11 posts · 6 likes · 0 reposts · 3 replies  
 Top: GPT-6.1 Terra (2❤ 0🔁 1💬)
 <!-- ENGAGEMENT:END -->
