@@ -6,10 +6,47 @@ import json
 from html import escape
 from datetime import datetime, timezone
 from typing import Optional, Tuple, Any, List
+from telegram.request import HTTPXRequest
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from src.settings import settings
 from src.utils import SafeLogger
 from src.models import MediaAsset, MediaSource
+
+
+def _make_bot(token: str) -> Bot:
+    # PTB's default 5s timeouts are too short for photo uploads from CI runners.
+    return Bot(token=token, request=HTTPXRequest(connect_timeout=15, read_timeout=30, write_timeout=60, pool_timeout=15))
+
+
+class ApprovalUnavailable(RuntimeError):
+    """Raised when a user-supplied topic could not be approved; nothing must be posted."""
+
+
+def split_news(text: str) -> Tuple[str, Optional[str]]:
+    """Splits '/news' text into (headline, optional url)."""
+    m = re.search(r"https?://\S+", text)
+    if not m:
+        return text.strip(), None
+    return (text[:m.start()] + text[m.end():]).strip(), m.group(0)
+
+
+def save_pending_topic(topic: str, kind: str = "topic") -> None:
+    from src.config import PENDING_TOPIC_FILE_PATH
+    with open(PENDING_TOPIC_FILE_PATH, "w", encoding="utf-8") as f:
+        json.dump({"topic": topic, "kind": kind, "timestamp": time.time()}, f)
+
+
+async def _abort_unapproved(chat_id: Any, pending: Optional[dict], reason: str) -> None:
+    """Fail closed for user-supplied topics: re-queue the topic, tell the user, never publish."""
+    try:
+        if pending:
+            save_pending_topic(pending["topic"], pending["kind"])
+        await _make_bot(settings.telegram_bot_token).send_message(
+            chat_id=chat_id, text=f"⚠️ {reason} Nothing was posted; your topic is queued for the next run."
+        )
+    except Exception as e:
+        SafeLogger.warn(f"Telegram: could not notify/requeue after approval failure: {e}")
+    raise ApprovalUnavailable(reason)
 
 def validate_text_limits(text: str) -> Optional[str]:
     """
@@ -193,7 +230,8 @@ async def send_draft_for_approval(
     topic: str = "General",
     text: Optional[str] = None,  # Backward-compatible keyword alias
     decision: Optional[Any] = None,
-    receipt: str = ""
+    receipt: str = "",
+    pending: Optional[dict] = None  # {"topic", "kind"} when the user supplied the topic: fail closed
 ) -> Tuple[Optional[Any], Optional[MediaAsset]]:
     """
     Sends generated post drafts and image to Telegram for approval.
@@ -213,7 +251,7 @@ async def send_draft_for_approval(
         return current_drafts, media
 
     try:
-        bot = Bot(token=settings.telegram_bot_token)
+        bot = _make_bot(settings.telegram_bot_token)
         chat_id = settings.telegram_user_id
 
         current_tab = "bluesky"
@@ -457,11 +495,9 @@ async def send_draft_for_approval(
                         text_val = msg.text.strip()
                         cmd_res = process_authorized_command(text_val)
                         if cmd_res:
-                            if cmd_res.get("action") == "topic" and cmd_res.get("topic"):
-                                from src.config import PENDING_TOPIC_FILE_PATH
+                            if cmd_res.get("action") in ("topic", "news") and cmd_res.get("topic"):
                                 try:
-                                    with open(PENDING_TOPIC_FILE_PATH, "w", encoding="utf-8") as f:
-                                        json.dump({"topic": cmd_res["topic"], "timestamp": time.time()}, f)
+                                    save_pending_topic(cmd_res["topic"], cmd_res["action"])
                                     SafeLogger.info(f"Telegram Loop: Persisted topic '{cmd_res['topic']}' to pending_topic.json")
                                 except Exception as persist_err:
                                     SafeLogger.error(f"Telegram Loop: Failed to persist topic: {persist_err}")
@@ -571,12 +607,18 @@ async def send_draft_for_approval(
 
             await asyncio.sleep(poll_interval)
 
+        if pending:
+            await _abort_unapproved(chat_id, pending, "Approval timed out.")
         SafeLogger.info("Telegram: Approval timeout expired. Automatically publishing draft.")
         await bot.send_message(chat_id=chat_id, text="🕒 Timeout expired. Automatically publishing draft.")
         return current_drafts, media
 
+    except ApprovalUnavailable:
+        raise
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")
+        if pending:
+            await _abort_unapproved(settings.telegram_user_id, pending, f"Approval failed ({e}).")
         return current_drafts, media
 
 def process_authorized_command(text: str) -> Optional[dict]:
@@ -598,6 +640,13 @@ def process_authorized_command(text: str) -> Optional[dict]:
     elif cmd_text.startswith("/topic "):
         topic = cmd_text.replace("/topic ", "", 1).strip()
         return {"action": "topic", "topic": topic, "response": f"📥 Received topic request: *{topic}*. Curating now..."} if topic else None
+    elif cmd_text.startswith("/news "):
+        raw = cmd_text.replace("/news ", "", 1).strip()
+        headline, url = split_news(raw)
+        from scripts.build_archive import is_valid_public_http_url
+        if not headline or (url and not is_valid_public_http_url(url)):
+            return {"action": "news_invalid", "response": "⚠️ Usage: /news <headline> [public https url]"}
+        return {"action": "news", "topic": raw, "response": f"📰 Received news: *{headline}*. Drafting as confirmed fact..."}
     elif cmd_text.startswith("/curate "):
         topic = cmd_text.replace("/curate ", "", 1).strip()
         return {"action": "topic", "topic": topic, "response": f"📥 Received topic request: *{topic}*. Curating now..."} if topic else None
@@ -677,11 +726,13 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
 
     # 1. Check pending_topic.json first
     topic_to_use = None
+    kind_to_use = "topic"
     if os.path.exists(PENDING_TOPIC_FILE_PATH):
         try:
             with open(PENDING_TOPIC_FILE_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
             topic_to_use = data.get("topic")
+            kind_to_use = data.get("kind", "topic")
         except Exception as e:
             SafeLogger.warn(f"Telegram: Error reading pending topic file: {e}")
         finally:
@@ -697,17 +748,17 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
         # Notify user on Telegram
         if settings.telegram_bot_token and settings.telegram_user_id:
             try:
-                bot = Bot(token=settings.telegram_bot_token)
+                bot = _make_bot(settings.telegram_bot_token)
                 await bot.send_message(chat_id=settings.telegram_user_id, text=f"📥 Using pending topic override: *{topic_to_use}*.")
             except Exception:
                 pass
-        return ("topic", topic_to_use)
+        return (kind_to_use, topic_to_use)
 
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         return (None, None)
 
     try:
-        bot = Bot(token=settings.telegram_bot_token)
+        bot = _make_bot(settings.telegram_bot_token)
         chat_id = settings.telegram_user_id
 
         updates = await bot.get_updates(limit=50)
@@ -733,7 +784,7 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
                         if result.get("response"):
                             await bot.send_message(chat_id=chat_id, text=result["response"])
 
-                        if result.get("action") in ("topic", "brief"):
+                        if result.get("action") in ("topic", "brief", "news"):
                             return (result.get("action"), result.get("topic"))
                         else:
                             # Non-topic/brief command (/watch, /unwatch, /watches) handled and acknowledged. Stop polling to prevent processing older stale updates.
@@ -759,7 +810,7 @@ async def send_broadcast_platform_messages(
         return False
 
     try:
-        bot = Bot(token=bot_token)
+        bot = _make_bot(bot_token)
     except Exception as e:
         SafeLogger.warn(f"Telegram: Failed to initialize bot for broadcast summary: {e}")
         return False

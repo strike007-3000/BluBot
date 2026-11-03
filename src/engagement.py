@@ -8,6 +8,7 @@ import httpx
 from src.logger import SafeLogger
 
 APPVIEW_GET_POSTS = "https://public.api.bsky.app/xrpc/app.bsky.feed.getPosts"
+APPVIEW_GET_THREAD = "https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread"
 BATCH_SIZE = 25
 START_MARKER = "<!-- ENGAGEMENT:START -->"
 END_MARKER = "<!-- ENGAGEMENT:END -->"
@@ -45,10 +46,24 @@ async def fetch_bluesky_metrics(client: httpx.AsyncClient, entries: List[dict]) 
             resp.raise_for_status()
             for post in resp.json().get("posts", []):
                 metrics[post["uri"]] = {name: int(post.get(key) or 0) for name, key in _FIELDS}
+                if metrics[post["uri"]]["replies"]:
+                    metrics[post["uri"]]["replies"] = await _external_replies(client, post)
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
         SafeLogger.warn(f"Engagement metrics unavailable: {e}")
         return {}
     return metrics
+
+
+async def _external_replies(client: httpx.AsyncClient, post: dict) -> int:
+    """replyCount includes our own thread parts (2/2, 3/3); count only replies by other authors."""
+    raw = int(post.get("replyCount") or 0)
+    try:
+        resp = await client.get(APPVIEW_GET_THREAD, params={"uri": post["uri"], "depth": 1, "parentHeight": 0}, timeout=10.0)
+        resp.raise_for_status()
+        me = post["author"]["did"]
+        return sum(1 for r in resp.json()["thread"].get("replies", []) if r["post"]["author"]["did"] != me)
+    except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        return raw  # shortcut: falls back to the inflated count if the thread lookup fails
 
 
 def render_table(metrics: Dict[str, Dict[str, int]], entries: List[dict]) -> str:

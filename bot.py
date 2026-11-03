@@ -8,6 +8,7 @@ if "--roundup" in sys.argv:
     os.environ["FORCE_ROUNDUP"] = "true"
 
 import asyncio
+from urllib.parse import urlparse
 import httpx
 import logging
 import time
@@ -136,7 +137,7 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
 
     return True
 
-async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None) -> CurationResult:
+async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None, news: Optional[dict] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
     seen_data = await asyncio.to_thread(load_seen_articles)
     from src.utils import filter_and_update_pending_stories
@@ -164,7 +165,18 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
 
     all_articles = [Article(**item) for item in raw_news]
 
-    if telegram_topic:
+    if news:
+        # /news: the user asserts this happened; feed matching could pick an unrelated story, so use their facts only.
+        articles = [Article(
+            title=telegram_topic,
+            link=news["url"],
+            summary=news["facts"],
+            published=datetime.now(timezone.utc).isoformat(),
+            source="Telegram Intercept",
+            score=100,
+            topic=telegram_topic
+        )]
+    elif telegram_topic:
         SafeLogger.info(f"Curation Stage: Filtering source items for Telegram topic request: '{telegram_topic}'")
         matching_articles = []
         for a in all_articles:
@@ -265,7 +277,8 @@ async def synthesis_stage(
     genai_client: genai.Client,
     curation: CurationResult,
     telegram_topic: Optional[str] = None,
-    decision: Optional[Any] = None
+    decision: Optional[Any] = None,
+    news: Optional[dict] = None
 ) -> Tuple[SynthesisResult, CurationResult]:
     """Stage 2: Synthesize Raw News into an Elite Tech Insight Post or Thread Update."""
     context = get_temporal_context()
@@ -336,6 +349,11 @@ async def synthesis_stage(
         try:
             from src.config import CURATOR_SYSTEM_INSTRUCTION
             prompt = (
+                "Write an elite tech insight post reporting this CONFIRMED news. It has already happened: "
+                "state it as fact, never as hypothetical or speculative. Use ONLY the facts below; "
+                "do not invent specs, numbers, dates or quotes.\n"
+                f"FACTS: {news['facts']}"
+            ) if news else (
                 f"Write an elite tech insight post on the topic: '{telegram_topic}'.\n"
                 "CRITICAL: If this topic is hypothetical, speculative, or references a potential future scenario (e.g. 'could be', 'what if', 'speculation'), "
                 "do NOT write as if it has already occurred or is an established fact. Frame it hypothetically (e.g., 'If Cursor were to be acquired...'). "
@@ -352,7 +370,7 @@ async def synthesis_stage(
             summary = strip_markdown(response.text.strip())
             from src.models import PlatformDrafts
             platform_drafts = PlatformDrafts.from_single(summary)
-            lead_link = None
+            lead_link = news["url"] if news else None
             topic = telegram_topic
         except Exception as e:
             SafeLogger.warn(f"Telegram topic synthesis failed: {e}")
@@ -845,7 +863,7 @@ async def settle_persistence_stage(
             supporting_links=pub_entry["supporting_links"],
             posts=posts,
             published_at=pub_entry["published_at"],
-            source=matched_article.source,
+            source=(urlparse(matched_article.link).hostname or "Manual news") if matched_article.source == "Telegram Intercept" else matched_article.source,
             source_id=matched_article.source_id,
             category=published_category,
             supporting_sources=matched_article.supporting_sources,
@@ -1443,6 +1461,20 @@ async def main():
         else:
             cmd_type, telegram_topic = ("topic" if res else None), res
 
+        raw_topic, news = telegram_topic, None
+        if cmd_type == "news":
+            from src.telegram_gateway import split_news
+            from src.utils import get_link_metadata
+            telegram_topic, url = split_news(raw_topic)
+            facts = telegram_topic
+            if url:
+                meta = await get_link_metadata(client, url)
+                if meta:
+                    facts += f"\nSource ({url}): {meta['title']}. {meta['description']}"
+                else:
+                    SafeLogger.warn(f"News: could not fetch {url}; using headline only.")
+            news = {"url": url, "facts": facts}
+
         if cmd_type == "brief":
             SafeLogger.info(f"Brief Engine: Generating 7-day briefing for topic '{telegram_topic}'")
             briefing = await generate_briefing(client, genai_client, telegram_topic)
@@ -1478,7 +1510,7 @@ async def main():
 
         # 1. Curation
         t0 = time.monotonic()
-        curation = await curation_stage(client, telegram_topic=telegram_topic)
+        curation = await curation_stage(client, telegram_topic=telegram_topic, news=news)
         SafeLogger.info(f"Curation Stage: Completed in {time.monotonic() - t0:.2f}s ({len(curation.top_articles)} candidates).")
 
         # 1.5 Continuity Matching & Editorial Decision Orchestration
@@ -1560,7 +1592,8 @@ async def main():
         synthesis, curation = await synthesis_stage(
             client, genai_client, curation,
             telegram_topic=telegram_topic,
-            decision=decision
+            decision=decision,
+            news=news
         )
         if not synthesis.content:
             SafeLogger.error("Synthesis produced no content. Aborting.")
@@ -1579,6 +1612,7 @@ async def main():
             from src.models import PlatformDrafts
             initial_drafts = synthesis.drafts or PlatformDrafts.from_single(synthesis.content)
             final_drafts, final_media = await send_draft_for_approval(
+                pending={"topic": raw_topic, "kind": cmd_type} if telegram_topic else None,
                 drafts=initial_drafts,
                 media=synthesis.media,
                 client=client,
