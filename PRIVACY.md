@@ -1,6 +1,6 @@
 # Privacy Policy for BluBot
 
-**Last Updated: October 17, 2026**
+**Last Updated: November 3, 2026**
 
 BluBot ("we", "our", or "the Bot") is an automated news curation and broadcasting tool. This Privacy Policy explains how the Bot handles data when you integrate it with third-party platforms, specifically Bluesky, Mastodon, Meta Threads, and Telegram.
 
@@ -11,7 +11,7 @@ BluBot is designed to run in a self-hosted or automated environment (such as Git
 * **Personal Data:** We do not collect, store, or harvest any personal data, profiles, or contact details of end users.
 * **Credentials & Tokens:** Any access tokens, handles, or user IDs required to run the Bot (e.g., `BSKY_APP_PASSWORD`, `MASTODON_ACCESS_TOKEN`, `THREADS_ACCESS_TOKEN`, `TELEGRAM_BOT_TOKEN`) are stored securely as encrypted secrets in your own hosting platform (e.g., GitHub Secrets). The Bot never transmits these credentials to any party other than the official, respective platform API endpoints.
 * **Interaction Metadata:** If the Interaction Engine is enabled, the Bot reads notification and reply metadata (post IDs, author handles, and post text) from Bluesky, Mastodon, and Threads APIs solely to generate replies. Processed notification IDs are stored locally in `seen_interactions.json` (in your private repository) to prevent double-replies; no personal text is persisted.
-* **Telegram Messages:** If the Telegram gateway is enabled, the Bot reads the most recent messages in your private Telegram bot conversation (up to the last 50 updates) to check for `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, and `/brief` commands and to receive approval decisions. All message processing is scoped to the single authorized `TELEGRAM_USER_ID`. Note: `/topic <keyword>`, `/brief <keyword>` commands, and text-regeneration feedback you send are forwarded to the Google Gemini API as part of the synthesis, editing, or briefing prompt. `/watch` topic strings are stored locally in `seen_articles.json` under the `watch_topics` key. No Telegram message content beyond watchlist entries is stored locally or transmitted to any other party.
+* **Telegram Messages:** If the Telegram gateway is enabled, the Bot reads the most recent messages in your private Telegram bot conversation (up to the last 50 updates) to check for `/topic`, `/curate`, `/news`, `/watch`, `/unwatch`, `/watches`, and `/brief` commands and to receive approval decisions. All message processing is scoped to the single authorized `TELEGRAM_USER_ID`. Note: `/topic <keyword>`, `/news <headline> [url]`, `/brief <keyword>` commands, and text-regeneration feedback you send are forwarded to the Google Gemini API as part of the synthesis, editing, or briefing prompt. A pending `/topic`, `/curate` or `/news` request is written to `pending_topic.json` only when approval fails or times out, so it can be retried on the next run, and is deleted once consumed. `/news` URLs are fetched (SSRF-validated) to read the page title and description. `/watch` topic strings are stored locally in `seen_articles.json` under the `watch_topics` key. No Telegram message content beyond watchlist entries is stored locally or transmitted to any other party.
 
 ## 2. How We Use Data
 
@@ -30,11 +30,12 @@ The Bot accesses platform APIs solely to:
   - Mastodon API in accordance with your instance's terms of service.
   - Meta Threads API in accordance with [Meta Developer Policies](https://developers.facebook.com/policy/).
   - Telegram Bot API in accordance with Telegram's [Privacy Policy](https://telegram.org/privacy).
+  - Public, unauthenticated Bluesky AppView endpoints (post metrics and reply threads, for 7-day engagement stats), the Hugging Face Hub API, and the GitHub REST/Search API (for trending sources). Only public post URIs and search terms are sent.
 * **AI services:** The following content is sent to the Google Gemini API as part of normal operation:
   - Curated news article titles and summaries (for synthesis).
   - Images and their article or topic context (for alt-text generation via Gemini Vision).
-  - `/topic` keywords and text-regeneration feedback from Telegram (when those features are used).
-  - When the Interaction Engine is enabled (`ENABLE_INTERACTIONS=true`, default), social mention and reply text — including the author's handle and post content — is sent to Gemini to generate a contextual reply, together with the title, summary, and URL of the Bot's own published post being replied to.
+  - `/topic` and `/news` text (plus the fetched title/description of a `/news` URL) and text-regeneration feedback from Telegram (when those features are used).
+  - When the Interaction Engine is enabled (`ENABLE_INTERACTIONS=true`, default), social mention and reply text — including the author's handle and post content — is sent to Gemini to generate a contextual reply.
 
   When generated images are needed, image prompts are sent to **Cloudflare Workers AI** by default. If that request fails or is unavailable, the same prompt may be sent to **Pollinations** and then **Hugging Face**. Selecting `IMAGE_PROVIDER=nvidia` sends image prompts to NVIDIA NIM; selecting `IMAGE_PROVIDER=imagen` sends them to Google Gemini. Refer to [Google's Privacy Policy](https://policies.google.com/privacy), [Cloudflare's Privacy Policy](https://www.cloudflare.com/privacypolicy/), [Pollinations' Privacy Policy](https://pollinations.ai/privacy), [Hugging Face's Privacy Policy](https://huggingface.co/privacy), and [NVIDIA's Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/) for details on how they handle API request data.
 
@@ -45,6 +46,8 @@ BluBot operates in a near-stateless environment. It does not run a persistent da
 * **`seen_articles.json`**: Public news article URLs and source publication timestamps (to prevent duplicate posts and preserve article age), plus editorial metadata (last dialect, topic history, watchlist topics). Capped at the last 500 links, 20 recent topics, and 10 watchlist entries.
 * **`seen_interactions.json`**: Social media post/notification IDs of processed interactions, to prevent double-replies. No personal text is stored.
 * **`bluesky_session.txt`**: A Bluesky session token for session resumption, stored in your private repository.
+* **`pending_topic.json`**: A user-supplied `/topic`, `/curate` or `/news` request awaiting retry, deleted once consumed.
+* **`published_posts` ledger (in `seen_articles.json` / Gist)**: Public story URLs, titles, supporting links, platform post IDs and timestamps, capped at 500 entries; used for the public archive and Friday roundup.
 * **`broken_feeds.json`**: Health status of RSS feeds (URLs and failure counts). No personal data.
 
 All state files reside exclusively in your private repository or GitHub Gist and are never transmitted to the bot author.

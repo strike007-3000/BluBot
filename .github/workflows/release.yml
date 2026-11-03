@@ -43,7 +43,7 @@ jobs:
         id: changelog
         run: |
           TAG_VERSION=${{ steps.get_version.outputs.version }}
-          # Extract section from README.md
+          # Extract section from CHANGELOG.md
           # It looks for a line containing the version (e.g. v3.3) 
           # and takes everything until the next line starting with '- **' (another entry)
           # or until it hits the footer separator '---'
@@ -55,7 +55,7 @@ jobs:
             found && /^---/ { exit }
             found && /^- \*\*/ { if ($0 !~ ver) exit }
             found { print $0 }
-          ' README.md > release_notes.md
+          ' CHANGELOG.md > release_notes.md
           
           echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
 
