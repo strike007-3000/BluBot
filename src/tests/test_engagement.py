@@ -36,7 +36,7 @@ async def test_fetch_batches_25_and_parses_counts():
     payload = {"posts": [{"uri": eng.bluesky_uri(entries[0]), "likeCount": 3, "repostCount": 1, "replyCount": 2}]}
     client = _client(payload)
     metrics = await eng.fetch_bluesky_metrics(client, entries)
-    assert client.get.await_count == 2
+    assert client.get.await_count == 4  # 2 batches + 1 thread lookup each (mock repeats the same post)
     first_params = client.get.await_args_list[0].kwargs["params"]
     assert len(first_params) == 25 and first_params[0][0] == "uris"
     assert metrics[eng.bluesky_uri(entries[0])] == {"likes": 3, "reposts": 1, "replies": 2, "quotes": 0}

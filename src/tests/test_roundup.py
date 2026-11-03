@@ -278,5 +278,5 @@ async def test_topic_command_bypasses_scheduled_roundup(mocker):
     # Roundup must NOT have been called because cmd_type was 'topic'
     mock_roundup.assert_not_called()
     # Curation must have received the requested topic
-    mock_curate.assert_called_once_with(mocker.ANY, telegram_topic="quantum-ai")
+    mock_curate.assert_called_once_with(mocker.ANY, telegram_topic="quantum-ai", news=None)
 
