@@ -6,8 +6,8 @@ We take the security of the BluBot ecosystem and the privacy of our automated po
 
 | Version | Supported |
 | ------- | --------- |
-| 3.22.x  | ✅ Active (Current) |
-| < 3.22  | ❌ End of Life |
+| 3.39.x  | ✅ Active (Current) |
+| < 3.39  | ❌ End of Life |
 
 ## Reporting a Vulnerability
 
@@ -20,7 +20,7 @@ Instead, please use the **GitHub "Private Vulnerability Reporting"** feature:
 
 Our team will respond within 48 hours to acknowledge your report and provide a timeline for resolution.
 
-## Current Security Baseline (v3.22.2)
+## Current Security Baseline (v3.39.0)
 
 The project is currently hardened against:
 
@@ -30,7 +30,7 @@ The project is currently hardened against:
 - **Data Corruption**: Atomic state persistence via cross-platform **Advisory File Locking** and `.tmp` swap logic prevents race conditions during concurrent CI and local runs.
 - **Decompression Bomb DoS**: Pillow's image loading engine is restricted to a maximum of `10,000,000` pixels (`Image.MAX_IMAGE_PIXELS`) to prevent memory exhaustion attacks when fetching remote media.
 - **Telegram Impersonation**: The Telegram approval gateway validates all incoming callback queries and message updates against the configured `TELEGRAM_USER_ID`, silently discarding interactions from unauthorized senders.
-- **Telegram Command Injection**: All Telegram commands (`/watch`, `/unwatch`, `/brief`, `/topic`) enforce input sanitization: topics are bounded to 100 characters and reject URL-containing payloads. Watchlists are capped at 10 entries to prevent state file inflation.
+- **Telegram Command Injection**: `/watch`, `/unwatch`, `/brief` and `/topic` enforce input sanitization: topics are bounded to 100 characters and reject URL-containing payloads. `/news` is not length-bounded: it extracts the first URL only, accepts it only if it is a public `http(s)` URL (SSRF validation), and passes the remaining text to Gemini as the headline. User-supplied topics fail closed: if Telegram approval times out or errors, nothing is published and the topic is re-queued. Watchlists are capped at 10 entries to prevent state file inflation.
 - **Duplicate Publication Defense**: Canonical URL identity, semantic story-history filtering, pre-broadcast reservations, and "Catch & Log" delivery state prevent duplicate posts across feed variants, concurrent runs, and partial platform failures.
 - **Resilient RSS Parsing**: Parses raw bytes (`response.content`) with safe attribute lookups (`getattr(entry, 'link', None)`) to survive malformed XML without exposing the pipeline to injection risks.
 

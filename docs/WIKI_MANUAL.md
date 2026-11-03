@@ -69,7 +69,7 @@ The "Brain" of the bot ranked by a weighted matrix.
 4. **Consensus Synergy Pass (Story Clustering)**: `+15` synergy bonus added when stories from ≥2 distinct publisher domains cluster together based on title normalization and headline similarity.
 5. **Watchlist Topic Boosting**: Bounded `+3` to `+8` boost for articles matching user-defined `/watch` topics. Uses word-boundary regex matching: `+8` for exact topic match in title, `+5` for keyword match in title, `+3` for keyword match in summary. Maximum boost across all watches capped at `+8`.
 6. **Diversity Penalty**: Subtracts `-12` if the article's classified topic is already in `recent_topics` list, preventing repetition.
-7. **Category Recurrence Penalty**: Progressive `-5` penalty step for each repeat of the same source category within a single run.
+7. **Category Recurrence Penalty**: Recency-weighted `-5` step against recently published categories (the last 10 are remembered): the most recent repeat counts fully, the one before it 1/2, then 1/3, and so on.
 8. **Time Decay**: Subtracts `-0.5` score for each hour since the article's publication to keep the feed fresh.
 
 ---
@@ -175,10 +175,12 @@ The current registry contains **45 RSS feeds plus two API sources** across 8 tie
 | `TELEGRAM_BOT_TOKEN` | (Optional) Your Telegram Bot API Token |
 | `TELEGRAM_USER_ID` | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | (Optional) Telegram polling timeout in minutes (default: `5`) |
-| `ENABLE_TELEGRAM_APPROVAL` | (Optional) Toggle Telegram draft approval (default: `true` if bot token set) |
+| `ENABLE_TELEGRAM_APPROVAL` | (Optional) Toggle Telegram draft approval (default: `true`; has no effect without a bot token and user ID) |
 | `ENABLE_BSKY_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
+| `REPO_TOKEN` | (Optional) PAT used by `weekly_config_update.yml` and `sync_status.yml` so pull requests and `STATUS.md` syncs trigger required checks |
+| `DRY_RUN` | (Optional, local use) `true` skips all external posting/persistence and injects mock credentials |
 | `ENABLE_HASHTAGS_BSKY` | (Optional) Enable/disable hashtags on Bluesky (default: `false`) |
 | `ENABLE_HASHTAGS_MASTODON` | (Optional) Enable/disable hashtags on Mastodon (default: `true`) |
 | `ENABLE_HASHTAGS_THREADS` | (Optional) Enable/disable hashtags on Threads (default: `true`) |
@@ -205,7 +207,7 @@ The Sage provides a robust **Full Pipeline Dry Run** via `scripts/diagnostic.py`
 ### Execution
 ```bash
 python scripts/diagnostic.py
-python scripts/diagnostic.py --mode engagement   # non-interactive; modes: scoring, dry-run, images, gist, gemini, drafts, hf, github, engagement
+python scripts/diagnostic.py --mode engagement   # non-interactive; modes: scoring, dry-run, images, gist, gemini, drafts, hf, github, engagement, continuity
 ```
 
 ### 🎨 Sage Console (Logging)
@@ -239,15 +241,15 @@ BluBot uses a tiered persistence model so ephemeral runners can recover recent s
    - **Threaded Publishing**: Confident updates chain replies directly to the original root post on Bluesky, Mastodon, and Threads. Update text uses deterministic link-preserving truncation so URLs are never truncated mid-string. If a parent entry was published prior to v3.37.0, its story fingerprint and thread roots are automatically derived from legacy post metadata.
    - `scripts/build_archive.py` uses this ledger to compile a responsive editorial static HTML archive (`index.html`) featuring the **Source Trust Dashboard**, interactive timeline linkages between original stories and updates with automatic filter resetting upon navigation, Update badges, and an enhanced RSS 2.0 feed (`feed.xml`, 50 items).
    - **Dashboard Metrics & Definitions**:
-     - *Published*: Total verified editorial entries curated in the durable ledger.
+     - *Stories* (shown as "Stories"): Total entries in the durable ledger (up to the 500 retained).
      - *Sources*: Count of distinct normalized lead-source domains.
      - *Corroborated*: Ratio and percentage of eligible stories backed by at least one unique public supporting domain distinct from the lead source (`corroborated_posts / eligible_posts * 100`). Invalid, private, duplicate, and same-domain links do not count; weekly roundups are excluded from the denominator. When there are no eligible stories, the page displays “—” and clarifies the status in the calculation disclosure.
-     - *Receipts*: Ratio and coverage percentage of eligible Bluesky posts that include a public proof thread receipt (`posts.bluesky.receipt_uri`). When no corroborated Bluesky stories are eligible, the page displays “—”.
+     - *Receipts*: Ratio and coverage percentage of eligible stories (non-roundup, corroborated, posted to Bluesky) that include a public proof thread receipt (`posts.bluesky.receipt_uri`). When none are eligible, the page displays “—”.
      - *Engagement*: 7-day public Bluesky engagement metrics (likes, reposts, replies) without API authentication or billing. The “Most engaged” view is limited to that same 7-day window.
-     - *Top sources & categories*: Horizontal CSS progress bars and category distributions showing dominant sources and topic distributions in a compact sidebar.
+     - *Top sources & categories*: Horizontal CSS progress bars for the top 5 lead-source domains plus "Other", and category distributions, in a compact sidebar.
    - **Historical-Entry Fallbacks**: For entries published prior to v3.34.0 metadata additions, the source name falls back cleanly to the hostname, category falls back to General, GitHub URLs classify as Repository, Hugging Face URLs classify as Model, and `kind == 'roundup'` classifies as Roundup.
    - **Best-Effort Public Metrics**: Gathers 7-day public Bluesky engagement metrics (likes, reposts, replies) without API authentication or billing. The “Most engaged” view is limited to that same 7-day window; if metrics are unavailable, deployment continues safely and engagement displays degrade cleanly.
-   - **Client-Side Search, Filter & Theme**: Real-time filtering by text query, content type (News, Repositories, Models, Roundups, Updates), trust status (Corroborated, Receipt available, Single-source), and sorting without any client-side JavaScript frameworks or build steps. Filter inputs use stacked labels on a grid (`minmax(260px, 1fr) repeat(3, 150px)` on desktop, full-width stacked on mobile). Light/dark mode defaults to `prefers-color-scheme`, persists an explicit choice in `localStorage`, updates `color-scheme` and accessible control state, and leaves all stories readable when JavaScript is unavailable.
+   - **Client-Side Search, Filter & Theme**: Real-time filtering by text query, content type (News, Repositories, Models, Roundups, Updates), trust status (Corroborated, Receipt available, Single-source), and sorting without any client-side JavaScript frameworks or build steps. Filter inputs use stacked labels on a grid (`minmax(240px, 1fr) repeat(3, 140px)` on desktop, narrower columns on tablets, full-width stacked on mobile). Light/dark mode defaults to `prefers-color-scheme`, persists an explicit choice in `localStorage`, updates `color-scheme` and accessible control state, and leaves all stories readable when JavaScript is unavailable.
    - **Zero-Cost & Dependency-Free**: Entirely static, self-contained CSS and vanilla JS with system fonts and inline SVGs. Deploys directly via GitHub Pages (`.github/workflows/pages.yml`) without new secrets, paid APIs, databases, or runtime servers at `https://strike007-3000.github.io/BluBot/`. Gist loading remains fail-closed.
 
 
@@ -262,7 +264,7 @@ BluBot maintains an automated `pytest` suite covering repository hygiene, exact 
 3. **Hardening (Redaction)**: The `SafeLogger` is tested against high-entropy string detection to ensure no API keys leak into production logs.
 4. **Transparency (Diagnostic Scoring)**: The curation engine attaches `_score_debug` metadata to every article, providing a granular breakdown (Source, Signal, Momentum, Watchlist, Penalty, Category Penalty, Decay) visible during dry-runs.
 5. **Story Clustering**: Validates title normalization, headline similarity, and cross-source consensus synergy bonus assignment.
-6. **Telegram Commands**: Validates `/topic`, `/curate`, `/watch`, `/unwatch`, `/watches`, and `/brief` command parsing, input sanitization, and state persistence.
+6. **Telegram Commands**: Validates `/topic`, `/curate`, `/news`, `/watch`, `/unwatch`, `/watches`, and `/brief` command parsing, `/news` URL splitting, input sanitization, and state persistence.
 7. **Topic Grounding**: Verifies RSS-grounded topic matching and curation pipeline bypasses.
 8. **Dry-Run Bypasses**: Ensures all external API calls (Gemini, social broadcasting, state persistence) are correctly bypassed in dry-run mode, including the `/brief` briefing synthesis.
 9. **Media Pipeline**: Validates OpenGraph scraping, image compression, alt-text generation, and platform-specific media rendering.
@@ -366,7 +368,7 @@ Instead of hard-deleting feeds when they flake out, the Vanguard uses a **Transi
    - **3rd failure**: Silenced for 12 hours.
    - **4th failure**: Silenced for 24 hours.
    - **5th failure**: Silenced for 48 hours.
-   - **6th+ failure**: Silenced for 72 hours max. Marked as `TERMINAL` state once failures hit 6+.
+   - **6th+ failure**: Silenced for 48 hours (the maximum). Marked as `TERMINAL` state once failures hit 6+.
 3. **Recovery**: Once the backoff period expires, the Vanguard attempts a recovery fetch. Success restores the feed; multiple failures result in a `TERMINAL` flag.
 
 ### Curation Feed Network (45 Validated Feeds)
@@ -469,7 +471,7 @@ To optimize inference cost and minimize latency during interactive reply synthes
 - **Engagement Jitter**: Implements a 10-30s delay to simulate human narrative thought.
 
 ### Configuration
-Set these in `config.py` or as environment variables:
+`ENABLE_*` flags are environment variables; the three constants below are set in `src/config.py` and are not read from the environment:
 - `ENABLE_BSKY_COMMENT_REPLIES`: Enable/disable comment replying on Bluesky (default: `true`).
 - `ENABLE_MASTODON_COMMENT_REPLIES`: Enable/disable comment replying on Mastodon (default: `false`).
 - `ENABLE_THREADS_COMMENT_REPLIES`: Enable/disable comment replying on Threads (default: `false`).
@@ -480,7 +482,7 @@ Set these in `config.py` or as environment variables:
 
 ### Managing Feeds
 - **Standalone Audit**: Run `python scripts/feed_audit.py` to get a full health report of all configured feeds.
-- **Status Dashboard**: Check `broken_feeds.json` for live health data and fail counts.
+- **Status Dashboard**: Check `broken_feeds.json` (local cache; the Gist file `feed_vanguard.json` is authoritative when configured) for live health data and fail counts.
 - **Manual Override**: Removing a URL from `broken_feeds.json` forces an immediate recovery attempt on the next run.
 
 ---
@@ -502,28 +504,25 @@ This ensures that the pagination markers (e.g., `(1/2)`) never push a post over 
 
 ---
 
-## 📅 Page 16: Automated Config Updates & Friday Release Focus
+## 📅 Page 16: Automated Config Updates
 
-### 1. Dynamic Keyword & Product Updates
+### Dynamic Keyword & Product Updates
 To prevent search terms from becoming outdated, BluBot utilizes `scripts/update_config_keywords.py` and a weekly GitHub Actions workflow `weekly_config_update.yml` running every Friday morning at 2:00 AM UTC.
 * **Functionality**: The script automatically fetches recent headlines from the feed network and calls Gemini to extract the top 10 momentum products and top 12 high-signal developer event/tech keywords.
 * **Cited-Domain Candidates**: The script also collects hosts linked from practitioner feed entries and lists those cited by 2 or more feeds (excluding registered sources and big platforms) under "Cited domains" in the PR body (`pr_body.md`). Nothing is added automatically; a human decides whether to register a feed. If the PR already exists, the workflow refreshes its body with `gh pr edit`.
 * **State Pull Request**: The workflow uses the `REPO_TOKEN` secret to update the `automated/config-update` branch and open or refresh a pull request. This non-default credential allows the pull-request event to trigger the normal required CI and CodeQL checks.
 
-### 2. Friday Release Curation Focus
-On Friday mornings, the curation prompt automatically shifts. The bot appends a specialized instruction to focus exclusively on product launches and developer releases from the past week, creating a weekly roundup digest.
-
 ---
 
-## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.13.0)
+## 🚀 Page 17: Interactive Telegram Control, Alt Text, and Hashtag Management (v3.12.0–v3.13.0)
 
-BluBot v3.13.0 introduced three upgrades for manual intervention, accessibility, and platform-specific formatting:
+BluBot v3.12.0 introduced three upgrades for manual intervention, accessibility, and platform-specific formatting (interactive curation and image regeneration followed in v3.13.0):
 
 ### 1. Interactive Telegram Gateway & Approval Queue
 You can control the bot directly from Telegram. The integration supports two key workflows:
 * **The Approval Queue**: Before publishing, the bot posts the text draft + generated image card directly to your Telegram chat using Inline Buttons (`[✅ Approve]`, `[❌ Reject]`, `[🔄 Regenerate Text]`, `[🎨 Regenerate Image]`).
   - **Wait-and-Poll**: The GitHub Action waits up to `TELEGRAM_TIMEOUT_MINUTES` (default: 5) for your choice.
-  - **Auto-Post Fallback**: If you do not respond in time, the bot automatically posts the draft to avoid scheduling delays.
+  - **Auto-Post Fallback**: If you do not respond in time, scheduled runs automatically post the draft to avoid scheduling delays. Drafts for user-supplied `/topic`, `/curate` and `/news` requests never auto-post (see fail-closed approval below).
   - **Security Gate**: The bot only processes updates matching `TELEGRAM_USER_ID`.
   - **Interactive Editing**: You can edit the draft inline by replying directly to the draft message with your new text, or sending a `/edit <new text>` command. The bot will validate the text length against safety-buffered limits (Bluesky 290, Mastodon 485, Threads 490) and warn you if it will split into a thread or truncate.
   - **Interactive Curation & Image Regeneration (v3.13.0)**:
@@ -532,6 +531,8 @@ You can control the bot directly from Telegram. The integration supports two key
 * **On-Demand Topic Curation**: Send `/topic <your_keyword>` or `/curate <your_keyword>` to your Telegram bot. When the GHA runner starts, it performs a real-time keyword search against all active RSS feeds:
   - **RSS Grounding**: If matching articles are found (e.g. searching "Cursor" matches the SpaceX-Cursor deal), the bot curates and synthesizes directly from the actual news articles (preserving original links/facts) rather than relying on stale parametric knowledge.
   - **Raw Curation Fallback**: If no matching articles are found in your RSS feeds, the bot gracefully falls back to raw synthesis from scratch.
+* **Confirmed News via `/news <headline> [public url]`**: For events you know happened. Feed matching is skipped (it could pick an unrelated story); the prompt uses only your headline plus the URL's fetched title/description and states it as fact without inventing specs, numbers, dates or quotes. The URL becomes the lead link and the ledger source is its host (or "Manual news" if linkless). A `/news` run is never swallowed by the Friday roundup intercept. Invalid usage (no headline, non-public URL) replies with a usage hint.
+* **Fail-Closed Approval for User Topics**: `/topic`, `/curate` and `/news` posts are never auto-published on timeout. If approval times out or errors, the bot sends a warning, posts nothing, and re-queues the request in `pending_topic.json` (`{topic, kind, timestamp}`) for the next run. Scheduled posts keep the auto-post fallback. Telegram requests use 15s connect / 30s read / 60s write timeouts for CI photo uploads.
 
 ### 2. Screen Reader Multimodal Alt-Text
 Accessibility is native. If the bot generates or attaches an image:
@@ -551,14 +552,14 @@ Hashtags are now toggleable per platform to fit their social norms:
 ## 🚀 Page 18: Threads Media Propagation Hardening (v3.13.1)
 
 BluBot v3.13.1 introduces a safety fix for Threads media propagation:
-* **Threads Stale Media Prevention**: When a user regenerates or changes the post image via the Telegram approval gateway, the bot now automatically clears the stale crawled `image_url` property in the synthesis model. Since Threads uploads images by pulling from the provided URL, this prevents Threads from publishing the original crawled image after a user has approved a regenerated or edited image.
+* **Threads Stale Media Prevention**: Threads publishes images by pulling a public URL. When a user regenerates or changes the post image via the Telegram approval gateway, the replacement `MediaAsset` is created with `public_url=None` (source `GENERATED`), so Threads cannot publish the original crawled OpenGraph image after the user approved a different one. (v3.13.1 cleared the synthesis `image_url`; the v3.13.9 unified media pipeline carries this on `MediaAsset.public_url`.) Covered by `src/tests/test_telegram_propagation.py`.
 
 ---
 
 ## 🚀 Page 19: Telegram Approval Queue Timeout Calibration (v3.13.2)
 
 BluBot v3.13.2 calibrates the Telegram approval queue timeout:
-* **Wall-Clock Time Polling**: The Telegram polling loop now uses real wall-clock time (`time.time()`) rather than iteration counts to track elapsed duration. This ensures that the polling timeout runs exactly for the configured timeframe (e.g. 5 minutes) regardless of network call durations or API request polling latency.
+* **Wall-Clock Time Polling** (superseded by Page 20): The Telegram polling loop used real wall-clock time (`time.time()`) rather than iteration counts to track elapsed duration. This ensures that the polling timeout runs exactly for the configured timeframe (e.g. 5 minutes) regardless of network call durations or API request polling latency.
 
 ---
 
@@ -574,11 +575,11 @@ BluBot v3.13.3 introduces monotonic time tracking for the Telegram approval queu
 BluBot v3.18.0 introduces a **title normalization and story clustering engine** for cross-source consensus detection.
 
 ### How It Works
-1. **Headline Normalization**: Article titles are tokenized and normalized by stripping stopwords, punctuation, and version identifiers (e.g. "GPT-4o" → "gpt"). This produces a canonical token set per article.
-2. **Similarity Matching**: Articles are compared pairwise using Jaccard similarity on their normalized token sets. Articles with high overlap (and optionally matching version strings) are grouped into clusters.
+1. **Headline Normalization**: `normalize_headline()` strips publisher suffixes and stopwords, lowercases and tokenizes the title, and extracts version numbers (e.g. `4.5`, named versions, model versions) into a separate set. Each article gets a token set plus a version set.
+2. **Similarity Matching**: Articles are compared pairwise greedily. Two headlines match when both have at least 2 tokens, their version sets do not conflict (if both have versions, they must be equal), and the Jaccard similarity of tokens plus versions is at least `0.25` with at least 2 shared items.
 3. **Domain Corroboration**: Within each cluster, the engine counts distinct publisher domains. If ≥2 unique domains report the same story, the cluster is awarded **Consensus Synergy** (`+15` bonus).
-4. **Lead Selection**: The highest-scoring article in each cluster becomes the lead. Supporting source names and direct article links are attached to the lead article for editorial transparency.
-5. **Selection Integrity**: Current-batch URLs are canonicalized before deduplication. For regular curation, stories matching recent or pending semantic fingerprints are removed before the final eight-article limit and lead-category policy, allowing fresh lower-ranked stories to refill the selection. Historical `/brief` requests intentionally retain the complete seven-day archive.
+4. **Lead Selection**: The highest-scoring article in each cluster becomes the lead (ties broken by source base score, then publication time). Supporting source names and direct article links are attached to the lead article for editorial transparency.
+5. **Selection Integrity**: Current-batch URLs are canonicalized (`normalize_url`) before clustering, and the semantic-duplicate filter runs after clustering. For regular curation, stories matching recent or pending semantic fingerprints are removed before the final eight-article limit and lead-category policy, allowing fresh lower-ranked stories to refill the selection. Historical `/brief` requests intentionally retain the complete seven-day archive.
 
 ### Scoring Debug Metadata
 Each clustered article's `_score_debug` dictionary is extended with:
@@ -596,7 +597,7 @@ BluBot v3.18.0 adds persistent **topic watchlists** for hands-free priority trac
 ### Telegram Commands
 | Command | Description |
 | :--- | :--- |
-| `/watch <topic>` | Add a topic to the watchlist (max 10 active). Topic must be under 100 characters and cannot contain URLs. |
+| `/watch <topic>` | Add a topic to the watchlist (max 10 active). Topic must be at most 100 characters and cannot contain URLs. |
 | `/unwatch <topic>` | Remove a topic from the watchlist by exact match (case-insensitive). |
 | `/watches` | Display all active watchlist entries with their creation dates. |
 
@@ -621,7 +622,7 @@ During curation, each article is matched against all active watchlist entries us
 
 ### Safety Guards
 - Maximum 10 active watches to prevent state inflation.
-- Topics must be under 100 characters.
+- Topics must be at most 100 characters.
 - URL-containing topics are rejected.
 - Duplicate topics are rejected with an informative response.
 
@@ -645,6 +646,32 @@ BluBot v3.18.0 adds the `/brief <topic>` Telegram command for on-demand **7-day 
 When `is_dry_run=True`, the briefing engine bypasses Gemini API calls entirely and returns a structured mock briefing containing the matched article list.
 
 ### Input Validation
-- Topic must be under 100 characters.
-- URL-containing topics are rejected with an `brief_invalid` response.
-- If no articles match the topic in the 7-day window, a "No articles found" message is returned.
+- Topic must be at most 100 characters.
+- URL-containing topics are rejected with a `brief_invalid` response.
+- If no articles match the topic in the 7-day window, the reply is "No matching source items were found over the past 7 days."
+
+---
+
+## 🧾 Page 24: Score Receipts, Reply Context & External Reply Counts (v3.38.0–v3.39.0)
+
+- **Score receipt (v3.38.0)**: Telegram approvals include a one-line receipt (`format_score_receipt`) showing the total score, its non-zero components (Source, Signal, Momentum, Watchlist), the corroborating-source count, and links to the lead and supporting articles.
+- **Reply post context (v3.38.0)**: When a mention replies to one of our ledger posts, the reply prompt includes that post's title/summary/url (first 500 characters).
+- **Candidate feeds (v3.38.0)**: The weekly config PR body lists up to 5 hosts cited by 2+ practitioner feeds (`known_hosts`/`cited_hosts` in `scripts/update_config_keywords.py`); adding them remains a human decision.
+- **External-only replies (v3.39.0)**: `src/engagement.py` reads `getPostThread` when a post has replies and counts only authors other than our own account, so multi-part threads (2/2, 3/3) don't inflate the Replies metric. If the lookup fails it falls back to the raw `replyCount`.
+
+---
+
+## ⚙️ Page 25: CI/CD Workflows
+
+| Workflow | Trigger | Purpose |
+| :--- | :--- | :--- |
+| `daily_post.yml` | Cron 06:17, 12:17, 18:17 UTC Mon–Fri; manual | Runs `bot.py`; commits `STATUS.md` to the `automated/state` branch. Serialized by the `bsky-persistence-state` concurrency group |
+| `sync_status.yml` | After a successful Daily AI News Post | Copies `STATUS.md` from `automated/state` to `main` via the GitHub Contents API (uses `REPO_TOKEN`) |
+| `pages.yml` | After Daily AI News Post; manual | Builds and deploys the GitHub Pages archive and RSS feed |
+| `weekly_config_update.yml` | Cron Friday 02:00 UTC | Refreshes momentum products and keywords; opens/updates the `automated/config-update` PR |
+| `test.yml` | Pull requests to `main` | Runs `pytest src/tests/` on Python 3.13 |
+| `codeql.yml` | Push/PR to `main`; cron Monday 02:30 UTC | CodeQL analysis |
+| `release.yml` | `v*` tag push, or merged PR to `main` | Tags from `VERSION` if needed and creates a GitHub Release whose notes are the matching `CHANGELOG.md` entry |
+
+Releases therefore require a `CHANGELOG.md` entry whose line contains `v<VERSION>`.
+

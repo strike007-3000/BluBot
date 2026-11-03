@@ -1,0 +1,303 @@
+# Changelog
+
+All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.39.0**: **`/news` Command, Fail-Closed Topic Approval & External Reply Counts**.
+  - `/news <headline> [url]` drafts user-asserted news as fact; it is exempt from the Friday roundup intercept and tolerates a linkless source.
+  - User-supplied topics fail closed: approval timeout or failure posts nothing and re-queues the topic.
+  - Telegram requests use longer connect/read/write timeouts for photo uploads from CI.
+  - Engagement metrics count only replies from other authors, excluding our own thread parts (falls back to the raw count if the thread lookup fails).
+  - Release workflow now reads release notes from `CHANGELOG.md` instead of `README.md`.
+  - Documentation audit: corrected the feed-backoff cap (48h), category-penalty description, Friday-focus claim, SECURITY supported versions, and added the CI/CD workflow reference, `REPO_TOKEN`/`DRY_RUN` settings and `pending_topic.json`/ledger retention notes.
+- **v3.38.0**: **Score Receipts, Reply Context & Feed Discovery Hints**.
+  - Telegram approvals send a one-line score receipt with links to the lead and supporting articles.
+  - Interaction replies now include the title/summary/url of the post being replied to.
+  - The weekly config PR body lists hosts cited by 2+ practitioner feeds as candidate feeds (human-gated).
+- **v3.37.1**: **Security & Reliability Hardening**.
+  - SSRF-safe fetches now connect to the validated IP with the original `Host` header and TLS server name instead of patching the process-wide `socket.getaddrinfo`, and close each pinned connection so hostnames sharing an IP never reuse a TLS session.
+  - `FileLock` always closes its handle, even if unlocking fails.
+  - Warns on local runs against the live Gist; untracks generated files; daily workflow settings read `vars` first, then `secrets`.
+- **v3.37.0**: **Story Continuity & Thread Updates**.
+  - Adds automated story continuity matching (`src/curator.py`) tracking 72-hour development timelines without duplicate posts.
+  - Detects meaningful changes (new versions, changed numeric facts, status changes, releases/acquisitions, or materially different reporting) while rejecting publisher-only syndication, duplicate URLs, and generic recurring titles.
+  - Supports threaded update broadcasting on Bluesky, Mastodon, and Threads with root reply chaining.
+  - Extends durable ledger schema non-destructively (`entry_kind`, `story_fingerprint`, `parent_story_fingerprint`, `update_number`, `thread_roots`, `idempotency_key`) with safe legacy migration.
+  - Adds interactive archive timeline cards, update badges, and update filtering on the GitHub Pages site.
+  - Adds diagnostic mode (`--mode continuity`) and rollout feature flag `STORY_UPDATE_DETECTION_ENABLED` (default: `false`).
+  - Simplifies duplicate handling by reusing the continuity matcher: only confirmed developments bypass the existing semantic-duplicate filter; possible matches remain blocked.
+  - Preserves counters and recent-topic/category/style histories when concurrent runs settle different stories.
+  - This is safe because the feature flag defaults off, legacy ledger fields remain optional, public archive URLs are validated, and platform permalinks now come from their publish APIs instead of guessed account paths.
+  - Validate with `.venv/bin/python -m pytest src/tests/`, `.venv/bin/python scripts/diagnostic.py --mode continuity`, and `git diff --check`.
+- **v3.35.1**: **Archive Visual Hierarchy & Filter Layout Refinements**.
+  - Shrinks the hero area substantially with crisp copy (“AI signals, with receipts”) getting readers to the archive faster.
+  - Densifies the top KPI row with compact metrics, concise labels (`Stories`, `Sources`, `Corroborated`, `Receipts`, `Engagement`), and tooltip disclosures for calculation definitions.
+  - Fixes filter label collisions by using clean stacked labels above inputs in a dominant search grid (`minmax(240px, 1fr) repeat(3, 140px)` on desktop, full-width stacked on mobile).
+  - Softens the Source Trust sidebar styling and collapses calculation disclosures by default to keep visual focus on curated stories.
+- **v3.35.0**: **Editorial Archive Theme & Accessible Color Modes**.
+  - Refines the archive into a compact editorial layout with a restrained KPI row, two-column source-trust sidebar and story feed, denser story cards, real section navigation, and a responsive violet-accent visual system.
+  - Adds an accessible light/dark mode control using system color preference by default and persisted explicit choices, while keeping the fully rendered archive usable without JavaScript.
+  - Clarifies trust KPI denominators: archives with no eligible stories now display “—” instead of a misleading 0%.
+  - Preserves the existing zero-dependency search, filters, sorting, RSS, trust calculations, and seven-day-only “Most engaged” view.
+- **v3.34.0**: **Source Trust Dashboard & Editorial Pages Redesign**.
+  - Redesigns the static GitHub Pages archive (`index.html`) into an editorial signal intelligence product with zero external runtime dependencies, fonts, or scripts.
+  - Adds the **Source Trust Dashboard**: primary metrics (Published stories, Unique sources, Corroborated percentage, Source receipts, and optional 7-Day engagement), horizontal source distribution bars, coverage distribution by category, and an accessible calculation disclosure. Corroboration counts only unique public supporting domains distinct from the lead source.
+  - Extends `append_published_post()` to persist optional `source`, `source_id`, `category`, and `supporting_sources` only when supplied, preserving full backwards compatibility with historical ledger entries without migration.
+  - Adds client-side vanilla search, category/type filtering, trust filtering (Corroborated, Receipt available, Single-source), and sorting (Newest, Oldest, Most corroborated, Most engaged within the last 7 days).
+  - Fetches best-effort public Bluesky metrics during site generation without credentials or failure risk, and enhances RSS 2.0 plain-text descriptions.
+- **v3.33.1**: **Weekly Config PR CI Fix**.
+  - Weekly configuration changes always use the existing `REPO_TOKEN` to update a pull request, allowing required CI and CodeQL workflows to run normally.
+- **v3.33.0**: **Friday Roundup Digest**.
+  - Weekly digest of the top 1–5 stories ranked by live Bluesky AppView engagement; replaces the Friday evening scheduled broadcast.
+- **v3.32.0**: **GitHub Pages Archive & RSS Feed**.
+  - Adds `scripts/build_archive.py` generating a lightweight, responsive static HTML archive (`index.html`) and RSS 2.0 XML feed (`feed.xml`) directly from the durable `published_posts` ledger.
+  - Fail-closed Gist loading ensures an empty state is never accidentally published if remote state is unreachable.
+  - Adds dedicated `.github/workflows/pages.yml` deploying to GitHub Pages environment upon successful daily runs or manual dispatch.
+  - Adds `append_published_post()` in `src/utils.py` recording `topic`, preserving `published_at`, and enforcing `PUBLISHED_POSTS_CAP`.
+- **v3.31.0**: **GitHub Fast-Rising Repositories Source**.
+  - Adds `fetch_github_rising()` querying GitHub Search API for fast-rising AI repositories (`llm`, `generative-ai`, `machine-learning`).
+  - Limits candidates before fetching bounded README excerpts, strictly validates HTTPS `github.com` URLs, applies capped velocity bonuses in `_score_debug`, and safely handles 403/429 rate limits.
+  - Adds `github_token` settings support and `scripts/diagnostic.py --mode github`.
+- **v3.30.0**: **Engagement Report (Report-Only)**.
+  - New `src/engagement.py` reads public Bluesky AppView metrics (no login) for the last 7 days and refreshes a marked section in `STATUS.md`.
+  - `scripts/diagnostic.py --mode engagement` prints the full table; all diagnostic modes now accept `--mode` for non-interactive runs.
+  - Metrics are never stored or used for scoring.
+- **v3.29.1**: **Image Request & Telegram Preview Fixes**.
+  - Sends the documented prompt-only FLUX request, capped at Cloudflare's 2,048-character limit.
+  - Escapes generated drafts before rendering Telegram previews as HTML, preventing malformed entity errors.
+- **v3.29.0**: **Free-Tier Cloudflare Image Generation**.
+  - Added Cloudflare Workers AI with FLUX.1 Schnell as the primary generated-image provider.
+  - Falls back to Pollinations and then Hugging Face, while removing automatic Imagen fallback and its billing risk.
+  - Extended the existing live image diagnostic to test Cloudflare credentials and generation directly.
+- **v3.28.0**: **Source Receipts & Hugging Face Trending**.
+  - 🧾 **Bluesky Receipts**: Best-effort replies attach up to two corroborating links after root-post settlement, preserving source/link pairing and recording the receipt URI in the ledger.
+  - 🤗 **Trending Models**: Adds the public Hugging Face models API as a scored source, requires a factual model-card excerpt, and keeps Feed Vanguard and RSS audits RSS-only.
+  - 🧪 **Diagnostics**: Extends the existing diagnostic menu with a live Hugging Face Trending source check.
+- **v3.27.0**: **Published-Post Ledger**.
+  - 📒 **Durable Ledger**: Adds a `published_posts` state collection (500-entry cap, no time pruning) recording where each story was published, kept separate from the 14-day `recent_stories` duplicate window.
+  - 🔗 **Root Post References**: Bluesky, Mastodon, and Threads publishers now return their root post reference; `BroadcastResult` carries `post_id`, `post_cid`, and `receipt_id`.
+  - 🔀 **Merge-Safe**: Gist/local merges union ledger entries, combine fields within each platform reference, and retain the newest 500 by publication timestamp.
+- **v3.26.0**: **Curation Selection Integrity**.
+  - ⏱️ **Weekday Cadence Experiment**: Schedules runs at 06:17, 12:17, and 18:17 UTC Monday through Friday while leaving weekend behavior unchanged.
+  - 🧬 **Complete Fresh Selection**: Applies semantic story-history filtering before the final eight-article limit so lower-ranked fresh stories refill removed duplicates.
+  - 🔗 **Canonical URL Identity**: Collapses tracking and fragment variants during current-batch deduplication while preserving the source URL used for publication.
+  - 🕒 **Source-Time Retention**: Persists each selected article's best available feed timestamp separately from BluBot's reservation and broadcast timestamps.
+- **v3.25.0**: **Natural, Source-Grounded Writing**.
+  - ✍️ **Shared Editorial Policy**: Applies direct, concrete, non-formulaic writing rules across curation, mentor posts, remixes, interaction replies, and executive briefings.
+  - 📰 **Better Grounding**: Passes source summaries into synthesis so requested technical facts come from supplied evidence instead of article titles alone.
+  - 🧹 **Simpler Style Rotation**: Removes the forced question-first structure and reframes rotating personas as content angles under one consistent voice.
+  - 📚 **Documentation Reconciliation**: Corrects model defaults, media-provider order, platform target versus safety limits, test guidance, and stale version labels.
+- **v3.24.1**: Isolated the momentum-scoring test from weekly product-list updates. The test supplies its own product fixture so changing trending products does not break CI.
+- **v3.24.0**: **Telegram Option A Approval**.
+  - Approval flow plus three post-broadcast platform messages reporting per-network status.
+- **v3.23.0**: **Platform-Native Differentiation & Telegram Remix Copilot**.
+  - 🌐 **Platform-Native Drafts**: Curates distinct posts for Bluesky, Threads, and Mastodon, then enforces safety-buffered maximums of 290, 490, and 485 characters respectively.
+  - 💬 **Telegram Interactive Review**: Single authoritative preview message with tabbed platform switching (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) and All-in-One view mode.
+  - ✨ **Remix Copilot**: Reply directly to remix prompts to refine individual platform variants or all platforms (`/remix_all`) using Gemini Flash rotation with deterministic URL-safe truncation and fallback preservation.
+- **v3.22.2**: **Cryptography Security Update**.
+  - 🔒 **Advisory Remediation**: Upgraded `cryptography` to `>=50.0.0,<51`, resolving CVE-2026-69247, CVE-2026-69248, and CVE-2026-69249 while remaining compatible with `atproto` 0.0.71.
+  - 🤖 **Dependabot Recovery**: Removed the obsolete `cryptography>=47` ignore rule so future compatible security updates are proposed normally.
+  - 📚 **Documentation Alignment**: Updated dependency and security guidance to match the supported runtime constraint.
+- **v3.22.1**: **Interaction Boundary Hardening**.
+  - 💬 **Reply Limits**: Enforces platform-safe interaction reply lengths before publishing, including a conservative Bluesky grapheme safety margin.
+  - 🧹 **Cleaner AI Calls**: Disables unused automatic function calling for tool-free synthesis and reply generation.
+  - 🩵 **Bounded Failures**: Keeps interaction errors concise instead of logging complete provider responses and headers.
+- **v3.22.0**: **Persistent Feed Reliability**.
+  - 📡 **Single-Fetch Vanguard**: Persists feed health in Gist state and evaluates each eligible RSS feed once per run.
+  - 🧠 **Model Routing**: Uses Gemini 3.5 Flash-Lite first, with immediate model rotation after exhausted transient failures.
+  - ♿ **Media Fallbacks**: Uses detected image MIME types and neutral local alt text when Vision is unavailable.
+- **v3.21.3**: **Local Tool Metadata Hygiene**.
+  - 🧹 **Repository Hygiene**: Ignores `.v3code/` workspace metadata so local editor state cannot appear in Git changes.
+- **v3.21.2**: **Merged Review Corrections**.
+  - ☁️ **Gist Recovery**: Clears `unsynced_gist` in the authoritative payload before a successful recovery upload.
+  - 🧠 **Exact Model Discovery**: Matches normalized Gemini model IDs exactly, preventing preview endpoints from impersonating stable models.
+  - 🛡️ **Provider Failures**: Stops retrying permanent Threads and NVIDIA 4xx errors while retaining retries for transient failures, and removes the deprecated NVIDIA endpoint from scheduled-run priority.
+- **v3.21.1**: **NIM & Threads Error Handling**.
+  - NVIDIA NIM HTTP 404 is treated as deterministic: no retries, immediate fallback; network and timeout errors are logged and re-raised.
+  - Threads container-creation and publish failures log the HTTP status and response body.
+- **v3.21.0**: **Gemini Model Priority & Diagnostics**.
+  - Reordered `GEMINI_MODEL_PRIORITY` to the approved list; diagnostic gains text and multimodal PNG checks.
+- **v3.20.2**: **Gist Observability**.
+  - Untracks the runtime `seen_articles.json`; resets `unsynced_gist` after a successful Gist save; logs the revision for each Gist reservation and settlement.
+- **v3.20.1**: **Production Gemini 2.5 Priority**.
+  - Adds `gemini-2.5-flash-lite`, `gemini-2.5-flash` and `gemini-2.5-pro` to `GEMINI_MODEL_PRIORITY`.
+- **v3.20.0**: **Semantic Story Fingerprints**.
+  - Semantic story fingerprints (`compute_story_fingerprint`, `is_story_semantic_duplicate`) strip publisher suffixes and non-version numbers and respect version boundaries; adds retention limits (persistence PR 3).
+- **v3.19.1**: **Gist Cutover**.
+  - Removes the `automated/state` branch restore and recovery-commit steps for `seen_articles.json` from `daily_post.yml`; Gist is the authoritative store (persistence PR 2).
+- **v3.19.0**: **Gist-Authoritative State**.
+  - Gist-authoritative persistence and the pre-broadcast reservation protocol (PR 1).
+- **v3.18.3**: **Node 24 Actions Compatibility**.
+  - ⚙️ **CI Maintenance**: Upgraded checkout, Python setup, and cache actions used by the scheduled and test workflows to Node 24-compatible major versions.
+- **v3.18.2**: **Synthesis Context Fix**.
+  - 🧠 **Pipeline Reliability**: Removed a truncated duplicate `synthesis_stage` declaration and restored temporal context initialization in the active synthesis path, preventing scheduled runs from failing before summarization or fallback generation.
+- **v3.18.1**: **Python 3.13 Dependency Lock Fix**.
+  - 🐍 **CI Compatibility**: Regenerated the dependency lock for Python 3.13, removing obsolete compatibility packages that cannot be installed on the project runtime.
+- **v3.18.0**: **Grounded Briefings, Watchlists, Story Clustering, and Feed Expansion**.
+  - 📊 **`/brief` Command (PR 3b)**: New Telegram command generates **7-day executive briefings** for any topic. Fetches articles with `days_lookback=7`, clusters corroborated stories across publisher domains, and synthesizes a Gemini-powered analytical report. Delivered to Telegram using `smart_split` with the 4096-character Telegram limit—**no max_chunks cap**, so lengthy briefings are delivered in full. Bypasses Gemini API in dry-run mode.
+  - 📌 **Topic Watchlists (PR 3a)**: Persistent `/watch`, `/unwatch`, and `/watches` commands with structured watchlist entries (topic, display name, keywords, timestamps). Watchlisted topics receive a bounded `+3` to `+8` scoring boost via word-boundary regex matching against article titles and summaries. Capped at 10 active watches.
+  - 🧬 **Cross-Source Story Clustering (PR 1)**: Title normalization engine with headline similarity and multi-domain corroboration. Stories from ≥2 distinct publisher domains are clustered together and the lead article receives a `+15` Consensus Synergy bonus. Supporting source names and links are tracked for transparency.
+  - 📡 **Feed Network Expansion (PR 2)**: Added 8 new live-audited RSS sources: Hugging Face Transformers, vLLM, Ollama, and PyTorch release feeds (Open Source tier), ServeTheHome and Semiconductor Engineering (Infrastructure tier), AI Incident Database and EU AI Act Tracker (Policy & Security tier). Feed network now covers **45 feeds** across 8 tiers.
+  - 🔧 **CI Workflow Fix**: Corrected GitHub Actions version tags (`actions/checkout@v4`, `actions/setup-python@v5`, `actions/cache@v4`) across `test.yml` and `daily_post.yml`.
+  - 🔒 **Dependency Hardening**: Upgraded `cryptography` to `>=46.0.7,<47` resolving CVE-2026-39892.
+- **v3.17.0**: **Topic Watchlists**.
+  - Persistent `/watch`, `/unwatch`, `/watches` with bounded scoring boost.
+- **v3.16.0**: **Eight New Audited Sources**.
+  - Adds Hugging Face Transformers, vLLM, Ollama and PyTorch release feeds; ServeTheHome and Semiconductor Engineering; AI Incident Database and EU AI Act Tracker. `feed_audit.py` extended.
+- **v3.15.0**: **Cross-Source Story Clustering**.
+  - Clusters headlines across publishers and applies a consensus bonus; adds `cluster_id`, `supporting_sources` and `supporting_links` to `Article`; supporting links are recorded as seen; CI action versions and dependencies bumped.
+- **v3.14.4**: **Scoring Diagnostic**.
+  - Enhanced scoring diagnostic; stale strings fixed; `google-genai` bumped.
+- **v3.14.3**: **Image Defaults & Imagen Model**.
+  - Default provider changed to Hugging Face with `stabilityai/stable-diffusion-3-medium-diffusers`; keyless Pollinations endpoint (`image.pollinations.ai/prompt/`); NVIDIA SD3 constants added; Imagen model updated to `gemini-3.1-flash-image`.
+- **v3.14.0**: **Image Provider Redesign**.
+  - Adds Pollinations and Hugging Face as image providers (`IMAGE_PROVIDER`, `POLLINATIONS_API_URL`, `HUGGINGFACE_API_KEY`, `HUGGINGFACE_IMAGE_MODEL`) and extends the image diagnostic.
+- **v3.13.11**: **Threads OpenGraph Images**.
+  - Preserves URL-only OpenGraph images for Threads.
+- **v3.13.10**: **Media Pipeline Follow-up**.
+  - Further media pipeline refactor fixes.
+- **v3.13.9**: **Unified Media Pipeline**.
+  - Media handling refactored into one cross-platform architecture.
+- **v3.13.8**: **Telegram Preview & Thread Formatting**.
+  - Disables link previews on scratch synthesis; refines thread formatting and styles.
+- **v3.13.6**: **Feed User-Agent**.
+  - Sets a browser User-Agent to resolve HTTP 403 blocks; dead 404 feeds removed.
+- **v3.13.5**: **Stable-ID Source Registry & Topic Persistence**.
+  - Stable-ID source registry, category/style rotation, and persisted Telegram topic intercept (no age limit).
+- **v3.13.4**: **Documentation Sync Patch**.
+  - 📄 **SECURITY.md Overhaul**: Updated supported versions table to the current `3.13.x` line, bumped security baseline reference to `v3.13.3`, and expanded the hardening section with 4 new entries: Decompression Bomb DoS protection, Telegram impersonation gating, Zero-Duplicate Threads logic, and Resilient RSS parsing.
+  - 🔒 **PRIVACY.md Expansion**: Broadened privacy policy scope from Threads-only to all 4 platforms (Bluesky, Mastodon, Threads, Telegram). Added sections covering Interaction Engine metadata, Telegram message processing, Google Gemini/NVIDIA NIM data handling, and a full enumeration of all persisted state files.
+  - 📖 **WIKI_MANUAL.md Corrections**: Added 11 missing environment variables to the Page 6 secrets table (Mastodon, Threads, Telegram, Hashtag controls), corrected feed count from "over 30" to "exactly 32", removed stale broken anchor links from Page 8, and clarified the `THINKING_BUDGET` Gemma bypass note.
+  - 📋 **README.md Corrections**: Updated the model failover list to the exact model IDs from `config.py`, clarified the `ENABLE_HASHTAGS_BSKY` default description, and updated the testing section version reference to `v3.13.3`.
+- **v3.13.3**: **Monotonic Time Approval Timeout**.
+  - 🕒 **Monotonic Polling**: Replaced standard system time checks with `time.monotonic()` in the Telegram polling loop to make the approval queue timeout robust against NTP updates and VM sleep resumes.
+- **v3.13.2**: **Telegram Timeout Calibration**.
+  - 🕒 **Wall-Clock Timeout**: Changed elapsed duration calculation from loop iteration counts to actual wall-clock elapsed time tracking to fix network long-polling delays that bloated the timeout.
+- **v3.13.1**: **Threads Media Propagation Fix**.
+  - 🖼️ **Stale URL Prevention**: Automatically clears the stale crawled `image_url` property from synthesis when the user regenerates or changes the post image via Telegram, preventing Threads from publishing outdated media.
+- **v3.13.0**: **Interactive Curation & Image Regeneration Loops**.
+  - 🔄 **Text Curation Feedback**: Allows users to request text regeneration (`[🔄 Regenerate Text]`) and supply custom editing instructions/feedback hints to Gemini.
+  - 🎨 **Image & Alt-Text Curation**: Allows users to regenerate cards (`[🎨 Regenerate Image]`) with NVIDIA NIM SD3, automatically syncing visual prompts, downscaling card bytes under 900KB, generating new alt-text via Gemini Vision, and updating the preview media.
+- **v3.12.2**: **Telegram Draft Editing**.
+  - Interactive draft editing and validation; stricter word-boundary topic matching.
+- **v3.12.1**: **RSS-Grounded Custom Topics**.
+  - 🔍 **Real-Time Fact Grounding**: User-submitted Telegram topics are now run against the live RSS curation feeds. If keyword matches (e.g. "Cursor acquisition") are found, the bot curates and synthesizes directly from the actual news articles (preserving source links/facts) rather than relying on stale/hallucinated parametric knowledge. Bypasses to raw generation only if no matches exist.
+- **v3.12.0**: **Telegram Control, Alt-Text, and Hashtag Management**.
+  - 🎮 **Telegram Control & Approval Queue**: Intercepts the post pipeline to request manual review (`[✅ Approve]`, `[❌ Reject]`) via a Telegram message. Automatically posts on timeout (default 5 minutes) to avoid runner hang-ups.
+  - 📥 **On-Demand Topic Curation**: Send a message starting with `/topic <keyword>` or `/curate <keyword>` to your Telegram Bot. During its startup sequence, the bot checks for recent user commands (last 15 minutes) and curates a post specifically on that topic instead of the normal RSS loop.
+  - ♿ **Alt-Text Generation**: Added Gemini Vision integration (`models/gemini-2.5-flash-lite`) to automatically generate descriptive, screen-reader-ready alt text (under 100 characters) for generated thumbnails, publishing to Mastodon and Threads.
+  - 🏷️ **Platform Hashtags Toggle**: Adds toggleable configurations per platform to strip or keep hashtags depending on social norms (`ENABLE_HASHTAGS_BSKY=false` by default).
+  - 🛡️ **Side-Effect-Free Dry-Run**: `DRY_RUN=true` bypasses all external broadcasts, state file persistence, and live AI API calls (substituting mock summaries, prompts, and alt-text) to enable offline local diagnostics without requiring keys.
+- **v3.11.2**: **Supply Chain Resilience & Dependabot Mitigation**.
+  - 🛡️ **Supply Chain Constraints**: Adjusted `cryptography` range dependency in `requirements.in` to `>=46.0.7,<47` to comply with the transitive constraint restrictions of the `atproto` SDK client library.
+  - 🤖 **Dependabot Security Gates**: Configured Dependabot to ignore version upgrades `>= 47.0.0` for `cryptography`, resolving the unresolvable dependency updater loop while keeping active path checks.
+- **v3.11.1**: **Refactored Persistence & Humanized Short-Form Prompts**.
+  - 🛠️ **Refactored Persistence Helpers**: Integrated generic `load_json_state` and `save_json_state` functions in `src/utils.py` to consolidate local state storage and prevent duplicate code.
+  - 🔒 **Performance Optimization**: Moved the regular expression compilation inside `strip_markdown` in `src/curator.py` to module scope.
+  - ✍️ **Humanized Short-Form Prompts**: Overhauled `CURATOR_SYSTEM_INSTRUCTION` and dialect descriptions to target engaging, short-form posts (260-290 characters) naturally, avoiding buzzwords/clichés and adding anti-patterns and strategic structures.
+  - 📁 **Repository Ignorance**: Added `graphify-out/` to `.gitignore` to prevent local graph visualizations from polluting Git tracking.
+- **v3.11.0**: **Dynamic Bio Engagement & Precision Counting**.
+  - 🤖 **Dynamic Bio Overhaul**: Profiles now display an active day count (streak) and the currently tracked topic instead of raw/confusing stats.
+  - 📊 **Accurate Post Incrementing**: Fixed a logic bug where `total_posts_curated` was incremented by the raw incoming article count rather than the actual published synthesis posts.
+- **v3.10.1**: **Curation Script Hardening & Documentation Sync**.
+  - 🔒 **Weekly Curation Hardening**: Added structured Pydantic response schemas and robust regex-based JSON boundary extraction to `update_config_keywords.py` to prevent JSON decode failures. Added API key environment guards.
+  - 📖 **Documentation Synchronization**: Updated `README.md` and manual wiki with exact scoring engine weights, 3-tier persistence flowcharts, Weaver splits, and comment system configurations.
+- **v3.10.0**: **Configurable & Token-Efficient Comment Replies**.
+  - 💬 **Configurable Comment Replies**: Per-platform toggles (`ENABLE_BSKY_COMMENT_REPLIES`, `ENABLE_MASTODON_COMMENT_REPLIES`, `ENABLE_THREADS_COMMENT_REPLIES`) for replying to comments on your own posts.
+  - ⏱️ **24-Hour Lookback**: Only comments and notifications from the last 24 hours are processed.
+  - 🗣️ **Conversational Tuning**: Reply generation uses a conversational prompt with a 100-token output cap and no thinking budget.
+- **v3.9.0**: **Gemini Model Discovery**.
+  - Active model discovery and thinking-budget controller; dependency updates.
+- **v3.8.5**: **Production Stabilization**.
+  - 🧶 **The Weaver Cap**: Limited multi-post threads to a strict 2-part maximum (`MAX_THREAD_PARTS`) to maintain high signal-to-noise.
+  - 🛡️ **Character Safety**: Implemented pagination buffers to prevent platform character limit rejections (Mastodon/Threads).
+  - 🎨 **Sage Console**: Introduced human-friendly, colorized logging for local development (toggleable via `LOG_FORMAT`).
+  - ⚡ **Failover Resilience**: Hardened AI synthesis with 503 retry delays and robust model rotation.
+  - Repaired a settings syntax error.
+- **v3.8.4**: **Final Infrastructure & Security Hardening**.
+  - 🛡️ **Harden Masking**: Relocated session metadata masking to the absolute first step of CI to prevent ID leaks in logs.
+  - 🛠️ **Development Rest Bypass**: Extended weekend-rest bypass logic to all non-scheduled events (push, dispatch, and pull request); only `workflow_dispatch` receives the `(Intercept)` editorial label.
+- **v3.8.3**: **Infrastructure Modernization**.
+  - 🐍 **Python 3.13 Upgrade**: Realigned the entire CI/CD pipeline and delivery environment to Python 3.13.
+  - ⚡ **Node.js 24 Actions**: Migrated to `actions/checkout@v4`, `actions/setup-python@v5`, and `actions/cache@v4`.
+- **v3.8.2**: **Hardening, Humanization & The Interaction Engine**.
+  - 🛡️ **Feed Vanguard**: Automated RSS resilience engine with soft-disable backoff and pre-flight auditing.
+  - 💬 **Interactive Sage**: Conversational AI (Mention Replies) for Bluesky and Mastodon with persona-aligned logic.
+  - 🛰️ **Elite Expansion**: Added high-signal sources: **AlphaSignal**, **TLDR AI**, and **TheSequence**.
+  - 🔒 **Supply Chain Hardening**: Transitioned to `pip-tools` for strict dependency locking with hashes.
+  - 🐛 **Bug Remediation**: Resolved critical P0/P1 issues in threading and broadcaster logic.
+  - **Thread Rhythm**: Implemented randomized pauses between thread posts.
+  - **Dynamic Bio**: Profiles now update automatically with live curation telemetry.
+- **v3.8.1**: **Thread Rhythm & Dynamic Bio**.
+  - Thread rhythm and dynamic bio management.
+- **v3.8.0**: **The Weaver & Resilience Engine**.
+  - **The Weaver**: Integrated a conditional multi-post threading engine with paragraph-aware `smart_split` logic.
+  - **Narrative Expansion**: Expanded AI synthesis capacity to 1000 characters to leverage the new multi-post architecture.
+  - **3-Tier Persistence**: Implemented a redundant state model (Primary → Local Backup → Remote Gist) with automatic corruption recovery.
+  - **Dashboard Migration**: Moved high-churn telemetry to a dedicated `STATUS.md` to eliminate Git rebase conflicts in CI.
+  - **CI Hardening**: Resolved "EDITOR unset" rebase failures in GitHub Actions.
+- **v3.7.6**: **Visual Integrity Hardening**.
+  - **Black/White Box Fix**: Implemented universal `RGB` mode conversion in the compression engine to prevent corrupted renders on ArXiv-style links.
+  - **Fidelity Guards**: Hardened broadcasting logic to ensure atomic image delivery and graceful text fallbacks to prevent placeholder distortions.
+- **v3.7.5**: **Content & Infrastructure Optimization**.
+  - **Smart Truncate**: Implemented word-boundary-aware truncation for Mastodon and Threads to prevent mid-word cutoffs.
+  - **Persistence Hardening**: Resolved automated `README.md` rebase conflicts and implemented session ID masking in CI logs.
+- **v3.7.3**: **Stabilization & Visibility Patch**.
+  - **Stability Fix**: Restored the missing `published` timestamp in the curation engine to satisfy `Article` model requirements.
+  - **Session Visibility**: Enhanced the broadcast stage with explicit logging for Bluesky session cache restoration.
+- **v3.7.2**: **Production Hardening Patch**.
+  - **Model Stability**: Resolved a critical `TypeError` in the Article dataclass by supporting diagnostic `_score_debug` metadata.
+  - **Infra Alignment**: Updated GitHub Actions environment to cleanly support Node.js 24 runners.
+- **v3.7.1**: **Gemma & Style Memory Fix**.
+  - Remediates a Gemma NameError and style memory propagation.
+- **v3.7.0**: **The Natural Vibe Engine Release**.
+  - **Style Memory**: Integrated stylistic persistence to ensure editorial variety between consecutive runs.
+  - **Session Granularity**: Increased temporal resolution to 5 sessions with manual intercept awareness.
+  - **Architectural Cleanup**: Formalized absolute `src.` imports across the entire project, resolving `pytest` isolation issues.
+- **v3.6.7**: **Elite Architecture Overhaul**.
+  - **Staged Pipeline**: Refactored `bot.py` into distinct functional stages powered by `src/models.py`.
+  - **Typed Settings**: Centralized configuration into `src/settings.py` for professional-grade environment management.
+  - **Thread-Safe State**: Integrated cross-platform `FileLock` for robust state persistence and atomic `seen_articles.json` writes.
+  - **Refined Normalization**: Resolved protocol-relative links (//) and stripped aggressive tracking queries while preserving redirect integrity (P1 Codex fix).
+- **v3.6.5**: **Hardening & Automated Quality Control**.
+  - Added the first automated pytest suite (14 tests) and automated GitHub Releases with CI hardening.
+- **v3.6.4**: **Threads & Documentation Sync**.
+  - **Failure Propagation**: Hardened Threads publishing to correctly signal delivery failures to the orchestrator.
+- **v3.6.3**: **Threads Stability Patch**.
+  - **Zero-Duplicate Strategy**: Implemented initial Threads delivery validation.
+- **v3.6.2**: **Threads Publish Validation**.
+  - Validates Threads publishing and aligns persona.
+- **v3.6.1**: **NVIDIA NIM Parsing**.
+  - Robust NVIDIA NIM response parsing and status telemetry.
+- **v3.6.0**: **NVIDIA NIM Image Integration**.
+  - Bypassed Imagen 4 restrictions by moving to NVIDIA SD3.
+  - Added interactive console input for keys in `scripts/diagnostic.py`.
+- **v3.5.12**: **Persistence & Retry Hardening**.
+  - Implemented `--autostash` for state updates and branch bootstrapping logic.
+  - Narrowed retry behavior to skip terminal 403/400 errors.
+- **v3.5.11**: **Absolute Restoration**.
+  - Guaranteed multi-module dynamic identity.
+- **v3.5.10**: **Final Stabilization**.
+  - Runtime credential discovery, zero-clobber persistence, and dynamic key propagation to the curator and tests.
+- **v3.5.9**: **Stabilization Suite**.
+  - Keys-free testing and concurrency protection.
+- **v3.5.6–v3.5.8**: **Stability Patches**.
+  - v3.5.6 fixes an ImportError and hardens state persistence; v3.5.7 and v3.5.8 are tag-only stabilization releases.
+- **v3.5.5**: **Offline Dry-Run Suite**.
+  - Offline dry-run tests, Codex retry fix, protected-branch persistence.
+- **v3.5.4**: **Image Validation**.
+  - Hardens image validation and suppresses external logs.
+- **v3.5.3**: **Threads Fix**.
+  - Fixes a `base_url` NameError in Threads broadcasting.
+- **v3.5.2**: **Security & Broadcast Resilience**.
+  - Security hardening and broadcast resilience suite.
+- **v3.5.1**: **Cross-Platform Visuals**.
+  - Critical stability patch and cross-platform visual support.
+- **v3.5.0**: **Sage Designer & Visual Discovery**.
+  - Imagen 4 integration and smart thumbnail filtering.
+- **v3.4.1**: **Bluesky Timeout**.
+  - Bluesky client timeout raised to 30s to resolve InvokeTimeoutError.
+- **v3.4.0**: **Elite Stability & API Resilience**.
+  - Resolves Bluesky rate-limit and forbidden errors.
+- **v3.0.0–v3.3.0**: **Foundations**.
+  - Automated GitHub Releases and centralized versioning; Sage v3.1 reliability hardening (atomic writes, IndexError fixes, Python 3.11); dependency-conflict and security hardening (v3.3); CI test workflow, SECURITY.md and CONTRIBUTING.md.
+
+_v3.36.x was never released. v3.5.7–v3.5.8 exist only as git tags with no distinct change._
