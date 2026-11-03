@@ -863,7 +863,7 @@ async def settle_persistence_stage(
             supporting_links=pub_entry["supporting_links"],
             posts=posts,
             published_at=pub_entry["published_at"],
-            source=(urlparse(matched_article.link).hostname or "Manual news") if matched_article.source == "Telegram Intercept" else matched_article.source,
+            source=(urlparse(matched_article.link or "").hostname or "Manual news") if matched_article.source == "Telegram Intercept" else matched_article.source,
             source_id=matched_article.source_id,
             category=published_category,
             supporting_sources=matched_article.supporting_sources,
@@ -1498,7 +1498,7 @@ async def main():
         force_roundup = getattr(settings, "force_roundup", False) is True
         # P1 fix: Do not consume or discard an explicit topic or curate command on Friday evening
         is_friday_evening_roundup = (
-            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type != "topic")
+            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type not in ("topic", "news"))
             or force_roundup
         )
         if is_friday_evening_roundup:
