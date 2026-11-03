@@ -198,7 +198,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 | :--- | :--- |
 | `/topic <keyword>` | Curate and broadcast a post on a specific topic, grounded against live RSS feeds |
 | `/curate <keyword>` | Alias for `/topic` |
-| `/news <headline> [https url]` | Report a **confirmed** event. Skips feed matching and drafts as fact from your headline plus the fetched page title/description (URL must be public https). Becomes the lead link; the ledger source is the URL host |
+| `/news <headline> [public url]` | Report a **confirmed** event. Skips feed matching and drafts as fact from your headline plus the fetched page title/description (URL must be public http(s)). Becomes the lead link; the ledger source is the URL host |
 | `/watch <keyword>` | Add a topic to your persistent watchlist (max 10). Watched topics receive a bounded `+3` to `+8` scoring boost during curation |
 | `/unwatch <keyword>` | Remove a topic from your watchlist |
 | `/watches` | List all active watchlist topics |
