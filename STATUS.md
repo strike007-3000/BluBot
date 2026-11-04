@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-04 | 🔍 Midday Briefing (Agentic Data Lineage and Enterprise Security) |
+| **Broadcaster** | Operational | 2026-11-04 | 🔍 Evening Synthesis (Autonomous Agentic Operations and Enterprise ROI) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
