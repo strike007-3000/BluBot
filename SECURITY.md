@@ -20,7 +20,7 @@ Instead, please use the **GitHub "Private Vulnerability Reporting"** feature:
 
 Our team will respond within 48 hours to acknowledge your report and provide a timeline for resolution.
 
-## Current Security Baseline (v3.39.0)
+## Current Security Baseline (v3.39.1)
 
 The project is currently hardened against:
 

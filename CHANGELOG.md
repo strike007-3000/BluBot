@@ -1,6 +1,8 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.39.1**: **Security dependency bumps**.
+  - `pyasn1` 0.6.4 → 0.6.5 and `tornado` 6.5.9 → 6.6 (Dependabot alerts 63–69).
 - **v3.39.0**: **`/news` Command, Fail-Closed Topic Approval & External Reply Counts**.
   - `/news <headline> [url]` drafts user-asserted news as fact; it is exempt from the Friday roundup intercept and tolerates a linkless source.
   - User-supplied topics fail closed: approval timeout or failure posts nothing and re-queues the topic.
