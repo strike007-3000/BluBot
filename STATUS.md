@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-06 | 🔍 Midday Briefing (Agentic Architecture and Open-Weight Model Releases) |
+| **Broadcaster** | Operational | 2026-11-06 | 🔍 Friday Roundup (Roundup 2026-W45) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
