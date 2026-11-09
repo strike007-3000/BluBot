@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-09 | 🚀 Morning Intelligence (Intercept) (webAI’s TwIL-8B Beats Frontier Models on Math and Code at 5 GiB) |
+| **Broadcaster** | Operational | 2026-11-09 | 🔍 Afternoon Deep Dive (PyTorch Build Environment Precedence) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
