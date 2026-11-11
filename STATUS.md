@@ -4,7 +4,9 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-11 | 🔍 Midday Briefing (AI Business Platforms and Enterprise Integration) |
+| **Broadcaster** | Operational | 2026-11-11 | 🔍 Evening Synthesis (Intercept) (Claude
+ Fable 5.2
+and Mythos 5.2 launched) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
