@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-10 | 🔍 Evening Synthesis (Autonomous treasury agents and agent evaluation) |
+| **Broadcaster** | Operational | 2026-11-11 | 🔍 Midday Briefing (AI Business Platforms and Enterprise Integration) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
