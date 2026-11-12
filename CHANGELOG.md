@@ -3,6 +3,7 @@
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
 - **v3.39.2**: **`/news` Gemini failure handling**.
   - `/news` synthesis retries up to 3 times on Gemini errors (e.g. 503). If all fail, it no longer posts an unrelated generic mentor insight: it sends a Telegram warning, re-queues the request in `pending_topic.json`, and fails the run.
+  - `pending_topic.json` is now saved/restored with the Bluesky session cache in `daily_post.yml`, so re-queued requests survive the ephemeral runner.
 - **v3.39.1**: **Security dependency bumps**.
   - `pyasn1` 0.6.4 → 0.6.5 and `tornado` 6.5.9 → 6.6 (Dependabot alerts 63–69).
 - **v3.39.0**: **`/news` Command, Fail-Closed Topic Approval & External Reply Counts**.
