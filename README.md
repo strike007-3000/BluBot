@@ -204,7 +204,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 | `/watches` | List all active watchlist topics |
 | `/brief <keyword>` | Generate a **7-day executive briefing** for a topic. Fetches all RSS articles from the past 7 days, clusters corroborated stories, and synthesizes a Gemini-powered analytical report delivered directly to Telegram with no platform character limits |
 
-> **Fail-closed approval:** posts from `/topic`, `/curate` and `/news` are never auto-published. If Telegram approval times out or errors, nothing is posted and the topic is re-queued in `pending_topic.json` (with its command kind) for the next run. Scheduled posts still auto-publish on timeout.
+> **Fail-closed approval:** posts from `/topic`, `/curate` and `/news` are never auto-published. If Telegram approval times out or errors, nothing is posted and the topic is re-queued in `pending_topic.json` (with its command kind) for the next run. Scheduled posts still auto-publish on timeout. The same applies if Gemini is unavailable for a `/news` request: it retries 3 times, then warns you on Telegram and re-queues instead of posting a generic fallback.
 
 ## 🗒️ Changelog
 

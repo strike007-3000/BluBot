@@ -153,3 +153,25 @@ async def test_synthesis_stage_passes_temporal_context(monkeypatch, mocker):
 
     assert synthesis.content == "summary"
     assert summarize.await_args.args[1] == context
+
+
+@pytest.mark.asyncio
+async def test_news_synthesis_retries_then_aborts_without_mentor_fallback(monkeypatch, mocker):
+    monkeypatch.setattr("bot.settings", Settings(gemini_key="mock", is_dry_run=False))
+    mocker.patch("bot.get_temporal_context", return_value={"day": "Wednesday", "session": "Morning"})
+    mocker.patch("bot.asyncio.sleep", new_callable=AsyncMock)
+    mentor = mocker.patch("bot.generate_mentor_insight", new_callable=AsyncMock)
+    abort = mocker.patch("src.telegram_gateway._abort_unapproved", new_callable=AsyncMock, side_effect=RuntimeError("aborted"))
+    genai = MagicMock()
+    genai.aio.models.generate_content = AsyncMock(side_effect=Exception("503 UNAVAILABLE"))
+    news = {"url": "https://example.com/x", "facts": "Gemini 4 Hydrogen launched", "raw": "Gemini 4 Hydrogen https://example.com/x"}
+    curation = CurationResult(
+        top_articles=[Article(title="t", link=news["url"], summary=news["facts"], published="2026-11-12T00:00:00Z", source="Telegram Intercept", score=100)],
+        seen_links=[], recent_topics=[], session_name="Morning",
+    )
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(RuntimeError, match="aborted"):
+            await synthesis_stage(client, genai, curation, telegram_topic="Gemini 4 Hydrogen", news=news)
+    assert genai.aio.models.generate_content.await_count == 3
+    mentor.assert_not_called()
+    assert abort.await_args.args[1] == {"topic": news["raw"], "kind": "news"}
