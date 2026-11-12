@@ -34,7 +34,9 @@ jobs:
       - name: Restore BlueSky session
         uses: actions/cache/restore@v6
         with:
-          path: bluesky_session.txt
+          path: |
+            bluesky_session.txt
+            pending_topic.json
           key: bsky-session-${{ github.run_id }}
           restore-keys: |
             bsky-session-
@@ -75,7 +77,9 @@ jobs:
         if: always()
         uses: actions/cache/save@v6
         with:
-          path: bluesky_session.txt
+          path: |
+            bluesky_session.txt
+            pending_topic.json
           key: bsky-session-${{ github.run_id }}
 
       - name: Commit STATUS.md to automated/state

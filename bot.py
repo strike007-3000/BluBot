@@ -359,14 +359,21 @@ async def synthesis_stage(
                 "do NOT write as if it has already occurred or is an established fact. Frame it hypothetically (e.g., 'If Cursor were to be acquired...'). "
                 "Do not state unverified assumptions as facts."
             )
-            response = await genai_client.aio.models.generate_content(
-                model=settings.gemini_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=CURATOR_SYSTEM_INSTRUCTION,
-                    temperature=0.7
-                )
-            )
+            for attempt in range(3 if news else 1):
+                try:
+                    response = await genai_client.aio.models.generate_content(
+                        model=settings.gemini_model,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            system_instruction=CURATOR_SYSTEM_INSTRUCTION,
+                            temperature=0.7
+                        )
+                    )
+                    break
+                except Exception:
+                    if attempt == 2 or not news:
+                        raise
+                    await asyncio.sleep(5 * (attempt + 1))
             summary = strip_markdown(response.text.strip())
             from src.models import PlatformDrafts
             platform_drafts = PlatformDrafts.from_single(summary)
@@ -374,6 +381,12 @@ async def synthesis_stage(
             topic = telegram_topic
         except Exception as e:
             SafeLogger.warn(f"Telegram topic synthesis failed: {e}")
+            if news:  # never substitute an unrelated generic post for a user-supplied news item
+                from src.telegram_gateway import _abort_unapproved
+                await _abort_unapproved(
+                    settings.telegram_user_id, {"topic": news["raw"], "kind": "news"},
+                    "/news synthesis failed after retries (Gemini unavailable).",
+                )
             summary, lead_link, topic, is_failover = await generate_mentor_insight(context)
             from src.models import PlatformDrafts
             platform_drafts = PlatformDrafts.from_single(summary)
@@ -1473,7 +1486,7 @@ async def main():
                     facts += f"\nSource ({url}): {meta['title']}. {meta['description']}"
                 else:
                     SafeLogger.warn(f"News: could not fetch {url}; using headline only.")
-            news = {"url": url, "facts": facts}
+            news = {"url": url, "facts": facts, "raw": raw_topic}
 
         if cmd_type == "brief":
             SafeLogger.info(f"Brief Engine: Generating 7-day briefing for topic '{telegram_topic}'")
