@@ -171,30 +171,30 @@ BASE_TIER_2 = 15
 # --- Breakthrough Scoring Engine Constants ---
 HIGH_SIGNAL_KEYWORDS = [
     "agentic",
-    "open-weight",
     "reasoning",
+    "open weights",
+    "test-time compute",
     "multimodal",
-    "autonomous",
+    "frontier ai",
+    "autonomous driving",
     "benchmark",
-    "mixture-of-experts",
-    "reinforcement learning",
+    "datacenter",
     "inference",
-    "interpretability",
-    "alignment",
-    "scaling"
+    "reinforcement learning",
+    "watermark"
 ]
 
 MOMENTUM_PRODUCTS = [
-    "gemini 4 argon",
-    "muse spark open",
-    "gemma 4",
-    "gpt-6 astra",
-    "nemotron 3 ultra",
-    "reflection beam",
-    "granite switch 4.1",
-    "agent lightning",
-    "chatgpt",
-    "google antigravity"
+    "gemini 4 hydrogen",
+    "gemini 4 carbon",
+    "gemma 4 12b",
+    "mistral large 4",
+    "codex",
+    "claude meetings",
+    "deepseek v4.1 flash",
+    "nvidia nemotron 3.5 super vl",
+    "alphagenome 2",
+    "gemini robotics 2.5"
 ]
 
 # Weighting Matrix (retained/updated)
