@@ -19,7 +19,7 @@ cryptography>=50.0.0,<51
 urllib3==2.8.0
 anyio==4.15.1
 zipp==4.1.2
-dnspython==2.9.1
+dnspython==2.9.2
 
 # Testing
 pytest>=9.2.0
