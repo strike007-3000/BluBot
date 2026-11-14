@@ -451,6 +451,9 @@ def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
 
     state["published_posts"] = _sanitize_published_posts(state["published_posts"])
 
+    if not isinstance(state.get("linkedin_weeks"), dict):
+        state["linkedin_weeks"] = {}
+
     try:
         state["total_posts_curated"] = int(state.get("total_posts_curated", 0))
     except (ValueError, TypeError):
