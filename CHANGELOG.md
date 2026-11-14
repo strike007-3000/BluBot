@@ -1,6 +1,9 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.40.0**: **Weekly LinkedIn draft (manual posting)**.
+  - New `linkedin_weekly.py` and `linkedin_weekly.yml` (Sundays 09:00 UTC, also manual): shortlists three of the week's published stories in Telegram, drafts one LinkedIn post in the owner's voice with an optional personal take, verifies it against the source (rules, numbers, claims), and delivers it for manual posting. Nothing is posted to LinkedIn.
+  - One 10-minute Telegram budget; a timeout auto-drafts the first story, labelled unreviewed. Independent of the daily bot and the Friday roundup.
 - **v3.39.2**: **`/news` Gemini failure handling**.
   - `/news` synthesis retries up to 3 times on Gemini errors (e.g. 503). If all fail, it no longer posts an unrelated generic mentor insight: it sends a Telegram warning, re-queues the request in `pending_topic.json`, and fails the run.
   - `pending_topic.json` is now saved/restored with the Bluesky session cache in `daily_post.yml`, so re-queued requests survive the ephemeral runner.
