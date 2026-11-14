@@ -48,6 +48,7 @@ class Settings:
     telegram_user_id: Optional[str] = None
     telegram_timeout_minutes: int = 5
     enable_telegram_approval: bool = False
+    linkedin_telegram_timeout_minutes: int = 10
 
     # Platform Hashtag Controls
     enable_hashtags_bsky: bool = True
@@ -124,6 +125,7 @@ class Settings:
             "telegram_user_id": os.getenv("TELEGRAM_USER_ID"),
             "telegram_timeout_minutes": int(os.getenv("TELEGRAM_TIMEOUT_MINUTES", "5")),
             "enable_telegram_approval": os.getenv("ENABLE_TELEGRAM_APPROVAL", "true").lower() == "true",
+            "linkedin_telegram_timeout_minutes": int(os.getenv("LINKEDIN_TELEGRAM_TIMEOUT_MINUTES", "10")),
 
             # Hashtags configuration
             "enable_hashtags_bsky": os.getenv("ENABLE_HASHTAGS_BSKY", "false").lower() == "true",

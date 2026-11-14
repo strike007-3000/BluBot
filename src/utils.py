@@ -451,6 +451,9 @@ def sanitize_and_migrate_state(data: Optional[dict]) -> dict:
 
     state["published_posts"] = _sanitize_published_posts(state["published_posts"])
 
+    if not isinstance(state.get("linkedin_weeks"), dict):
+        state["linkedin_weeks"] = {}
+
     try:
         state["total_posts_curated"] = int(state.get("total_posts_curated", 0))
     except (ValueError, TypeError):
@@ -520,6 +523,8 @@ def _merge_publication_states(state1: dict, state2: dict) -> dict:
     merged["published_posts"] = _sanitize_published_posts(list(ledger.values()))
 
     merged["watch_topics"] = state1.get("watch_topics", [])
+
+    merged["linkedin_weeks"] = {**sanitize_and_migrate_state(state2)["linkedin_weeks"], **merged["linkedin_weeks"]}
 
     if str(state2.get("updated_at", "")) > str(merged.get("updated_at", "")):
         merged["updated_at"] = state2.get("updated_at")

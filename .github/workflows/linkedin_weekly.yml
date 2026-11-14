@@ -1,0 +1,43 @@
+name: Weekly LinkedIn Draft
+
+on:
+  # Re-enable after one successful manual run: Sunday 09:00 UTC (the daily bot runs Mon-Fri only)
+  # schedule:
+  #   - cron: '0 9 * * 0'
+  workflow_dispatch:
+
+# Own group: a Telegram wait must not block or be blocked by the daily state-persistence group
+concurrency:
+  group: linkedin-weekly
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Draft LinkedIn post
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_USER_ID }}
+          LINKEDIN_TELEGRAM_TIMEOUT_MINUTES: ${{ vars.LINKEDIN_TELEGRAM_TIMEOUT_MINUTES || '10' }}
+          LOG_FORMAT: pretty
+        run: python linkedin_weekly.py
