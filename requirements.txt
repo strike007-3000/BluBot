@@ -11,7 +11,7 @@ anyio==4.15.1
     #   httpx
 apscheduler==3.11.2
     # via python-telegram-bot
-atproto==0.0.73
+atproto==0.0.74
     # via -r requirements.in
 beautifulsoup4==4.15.0
     # via -r requirements.in
@@ -68,7 +68,7 @@ idna==3.18
     #   requests
 iniconfig==2.3.0
     # via pytest
-libipld==3.4.1
+libipld==3.5.0
     # via atproto
 mastodon-py==2.3.3
     # via -r requirements.in
@@ -123,11 +123,10 @@ tenacity==9.1.4
     # via google-genai
 tlds==2026093003
     # via atproto
-tornado==6.6
+tornado==6.6.1
     # via python-telegram-bot
 typing-extensions==4.16.0
     # via
-    #   anyio
     #   atproto
     #   beautifulsoup4
     #   google-genai
@@ -148,5 +147,3 @@ websockets==15.0.1
     #   google-genai
 zipp==4.1.2
     # via -r requirements.in
-zstandard==0.25.0
-    # via atproto
