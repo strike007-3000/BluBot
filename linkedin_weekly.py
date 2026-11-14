@@ -44,7 +44,10 @@ async def run(client, genai_client, now: Optional[datetime] = None) -> str:
     if not result.reviewed:
         return "auto_drafted"
     mark_week_done(state, iso_week, result.candidate.entry["url"])
-    await asyncio.to_thread(save_seen_articles, state)
+    saved, _ = await asyncio.to_thread(save_seen_articles, state)
+    if not saved:
+        SafeLogger.error("LinkedIn weekly: week marker was not persisted; a rerun may send another shortlist.")
+        return "marker_failed"
     return "done"
 
 
@@ -53,6 +56,8 @@ async def main() -> None:
     async with httpx.AsyncClient(follow_redirects=False) as client:
         outcome = await run(client, genai_client)
     SafeLogger.info(f"LinkedIn weekly outcome: {outcome}")
+    if outcome == "marker_failed":
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

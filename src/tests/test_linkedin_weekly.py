@@ -128,3 +128,8 @@ def test_timeout_autodraft_returns_auto_drafted_and_writes_no_marker(env):
 def test_missing_telegram_config_is_disabled(env, monkeypatch):
     monkeypatch.setattr(lw, "settings", SimpleNamespace(telegram_bot_token=None, telegram_user_id="1"))
     assert go() == "telegram_disabled" and env.sessions == []
+
+
+def test_failed_marker_save_is_reported_not_done(env, monkeypatch):
+    monkeypatch.setattr(lw, "save_seen_articles", lambda s, **k: (False, s))
+    assert go() == "marker_failed"
