@@ -1,8 +1,9 @@
 name: Weekly LinkedIn Draft
 
 on:
-  schedule:
-    - cron: '0 9 * * 0' # Sunday 09:00 UTC; the daily bot runs Mon-Fri only
+  # Re-enable after one successful manual run: Sunday 09:00 UTC (the daily bot runs Mon-Fri only)
+  # schedule:
+  #   - cron: '0 9 * * 0'
   workflow_dispatch:
 
 # Own group: a Telegram wait must not block or be blocked by the daily state-persistence group
