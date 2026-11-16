@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-15 | 🔍 Midday Briefing (Intercept) (Kiri The modern container runtime. 8× faster than Docker) |
+| **Broadcaster** | Operational | 2026-11-16 | 🔍 Afternoon Deep Dive (Enterprise AI Transition) |
  Fable 5.2
 and Mythos 5.2 launched) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
