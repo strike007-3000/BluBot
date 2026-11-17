@@ -1,6 +1,9 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.42.0**: **Breaking-news lane**.
+  - `daily_post.yml` gains an hourly weekday run (`:47`, `BREAKING_ONLY=true`) that posts only when the top story scores 40+ and is under 6 hours old, with a 3-hour cooldown after any post and at most 4 posts per rolling 24 hours (one extra beyond the three scheduled slots). Otherwise it exits before synthesis, so it costs no Gemini calls and sends no Telegram prompt.
+  - It never reads Telegram topic requests, so scheduled runs keep owning `/topic` and `/news`. Tunable via `BREAKING_MIN_SCORE`, `BREAKING_MAX_AGE_HOURS`, `BREAKING_COOLDOWN_HOURS`, `BREAKING_MAX_POSTS_24H`.
 - **v3.41.0**: **Wider sources and full-article grounding**.
   - New API sources: Hacker News (Algolia, 100+ points, LLM/AI queries) and Hugging Face Daily Papers (5+ upvotes), scored and deduplicated like the existing API sources.
   - The lead story's article body (up to 6,000 chars, via the SSRF-safe fetcher) now reaches synthesis as `article_text`; a failed fetch falls back to the RSS summary.

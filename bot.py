@@ -1468,7 +1468,10 @@ async def main():
         await prune_gemini_model_priority_async(genai_client)
 
         # Check for on-demand Telegram topic or brief intercept
-        res = await check_for_telegram_topic()
+        # `is True` keeps MagicMock settings in tests from enabling the lane.
+        breaking_lane = getattr(settings, "breaking_only", False) is True
+        # The breaking lane never consumes Telegram topic requests; scheduled runs own those.
+        res = None if breaking_lane else await check_for_telegram_topic()
         if isinstance(res, tuple):
             cmd_type, telegram_topic = res
         else:
@@ -1525,6 +1528,17 @@ async def main():
         t0 = time.monotonic()
         curation = await curation_stage(client, telegram_topic=telegram_topic, news=news)
         SafeLogger.info(f"Curation Stage: Completed in {time.monotonic() - t0:.2f}s ({len(curation.top_articles)} candidates).")
+
+        if breaking_lane:
+            from src.curator import select_breaking
+            ledger = (await asyncio.to_thread(load_seen_articles)).get("published_posts", [])
+            if not select_breaking(
+                curation.top_articles, ledger, now, settings.breaking_min_score,
+                settings.breaking_max_age_hours, settings.breaking_cooldown_hours, settings.breaking_max_posts_24h,
+            ):
+                SafeLogger.info("Breaking lane: no story clears the bar. Nothing posted.")
+                return
+            SafeLogger.info(f"Breaking lane: posting '{curation.top_articles[0].title}'.")
 
         # 1.5 Continuity Matching & Editorial Decision Orchestration
         from src.models import MatchDecision, EditorialDecision
