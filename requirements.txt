@@ -4,11 +4,12 @@ aiolimiter==1.2.1
     # via python-telegram-bot
 annotated-types==0.7.0
     # via pydantic
-anyio==4.15.1
+anyio==4.16.0
     # via
     #   -r requirements.in
     #   google-genai
     #   httpx
+    #   httpx2
 apscheduler==3.11.2
     # via python-telegram-bot
 atproto==0.0.74
@@ -47,24 +48,30 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 google-auth[requests]==2.56.2
     # via google-genai
-google-genai==2.34.0
+google-genai==3.3.0
     # via -r requirements.in
 h11==0.16.0
-    # via httpcore
+    # via
+    #   httpcore
+    #   httpcore2
 httpcore==1.0.9
     # via
     #   httpx
     #   python-telegram-bot
+httpcore2==2.16.2
+    # via httpx2
 httpx==0.28.1
     # via
     #   -r requirements.in
     #   atproto
-    #   google-genai
     #   python-telegram-bot
+httpx2==2.16.2
+    # via google-genai
 idna==3.18
     # via
     #   anyio
     #   httpx
+    #   httpx2
     #   requests
 iniconfig==2.3.0
     # via pytest
@@ -97,7 +104,7 @@ pytest==9.2.0
     #   -r requirements.in
     #   pytest-asyncio
     #   pytest-mock
-pytest-asyncio==1.4.1
+pytest-asyncio==1.5.0
     # via -r requirements.in
 pytest-mock==3.17.0
     # via -r requirements.in
@@ -125,6 +132,10 @@ tlds==2026093003
     # via atproto
 tornado==6.6.1
     # via python-telegram-bot
+truststore==0.10.5
+    # via
+    #   httpcore2
+    #   httpx2
 typing-extensions==4.16.0
     # via
     #   atproto
