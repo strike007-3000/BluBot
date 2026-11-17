@@ -1023,7 +1023,7 @@ def _pinned_request_target(url: str, ip: str) -> Tuple[str, str]:
     netloc = ip_host if parsed.port is None else f"{ip_host}:{parsed.port}"
     return parsed._replace(netloc=netloc).geturl(), host_header
 
-async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, headers=None):
+async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, headers=None, max_bytes=None):
     """Fetches a URL while validating every hop in the redirect chain."""
     current_url = url
     initial_scheme = urlparse(url).scheme
@@ -1055,13 +1055,34 @@ async def get_with_safe_redirects(client, url, timeout=10.0, max_redirects=5, he
             # otherwise another hostname on the same IP could reuse this TLS session.
             pinned_headers["Connection"] = "close"
             try:
-                response = await client.get(
-                    pinned_url,
-                    timeout=timeout,
-                    follow_redirects=False,
-                    headers=pinned_headers,
-                    extensions={"sni_hostname": hostname},
-                )
+                if max_bytes is None:
+                    response = await client.get(
+                        pinned_url,
+                        timeout=timeout,
+                        follow_redirects=False,
+                        headers=pinned_headers,
+                        extensions={"sni_hostname": hostname},
+                    )
+                else:
+                    # Stream and stop at max_bytes so a huge or hostile page cannot exhaust memory.
+                    async with client.stream(
+                        "GET",
+                        pinned_url,
+                        timeout=timeout,
+                        follow_redirects=False,
+                        headers=pinned_headers,
+                        extensions={"sni_hostname": hostname},
+                    ) as streamed:
+                        body = bytearray()
+                        async for chunk in streamed.aiter_bytes():
+                            body.extend(chunk)
+                            if len(body) >= max_bytes:
+                                break
+                        # aiter_bytes already decoded the body, so drop the encoding/length headers.
+                        kept = {k: v for k, v in streamed.headers.items()
+                                if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")}
+                        response = httpx.Response(streamed.status_code, headers=kept,
+                                                  content=bytes(body[:max_bytes]), request=streamed.request)
                 break
             except Exception as e:
                 SafeLogger.warn(f"Request to {hostname} via {ip} failed: {e}", "unsafe_url_blocked")

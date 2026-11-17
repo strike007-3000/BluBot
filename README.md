@@ -11,11 +11,12 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 - **Sage Intelligence v3 (Self-Healing AI)**:
     - **Multi-Platform Differentiation**: Generates tailored drafts for **Bluesky** (direct, specific observation), **Threads** (conversational explanation), and **Mastodon** (technical overview with hashtags) in a single request. Questions are optional, not forced.
     - **Interactive Telegram Review & Post-Broadcast Transparency**: Interactive inline tab switcher (`[🔵 Bluesky] [🧵 Threads] [🐘 Mastodon]`) and All-in-One inspection. Allows conversational editing via replies (`remix_platform_draft`), in-place caption updates within strict 1,024-character limits, and link-safe deterministic truncation. Following broadcast, dispatches 3 dedicated plain-text messages to Telegram detailing publication status (`✅ Published`, `❌ Failed`, `⚪ Not configured / not attempted`), requested delivery mode, and the approved draft variant sent to each network.
-    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.5-flash-lite`** → **`gemini-3.7-flash`** → **`gemini-3.6-flash`** → **`gemini-2.5-flash-lite`**) with immediate status-aware rotation (503, 429, 400, 404) and local deterministic topic derivation.
+    - **Multi-Model Failover**: Automatically rotates through prioritized models (**`gemini-3.5-flash-lite`** → **`gemini-3.8-flash`** → **`gemini-4-hydrogen`** → **`gemini-3.7-flash`** → **`gemini-3.6-flash`** → **`gemini-2.5-flash-lite`**) with immediate status-aware rotation (503, 429, 400, 404) and local deterministic topic derivation.
     - **Task-Specific Routing**: Dedicated multimodal models (`gemini-3.5-flash-lite`, `gemini-2.5-flash-lite`) handle screen-reader alt-text with MIME detection and a neutral local fallback. `gemini-3.5-flash-lite` handles visual prompts; `GEMINI_MODEL` handles interactive replies and `/brief` synthesis.
     - **Output Repair**: Strips accidental markdown formatting, applies platform-specific hashtag policy, and repairs overlong output without splitting URLs.
     - **Model Discovery**: Lists the models available to the configured key and keeps only exact matches from the approved priority list; if discovery fails, the defaults remain available for runtime failover.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
+- **Full-Article Grounding**: Synthesis receives each story's article body (6,000 chars for the lead, 2,000 for the rest, via the SSRF-safe 1 MB-capped fetcher), falling back to the RSS summary when a fetch fails.
 - **🖼️ Unified Media Strategy Stage**:
     - **Single Media Decision Point**: Decides if a post should contain media, extracts and validates OpenGraph metadata, generates a visual prompt, uses the configured image-provider fallback chain when necessary, and compiles everything into a single `MediaAsset`.
     - **Self-Healing OpenGraph Validation**: Runs multi-criteria validation (dimensions, size, aspect ratios, decoding, known placeholder logo patterns) before selecting.
@@ -58,17 +59,17 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
     - **Conversational Quality**: Replies address the actual comment as a peer, without persona introductions, canned thanks, hashtags, or forced broader lessons.
 - **Breakthrough Scoring Engine v5 (Elite Signal Processing)**:
-    - **Stable-ID Curation Registry (8-Tier, 45 Feeds)**:
+    - **Stable-ID Curation Registry (8-Tier, 51 Feeds)**:
 
         | Source Category | Base Score | Notes / Source Tiers |
         | :--- | :--- | :--- |
-        | **Research Labs** | `+30` | OpenAI, DeepMind, HuggingFace |
-        | **Enterprise AI** | `+25`–`+27` | Microsoft Research, AWS ML, NVIDIA Deep Learning |
-        | **Practitioner** | `+20` | Simon Willison, Interconnects, Latent Space, One Useful Thing, Sebastian Raschka, Jack Clark, Maarten Grootendorst |
-        | **Open Source** | `+18` (GitHub Fast-Rising: `+16`) | Hugging Face Transformers Releases, vLLM, Ollama, PyTorch, Hugging Face Trending (API), GitHub Fast-Rising Repositories (API) |
+        | **Research Labs** | `+30` | OpenAI, DeepMind, HuggingFace, Anthropic (community-maintained feed), Google AI, Google Research, Mistral (`+25`–`+28`) |
+        | **Enterprise AI** | `+25`–`+27` | Microsoft Research, AWS ML, NVIDIA Deep Learning, Apple ML Research (`+22`) |
+        | **Practitioner** | `+20` | Simon Willison, Interconnects, Latent Space, One Useful Thing, Sebastian Raschka, Jack Clark, Maarten Grootendorst; Hacker News (API, `+15`, 50+ points) |
+        | **Open Source** | `+18` (GitHub Fast-Rising: `+16`) | Hugging Face Transformers Releases, vLLM, Ollama, PyTorch, llama.cpp, Claude Code (`+16`), Hugging Face Trending (API), GitHub Fast-Rising Repositories (API) |
         | **Infrastructure/Business** | `+15` | SemiAnalysis, Together AI, ServeTheHome, Semiconductor Engineering, Sequoia, CB Insights |
-        | **Journalism** | `+12` | The Verge, Wired, MIT Tech Review, TechCrunch, VentureBeat, IEEE Spectrum, The Decoder, 404 Media, Silicon Angle, The Sequence, Marktechpost, AI Accelerator Institute |
-        | **Academic** | `+10` | arXiv CS.LG, The Gradient, BAIR Blog, ML Mastery |
+        | **Journalism** | `+12` | Ars Technica, The Verge, Wired, MIT Tech Review, TechCrunch, VentureBeat, IEEE Spectrum, The Decoder, 404 Media, Silicon Angle, The Sequence, Marktechpost, AI Accelerator Institute |
+        | **Academic** | `+10` | arXiv CS.LG, The Gradient, BAIR Blog, ML Mastery; Hugging Face Daily Papers (API, `+18`, 10+ upvotes) |
         | **Critical / Policy & Security** | `+5`–`+10` | AI Incident Database and EU AI Act Tracker (`+10`); AI Snake Oil, Gary Marcus, Algorithmic Bridge, Victoria Krakovna (`+5`) |
     - **Curation Boosts & Penalties**:
         - **High-Signal Keywords**: `+12` (Boosts *SOTA, agentic, world model, open weights*, etc.)
@@ -78,7 +79,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) selection across 4 content structures: strategic shift, practical workflow, risk/verification, and enterprise ROI.
-    - **Curated Source Network**: **45 RSS feeds plus two API sources** (Hugging Face Trending and GitHub Fast-Rising Repositories) across 8 tiers, with API sources excluded from RSS health tracking.
+    - **Curated Source Network**: **51 RSS feeds plus four API sources** (Hugging Face Trending, GitHub Fast-Rising Repositories, Hugging Face Daily Papers, and Hacker News) across 8 tiers, with API sources excluded from RSS health tracking.
     - **Bluesky Source Receipts**: Optionally replies to corroborated Bluesky posts with up to two aligned source links, only after the root publication has been durably settled.
     - **Friday Evening Roundup**: Automatically replaces the scheduled Friday 18:17 UTC broadcast with a weekly digest summarizing the top 1–5 stories published during the ISO week, ranked by live Bluesky engagement and threaded with exact URL preservation. Skips if already published or reserved, and falls back to normal curation if zero eligible stories are found. Can be triggered manually with `--roundup`.
 

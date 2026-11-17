@@ -14,6 +14,7 @@ from src.utils import get_with_safe_redirects
 
 TAKE_MAX_CHARS = 1000
 SOURCE_TEXT_MAX_CHARS = 6000
+SOURCE_FETCH_MAX_BYTES = 1_000_000
 MAX_RETRIES = 2
 
 _URL_RE = re.compile(r"https?://\S+")
@@ -27,7 +28,7 @@ def _collapse(text: str) -> str:
 
 async def fetch_source_text(client, url: str) -> Optional[str]:
     try:
-        resp = await get_with_safe_redirects(client, url, timeout=10)
+        resp = await get_with_safe_redirects(client, url, timeout=10, max_bytes=SOURCE_FETCH_MAX_BYTES)
         if not resp or resp.status_code != 200:
             return None
         if "html" not in resp.headers.get("content-type", "").lower():
@@ -43,7 +44,7 @@ async def fetch_source_text(client, url: str) -> Optional[str]:
         text = _collapse(" ".join(parts))[:SOURCE_TEXT_MAX_CHARS]
         return text or None
     except Exception as e:
-        SafeLogger.warn(f"LinkedIn source fetch failed for {url}: {e}")
+        SafeLogger.warn(f"Source article fetch failed for {url}: {e}")
         return None
 
 
