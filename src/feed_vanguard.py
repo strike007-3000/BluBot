@@ -39,7 +39,8 @@ class VanguardManager:
                 active.append(url)
             else:
                 retry_time_str = retry_at.strftime('%H:%M')
-                SafeLogger.info(f"Vanguard: Skipping penalized feed (until {retry_time_str}): {name}")
+                reason = f" [{data['last_error']}]" if data.get("last_error") else ""
+                SafeLogger.info(f"Vanguard: Skipping penalized feed (until {retry_time_str}): {name}{reason}")
 
         return active
 

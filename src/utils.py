@@ -987,7 +987,8 @@ def _resolve_public_ip_candidates(hostname: str) -> Optional[List[str]]:
     """Resolves a hostname and returns only public IP candidates."""
     try:
         resolved = socket.getaddrinfo(hostname, None)
-        ips = list(set(res[4][0] for res in resolved))
+        # IPv4 first: hosts without IPv6 (e.g. some runners) would otherwise fail on a random IPv6 pick.
+        ips = sorted({res[4][0] for res in resolved}, key=lambda ip: ':' in ip)
         # If any resolved IP is private, we block the whole host for safety
         if any(not _is_public_ip(ip) for ip in ips):
             return None
