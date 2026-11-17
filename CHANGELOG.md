@@ -4,7 +4,7 @@ All notable changes to BluBot. The current version is in [VERSION](VERSION).
 - **v3.41.0**: **Wider sources and full-article grounding**.
   - New API sources: Hacker News (Algolia, 100+ points, LLM/AI queries) and Hugging Face Daily Papers (5+ upvotes), scored and deduplicated like the existing API sources.
   - The lead story's article body (up to 6,000 chars, via the SSRF-safe fetcher) now reaches synthesis as `article_text`; a failed fetch falls back to the RSS summary.
-  - Seven new RSS feeds: Anthropic (community-maintained mirror, no official feed exists), Google AI, Google Research, Mistral, Apple ML Research, Ars Technica AI, plus llama.cpp and Claude Code releases. Removed two feeds with no posts in 9+ months (SemiAnalysis, The Gradient).
+  - Eight new RSS feeds: Anthropic (community-maintained mirror, no official feed exists), Google AI, Google Research, Mistral, Apple ML Research, Ars Technica AI, plus llama.cpp and Claude Code releases. Removed two feeds with no posts in 9+ months (SemiAnalysis, The Gradient).
   - Model chain adds `gemini-3.8-flash` and `gemini-4-hydrogen` (IDs confirmed against the key's model list).
 - **v3.40.0**: **Weekly LinkedIn draft (manual posting)**.
   - New `linkedin_weekly.py` and `linkedin_weekly.yml` (Sundays 12:00 UTC, also manual): shortlists three of the week's published stories in Telegram, drafts one LinkedIn post in the owner's voice with an optional personal take, verifies it against the source (rules, numbers, claims), and delivers it for manual posting. Nothing is posted to LinkedIn.
