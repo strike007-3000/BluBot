@@ -17,6 +17,8 @@ INTERACTIONS_STATE_PATH = os.path.join(BASE_DIR, "seen_interactions.json")
 PENDING_TOPIC_FILE_PATH = os.path.join(BASE_DIR, "pending_topic.json")
 HF_MODELS_API_URL = "https://huggingface.co/api/models"
 GITHUB_SEARCH_REPOS_URL = "https://api.github.com/search/repositories"
+HF_DAILY_PAPERS_URL = "https://huggingface.co/api/daily_papers"
+HN_SEARCH_URL = "https://hn.algolia.com/api/v1/search_by_date"
 GITHUB_REPOS_API_URL = "https://api.github.com/repos"
 
 # Interaction Engine Constants
@@ -57,6 +59,7 @@ NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffu
 
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.5-flash-lite",
+    "models/gemini-3.8-flash",
     "models/gemini-3.7-flash",
     "models/gemini-3.6-flash",
     "models/gemini-2.5-flash-lite",
@@ -113,6 +116,8 @@ SOURCE_REGISTRY = [
     {"id": "pytorch_releases",    "name": "PyTorch Releases",                "url": "https://github.com/pytorch/pytorch/releases.atom",            "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
     {"id": "hf_trending",         "name": "Hugging Face Trending",            "url": HF_MODELS_API_URL,                                                   "category": "open_source",    "quality": "community",  "base_score": 18, "kind": "api"},
     {"id": "github_rising",       "name": "GitHub Fast-Rising Repositories",   "url": GITHUB_SEARCH_REPOS_URL,                                             "category": "open_source",    "quality": "community",  "base_score": 16, "kind": "api"},
+    {"id": "hf_daily_papers",     "name": "Hugging Face Daily Papers",         "url": HF_DAILY_PAPERS_URL,                                                 "category": "academic",       "quality": "community",  "base_score": 18, "kind": "api"},
+    {"id": "hn_ai",               "name": "Hacker News",                       "url": HN_SEARCH_URL,                                                       "category": "practitioner",   "quality": "community",  "base_score": 15, "kind": "api"},
 
     # === Tier 5: Infrastructure / Business Analysis (base 15) ===
     {"id": "semianalysis",        "name": "SemiAnalysis",        "url": "https://semianalysis.com/feed/",                                     "category": "infrastructure", "quality": "opinion",    "base_score": 15},
@@ -247,6 +252,7 @@ SOURCE SAFETY:
 """
 
 CURATOR_SYSTEM_INSTRUCTION = """Synthesize technical news into a natural, source-grounded social media post or short thread.
+When a story includes "article_text", take specific facts and numbers from it; it is fuller than "summary". Never state a fact that neither field supports.
 
 CRITICAL FORMAT REQUIREMENT:
 * Determine if the story can be effectively communicated in a single high-signal post (1 paragraph), or if it genuinely requires a second post (exactly 2 paragraphs separated by a double newline '\\n\\n') to introduce a distinct perspective.

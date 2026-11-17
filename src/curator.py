@@ -24,7 +24,8 @@ from src.config import (
     BASE_TIER_1, BASE_HIDDEN_GEM, BASE_TIER_2, SIGNAL_BOOST,
     MOMENTUM_BOOST, SYNERGY_BONUS, DIVERSITY_PENALTY, MAX_TOPIC_RECURRENCE,
     FEED_SUMMARY_MAX_CHARS, HF_MODELS_API_URL, CLOUDFLARE_IMAGE_MODEL,
-    GITHUB_SEARCH_REPOS_URL, GITHUB_REPOS_API_URL
+    GITHUB_SEARCH_REPOS_URL, GITHUB_REPOS_API_URL,
+    HF_DAILY_PAPERS_URL, HN_SEARCH_URL
 )
 from urllib.parse import urlparse
 from src.utils import retry_with_backoff, SafeLogger
@@ -343,6 +344,127 @@ async def fetch_hf_trending(
         return items
     except Exception as exc:
         SafeLogger.warn(f"Hugging Face Trending fetch failed: {type(exc).__name__}")
+        return []
+
+
+def _score_api_item(item, published_at, now_utc, recent_topics, recent_categories, watch_topics):
+    item["score"] = calculate_relevance_score(
+        item, published_at, now_utc, recent_topics, recent_categories, watch_topics
+    )
+    return item
+
+
+async def fetch_hf_daily_papers(
+    client,
+    seen_links=None,
+    recent_topics=None,
+    recent_categories=None,
+    watch_topics=None,
+    days_lookback=3,
+    limit=15,
+    min_upvotes=5,
+):
+    """Fetch upvote-ranked Hugging Face Daily Papers as scored curation entries."""
+    try:
+        response = await client.get(HF_DAILY_PAPERS_URL, params={"limit": str(limit)}, timeout=10)
+        if response.status_code != 200:
+            SafeLogger.warn(f"HF Daily Papers fetch failed: HTTP {response.status_code}")
+            return []
+        data = response.json()
+        if not isinstance(data, list):
+            SafeLogger.warn("HF Daily Papers returned an invalid payload.")
+            return []
+
+        from src.utils import normalize_url
+        now_utc = datetime.now(timezone.utc)
+        cutoff = now_utc - timedelta(days=days_lookback)
+        normalized_seen = {normalize_url(link) for link in (seen_links or []) if link}
+        items = []
+        for entry in data:
+            try:
+                paper = entry.get("paper") or {}
+                paper_id = paper.get("id")
+                title = str(entry.get("title") or paper.get("title") or "").strip()
+                summary = _MARKDOWN_STRIP_RE.sub("", str(entry.get("summary") or paper.get("summary") or "")).strip()
+                if not paper_id or not title or not summary or (paper.get("upvotes") or 0) < min_upvotes:
+                    continue
+                published_at = datetime.fromisoformat(str(entry.get("publishedAt") or paper.get("publishedAt")).replace("Z", "+00:00"))
+                if published_at.tzinfo is None:
+                    published_at = published_at.replace(tzinfo=timezone.utc)
+                link = normalize_url(f"https://huggingface.co/papers/{paper_id}")
+                if published_at < cutoff or link in normalized_seen:
+                    continue
+                items.append(_score_api_item({
+                    "title": title,
+                    "summary": f"{paper.get('upvotes', 0)} upvotes on HF Daily Papers. {summary}"[:FEED_SUMMARY_MAX_CHARS],
+                    "link": link,
+                    "published": published_at.isoformat(),
+                    "source": "Hugging Face Daily Papers",
+                    "source_url": HF_DAILY_PAPERS_URL,
+                    "source_id": "hf_daily_papers",
+                }, published_at, now_utc, recent_topics, recent_categories, watch_topics))
+            except (AttributeError, TypeError, ValueError):
+                continue
+        return items
+    except Exception as exc:
+        SafeLogger.warn(f"HF Daily Papers fetch failed: {type(exc).__name__}")
+        return []
+
+
+async def fetch_hacker_news(
+    client,
+    seen_links=None,
+    recent_topics=None,
+    recent_categories=None,
+    watch_topics=None,
+    days_lookback=2,
+    min_points=100,
+    queries=("LLM", "AI model"),
+):
+    """Fetch popular AI stories from Hacker News (Algolia API) as scored curation entries."""
+    try:
+        from src.utils import normalize_url
+        now_utc = datetime.now(timezone.utc)
+        cutoff = now_utc - timedelta(days=days_lookback)
+        responses = await asyncio.gather(*[
+            client.get(HN_SEARCH_URL, params={
+                "tags": "story",
+                "query": query,
+                "numericFilters": f"points>{min_points},created_at_i>{int(cutoff.timestamp())}",
+                "hitsPerPage": "10",
+            }, timeout=10)
+            for query in queries
+        ], return_exceptions=True)
+
+        normalized_seen = {normalize_url(link) for link in (seen_links or []) if link}
+        items = {}
+        for response in responses:
+            if isinstance(response, Exception) or response.status_code != 200:
+                SafeLogger.warn("Hacker News fetch failed for one query.")
+                continue
+            for hit in (response.json().get("hits") or []):
+                try:
+                    url, title = hit.get("url"), str(hit.get("title") or "").strip()
+                    if not url or not title:
+                        continue
+                    link = normalize_url(url)
+                    if link in normalized_seen or link in items:
+                        continue
+                    published_at = datetime.fromtimestamp(int(hit["created_at_i"]), tz=timezone.utc)
+                    items[link] = _score_api_item({
+                        "title": title,
+                        "summary": f"{hit.get('points', 0)} points and {hit.get('num_comments', 0)} comments on Hacker News.",
+                        "link": link,
+                        "published": published_at.isoformat(),
+                        "source": "Hacker News",
+                        "source_url": HN_SEARCH_URL,
+                        "source_id": "hn_ai",
+                    }, published_at, now_utc, recent_topics, recent_categories, watch_topics)
+                except (AttributeError, KeyError, TypeError, ValueError):
+                    continue
+        return list(items.values())
+    except Exception as exc:
+        SafeLogger.warn(f"Hacker News fetch failed: {type(exc).__name__}")
         return []
 
 
@@ -1070,7 +1192,19 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
     tasks = [fetch_single_feed(client, url, now_utc - timedelta(days=days_lookback), now_utc, seen_links or [], recent_topics, recent_categories, watch_topics) for url in source_list]
     hf_task = None
     gh_task = None
+    extra_tasks = []
     if include_api_sources:
+        extra_tasks = [
+            asyncio.create_task(fn(
+                client,
+                seen_links=seen_links or [],
+                recent_topics=recent_topics,
+                recent_categories=recent_categories,
+                watch_topics=watch_topics,
+                days_lookback=days_lookback,
+            ))
+            for fn in (fetch_hf_daily_papers, fetch_hacker_news)
+        ]
         hf_task = asyncio.create_task(fetch_hf_trending(
             client,
             seen_links=seen_links or [],
@@ -1098,6 +1232,8 @@ async def fetch_news(client, seen_links=None, recent_topics=None, feed_list=None
         all_raw_entries.extend(await hf_task)
     if gh_task:
         all_raw_entries.extend(await gh_task)
+    for task in extra_tasks:
+        all_raw_entries.extend(await task)
 
     # Canonical URL deduplication
     from src.utils import normalize_url
@@ -1421,6 +1557,17 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
         if item.get('consensus_synergy') and item.get('supporting_sources'):
             source_item["corroborated_by"] = item["supporting_sources"]
         source_items.append(source_item)
+
+    # Ground the lead story in the article body, not just the 500-char feed blurb.
+    # Any failure leaves the RSS summary in place.
+    try:
+        from src.linkedin_draft import fetch_source_text
+        async with httpx.AsyncClient() as http_client:
+            full_text = await fetch_source_text(http_client, news_items[0].get("link", ""))
+        if full_text:
+            source_items[0]["article_text"] = full_text
+    except Exception as exc:
+        SafeLogger.warn(f"Full-article fetch skipped: {type(exc).__name__}")
     news_text = json.dumps(source_items, ensure_ascii=False)
 
     # Multi-platform output requirement
@@ -1472,9 +1619,9 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
                 "system_instruction": combined_instruction,
                 "automatic_function_calling": types.AutomaticFunctionCallingConfig(disable=True),
             }
-            # gemini-3.7-flash and gemini-3.6-flash omit legacy temperature
+            # gemini-3.8-flash, gemini-3.7-flash and gemini-3.6-flash omit legacy temperature
             normalized = normalize_gemini_model_id(model_id)
-            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+            if normalized not in ("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"):
                 config_args["temperature"] = 0.7
 
             # Apply thinking config if supported
@@ -1642,7 +1789,7 @@ async def summarize_update(
                 "automatic_function_calling": types.AutomaticFunctionCallingConfig(disable=True),
             }
             normalized = normalize_gemini_model_id(model_id)
-            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+            if normalized not in ("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"):
                 config_args["temperature"] = 0.5
 
             response = await client.aio.models.generate_content(
@@ -1731,7 +1878,7 @@ async def remix_platform_draft(
                 "system_instruction": CURATOR_SYSTEM_INSTRUCTION,
             }
             normalized = normalize_gemini_model_id(model_id)
-            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+            if normalized not in ("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"):
                 config_args["temperature"] = 0.7
 
             if supports_thinking(model_id):
@@ -1795,7 +1942,7 @@ async def remix_all_drafts(
                 "system_instruction": CURATOR_SYSTEM_INSTRUCTION,
             }
             normalized = normalize_gemini_model_id(model_id)
-            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+            if normalized not in ("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"):
                 config_args["temperature"] = 0.7
 
             if supports_thinking(model_id):
@@ -1837,9 +1984,9 @@ async def generate_mentor_insight(context):
             config_args = {
                 "system_instruction": MENTOR_SYSTEM_INSTRUCTION
             }
-            # gemini-3.7-flash and gemini-3.6-flash omit legacy temperature
+            # gemini-3.8-flash, gemini-3.7-flash and gemini-3.6-flash omit legacy temperature
             normalized = normalize_gemini_model_id(model_id)
-            if normalized not in ("gemini-3.7-flash", "gemini-3.6-flash"):
+            if normalized not in ("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"):
                 config_args["temperature"] = 0.8
 
             # Apply thinking config if supported
