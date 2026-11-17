@@ -59,16 +59,16 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Token Optimization**: Disables thinking models and imposes a hard limit of `100` max output tokens for replies to minimize latency and token overhead.
     - **Conversational Quality**: Replies address the actual comment as a peer, without persona introductions, canned thanks, hashtags, or forced broader lessons.
 - **Breakthrough Scoring Engine v5 (Elite Signal Processing)**:
-    - **Stable-ID Curation Registry (8-Tier, 45 Feeds)**:
+    - **Stable-ID Curation Registry (8-Tier, 51 Feeds)**:
 
         | Source Category | Base Score | Notes / Source Tiers |
         | :--- | :--- | :--- |
-        | **Research Labs** | `+30` | OpenAI, DeepMind, HuggingFace |
-        | **Enterprise AI** | `+25`–`+27` | Microsoft Research, AWS ML, NVIDIA Deep Learning |
+        | **Research Labs** | `+30` | OpenAI, DeepMind, HuggingFace, Anthropic (community-maintained feed), Google AI, Google Research, Mistral (`+25`–`+28`) |
+        | **Enterprise AI** | `+25`–`+27` | Microsoft Research, AWS ML, NVIDIA Deep Learning, Apple ML Research (`+22`) |
         | **Practitioner** | `+20` | Simon Willison, Interconnects, Latent Space, One Useful Thing, Sebastian Raschka, Jack Clark, Maarten Grootendorst; Hacker News (API, `+15`, 50+ points) |
-        | **Open Source** | `+18` (GitHub Fast-Rising: `+16`) | Hugging Face Transformers Releases, vLLM, Ollama, PyTorch, Hugging Face Trending (API), GitHub Fast-Rising Repositories (API) |
+        | **Open Source** | `+18` (GitHub Fast-Rising: `+16`) | Hugging Face Transformers Releases, vLLM, Ollama, PyTorch, llama.cpp, Claude Code (`+16`), Hugging Face Trending (API), GitHub Fast-Rising Repositories (API) |
         | **Infrastructure/Business** | `+15` | SemiAnalysis, Together AI, ServeTheHome, Semiconductor Engineering, Sequoia, CB Insights |
-        | **Journalism** | `+12` | The Verge, Wired, MIT Tech Review, TechCrunch, VentureBeat, IEEE Spectrum, The Decoder, 404 Media, Silicon Angle, The Sequence, Marktechpost, AI Accelerator Institute |
+        | **Journalism** | `+12` | Ars Technica, The Verge, Wired, MIT Tech Review, TechCrunch, VentureBeat, IEEE Spectrum, The Decoder, 404 Media, Silicon Angle, The Sequence, Marktechpost, AI Accelerator Institute |
         | **Academic** | `+10` | arXiv CS.LG, The Gradient, BAIR Blog, ML Mastery; Hugging Face Daily Papers (API, `+18`, 10+ upvotes) |
         | **Critical / Policy & Security** | `+5`–`+10` | AI Incident Database and EU AI Act Tracker (`+10`); AI Snake Oil, Gary Marcus, Algorithmic Bridge, Victoria Krakovna (`+5`) |
     - **Curation Boosts & Penalties**:
@@ -79,7 +79,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - **Time Decay**: `-0.5` / hour (Linearly decays relevance score over time)
         - **Progressive Recency-weighted Category Penalty**: Automatically applies a penalty decay for recurring categories to keep feeds varied.
     - **Writing-Style Rotation**: Least-Recently-Used (LRU) selection across 4 content structures: strategic shift, practical workflow, risk/verification, and enterprise ROI.
-    - **Curated Source Network**: **45 RSS feeds plus four API sources** (Hugging Face Trending, GitHub Fast-Rising Repositories, Hugging Face Daily Papers, and Hacker News) across 8 tiers, with API sources excluded from RSS health tracking.
+    - **Curated Source Network**: **51 RSS feeds plus four API sources** (Hugging Face Trending, GitHub Fast-Rising Repositories, Hugging Face Daily Papers, and Hacker News) across 8 tiers, with API sources excluded from RSS health tracking.
     - **Bluesky Source Receipts**: Optionally replies to corroborated Bluesky posts with up to two aligned source links, only after the root publication has been durably settled.
     - **Friday Evening Roundup**: Automatically replaces the scheduled Friday 18:17 UTC broadcast with a weekly digest summarizing the top 1–5 stories published during the ISO week, ranked by live Bluesky engagement and threaded with exact URL preservation. Skips if already published or reserved, and falls back to normal curation if zero eligible stories are found. Can be triggered manually with `--roundup`.
 

@@ -94,12 +94,17 @@ SOURCE_REGISTRY = [
     # === Tier 1: AI Research Labs (base 30) ===
     {"id": "openai_news",         "name": "OpenAI News",         "url": "https://openai.com/news/rss.xml",                                    "category": "research_lab",   "quality": "official",   "base_score": 30},
     {"id": "deepmind_blog",       "name": "DeepMind Blog",       "url": "https://deepmind.google/blog/rss.xml",                               "category": "research_lab",   "quality": "official",   "base_score": 30},
+    {"id": "anthropic_news", "name": "Anthropic News (community feed)", "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml", "category": "research_lab", "quality": "official", "base_score": 30},
+    {"id": "google_ai_blog", "name": "Google AI Blog", "url": "https://blog.google/technology/ai/rss/", "category": "research_lab", "quality": "official", "base_score": 28},
+    {"id": "google_research", "name": "Google Research Blog", "url": "https://research.google/blog/rss/", "category": "research_lab", "quality": "official", "base_score": 25},
+    {"id": "mistral_news", "name": "Mistral AI", "url": "https://mistral.ai/rss.xml", "category": "research_lab", "quality": "official", "base_score": 25},
     {"id": "huggingface_blog",    "name": "HuggingFace Blog",    "url": "https://huggingface.co/blog/feed.xml",                               "category": "research_lab",   "quality": "official",   "base_score": 30},
 
     # === Tier 2: Enterprise AI Blogs (base 25-27) ===
     {"id": "microsoft_research",  "name": "Microsoft Research",  "url": "https://www.microsoft.com/en-us/research/blog/feed/",                "category": "enterprise",     "quality": "official",   "base_score": 25},
     {"id": "aws_ml_blog",         "name": "AWS ML Blog",         "url": "https://aws.amazon.com/blogs/machine-learning/feed/",                "category": "enterprise",     "quality": "official",   "base_score": 25},
     {"id": "nvidia_dl_blog",      "name": "NVIDIA Deep Learning","url": "https://blogs.nvidia.com/blog/category/deep-learning/feed/",         "category": "enterprise",     "quality": "official",   "base_score": 27},
+    {"id": "apple_ml", "name": "Apple Machine Learning Research", "url": "https://machinelearning.apple.com/rss.xml", "category": "enterprise", "quality": "official", "base_score": 22},
 
     # === Tier 3: Practitioner / Developer Ecosystem (base 20) ===
     {"id": "simon_willison",      "name": "Simon Willison",      "url": "https://simonwillison.net/atom/everything/",                         "category": "practitioner",   "quality": "opinion",    "base_score": 20},
@@ -115,13 +120,14 @@ SOURCE_REGISTRY = [
     {"id": "vllm_releases",       "name": "vLLM Releases",                   "url": "https://github.com/vllm-project/vllm/releases.atom",         "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
     {"id": "ollama_releases",     "name": "Ollama Releases",                 "url": "https://github.com/ollama/ollama/releases.atom",             "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
     {"id": "pytorch_releases",    "name": "PyTorch Releases",                "url": "https://github.com/pytorch/pytorch/releases.atom",            "category": "open_source",    "quality": "official",   "base_score": 18}, # EVALUATION
+    {"id": "llamacpp_releases", "name": "llama.cpp Releases", "url": "https://github.com/ggml-org/llama.cpp/releases.atom", "category": "open_source", "quality": "official", "base_score": 18},
+    {"id": "claude_code_releases", "name": "Claude Code Releases", "url": "https://github.com/anthropics/claude-code/releases.atom", "category": "open_source", "quality": "official", "base_score": 16},
     {"id": "hf_trending",         "name": "Hugging Face Trending",            "url": HF_MODELS_API_URL,                                                   "category": "open_source",    "quality": "community",  "base_score": 18, "kind": "api"},
     {"id": "github_rising",       "name": "GitHub Fast-Rising Repositories",   "url": GITHUB_SEARCH_REPOS_URL,                                             "category": "open_source",    "quality": "community",  "base_score": 16, "kind": "api"},
     {"id": "hf_daily_papers",     "name": "Hugging Face Daily Papers",         "url": HF_DAILY_PAPERS_URL,                                                 "category": "academic",       "quality": "community",  "base_score": 18, "kind": "api"},
     {"id": "hn_ai",               "name": "Hacker News",                       "url": HN_SEARCH_URL,                                                       "category": "practitioner",   "quality": "community",  "base_score": 15, "kind": "api"},
 
     # === Tier 5: Infrastructure / Business Analysis (base 15) ===
-    {"id": "semianalysis",        "name": "SemiAnalysis",        "url": "https://semianalysis.com/feed/",                                     "category": "infrastructure", "quality": "opinion",    "base_score": 15},
     {"id": "together_ai",         "name": "Together AI Blog",    "url": "https://www.together.ai/blog/rss.xml",                               "category": "infrastructure", "quality": "official",   "base_score": 15},
     {"id": "servethehome",        "name": "ServeTheHome",        "url": "https://www.servethehome.com/feed/",                                 "category": "infrastructure", "quality": "journalism", "base_score": 15}, # EVALUATION
     {"id": "semiengineering",     "name": "Semiconductor Engineering", "url": "https://semiengineering.com/feed/",                             "category": "infrastructure", "quality": "journalism", "base_score": 15}, # EVALUATION
@@ -132,6 +138,7 @@ SOURCE_REGISTRY = [
     {"id": "ai_incident_db",      "name": "AI Incident Database", "url": "https://incidentdatabase.ai/rss.xml",                                 "category": "critical",       "quality": "official",   "base_score": 10}, # EVALUATION
     {"id": "eu_ai_act",           "name": "EU AI Act Tracker",   "url": "https://artificialintelligenceact.eu/feed/",                         "category": "critical",       "quality": "official",   "base_score": 10}, # EVALUATION
     {"id": "the_verge_ai",        "name": "The Verge AI",        "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",  "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "ars_ai", "name": "Ars Technica AI", "url": "https://arstechnica.com/ai/feed/", "category": "journalism", "quality": "journalism", "base_score": 12},
     {"id": "mit_tech_review",     "name": "MIT Tech Review AI",  "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed/","category": "journalism",   "quality": "journalism", "base_score": 12},
     {"id": "ieee_spectrum",       "name": "IEEE Spectrum AI",    "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "the_decoder",         "name": "The Decoder",         "url": "https://www.the-decoder.com/feed/",                                  "category": "journalism",     "quality": "journalism", "base_score": 12},
@@ -146,7 +153,6 @@ SOURCE_REGISTRY = [
 
     # === Tier 7: Academic (base 10) ===
     {"id": "arxiv_cslg",          "name": "arXiv CS.LG",         "url": "https://arxiv.org/rss/cs.LG",                                        "category": "academic",       "quality": "academic",   "base_score": 10},
-    {"id": "the_gradient",        "name": "The Gradient",        "url": "https://thegradient.pub/rss/",                                       "category": "academic",       "quality": "academic",   "base_score": 10},
     {"id": "bair_blog",           "name": "BAIR Blog",           "url": "https://bair.berkeley.edu/blog/feed.xml",                             "category": "academic",       "quality": "academic",   "base_score": 10},
     {"id": "ml_mastery",          "name": "ML Mastery",          "url": "https://machinelearningmastery.com/feed/",                            "category": "academic",       "quality": "academic",   "base_score": 10},
 
