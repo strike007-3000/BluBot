@@ -154,7 +154,8 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         if feed.bozo and not feed.entries:
             return url, [], False, "Parse error/Invalid RSS"
         if not feed.entries:
-            return url, [], False, "Empty feed"
+            # arXiv's feed is legitimately empty outside its announcement windows.
+            return url, [], "arxiv.org" in url, None if "arxiv.org" in url else "Empty feed"
 
         items = []
         from src.utils import normalize_url
