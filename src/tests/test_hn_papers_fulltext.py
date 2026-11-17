@@ -84,3 +84,16 @@ async def test_summarize_news_adds_article_text_only_when_fetched(monkeypatch, f
     contents = mock_client.aio.models.generate_content.await_args.kwargs["contents"]
     assert ("Full body text." in contents) is expect_field
     assert "blurb" in contents
+
+
+@pytest.mark.asyncio
+async def test_safe_fetch_stops_at_max_bytes(monkeypatch):
+    import httpx
+    from src.utils import get_with_safe_redirects
+
+    monkeypatch.setattr("src.utils._resolve_public_ip_candidates", lambda host: ["93.184.216.34"])
+    transport = httpx.MockTransport(lambda req: httpx.Response(200, content=b"x" * 50_000))
+    async with httpx.AsyncClient(transport=transport) as client:
+        resp = await get_with_safe_redirects(client, "https://example.com/big", max_bytes=1_000)
+
+    assert resp.status_code == 200 and len(resp.content) == 1_000
