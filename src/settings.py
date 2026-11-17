@@ -31,7 +31,6 @@ class Settings:
     breaking_min_score: float = 40.0
     breaking_max_age_hours: float = 6.0
     breaking_cooldown_hours: float = 3.0
-    breaking_max_posts_24h: int = 4
     github_event: str = "schedule"
     image_provider: str = "cloudflare"
     cloudflare_account_id: Optional[str] = None
@@ -119,7 +118,6 @@ class Settings:
             "breaking_min_score": float(os.getenv("BREAKING_MIN_SCORE", "40")),
             "breaking_max_age_hours": float(os.getenv("BREAKING_MAX_AGE_HOURS", "6")),
             "breaking_cooldown_hours": float(os.getenv("BREAKING_COOLDOWN_HOURS", "3")),
-            "breaking_max_posts_24h": int(os.getenv("BREAKING_MAX_POSTS_24H", "4")),
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
             "cloudflare_account_id": os.getenv("CLOUDFLARE_ACCOUNT_ID"),

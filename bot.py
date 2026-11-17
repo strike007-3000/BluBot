@@ -890,6 +890,7 @@ async def settle_persistence_stage(
             thread_roots=thread_roots,
             summary=matched_article.summary,
             source_published_at=matched_article.published,
+            breaking=getattr(settings, "breaking_only", False) is True,
         )
 
         state.setdefault("links", [])
@@ -1514,7 +1515,7 @@ async def main():
         force_roundup = getattr(settings, "force_roundup", False) is True
         # P1 fix: Do not consume or discard an explicit topic or curate command on Friday evening
         is_friday_evening_roundup = (
-            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type not in ("topic", "news"))
+            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type not in ("topic", "news") and not breaking_lane)
             or force_roundup
         )
         if is_friday_evening_roundup:
@@ -1534,7 +1535,7 @@ async def main():
             ledger = (await asyncio.to_thread(load_seen_articles)).get("published_posts", [])
             if not select_breaking(
                 curation.top_articles, ledger, now, settings.breaking_min_score,
-                settings.breaking_max_age_hours, settings.breaking_cooldown_hours, settings.breaking_max_posts_24h,
+                settings.breaking_max_age_hours, settings.breaking_cooldown_hours,
             ):
                 SafeLogger.info("Breaking lane: no story clears the bar. Nothing posted.")
                 return

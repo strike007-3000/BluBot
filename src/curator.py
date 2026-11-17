@@ -348,17 +348,18 @@ async def fetch_hf_trending(
         return []
 
 
-def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_hours, max_posts_24h):
-    """Return the lead article if it is strong and fresh enough to post outside a scheduled slot."""
-    posted = []
+def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_hours):
+    """Return the lead article if it is strong and fresh enough to post outside a scheduled slot.
+
+    Limits: nothing within `cooldown_hours` of any post, and at most one breaking post per rolling 24h.
+    """
     for entry in ledger or []:
         try:
-            posted.append(datetime.fromisoformat(str(entry["published_at"]).replace("Z", "+00:00")))
+            age_h = (now - datetime.fromisoformat(str(entry["published_at"]).replace("Z", "+00:00"))).total_seconds() / 3600
         except (KeyError, ValueError):
             continue
-    ages_h = [(now - t).total_seconds() / 3600 for t in posted]
-    if any(a < cooldown_hours for a in ages_h) or sum(1 for a in ages_h if a < 24) >= max_posts_24h:
-        return None
+        if age_h < cooldown_hours or (entry.get("breaking") and age_h < 24):
+            return None
     if not articles:
         return None
     lead = articles[0]

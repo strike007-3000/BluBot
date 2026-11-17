@@ -16,7 +16,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Output Repair**: Strips accidental markdown formatting, applies platform-specific hashtag policy, and repairs overlong output without splitting URLs.
     - **Model Discovery**: Lists the models available to the configured key and keeps only exact matches from the approved priority list; if discovery fails, the defaults remain available for runtime failover.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
-- **Breaking-News Lane**: An hourly weekday run posts outside the three scheduled slots only when the top story scores 40+ and is under 6 hours old (3-hour cooldown, at most 4 posts per rolling 24 hours); otherwise it exits before any Gemini call. Thresholds are env-tunable (`BREAKING_*`).
+- **Breaking-News Lane**: An hourly weekday run posts outside the three scheduled slots only when the top story scores 40+ and is under 6 hours old (3-hour cooldown after any post, at most one breaking post per rolling 24 hours); otherwise it exits before any Gemini call. Thresholds are env-tunable (`BREAKING_*`).
 - **Full-Article Grounding**: Synthesis receives each story's article body (6,000 chars for the lead, 2,000 for the rest, via the SSRF-safe 1 MB-capped fetcher), falling back to the RSS summary when a fetch fails.
 - **🖼️ Unified Media Strategy Stage**:
     - **Single Media Decision Point**: Decides if a post should contain media, extracts and validates OpenGraph metadata, generates a visual prompt, uses the configured image-provider fallback chain when necessary, and compiles everything into a single `MediaAsset`.
