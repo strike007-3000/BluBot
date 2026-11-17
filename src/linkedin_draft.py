@@ -44,7 +44,7 @@ async def fetch_source_text(client, url: str) -> Optional[str]:
         text = _collapse(" ".join(parts))[:SOURCE_TEXT_MAX_CHARS]
         return text or None
     except Exception as e:
-        SafeLogger.warn(f"LinkedIn source fetch failed for {url}: {e}")
+        SafeLogger.warn(f"Source article fetch failed for {url}: {e}")
         return None
 
 

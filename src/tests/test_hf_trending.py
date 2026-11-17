@@ -205,6 +205,7 @@ async def test_hf_model_card_excerpt_reaches_synthesis(monkeypatch):
     monkeypatch.setattr("google.genai.Client", lambda api_key: mock_client)
     monkeypatch.setattr("src.curator.GEMINI_MODEL_PRIORITY", ["models/gemini-3.5-flash-lite"])
     monkeypatch.setattr("src.curator.settings", Settings(gemini_key="test", is_dry_run=False))
+    monkeypatch.setattr("src.linkedin_draft.fetch_source_text", AsyncMock(return_value=None))
     excerpt = "Fresh translates technical documents while preserving terminology and document structure across long inputs."
 
     await summarize_news([{

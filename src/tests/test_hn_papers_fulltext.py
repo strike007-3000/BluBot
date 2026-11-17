@@ -23,7 +23,7 @@ def test_new_api_sources_registered_and_not_rss():
 @pytest.mark.asyncio
 async def test_hf_daily_papers_filters_and_shapes():
     now = datetime.now(timezone.utc)
-    ok = {"paper": {"id": "2611.1", "upvotes": 9}, "title": "Good Paper", "summary": "Does X.",
+    ok = {"paper": {"id": "2611.1", "upvotes": 12}, "title": "Good Paper", "summary": "Does X.",
           "publishedAt": (now - timedelta(hours=5)).isoformat()}
     low = {"paper": {"id": "2611.2", "upvotes": 1}, "title": "Low", "summary": "s", "publishedAt": now.isoformat()}
     old = {"paper": {"id": "2611.3", "upvotes": 50}, "title": "Old", "summary": "s",
@@ -97,3 +97,22 @@ async def test_safe_fetch_stops_at_max_bytes(monkeypatch):
         resp = await get_with_safe_redirects(client, "https://example.com/big", max_bytes=1_000)
 
     assert resp.status_code == 200 and len(resp.content) == 1_000
+
+
+@pytest.mark.asyncio
+async def test_non_lead_stories_get_shorter_article_excerpt(monkeypatch):
+    mock_client = MagicMock()
+    mock_client.aio.models.generate_content = AsyncMock(return_value=MagicMock(text=(
+        '{"topic":"AI","bluesky":"A specific observation about the story.","threads":"A conversational take.","mastodon":"A technical overview. #AI"}'
+    )))
+    monkeypatch.setattr("google.genai.Client", lambda api_key: mock_client)
+    monkeypatch.setattr("src.curator.GEMINI_MODEL_PRIORITY", ["models/gemini-3.5-flash-lite"])
+    monkeypatch.setattr("src.curator.settings", Settings(gemini_key="test", is_dry_run=False))
+    monkeypatch.setattr("src.linkedin_draft.fetch_source_text", AsyncMock(return_value="y" * 6000))
+
+    items = [{"title": f"T{i}", "source": "S", "summary": "b", "link": f"https://example.com/{i}"} for i in range(2)]
+    await summarize_news(items, {"day": "Monday", "session": "Morning Intelligence"})
+
+    contents = mock_client.aio.models.generate_content.await_args.kwargs["contents"]
+    assert "y" * 6000 in contents and "y" * 6001 not in contents
+    assert contents.count("y" * 2000) == 4  # lead (6000) holds three 2000-runs; the other story holds one

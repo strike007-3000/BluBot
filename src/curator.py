@@ -31,6 +31,7 @@ from urllib.parse import urlparse
 from src.utils import retry_with_backoff, SafeLogger
 from src.models import ImageValidationResult
 
+ARTICLE_EXCERPT_CHARS = 2000
 _MARKDOWN_STRIP_RE = re.compile(r'(\*\*|__|\*)')
 
 def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recent_categories=None, watch_topics=None):
@@ -360,9 +361,9 @@ async def fetch_hf_daily_papers(
     recent_topics=None,
     recent_categories=None,
     watch_topics=None,
-    days_lookback=3,
-    limit=15,
-    min_upvotes=5,
+    days_lookback=7,
+    limit=30,
+    min_upvotes=10,
 ):
     """Fetch upvote-ranked Hugging Face Daily Papers as scored curation entries."""
     try:
@@ -418,8 +419,8 @@ async def fetch_hacker_news(
     recent_categories=None,
     watch_topics=None,
     days_lookback=2,
-    min_points=100,
-    queries=("LLM", "AI model"),
+    min_points=50,
+    queries=("LLM", "AI agent", "open source model"),
 ):
     """Fetch popular AI stories from Hacker News (Algolia API) as scored curation entries."""
     try:
@@ -1558,14 +1559,17 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
             source_item["corroborated_by"] = item["supporting_sources"]
         source_items.append(source_item)
 
-    # Ground the lead story in the article body, not just the 500-char feed blurb.
-    # Any failure leaves the RSS summary in place.
+    # Ground each story in its article body, not just the 500-char feed blurb. The lead gets the
+    # full cap, the rest a shorter excerpt. Any failure leaves the RSS summary in place.
     try:
         from src.linkedin_draft import fetch_source_text
         async with httpx.AsyncClient() as http_client:
-            full_text = await fetch_source_text(http_client, news_items[0].get("link", ""))
-        if full_text:
-            source_items[0]["article_text"] = full_text
+            texts = await asyncio.gather(*[
+                fetch_source_text(http_client, item.get("link", "")) for item in news_items
+            ], return_exceptions=True)
+        for index, (source_item, text) in enumerate(zip(source_items, texts)):
+            if isinstance(text, str) and text:
+                source_item["article_text"] = text if index == 0 else text[:ARTICLE_EXCERPT_CHARS]
     except Exception as exc:
         SafeLogger.warn(f"Full-article fetch skipped: {type(exc).__name__}")
     news_text = json.dumps(source_items, ensure_ascii=False)
