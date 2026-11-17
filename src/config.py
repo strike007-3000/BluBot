@@ -60,6 +60,7 @@ NVIDIA_INVOKE_URL = "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffu
 GEMINI_MODEL_PRIORITY = [
     "models/gemini-3.5-flash-lite",
     "models/gemini-3.8-flash",
+    "models/gemini-4-hydrogen",
     "models/gemini-3.7-flash",
     "models/gemini-3.6-flash",
     "models/gemini-2.5-flash-lite",

@@ -1621,7 +1621,7 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
             }
             # gemini-3.8-flash, gemini-3.7-flash and gemini-3.6-flash omit legacy temperature
             normalized = normalize_gemini_model_id(model_id)
-            if normalized not in ("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"):
+            if normalized not in ("gemini-4-hydrogen", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"):
                 config_args["temperature"] = 0.7
 
             # Apply thinking config if supported

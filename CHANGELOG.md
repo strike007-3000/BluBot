@@ -4,7 +4,7 @@ All notable changes to BluBot. The current version is in [VERSION](VERSION).
 - **v3.41.0**: **Wider sources and full-article grounding**.
   - New API sources: Hacker News (Algolia, 100+ points, LLM/AI queries) and Hugging Face Daily Papers (5+ upvotes), scored and deduplicated like the existing API sources.
   - The lead story's article body (up to 6,000 chars, via the SSRF-safe fetcher) now reaches synthesis as `article_text`; a failed fetch falls back to the RSS summary.
-  - Model chain adds `gemini-3.8-flash` (pruned automatically if the key lacks it).
+  - Model chain adds `gemini-3.8-flash` and `gemini-4-hydrogen` (IDs confirmed against the key's model list).
 - **v3.40.0**: **Weekly LinkedIn draft (manual posting)**.
   - New `linkedin_weekly.py` and `linkedin_weekly.yml` (Sundays 12:00 UTC, also manual): shortlists three of the week's published stories in Telegram, drafts one LinkedIn post in the owner's voice with an optional personal take, verifies it against the source (rules, numbers, claims), and delivers it for manual posting. Nothing is posted to LinkedIn.
   - One 10-minute Telegram budget; a timeout auto-drafts the first story, labelled unreviewed. Independent of the daily bot and the Friday roundup.
