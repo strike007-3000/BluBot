@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-17 | 🔍 Afternoon Deep Dive (LLM Inference Optimization & Cost Reduction) |
+| **Broadcaster** | Operational | 2026-11-18 | 🔍 Night Reflection (Amazon SageMaker AI KV Cache-Aware Routing) |
  Fable 5.2
 and Mythos 5.2 launched) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
