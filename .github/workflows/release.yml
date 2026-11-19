@@ -16,7 +16,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -41,8 +41,9 @@ jobs:
 
       - name: Extract Changelog
         id: changelog
+        env:
+          TAG_VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          TAG_VERSION=${{ steps.get_version.outputs.version }}
           # Extract section from CHANGELOG.md
           # It looks for a line containing the version (e.g. v3.3) 
           # and takes everything until the next line starting with '- **' (another entry)
@@ -60,7 +61,7 @@ jobs:
           echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
           tag_name: "v${{ steps.get_version.outputs.version }}"
           body_path: release_notes.md
