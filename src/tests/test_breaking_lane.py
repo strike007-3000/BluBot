@@ -51,3 +51,11 @@ def test_append_published_post_records_breaking_marker():
     entry = append_published_post(state, url="https://e.com/a", title="A", breaking=True)
     normal = append_published_post(state, url="https://e.com/b", title="B")
     assert entry["breaking"] is True and "breaking" not in normal
+
+
+def test_archive_marks_breaking_cards():
+    from scripts.build_archive import build_html
+    e = {"url": "https://e.com/a", "title": "T", "published_at": "2026-11-19T10:00:00+00:00"}
+    html = build_html([{**e, "breaking": True}, {**e, "url": "https://e.com/b"}])
+    assert html.count('badge-breaking">Breaking') == 1 and html.count('data-breaking="true"') == 1
+    assert 'value="breaking"' in html

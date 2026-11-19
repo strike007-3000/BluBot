@@ -137,6 +137,13 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
 
     return True
 
+def _mark_quiet_run():
+    """Tell the workflow nothing was posted so it skips the Pages rebuild."""
+    if path := os.getenv("GITHUB_OUTPUT"):
+        with open(path, "a") as f:
+            f.write("quiet=true\n")
+
+
 async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None, news: Optional[dict] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
     seen_data = await asyncio.to_thread(load_seen_articles)
@@ -1538,6 +1545,7 @@ async def main():
                 settings.breaking_max_age_hours, settings.breaking_cooldown_hours,
             ):
                 SafeLogger.info("Breaking lane: no story clears the bar. Nothing posted.")
+                _mark_quiet_run()
                 return
             SafeLogger.info(f"Breaking lane: posting '{curation.top_articles[0].title}'.")
 
@@ -1630,6 +1638,7 @@ async def main():
         # Synthesis may pick a different lead than the one that cleared the bar; post nothing then.
         if breaking_lane and normalize_url(synthesis.lead_link or "") != normalize_url(curation.top_articles[0].link or ""):
             SafeLogger.info("Breaking lane: synthesis chose a different lead than the approved story. Nothing posted.")
+            _mark_quiet_run()
             return
 
         # 2.2 Media Strategy Decision
