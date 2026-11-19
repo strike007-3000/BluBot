@@ -102,6 +102,8 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
 ### 🤫2. Configure GitHub Secrets
 
+> **Store these as environment secrets, not repository secrets.** Create a `production` environment (Settings → Environments), set **Deployment branches and tags** to *Selected branches* → `main`, add every secret below to that environment, then delete any repository-level copies. Every workflow job that reads a secret declares `environment: production`, so secrets are only released to runs from `main`; a workflow run from any other pushed branch gets none. `src/tests/test_workflow_environments.py` fails CI if a job reads `secrets.*` without declaring an environment. Do not rename secrets: workflows reference these exact names. `REPO_TOKEN` should be a fine-grained token limited to this repository (Contents and Pull requests read/write) with an expiry date.
+
 | Secret Name | Required | Description |
 |-------------|----------|-------------|
 | `BSKY_HANDLE` | **Yes** | Your Bluesky handle |
