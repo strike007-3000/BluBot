@@ -17,6 +17,7 @@ from scripts.build_archive import (
     compute_guid,
     compute_html_id,
     compute_trust_stats,
+    display_title,
     extract_display_domain,
     fetch_metrics_best_effort,
     format_human_date,
@@ -714,3 +715,18 @@ def test_archive_uses_unique_story_id_for_recurring_titles():
     assert f'href="{second_anchor}"' in html_out
 
 
+
+
+def test_display_title_normalization():
+    c = "trunk/8a9a9e737dba491a2eea270641bff86eea6e1ea2: Apply one precedence rule to all forwarded build env vars (#201666)"
+    assert display_title({"title": c}) == "Apply one precedence rule to all forwarded build env vars"
+    r = {"title": "Release v5.23.0", "url": "https://github.com/huggingface/transformers/releases/tag/v5.23.0"}
+    assert display_title(r) == "transformers Release v5.23.0"
+    assert display_title({"title": "Release v1.0", "url": "https://x.com/a", "source": "Foo"}) == "Foo Release v1.0"
+    long = "Gemini Decisions API evaluates closed-set questions with consent.Multiple outcomes are possible " * 6
+    out = display_title({"title": long})
+    assert len(out) <= 115 and out.endswith("…") and "consent. Multiple" in out
+    assert display_title({"title": "introducing Gemini 4 Hydrogen, fast"}) == "Introducing Gemini 4 Hydrogen, fast"
+    good = "NVIDIA CEO and Co-Founder Jensen Huang Resigns, Effective Immediately"
+    assert display_title({"title": good}) == good
+    assert "Apply one" in build_html([{"title": c, "url": "https://example.com/a", "published_at": "2026-01-01T00:00:00+00:00"}])
