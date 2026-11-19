@@ -22,7 +22,7 @@ To prevent supply-chain attacks via unvetted transitive dependencies, BluBot gen
 
 **How to update dependencies:**
 1. Add the new library to `requirements.in`.
-2. Run: `uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt`.
+2. Run: `uv pip compile requirements.in --python-version 3.13 --generate-hashes --no-annotate --output-file requirements.txt`.
 3. Commit both files.
 
 ### SSRF Protection

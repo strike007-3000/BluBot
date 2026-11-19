@@ -7,7 +7,7 @@ lets any pushed branch exfiltrate them.
 import re
 from pathlib import Path
 
-WORKFLOWS = sorted((Path(__file__).resolve().parents[2] / ".github" / "workflows").glob("*.yml"))
+WORKFLOWS = sorted(p for p in (Path(__file__).resolve().parents[2] / ".github" / "workflows").iterdir() if p.suffix in {".yml", ".yaml"})
 SECRET_RE = re.compile(r"secrets\.(?!GITHUB_TOKEN\b)\w+")
 JOB_RE = re.compile(r"^  ([\w-]+):\s*$")  # job id: 2-space indent under `jobs:`
 ENV_RE = re.compile(r"^    environment:")  # job-level key: 4-space indent
