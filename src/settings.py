@@ -26,7 +26,7 @@ class Settings:
     is_dry_run: bool = False
     is_ci: bool = False
     force_roundup: bool = False
-    # Breaking-news lane: an hourly run that posts only an unusually strong, fresh story.
+    # Breaking-news lane: a periodic run that posts only an unusually strong, fresh story.
     breaking_only: bool = False
     breaking_min_score: float = 40.0
     breaking_max_age_hours: float = 6.0

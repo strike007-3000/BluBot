@@ -1627,6 +1627,10 @@ async def main():
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
         SafeLogger.info(f"Synthesis Stage: Completed in {time.monotonic() - t0:.2f}s.")
+        # Synthesis may pick a different lead than the one that cleared the bar; post nothing then.
+        if breaking_lane and normalize_url(synthesis.lead_link or "") != normalize_url(curation.top_articles[0].link or ""):
+            SafeLogger.info("Breaking lane: synthesis chose a different lead than the approved story. Nothing posted.")
+            return
 
         # 2.2 Media Strategy Decision
         t0 = time.monotonic()
@@ -1636,7 +1640,8 @@ async def main():
         SafeLogger.info(f"Media Stage: Completed in {time.monotonic() - t0:.2f}s.")
 
         # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
-        if settings.enable_telegram_approval and not settings.is_dry_run:
+        # Breaking lane skips approval (speed); the final post is still pushed to Telegram in 3.6.
+        if settings.enable_telegram_approval and not settings.is_dry_run and not breaking_lane:
             from src.models import PlatformDrafts
             initial_drafts = synthesis.drafts or PlatformDrafts.from_single(synthesis.content)
             final_drafts, final_media = await send_draft_for_approval(

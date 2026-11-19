@@ -3,7 +3,7 @@ name: Daily AI News Post
 on:
   schedule:
     - cron: '17 6,12,18 * * 1-5' # Weekday experiment: 06:17, 12:17, and 18:17 UTC
-    - cron: '47 * * * 1-5' # Hourly breaking-news lane (BREAKING_ONLY): posts only a strong, fresh story
+    - cron: '47 9,15,21 * * 1-5' # Breaking-news lane, offset 3h from scheduled slots (BREAKING_ONLY): posts only a strong, fresh story
   workflow_dispatch: # Allows manual triggering
 
 # Ensure only one run updates the state branch at a time
@@ -72,7 +72,7 @@ jobs:
           ENABLE_HASHTAGS_BSKY: ${{ vars.ENABLE_HASHTAGS_BSKY || secrets.ENABLE_HASHTAGS_BSKY || 'false' }}
           ENABLE_HASHTAGS_MASTODON: ${{ vars.ENABLE_HASHTAGS_MASTODON || secrets.ENABLE_HASHTAGS_MASTODON || 'true' }}
           ENABLE_HASHTAGS_THREADS: ${{ vars.ENABLE_HASHTAGS_THREADS || secrets.ENABLE_HASHTAGS_THREADS || 'true' }}
-          BREAKING_ONLY: ${{ github.event.schedule == '47 * * * 1-5' }}
+          BREAKING_ONLY: ${{ github.event.schedule == '47 9,15,21 * * 1-5' }}
           LOG_FORMAT: pretty
         run: python bot.py
 
