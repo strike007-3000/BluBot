@@ -727,6 +727,9 @@ def test_display_title_normalization():
     out = display_title({"title": long})
     assert len(out) <= 115 and out.endswith("…") and "consent. Multiple" in out
     assert display_title({"title": "introducing Gemini 4 Hydrogen, fast"}) == "Introducing Gemini 4 Hydrogen, fast"
+    assert display_title({"title": "(#123)"}) == "Untitled"
+    assert display_title({"title": "Release v1.0", "url": "http://[bad", "source": "Foo"}) == "Foo Release v1.0"
+    assert display_title({"title": "Release v1.0", "url": "https://github.com.evil.example/a/b", "source": "Foo"}) == "Foo Release v1.0"
     good = "NVIDIA CEO and Co-Founder Jensen Huang Resigns, Effective Immediately"
     assert display_title({"title": good}) == good
     assert "Apply one" in build_html([{"title": c, "url": "https://example.com/a", "published_at": "2026-01-01T00:00:00+00:00"}])

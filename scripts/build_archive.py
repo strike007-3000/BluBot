@@ -211,12 +211,17 @@ def display_title(entry: dict, max_len: int = 115) -> str:
         return "Untitled"
     t = re.sub(r"^[\w.\-]+/[0-9a-f]{7,40}:\s*", "", t)  # "trunk/<sha>: "
     t = re.sub(r"\s*\(#\d+\)\s*$", "", t)
+    if not t:
+        return "Untitled"
     t = re.sub(r"([a-z0-9][.!?])([A-Z])", r"\1 \2", t)  # "consent.Multiple"
     t = t[0].upper() + t[1:] if t[0].islower() else t
     if re.fullmatch(r"(?i)release\s+v?\d[\w.\-+]*", t):
-        parts = urlparse(str(entry.get("url") or "")).path.strip("/").split("/")
+        try:
+            parts = urlparse(str(entry.get("url") or "")).path.strip("/").split("/")
+        except ValueError:
+            parts = []
         host = extract_display_domain(entry.get("url") or "")
-        proj = parts[1] if "github.com" in host and len(parts) > 1 else get_display_source_and_domain(entry)[0]
+        proj = parts[1] if _hostname_matches(host, "github.com") and len(parts) > 1 else get_display_source_and_domain(entry)[0]
         if proj and proj.lower() not in t.lower():
             t = f"{proj} {t}"
     if len(t) > max_len:
