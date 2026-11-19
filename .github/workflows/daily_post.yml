@@ -14,16 +14,17 @@ concurrency:
 jobs:
   post-news:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 1
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.13'
 
@@ -33,7 +34,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Restore BlueSky session
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             bluesky_session.txt
@@ -77,7 +78,7 @@ jobs:
 
       - name: Save BlueSky session
         if: always()
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             bluesky_session.txt
@@ -86,16 +87,22 @@ jobs:
 
       - name: Commit STATUS.md to automated/state
         if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Auth via a non-persisted, masked header instead of a token in the git URL
+          AUTH=$(printf "x-access-token:%s" "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$AUTH"
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.https://github.com/.extraheader" GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $AUTH"
           if [ -f STATUS.md ]; then
             mkdir -p /tmp/state
             cp STATUS.md /tmp/state/
-            git clone --depth 1 --branch automated/state https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git status-branch || {
+            git clone --depth 1 --branch automated/state https://github.com/${{ github.repository }}.git status-branch || {
               mkdir status-branch
               cd status-branch
               git init
               git checkout -b automated/state
-              git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+              git remote add origin https://github.com/${{ github.repository }}.git
               cd ..
             }
             cd status-branch

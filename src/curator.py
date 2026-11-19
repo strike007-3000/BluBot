@@ -1595,6 +1595,7 @@ async def summarize_news(news_items, context, mode="Curator", last_dialect=None,
         for index, (source_item, text) in enumerate(zip(source_items, texts)):
             if isinstance(text, str) and text:
                 source_item["article_text"] = text if index == 0 else text[:ARTICLE_EXCERPT_CHARS]
+        SafeLogger.info(f"Full-article grounding: {sum('article_text' in s for s in source_items)}/{len(source_items)} stories fetched.")
     except Exception as exc:
         SafeLogger.warn(f"Full-article fetch skipped: {type(exc).__name__}")
     news_text = json.dumps(source_items, ensure_ascii=False)

@@ -1,9 +1,9 @@
 # BluBot Source Dependencies (v3.22.2)
-# Use 'uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt'
+# Use 'uv pip compile requirements.in --python-version 3.13 --generate-hashes --no-annotate --output-file requirements.txt'
 # to generate the Python 3.13 runtime lockfile.
 
 atproto>=0.0.73
-google-genai>=2.34.0
+google-genai>=3.3.0
 feedparser>=6.0.14
 python-dotenv>=1.2.4
 requests==2.34.2
@@ -17,11 +17,11 @@ python-telegram-bot[ext]>=21.0
 # atproto 0.0.71 supports cryptography <51; 50.0.0 fixes the active advisories.
 cryptography>=50.0.0,<51
 urllib3==2.8.0
-anyio==4.15.1
+anyio==4.16.0
 zipp==4.1.2
 dnspython==2.9.2
 
 # Testing
 pytest>=9.2.0
-pytest-asyncio>=1.4.1
+pytest-asyncio>=1.5.0
 pytest-mock>=3.17.0
