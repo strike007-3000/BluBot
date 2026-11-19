@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-19 | 🔍 Afternoon Deep Dive (The new Gemini Decisions API evaluates closed-set questions directly on PDFs, audio, video, images, and text in a single forward pass. Powered by Gemini Decision 1, it returns scores in 150 to 250 ms, with 0 output tokens and no separate OCR or transcription step.
+| **Broadcaster** | Operational | 2026-11-19 | 🔍 Evening Synthesis (Intercept) (AI Tool Retrieval and Agent Scaling) |
 Pass your combined input, and mix three question types in one call:
 Yes/no (noul): Check if an invoice PDF has a PO number or a call includes consent.Multiple choice (choice): Route calls, documents, or prompts across queues, tools, and models.Rubric rating (score): Rate audio delivery, video events, or document quality against ordered levels.) |
  Fable 5.2
