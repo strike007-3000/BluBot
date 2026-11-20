@@ -2,6 +2,7 @@
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
 - **v3.42.2**: **Credential checker**.
+  - Removed the Pollinations image provider (an unauthenticated third party that received image prompts whenever Cloudflare failed). The chain is now Cloudflare, then Hugging Face; `IMAGE_PROVIDER=pollinations` falls back to the default chain, and `POLLINATIONS_API_URL`/`POLLINATIONS_API_KEY` are gone.
   - New `scripts/check_tokens.py`: interactive menu that tests Bluesky, Threads, Mastodon, Gemini, NVIDIA, Telegram, Gist, Cloudflare, Hugging Face and `REPO_TOKEN` credentials against each API without posting. Mastodon also verifies the base URL and `write:statuses` scope.
 - **v3.42.1**: **Off-topic post fix, bio limits, reply retry**.
   - Synthesis now sees only the lead story, so the post can no longer be about a different article than its link and image. Any platform draft sharing no word (3+ chars) with the lead story is rejected and rotate to the next model.

@@ -51,7 +51,7 @@ def test_settings_validation_missing_keys():
 
 def test_settings_validation_success():
     """Verify validate() succeeds with valid parameters."""
-    settings = Settings(gemini_key="key", bsky_handle="h", bsky_password="p", image_provider="pollinations")
+    settings = Settings(gemini_key="key", bsky_handle="h", bsky_password="p", image_provider="huggingface")
     assert settings.validate() is True
 
 def test_settings_is_manual_run():

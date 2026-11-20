@@ -99,7 +99,7 @@ BluBot uses layered failure handling and state recovery.
 
 ## 🎨 Page 4: Configurable Image Generation
 
-BluBot defaults to **Cloudflare Workers AI** with `@cf/black-forest-labs/flux-1-schnell`, then falls back to **Pollinations** and **Hugging Face**. `IMAGE_PROVIDER` can select another chain; Imagen is used only when explicitly selected.
+BluBot defaults to **Cloudflare Workers AI** with `@cf/black-forest-labs/flux-1-schnell`, then falls back to **Hugging Face**. `IMAGE_PROVIDER` can select another chain; Imagen is used only when explicitly selected.
 
 ### The Designer & Image Pipeline
 
@@ -111,7 +111,7 @@ BluBot defaults to **Cloudflare Workers AI** with `@cf/black-forest-labs/flux-1-
            /                        \
       (Found)                     (Not Found)
          ▼                            ▼
-  [Normalize URL]            [Cloudflare → Pollinations → HF]
+  [Normalize URL]            [Cloudflare → HF]
          ▼                    (Generate Isometric Prompt)
   [Filter Generic Logos]              ▼
   (Skip if e.g. "arxiv-logo") [Convert Base64 to Bytes]
@@ -135,7 +135,7 @@ BluBot defaults to **Cloudflare Workers AI** with `@cf/black-forest-labs/flux-1-
 
 1. **Lead Selection & Scraper**: The metadata scraper extracts metadata tags like `og:image` from the target article.
 2. **URL Normalization & Logo Filter**: Resolves protocol-relative link formats (e.g. `//site.com/img.png` to `https://site.com/img.png`) and checks the path against `GENERIC_IMAGE_PATTERNS`. If a site logo is detected, it is discarded.
-3. **Free-Tier Image Generation**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using the active Gemini model, then tries Cloudflare Workers AI, Pollinations, and Hugging Face in order. Exhausting the chain returns no generated image; it never invokes Imagen implicitly.
+3. **Free-Tier Image Generation**: If no original image is found, the system requests a minimalist isometric tech graphic prompt using the active Gemini model, then tries Cloudflare Workers AI and Hugging Face in order. Exhausting the chain returns no generated image; it never invokes Imagen implicitly.
    Cloudflare prompts are capped at 2,048 characters and rely on FLUX's documented default generation parameters.
 4. **RGB Conversion**: Standardizes image mode representations by converting CMYK or Grayscale source images to standard RGB, preventing rendering distortions.
 5. **Iterative Quality Compression**: Fits the binary payload under the strict 900KB platform upload cap. The optimizer iteratively scales JPEG quality down (from 85% to 30%, in steps of 10%) and writes to an in-memory buffer (`io.BytesIO()`) until the constraints are met.
@@ -160,7 +160,6 @@ Add these as secrets of the GitHub `production` environment (branch-restricted t
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account used for Workers AI image generation |
 | `CLOUDFLARE_API_TOKEN` | Scoped API token with Workers AI permissions |
-| `POLLINATIONS_API_KEY` | Deprecated compatibility setting; current Pollinations requests do not use it |
 | `HUGGINGFACE_API_KEY` | Hugging Face Hub User Access Token |
 | `HUGGINGFACE_IMAGE_MODEL` | Hugging Face model target (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
 | `THINKING_BUDGET` | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma models) |
@@ -175,8 +174,7 @@ Add these as secrets of the GitHub `production` environment (branch-restricted t
 | `GIST_ID` | Private GitHub Gist ID |
 | `GIST_TOKEN` | GitHub Token with `gist` scope |
 | `GITHUB_TOKEN` | (Optional) GitHub Token (PAT or automatic Actions `${{ secrets.GITHUB_TOKEN }}`) for higher REST API limits (1,000 req/hr) when fetching fast-rising repositories |
-| `IMAGE_PROVIDER` | `cloudflare` (default), `pollinations`, `huggingface`, `nvidia`, or explicit-only `imagen` |
-| `POLLINATIONS_API_URL` | Optional Pollinations endpoint override |
+| `IMAGE_PROVIDER` | `cloudflare` (default), `huggingface`, `nvidia`, or explicit-only `imagen` |
 | `ENABLE_IMAGE_GEN` | Enable generated-image fallbacks (default: `true`) |
 | `ENABLE_BIO_MGMT` | Enable profile bio updates; the topic is trimmed to keep the bio under 250 characters (Bluesky allows 256, Mastodon 500) (default: `true`) |
 | `ENABLE_INTERACTIONS` | Enable mention/comment processing (default: `true`) |
