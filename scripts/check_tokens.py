@@ -39,10 +39,11 @@ def mastodon():
     msg = f"valid, account @{r.json().get('acct')}"
     s = requests.get(f"{base}/api/v1/apps/verify_credentials", headers=h, timeout=T)
     scopes = s.json().get("scopes") if s.ok else None
-    if scopes:
-        msg += f", scopes: {' '.join(scopes) if isinstance(scopes, list) else scopes}"
-        if not any(x in ("write", "write:statuses") for x in scopes):
-            return False, msg + " -> MISSING write:statuses, posting will fail"
+    if not scopes:
+        return False, msg + " -> could not read token scopes, cannot confirm write:statuses"
+    msg += f", scopes: {' '.join(scopes) if isinstance(scopes, list) else scopes}"
+    if not any(x in ("write", "write:statuses") for x in scopes):
+        return False, msg + " -> MISSING write:statuses, posting will fail"
     return True, msg
 
 
@@ -92,7 +93,15 @@ def gist():
     tok = ask("GitHub gist token (GIST_TOKEN)", "GIST_TOKEN", True)
     gid = ask("Gist id (GIST_ID)", "GIST_ID")
     r, err = _get(f"https://api.github.com/gists/{gid}", tok)
-    return r.ok, err or f"gist readable, owner {r.json().get('owner', {}).get('login')}"
+    if not r.ok:
+        return False, err
+    # Prod PATCHes the gist, so prove write access: add a temp file, then delete it.
+    url, h, f = f"https://api.github.com/gists/{gid}", {"Authorization": f"Bearer {tok}"}, "blubot_token_check.json"
+    w = requests.patch(url, headers=h, json={"files": {f: {"content": "{}"}}}, timeout=T)
+    if not w.ok:
+        return False, f"readable but NOT writable: {w.status_code} {w.text[:200]}"
+    requests.patch(url, headers=h, json={"files": {f: None}}, timeout=T)
+    return True, f"gist readable and writable, owner {r.json().get('owner', {}).get('login')}"
 
 
 def cloudflare():
