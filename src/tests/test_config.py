@@ -7,10 +7,13 @@ from src.config import validate_config, validate_gemini_model_priority
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 def test_scheduled_workflow_cadence():
-    daily = (PROJECT_ROOT / ".github/workflows/daily_post.yml").read_text()
+    daily = (PROJECT_ROOT / ".github/workflows/post_pipeline.yml").read_text()
+    caller = (PROJECT_ROOT / ".github/workflows/daily_post.yml").read_text()
+    breaking = (PROJECT_ROOT / ".github/workflows/breaking_news.yml").read_text()
     weekly = (PROJECT_ROOT / ".github/workflows/weekly_config_update.yml").read_text()
 
-    assert "cron: '17 6,12,18 * * 1-5'" in daily
+    assert "cron: '17 6,12,18 * * 1-5'" in caller and "breaking_only: false" in caller
+    assert "cron: '47 9,15,21 * * *'" in breaking and "breaking_only: true" in breaking
     assert "cron: '0 2 * * 5'" in weekly
     assert "ENABLE_SOURCE_RECEIPTS_BSKY: ${{ vars.ENABLE_SOURCE_RECEIPTS_BSKY || 'false' }}" in daily
     assert "[skip ci]" not in weekly
