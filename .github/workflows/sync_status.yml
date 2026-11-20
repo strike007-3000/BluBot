@@ -2,7 +2,7 @@ name: Sync STATUS.md to main
 
 on:
   workflow_run:
-    workflows: ["Daily AI News Post"]
+    workflows: ["Daily AI News Post", "Breaking News Post"]
     types: [completed]
 
 jobs:

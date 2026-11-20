@@ -556,6 +556,8 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
 
         # Badges list
         badges = []
+        if e.get("breaking"):
+            badges.append('<span class="badge badge-breaking">Breaking</span>')
         if is_update:
             badges.append(f'<span class="badge badge-update">Update {update_num}</span>')
         badges.append(f'<span class="badge badge-type badge-type-{content_type_attr}">{html.escape(content_type)}</span>')
@@ -652,7 +654,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
         card_id = f"story-{compute_html_id(e)}"
 
         card_html = f"""
-        <article id="{card_id}" class="{card_class}" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-recent="{str(is_recent).lower()}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
+        <article id="{card_id}" class="{card_class}" data-title="{title}" data-source="{html.escape(source_name)}" data-domain="{html.escape(display_domain)}" data-category="{html.escape(display_category)}" data-content-type="{content_type_attr}" data-breaking="{str(bool(e.get("breaking"))).lower()}" data-trust="{trust_type}" data-published="{html.escape(pub_at_iso)}" data-recent="{str(is_recent).lower()}" data-corroborated="{corroboration_sort_score}" data-engagement="{eng_score}" data-search="{html.escape(search_terms)}">
           <header class="card-header">
             <div class="card-badges">
               {badges_html}
@@ -973,6 +975,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     .badge-receipt, .badge-corroborated {{ color: var(--trusted); background: var(--trusted-soft); }}
     .badge-single {{ color: var(--warning); background: var(--warning-soft); }}
     .badge-roundup {{ color: var(--signal); background: var(--signal-soft); }}
+    .badge-breaking {{ color: var(--warning); background: var(--warning-soft); border-color: var(--warning); }}
     .badge-update {{ color: var(--signal); background: var(--signal-soft); border-color: var(--signal); }}
     .card-update {{ border-left: 3px solid var(--signal); margin-left: 1rem; }}
     .card-timeline {{ margin: 0.4rem 0 0.2rem; padding: 0.35rem 0.6rem; border-radius: 0.35rem; background: var(--surface-raised); font-size: 0.75rem; color: var(--muted); }}
@@ -1123,6 +1126,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
               <label for="filter-type" class="field-label">Type</label>
               <select id="filter-type" class="control-select">
                 <option value="all">All types</option>
+                <option value="breaking">Breaking</option>
                 <option value="news">News</option>
                 <option value="repositories">Repositories</option>
                 <option value="models">Models</option>
@@ -1219,7 +1223,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
           const cardTrust = card.getAttribute('data-trust') || '';
           const isRecent = card.getAttribute('data-recent') === 'true';
           const matchesSearch = !query || searchContent.includes(query);
-          const matchesType = typeVal === 'all' || cardType === typeVal;
+          const matchesType = typeVal === 'all' || (typeVal === 'breaking' ? card.getAttribute('data-breaking') === 'true' : cardType === typeVal);
           let matchesTrust = true;
 
           if (trustVal === 'corroborated') {{

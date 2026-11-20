@@ -16,6 +16,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Output Repair**: Strips accidental markdown formatting, applies platform-specific hashtag policy, and repairs overlong output without splitting URLs.
     - **Model Discovery**: Lists the models available to the configured key and keeps only exact matches from the approved priority list; if discovery fails, the defaults remain available for runtime failover.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
+- **Breaking-News Lane**: A daily run at 09:47, 15:47 and 21:47 UTC posts outside the three scheduled slots only when the top story scores 40+ and is under 6 hours old (3-hour cooldown after any post, at most one breaking post per rolling 24 hours); otherwise it exits before any Gemini call. Posts show a Breaking badge and filter on the archive page. Thresholds are env-tunable (`BREAKING_*`).
 - **Full-Article Grounding**: Synthesis receives each story's article body (6,000 chars for the lead, 2,000 for the rest, via the SSRF-safe 1 MB-capped fetcher), falling back to the RSS summary when a fetch fails.
 - **🖼️ Unified Media Strategy Stage**:
     - **Single Media Decision Point**: Decides if a post should contain media, extracts and validates OpenGraph metadata, generates a visual prompt, uses the configured image-provider fallback chain when necessary, and compiles everything into a single `MediaAsset`.
@@ -100,6 +101,8 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 - Get a free API key from [Google AI Studio](https://aistudio.google.com/).
 
 ### 🤫2. Configure GitHub Secrets
+
+> **Store these as environment secrets, not repository secrets.** Create a `production` environment (Settings → Environments), set **Deployment branches and tags** to *Selected branches* → `main`, add every secret below to that environment, then delete any repository-level copies. Every workflow job that reads a secret declares `environment: production`, so secrets are only released to runs from `main`; a workflow run from any other pushed branch gets none. `src/tests/test_workflow_environments.py` fails CI if a job reads `secrets.*` without declaring an environment. Do not rename secrets: workflows reference these exact names. `REPO_TOKEN` should be a fine-grained token limited to this repository (Contents and Pull requests read/write) with an expiry date.
 
 | Secret Name | Required | Description |
 |-------------|----------|-------------|

@@ -1,9 +1,6 @@
 name: Deploy GitHub Pages Archive
 
 on:
-  workflow_run:
-    workflows: ["Daily AI News Post"]
-    types: [completed]
   workflow_dispatch:
 
 concurrency:

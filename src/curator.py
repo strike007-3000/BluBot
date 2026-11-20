@@ -348,6 +348,31 @@ async def fetch_hf_trending(
         return []
 
 
+def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_hours):
+    """Return the lead article if it is strong and fresh enough to post outside a scheduled slot.
+
+    Limits: nothing within `cooldown_hours` of any post, and at most one breaking post per rolling 24h.
+    """
+    for entry in ledger or []:
+        try:
+            age_h = (now - datetime.fromisoformat(str(entry["published_at"]).replace("Z", "+00:00"))).total_seconds() / 3600
+        except (KeyError, ValueError):
+            continue
+        if age_h < cooldown_hours or (entry.get("breaking") and age_h < 24):
+            return None
+    if not articles:
+        return None
+    lead = articles[0]
+    try:
+        published = datetime.fromisoformat(str(lead.published).replace("Z", "+00:00"))
+        if published.tzinfo is None:
+            published = published.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    fresh = (now - published).total_seconds() / 3600 <= max_age_hours
+    return lead if lead.score >= min_score and fresh else None
+
+
 def _score_api_item(item, published_at, now_utc, recent_topics, recent_categories, watch_topics):
     item["score"] = calculate_relevance_score(
         item, published_at, now_utc, recent_topics, recent_categories, watch_topics

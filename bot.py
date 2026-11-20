@@ -137,6 +137,13 @@ def article_matches_topic(title: str, summary: str, topic: str) -> bool:
 
     return True
 
+def _mark_quiet_run():
+    """Tell the workflow nothing was posted so it skips the Pages rebuild."""
+    if path := os.getenv("GITHUB_OUTPUT"):
+        with open(path, "a") as f:
+            f.write("quiet=true\n")
+
+
 async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str] = None, news: Optional[dict] = None) -> CurationResult:
     """Stage 1: Fetch and Score Raw News."""
     seen_data = await asyncio.to_thread(load_seen_articles)
@@ -890,6 +897,7 @@ async def settle_persistence_stage(
             thread_roots=thread_roots,
             summary=matched_article.summary,
             source_published_at=matched_article.published,
+            breaking=getattr(settings, "breaking_only", False) is True,
         )
 
         state.setdefault("links", [])
@@ -1451,7 +1459,8 @@ async def main():
 
     # Weekend Rest logic
     now = datetime.now(timezone.utc)
-    if now.weekday() >= 5 and now.hour >= 12 and not settings.should_bypass_rest:
+    # The breaking lane runs on weekends too; its own gate decides whether anything posts.
+    if now.weekday() >= 5 and now.hour >= 12 and not settings.should_bypass_rest and getattr(settings, "breaking_only", False) is not True:
         SafeLogger.info("Weekend rest initiated. Skipping post.")
         return
 
@@ -1468,7 +1477,10 @@ async def main():
         await prune_gemini_model_priority_async(genai_client)
 
         # Check for on-demand Telegram topic or brief intercept
-        res = await check_for_telegram_topic()
+        # `is True` keeps MagicMock settings in tests from enabling the lane.
+        breaking_lane = getattr(settings, "breaking_only", False) is True
+        # The breaking lane never consumes Telegram topic requests; scheduled runs own those.
+        res = None if breaking_lane else await check_for_telegram_topic()
         if isinstance(res, tuple):
             cmd_type, telegram_topic = res
         else:
@@ -1511,7 +1523,7 @@ async def main():
         force_roundup = getattr(settings, "force_roundup", False) is True
         # P1 fix: Do not consume or discard an explicit topic or curate command on Friday evening
         is_friday_evening_roundup = (
-            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type not in ("topic", "news"))
+            (now.weekday() == 4 and now.hour >= 18 and is_scheduled and cmd_type not in ("topic", "news") and not breaking_lane)
             or force_roundup
         )
         if is_friday_evening_roundup:
@@ -1525,6 +1537,18 @@ async def main():
         t0 = time.monotonic()
         curation = await curation_stage(client, telegram_topic=telegram_topic, news=news)
         SafeLogger.info(f"Curation Stage: Completed in {time.monotonic() - t0:.2f}s ({len(curation.top_articles)} candidates).")
+
+        if breaking_lane:
+            from src.curator import select_breaking
+            ledger = (await asyncio.to_thread(load_seen_articles)).get("published_posts", [])
+            if not select_breaking(
+                curation.top_articles, ledger, now, settings.breaking_min_score,
+                settings.breaking_max_age_hours, settings.breaking_cooldown_hours,
+            ):
+                SafeLogger.info("Breaking lane: no story clears the bar. Nothing posted.")
+                _mark_quiet_run()
+                return
+            SafeLogger.info(f"Breaking lane: posting '{curation.top_articles[0].title}'.")
 
         # 1.5 Continuity Matching & Editorial Decision Orchestration
         from src.models import MatchDecision, EditorialDecision
@@ -1612,6 +1636,11 @@ async def main():
             SafeLogger.error("Synthesis produced no content. Aborting.")
             return
         SafeLogger.info(f"Synthesis Stage: Completed in {time.monotonic() - t0:.2f}s.")
+        # Synthesis may pick a different lead than the one that cleared the bar; post nothing then.
+        if breaking_lane and normalize_url(synthesis.lead_link or "") != normalize_url(curation.top_articles[0].link or ""):
+            SafeLogger.info("Breaking lane: synthesis chose a different lead than the approved story. Nothing posted.")
+            _mark_quiet_run()
+            return
 
         # 2.2 Media Strategy Decision
         t0 = time.monotonic()
@@ -1621,7 +1650,8 @@ async def main():
         SafeLogger.info(f"Media Stage: Completed in {time.monotonic() - t0:.2f}s.")
 
         # 2.5 Telegram Approval Stage (if enabled and not a dry-run)
-        if settings.enable_telegram_approval and not settings.is_dry_run:
+        # Breaking lane skips approval (speed); the final post is still pushed to Telegram in 3.6.
+        if settings.enable_telegram_approval and not settings.is_dry_run and not breaking_lane:
             from src.models import PlatformDrafts
             initial_drafts = synthesis.drafts or PlatformDrafts.from_single(synthesis.content)
             final_drafts, final_media = await send_draft_for_approval(
