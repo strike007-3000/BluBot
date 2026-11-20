@@ -1543,13 +1543,14 @@ def _derive_topic_locally(title: str, summary: str, source_id: str) -> str:
     return "General"
 
 def _draft_matches_story(drafts, title: str, summary: str) -> bool:
-    """True if the draft shares at least one distinctive word with the lead article (guards against off-topic posts)."""
+    """True if every non-empty platform draft shares a word with the lead article (guards against off-topic posts)."""
     import re
     def words(t):
-        return {w for w in re.findall(r"[a-z0-9]{4,}", str(t).lower())}
+        return set(re.findall(r"\w{3,}", str(t).lower()))
     source = words(f"{title} {summary}")
-    draft = words(f"{drafts.bluesky} {drafts.threads} {drafts.mastodon}")
-    return len(source & draft) >= 1
+    if not source:  # nothing to compare against (e.g. very short headline): don't reject
+        return True
+    return all(words(d) & source for d in (drafts.bluesky, drafts.threads, drafts.mastodon) if d)
 
 async def summarize_news(news_items, context, mode="Curator", last_dialect=None, writing_style=None):
     if not news_items:

@@ -2,7 +2,7 @@
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
 - **v3.42.1**: **Off-topic post fix, bio limits, reply retry**.
-  - Synthesis now sees only the lead story, so the post can no longer be about a different article than its link and image. Drafts sharing no 4+ letter word with the lead story are rejected and rotate to the next model.
+  - Synthesis now sees only the lead story, so the post can no longer be about a different article than its link and image. Any platform draft sharing no word (3+ chars) with the lead story is rejected and rotate to the next model.
   - Bio updates trim the topic so the bio fits Bluesky (256 graphemes) and Mastodon (500 chars).
   - Interaction replies retry up to 3 times (2s, 4s backoff) on Gemini 503.
 - **v3.42.0**: **Breaking-news lane**.

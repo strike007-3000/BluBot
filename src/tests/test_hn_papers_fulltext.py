@@ -119,3 +119,13 @@ async def test_only_lead_story_reaches_model_and_offtopic_draft_rejected(monkeyp
     contents = mock_client.aio.models.generate_content.await_args.kwargs["contents"]
     assert "Gemini tool retrieval" not in contents.split("UNTRUSTED")[1]
     assert res[0] is None  # draft about another story is rejected
+
+
+def test_draft_match_is_per_platform_and_tolerates_empty_source():
+    from src.curator import _draft_matches_story
+    from src.models import PlatformDrafts
+    ok = PlatformDrafts(bluesky="Performance Factory fixes ChatGPT", threads="Performance Factory", mastodon="Performance Factory")
+    mixed = PlatformDrafts(bluesky="Gemini tool retrieval defers loading", threads="Performance Factory", mastodon="Performance Factory")
+    assert _draft_matches_story(ok, "OpenAI Performance Factory", "")
+    assert not _draft_matches_story(mixed, "OpenAI Performance Factory", "")
+    assert _draft_matches_story(mixed, "", "")
