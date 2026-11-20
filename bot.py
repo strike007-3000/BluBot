@@ -1459,7 +1459,8 @@ async def main():
 
     # Weekend Rest logic
     now = datetime.now(timezone.utc)
-    if now.weekday() >= 5 and now.hour >= 12 and not settings.should_bypass_rest:
+    # The breaking lane runs on weekends too; its own gate decides whether anything posts.
+    if now.weekday() >= 5 and now.hour >= 12 and not settings.should_bypass_rest and getattr(settings, "breaking_only", False) is not True:
         SafeLogger.info("Weekend rest initiated. Skipping post.")
         return
 
