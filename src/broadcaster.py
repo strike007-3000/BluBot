@@ -550,8 +550,13 @@ async def update_social_profiles(bsky_client, mastodon_token, active_day, topic)
     if not settings.enable_bio_management:
         return
 
-    bio = f"AI signal, zero noise. Day {active_day}. | Currently tracking: {topic}"
-    
+    prefix = f"AI signal, zero noise. Day {active_day}. | Currently tracking: "
+    topic = " ".join(str(topic).split())
+    room = 250 - len(prefix)  # Bluesky limit is 256 graphemes (strictest); Mastodon 500
+    if len(topic) > room:
+        topic = topic[:room - 1].rstrip() + "…"
+    bio = prefix + topic
+
     # 1. Bluesky
     if bsky_client and settings.bsky_handle:
         try:
