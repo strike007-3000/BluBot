@@ -25,7 +25,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         - *Bluesky*: Uses `AppBskyEmbedExternal` for link cards and `AppBskyEmbedImages` for scratch posts.
         - *Mastodon*: Uploads image bytes, degrading gracefully to text on upload errors.
         - *Threads*: Renders OpenGraph public URLs only, gracefully falling back to text-only mode for generated assets lacking public hosting.
-    - **Configurable Image Fallbacks**: Defaults to **Cloudflare Workers AI (FLUX.1 Schnell)**, then falls back to **Pollinations** and **Hugging Face**. Imagen runs only when explicitly selected.
+    - **Configurable Image Fallbacks**: Defaults to **Cloudflare Workers AI (FLUX.1 Schnell)**, then falls back to **Hugging Face**. Imagen runs only when explicitly selected.
     - **Smart Image Compression**: Built-in **Pillow-powered optimizer** that automatically resizes thumbnails to platform-specific limits (fixing "blob too big" errors).
 - **Elite Architecture**:
     - **🧵 The Weaver (Conditional Threading)**: Automatically chains high-resolution news analysis into platform-native threads.
@@ -92,9 +92,8 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
 #### Bluesky & Mastodon
 Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 
-#### Cloudflare Workers AI, Pollinations & Hugging Face
+#### Cloudflare Workers AI & Hugging Face
 - Cloudflare Workers AI is the default image provider. Create a scoped Workers AI API token and copy your Cloudflare Account ID.
-- Pollinations is free and requires no API key.
 - Hugging Face remains the final fallback when a token with **Inference** permissions is configured.
 
 #### Google Gemini
@@ -111,14 +110,12 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `GEMINI_KEY` | **Yes** | Your Google Gemini API Key (also used for Active Model Discovery) |
 | `CLOUDFLARE_ACCOUNT_ID` | No | Cloudflare account used for Workers AI image generation; required for the default provider |
 | `CLOUDFLARE_API_TOKEN` | No | Scoped API token with Workers AI permissions; required for the default provider |
-| `POLLINATIONS_API_KEY` | No | Deprecated compatibility setting; the current Pollinations request does not use it |
 | `HUGGINGFACE_API_KEY` | No | Hugging Face token with **Inference** permissions; used by the final fallback |
 | `HUGGINGFACE_IMAGE_MODEL` | No | Hugging Face model (default: `stabilityai/stable-diffusion-3-medium-diffusers`) |
 | `THINKING_BUDGET` | No | (Optional) Thinking budget for Gemini 2.0/2.5 models (default: 1024; bypassed for Gemma) |
 | `GEMINI_MODEL` | No | (Optional) Model used for interactive replies, on-demand topics, and `/brief` synthesis (default: `models/gemini-3.5-flash-lite`) |
-| `IMAGE_PROVIDER` | No | Default: `cloudflare`. Options: `cloudflare`, `pollinations`, `huggingface`, `nvidia`, `imagen`. Imagen is explicit-only. |
+| `IMAGE_PROVIDER` | No | Default: `cloudflare`. Options: `cloudflare`, `huggingface`, `nvidia`, `imagen`. Imagen is explicit-only. |
 | `NVIDIA_KEY` | No | NVIDIA image API key; also retained as a legacy token fallback for Hugging Face |
-| `POLLINATIONS_API_URL` | No | Override the Pollinations image endpoint |
 | `ENABLE_IMAGE_GEN` | No | Enable generated-image fallbacks (default: `true`) |
 | `ENABLE_BIO_MGMT` | No | Enable profile bio updates (default: `true`) |
 | `ENABLE_INTERACTIONS` | No | Enable mention/comment processing (default: `true`) |
@@ -194,6 +191,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 - `scripts/diagnostic.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
 - `scripts/build_archive.py`: **Static Site & RSS Builder** (Generates HTML archive and RSS 2.0 feed from ledger).
 - `scripts/feed_audit.py`, `scripts/update_config_keywords.py`: **Feed audit & weekly config update** tooling.
+- `scripts/check_tokens.py`: **Credential checker** (menu: Bluesky, Threads, Mastodon, Gemini, NVIDIA, Telegram, Gist, Cloudflare, Hugging Face, Repo token; paste a secret, see if it is accepted).
 - `scripts/test_telegram_setup.py`, `setup_threads.py`: **Telegram and Threads setup helpers**.
 
 ## 📡 Telegram Command Reference

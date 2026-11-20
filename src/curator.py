@@ -2281,52 +2281,6 @@ def validate_image_bytes(image_bytes: bytes) -> bool:
     except (UnidentifiedImageError, OSError, ValueError):
         return False
 
-async def generate_pollinations_image(
-    prompt: str,
-    client: httpx.AsyncClient,
-) -> bytes | None:
-    encoded_prompt = quote(prompt, safe="")
-    url = f"{settings.pollinations_api_url.rstrip('/')}/{encoded_prompt}"
-    headers = {
-        "Accept": "image/*",
-    }
-
-    params = {
-        "width": 1024,
-        "height": 1024,
-        "model": "flux",
-        "seed": 0,
-        "nologo": "true",
-    }
-
-
-    try:
-        # 90 seconds timeout
-        timeout = httpx.Timeout(90.0, connect=10.0)
-        response = await client.get(url, headers=headers, params=params, timeout=timeout)
-
-        status_code = response.status_code
-        if status_code in [401, 402, 429] or (500 <= status_code < 600):
-            SafeLogger.warn(f"Pollinations HTTP error: Status={status_code}")
-
-        response.raise_for_status()
-
-        content_type = response.headers.get("Content-Type", "")
-        if not content_type.startswith("image/"):
-            SafeLogger.warn(f"Pollinations response content type invalid: {content_type}")
-            return None
-
-        img_bytes = response.content
-        if not validate_image_bytes(img_bytes):
-            SafeLogger.warn("Pollinations response returned invalid image bytes")
-            return None
-
-        return img_bytes
-
-    except (httpx.TimeoutException, httpx.HTTPStatusError, httpx.RequestError) as e:
-        SafeLogger.warn(f"Pollinations failed: {e}")
-        return None
-
 async def generate_cloudflare_image(
     prompt: str,
     client: httpx.AsyncClient,
@@ -2477,15 +2431,13 @@ async def generate_nvidia_image(
     return None
 
 IMAGE_PROVIDER_CHAINS = {
-    "cloudflare": ["cloudflare", "pollinations", "huggingface"],
-    "pollinations": ["pollinations", "huggingface"],
-    "huggingface": ["huggingface", "pollinations"],
-    "nvidia": ["nvidia", "huggingface", "pollinations"],
+    "cloudflare": ["cloudflare", "huggingface"],
+    "huggingface": ["huggingface"],
+    "nvidia": ["nvidia", "huggingface"],
 }
 
 IMAGE_GENERATORS = {
     "cloudflare": generate_cloudflare_image,
-    "pollinations": generate_pollinations_image,
     "huggingface": generate_huggingface_image,
     "nvidia": generate_nvidia_image,
 }

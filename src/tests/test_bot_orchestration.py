@@ -436,7 +436,7 @@ async def test_broadcast_messages_dispatched_when_approval_disabled_with_credent
     mock_settings.enable_interactions = False
     mock_settings.gemini_model = "gemini-3.5-flash-lite"
     mock_settings.mastodon_token = None
-    mock_settings.image_provider = "pollinations"
+    mock_settings.image_provider = "huggingface"
     mock_settings.enable_image_gen = False
     monkeypatch.setattr("bot.settings", mock_settings)
 
@@ -492,7 +492,7 @@ async def test_settlement_occurs_before_telegram_notifications(monkeypatch, mock
     mock_settings.enable_interactions = False
     mock_settings.gemini_model = "gemini-3.5-flash-lite"
     mock_settings.mastodon_token = None
-    mock_settings.image_provider = "pollinations"
+    mock_settings.image_provider = "huggingface"
     mock_settings.enable_image_gen = False
     monkeypatch.setattr("bot.settings", mock_settings)
 
@@ -553,7 +553,7 @@ async def test_bot_orchestration_confident_update_flow(monkeypatch, mocker):
     mock_settings.enable_telegram_approval = False
     mock_settings.enable_interactions = False
     mock_settings.gemini_model = "gemini-3.5-flash-lite"
-    mock_settings.image_provider = "pollinations"
+    mock_settings.image_provider = "huggingface"
     mock_settings.enable_image_gen = False
     mock_settings.story_update_detection_enabled = True
     monkeypatch.setattr("bot.settings", mock_settings)

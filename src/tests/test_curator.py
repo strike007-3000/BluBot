@@ -468,7 +468,6 @@ from src.curator import (
     generate_ai_image,
     validate_image_bytes,
     generate_cloudflare_image,
-    generate_pollinations_image,
     generate_huggingface_image,
     generate_nvidia_image,
 )
@@ -618,43 +617,14 @@ async def test_dispatcher_falls_back_after_real_cloudflare_quota_error(monkeypat
     request = httpx.Request("POST", "https://api.cloudflare.com/test")
     mock_client = AsyncMock()
     mock_client.post.return_value = httpx.Response(429, request=request)
-    pollinations = AsyncMock(return_value=valid_bytes)
+    hf = AsyncMock(return_value=valid_bytes)
     mocker.patch("src.curator.IMAGE_GENERATORS", {
         "cloudflare": generate_cloudflare_image,
-        "pollinations": pollinations,
-        "huggingface": AsyncMock(return_value=None),
+        "huggingface": hf,
     })
 
     assert await generate_ai_image(mock_client, None, "Test Prompt") == valid_bytes
-    pollinations.assert_awaited_once_with("Test Prompt", mock_client)
-
-@pytest.mark.asyncio
-async def test_generate_pollinations_success(monkeypatch):
-    from src.settings import Settings
-    mock_settings = Settings(
-        gemini_key="mock",
-        pollinations_api_url="https://image.pollinations.ai/prompt/",
-        image_provider="pollinations"
-    )
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-
-    valid_bytes = create_valid_test_image_bytes()
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.content = valid_bytes
-    mock_response.headers = {"Content-Type": "image/png"}
-
-    mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response)
-
-    res = await generate_pollinations_image("Test Prompt", mock_client)
-    assert res == valid_bytes
-
-    # Pollinations free API needs no auth — just verify the URL format
-    mock_client.get.assert_called_once()
-    args, kwargs = mock_client.get.call_args
-    assert "image.pollinations.ai/prompt/" in args[0]
-    assert "Authorization" not in kwargs["headers"]
+    hf.assert_awaited_once_with("Test Prompt", mock_client)
 
 @pytest.mark.asyncio
 async def test_generate_nvidia_success(monkeypatch):
@@ -753,32 +723,6 @@ async def test_generate_nvidia_429_retains_retries(monkeypatch):
     assert mock_client.post.call_count == 3
 
 @pytest.mark.asyncio
-async def test_generate_pollinations_works_without_key(monkeypatch):
-    """Pollinations free API works without any API key."""
-    from src.settings import Settings
-    mock_settings = Settings(
-        gemini_key="mock",
-        pollinations_api_key=None,
-        pollinations_api_url="https://image.pollinations.ai/prompt/",
-        image_provider="pollinations"
-    )
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-
-    valid_bytes = create_valid_test_image_bytes()
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.content = valid_bytes
-    mock_response.headers = {"Content-Type": "image/jpeg"}
-
-    mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response)
-
-    res = await generate_pollinations_image("Test Prompt", mock_client)
-    assert res == valid_bytes
-    mock_client.get.assert_called_once()
-
-
-@pytest.mark.asyncio
 async def test_generate_huggingface_success(monkeypatch):
     from src.settings import Settings
     mock_settings = Settings(
@@ -836,30 +780,7 @@ async def test_generate_huggingface_nvidia_fallback(monkeypatch):
     assert "Bearer legacy-nv-token" in kwargs["headers"]["Authorization"]
 
 @pytest.mark.asyncio
-async def test_dispatcher_pollinations_success_stops_chain(monkeypatch, mocker):
-    from src.settings import Settings
-    mock_settings = Settings(
-        gemini_key="mock",
-        image_provider="pollinations"
-    )
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-
-    valid_bytes = create_valid_test_image_bytes()
-
-    # Mock the functions inside curator using mocker.patch
-    mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
-        "pollinations": AsyncMock(return_value=valid_bytes),
-        "huggingface": AsyncMock(return_value=None)
-    })
-
-    mock_client = AsyncMock()
-    res = await generate_ai_image(mock_client, None, "Test Prompt")
-    assert res == valid_bytes
-    assert mock_poll["pollinations"].await_count == 1
-    assert mock_poll["huggingface"].await_count == 0
-
-@pytest.mark.asyncio
-async def test_dispatcher_cloudflare_falls_back_to_pollinations_then_huggingface(monkeypatch, mocker):
+async def test_dispatcher_cloudflare_falls_back_to_huggingface(monkeypatch, mocker):
     from src.settings import Settings
     monkeypatch.setattr(
         "src.curator.settings",
@@ -868,13 +789,11 @@ async def test_dispatcher_cloudflare_falls_back_to_pollinations_then_huggingface
     valid_bytes = create_valid_test_image_bytes()
     generators = mocker.patch("src.curator.IMAGE_GENERATORS", {
         "cloudflare": AsyncMock(return_value=None),
-        "pollinations": AsyncMock(return_value=None),
         "huggingface": AsyncMock(return_value=valid_bytes),
     })
 
     assert await generate_ai_image(AsyncMock(), None, "Test Prompt") == valid_bytes
     assert generators["cloudflare"].await_count == 1
-    assert generators["pollinations"].await_count == 1
     assert generators["huggingface"].await_count == 1
 
 @pytest.mark.asyncio
@@ -886,34 +805,12 @@ async def test_dispatcher_does_not_fall_back_to_imagen(monkeypatch, mocker):
     )
     mocker.patch("src.curator.IMAGE_GENERATORS", {
         "cloudflare": AsyncMock(return_value=None),
-        "pollinations": AsyncMock(return_value=None),
         "huggingface": AsyncMock(return_value=None),
     })
     imagen = mocker.patch("src.curator.generate_imagen_image", return_value=b"unexpected")
 
     assert await generate_ai_image(AsyncMock(), MagicMock(), "Test Prompt") is None
     imagen.assert_not_called()
-
-@pytest.mark.asyncio
-async def test_dispatcher_pollinations_failure_uses_huggingface(monkeypatch, mocker):
-    from src.settings import Settings
-    mock_settings = Settings(
-        gemini_key="mock",
-        image_provider="pollinations"
-    )
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-
-    valid_bytes = create_valid_test_image_bytes()
-    mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
-        "pollinations": AsyncMock(return_value=None),
-        "huggingface": AsyncMock(return_value=valid_bytes)
-    })
-
-    mock_client = AsyncMock()
-    res = await generate_ai_image(mock_client, None, "Test Prompt")
-    assert res == valid_bytes
-    assert mock_poll["pollinations"].await_count == 1
-    assert mock_poll["huggingface"].await_count == 1
 
 @pytest.mark.asyncio
 async def test_dispatcher_explicit_imagen_provider(monkeypatch, mocker):
@@ -977,20 +874,20 @@ async def test_dispatcher_unexpected_provider_exception_continues(monkeypatch, m
     from src.settings import Settings
     mock_settings = Settings(
         gemini_key="mock",
-        image_provider="pollinations"
+        image_provider="cloudflare"
     )
     monkeypatch.setattr("src.curator.settings", mock_settings)
 
     valid_bytes = create_valid_test_image_bytes()
     mock_poll = mocker.patch("src.curator.IMAGE_GENERATORS", {
-        "pollinations": AsyncMock(side_effect=Exception("Unexpected API error")),
+        "cloudflare": AsyncMock(side_effect=Exception("Unexpected API error")),
         "huggingface": AsyncMock(return_value=valid_bytes)
     })
 
     mock_client = AsyncMock()
     res = await generate_ai_image(mock_client, None, "Test Prompt")
     assert res == valid_bytes
-    assert mock_poll["pollinations"].await_count == 1
+    assert mock_poll["cloudflare"].await_count == 1
     assert mock_poll["huggingface"].await_count == 1
 @pytest.mark.asyncio
 async def test_generate_huggingface_skips_without_keys(monkeypatch):
@@ -1017,26 +914,6 @@ def test_frozen_settings_setattr():
     s = Settings(gemini_key="original")
     object.__setattr__(s, "gemini_key", "patched")
     assert s.gemini_key == "patched"
-
-
-@pytest.mark.asyncio
-async def test_pollinations_url_uses_correct_domain(monkeypatch):
-    """Catch endpoint migrations: Pollinations URL must use image.pollinations.ai."""
-    from src.settings import Settings
-    from src.config import POLLINATIONS_API_URL
-    mock_settings = Settings(
-        gemini_key="mock",
-        pollinations_api_url=POLLINATIONS_API_URL,
-        image_provider="pollinations"
-    )
-    monkeypatch.setattr("src.curator.settings", mock_settings)
-
-    mock_client = AsyncMock()
-    mock_client.get = AsyncMock(side_effect=httpx.TimeoutException("skip"))
-
-    await generate_pollinations_image("test", mock_client)
-    url_called = mock_client.get.call_args[0][0]
-    assert "image.pollinations.ai" in url_called, f"Pollinations URL stale: {url_called}"
 
 
 @pytest.mark.asyncio

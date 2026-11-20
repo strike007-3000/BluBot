@@ -171,25 +171,6 @@ def _prompt_key(env_var, label):
     return key
 
 
-async def _test_pollinations(prompt):
-    import httpx
-    from src.curator import generate_pollinations_image
-
-    print(f"\nRunning Pollinations image generation...")
-    try:
-        async with httpx.AsyncClient() as client:
-            res = await generate_pollinations_image(prompt, client)
-        if res:
-            out_path = "pollinations_test.png"
-            with open(out_path, "wb") as f:
-                f.write(res)
-            print(f"✅ Success! Pollinations image saved to: {out_path} ({len(res)} bytes)")
-        else:
-            print("❌ Failure: Pollinations generation returned no bytes.")
-    except Exception as e:
-        print(f"❌ Failure: Pollinations generation failed: {e}")
-
-
 async def _test_cloudflare(prompt):
     import httpx
     from src.curator import generate_cloudflare_image
@@ -265,16 +246,15 @@ async def _test_imagen(prompt):
 
 PROVIDER_TESTS = {
     "1": ("Cloudflare Workers AI (default)", _test_cloudflare),
-    "2": ("Pollinations (free, no key)", _test_pollinations),
-    "3": ("Hugging Face (requires HF key)", _test_huggingface),
-    "4": ("Gemini Imagen (explicit-only; requires Gemini key)", _test_imagen),
+    "2": ("Hugging Face (requires HF key)", _test_huggingface),
+    "3": ("Gemini Imagen (explicit-only; requires Gemini key)", _test_imagen),
     "a": ("All providers", None),
 }
 
 
 async def test_image_generation():
     import httpx
-    from src.config import POLLINATIONS_API_URL, HF_IMAGE_MODEL
+    from src.config import HF_IMAGE_MODEL
 
     print(f"\n{'='*20}")
     print(f"DIAGNOSTIC: LIVE IMAGE GENERATION TEST")
@@ -283,7 +263,6 @@ async def test_image_generation():
     # --- Endpoint Connectivity Pre-Check ---
     print(f"\n--- Endpoint Connectivity Check ---")
     endpoints = {
-        "Pollinations": POLLINATIONS_API_URL.rstrip("/") + "/test",
         "Hugging Face": f"https://router.huggingface.co/hf-inference/models/{HF_IMAGE_MODEL}",
     }
     async with httpx.AsyncClient() as check_client:
@@ -566,7 +545,7 @@ async def main():
     print("\nSelect Diagnostic Mode:")
     print("1. Quick Diagnostic (Scoring Breakdown)")
     print("2. FULL PIPELINE DRY RUN (AI Generation + Mock Broadcast)")
-    print("3. Live Image Generation Test (Cloudflare, Pollinations, Hugging Face, & explicit Imagen)")
+    print("3. Live Image Generation Test (Cloudflare, Hugging Face, & explicit Imagen)")
     print("4. Gist State Diagnostics (Opt-in Read/Write Test)")
     print("5. Gemini Model Discovery & Multi-Model Test (Text + PNG Image Input)")
     print("6. Multi-Platform Drafting & Telegram State Simulation")
