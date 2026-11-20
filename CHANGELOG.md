@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.42.1**: **Off-topic post fix, bio limits, reply retry**.
+  - Synthesis now sees only the lead story, so the post can no longer be about a different article than its link and image. Any platform draft sharing no word (3+ chars) with the lead story is rejected and rotate to the next model.
+  - Bio updates trim the topic so the bio fits Bluesky (256 graphemes) and Mastodon (500 chars).
+  - Interaction replies retry up to 3 times (2s, 4s backoff) on Gemini 503.
 - **v3.42.0**: **Breaking-news lane**.
   - The new `breaking_news.yml` (sharing `post_pipeline.yml` with `daily_post.yml`) runs daily at 09:47, 15:47 and 21:47 UTC (`BREAKING_ONLY=true`) and posts only when the top story scores 40+ and is under 6 hours old, with a 3-hour cooldown after any post and at most one breaking post per rolling 24 hours (scheduled slots are unaffected and not capped by it). Otherwise it exits before synthesis, so it costs no Gemini calls and sends no Telegram prompt. A qualifying post skips Telegram approval (the final post is still pushed to Telegram) and is abandoned if synthesis picks a different lead than the one approved.
   - CI security hardening (from #223): secrets moved to a `production` environment restricted to `main`, with `environment: production` on every secret-reading job and a guard test (`src/tests/test_workflow_environments.py`); all actions pinned to commit SHAs; `GITHUB_TOKEN` no longer embedded in git URLs; `release.yml` script-injection fix; least-privilege `permissions:` on `test.yml` and the `pages.yml` build job; `requirements.txt` now carries hashes (`--generate-hashes`).

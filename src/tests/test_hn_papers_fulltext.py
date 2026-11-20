@@ -100,19 +100,32 @@ async def test_safe_fetch_stops_at_max_bytes(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_non_lead_stories_get_shorter_article_excerpt(monkeypatch):
+async def test_only_lead_story_reaches_model_and_offtopic_draft_rejected(monkeypatch):
     mock_client = MagicMock()
     mock_client.aio.models.generate_content = AsyncMock(return_value=MagicMock(text=(
-        '{"topic":"AI","bluesky":"A specific observation about the story.","threads":"A conversational take.","mastodon":"A technical overview. #AI"}'
+        '{"topic":"AI","bluesky":"Gemini tool retrieval loads schemas on demand for agents.","threads":"Gemini tool retrieval defers loading.","mastodon":"Gemini tool retrieval. #AI"}'
     )))
     monkeypatch.setattr("google.genai.Client", lambda api_key: mock_client)
     monkeypatch.setattr("src.curator.GEMINI_MODEL_PRIORITY", ["models/gemini-3.5-flash-lite"])
     monkeypatch.setattr("src.curator.settings", Settings(gemini_key="test", is_dry_run=False))
-    monkeypatch.setattr("src.linkedin_draft.fetch_source_text", AsyncMock(return_value="y" * 6000))
+    monkeypatch.setattr("src.linkedin_draft.fetch_source_text", AsyncMock(return_value="Performance Factory body"))
 
-    items = [{"title": f"T{i}", "source": "S", "summary": "b", "link": f"https://example.com/{i}"} for i in range(2)]
-    await summarize_news(items, {"day": "Monday", "session": "Morning Intelligence"})
+    items = [
+        {"title": "OpenAI Performance Factory keeps ChatGPT fast", "source": "OpenAI", "summary": "Codex workflows fix performance issues", "link": "https://example.com/0"},
+        {"title": "Gemini tool retrieval", "source": "G", "summary": "defer_loading", "link": "https://example.com/1"},
+    ]
+    res = await summarize_news(items, {"day": "Monday", "session": "Morning Intelligence"})
 
     contents = mock_client.aio.models.generate_content.await_args.kwargs["contents"]
-    assert "y" * 6000 in contents and "y" * 6001 not in contents
-    assert contents.count("y" * 2000) == 4  # lead (6000) holds three 2000-runs; the other story holds one
+    assert "Gemini tool retrieval" not in contents.split("UNTRUSTED")[1]
+    assert res[0] is None  # draft about another story is rejected
+
+
+def test_draft_match_is_per_platform_and_tolerates_empty_source():
+    from src.curator import _draft_matches_story
+    from src.models import PlatformDrafts
+    ok = PlatformDrafts(bluesky="Performance Factory fixes ChatGPT", threads="Performance Factory", mastodon="Performance Factory")
+    mixed = PlatformDrafts(bluesky="Gemini tool retrieval defers loading", threads="Performance Factory", mastodon="Performance Factory")
+    assert _draft_matches_story(ok, "OpenAI Performance Factory", "")
+    assert not _draft_matches_story(mixed, "OpenAI Performance Factory", "")
+    assert _draft_matches_story(mixed, "", "")
