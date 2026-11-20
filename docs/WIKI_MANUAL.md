@@ -37,7 +37,7 @@ The `SafeLogger` automatically redacts secrets based on both keyword matching an
 - **Threads**: Conversational explanation targeting 450 characters, repaired to a safety-buffered maximum of 490. A question is optional and must follow naturally from the source.
 
 ### Shared Natural-Writing Policy
-All text-generation paths reuse `NATURAL_WRITING_GUIDE`: daily synthesis, mentor fallback, Telegram remixing, interaction replies, and `/brief`. The policy requires supplied evidence, direct verbs, plain language, and varied sentence rhythm. It rejects generic setup, unsupported importance claims, forced questions, binary "not X, but Y" contrasts, fake revelations, stacked fragments, and recap endings. Daily synthesis serializes selected titles, source names, and summaries as a labeled untrusted JSON data block; `SOURCE_CONTENT_SAFETY` explicitly prohibits following instructions embedded in RSS content. Summaries remain capped by `FEED_SUMMARY_MAX_CHARS`.
+All text-generation paths reuse `NATURAL_WRITING_GUIDE`: daily synthesis, mentor fallback, Telegram remixing, interaction replies, and `/brief`. The policy requires supplied evidence, direct verbs, plain language, and varied sentence rhythm. It rejects generic setup, unsupported importance claims, forced questions, binary "not X, but Y" contrasts, fake revelations, stacked fragments, and recap endings. Daily synthesis serializes only the lead story (title, source name, summary, and article body) as a labeled untrusted JSON data block, and the prompt names it as the sole subject; drafts sharing no 4+ letter word with the lead story are rejected and rotate to the next model; `SOURCE_CONTENT_SAFETY` explicitly prohibits following instructions embedded in RSS content. Summaries remain capped by `FEED_SUMMARY_MAX_CHARS`.
 
 ### Telegram Authoritative Review & Remix Copilot
 - **Authoritative Preview**: Maintains a single primary preview message (photo if media present, else text).
@@ -168,7 +168,7 @@ The current registry contains **45 RSS feeds plus two API sources** across 8 tie
 | `IMAGE_PROVIDER` | `cloudflare` (default), `pollinations`, `huggingface`, `nvidia`, or explicit-only `imagen` |
 | `POLLINATIONS_API_URL` | Optional Pollinations endpoint override |
 | `ENABLE_IMAGE_GEN` | Enable generated-image fallbacks (default: `true`) |
-| `ENABLE_BIO_MGMT` | Enable profile bio updates (default: `true`) |
+| `ENABLE_BIO_MGMT` | Enable profile bio updates; the topic is trimmed to keep the bio under 250 characters (Bluesky allows 256, Mastodon 500) (default: `true`) |
 | `ENABLE_INTERACTIONS` | Enable mention/comment processing (default: `true`) |
 | `MAX_THREAD_PARTS` | Maximum posts in a platform thread (default: `2`) |
 | `LOG_FORMAT` | `pretty` locally or `json` in CI by default |
@@ -468,6 +468,7 @@ To optimize inference cost and minimize latency during interactive reply synthes
 ### Security & Anti-Spam
 - **Interaction Limit**: Hard-capped at 5 interactions per run to prevent "tag-bombing" from exhausting AI tokens.
 - **Seen Interactions**: Notification IDs are tracked in `seen_interactions.json` to prevent double-replies.
+- **Transient Gemini Overload**: Reply generation retries up to 3 times (2s, 4s backoff) on 503 errors; other errors fail immediately.
 - **Engagement Jitter**: Implements a 10-30s delay to simulate human narrative thought.
 
 ### Configuration
