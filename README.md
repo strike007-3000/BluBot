@@ -194,7 +194,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 - `scripts/diagnostic.py`: **Interactive Diagnostic Suite** (Unified RSS & AI validation).
 - `scripts/build_archive.py`: **Static Site & RSS Builder** (Generates HTML archive and RSS 2.0 feed from ledger).
 - `scripts/feed_audit.py`, `scripts/update_config_keywords.py`: **Feed audit & weekly config update** tooling.
-- `scripts/check_tokens.py`: **Credential checker** (menu: Bluesky, Threads, Mastodon, Gemini, NVIDIA, Telegram, Gist, Cloudflare, Hugging Face; paste a secret, see if it is accepted).
+- `scripts/check_tokens.py`: **Credential checker** (menu: Bluesky, Threads, Mastodon, Gemini, NVIDIA, Telegram, Gist, Cloudflare, Hugging Face, Repo token; paste a secret, see if it is accepted).
 - `scripts/test_telegram_setup.py`, `setup_threads.py`: **Telegram and Threads setup helpers**.
 
 ## 📡 Telegram Command Reference

@@ -108,10 +108,20 @@ def huggingface():
     return r.ok, err or f"valid, user {r.json().get('name')}"
 
 
+def repo_token():
+    tok = ask("GitHub repo token (REPO_TOKEN)", "REPO_TOKEN", True)
+    repo = input("Repo [strike007-3000/BluBot]: ").strip() or "strike007-3000/BluBot"
+    r, err = _get(f"https://api.github.com/repos/{repo}", tok)
+    if not r.ok:
+        return False, err
+    push = r.json().get("permissions", {}).get("push")
+    return bool(push), f"repo readable, push access: {push}" + ("" if push else " -> cannot push/open PRs")
+
+
 MENU = {
     "1": ("Bluesky", bluesky), "2": ("Threads", threads), "3": ("Mastodon", mastodon),
     "4": ("Gemini", gemini), "5": ("NVIDIA", nvidia), "6": ("Telegram", telegram),
-    "7": ("Gist", gist), "8": ("Cloudflare", cloudflare), "9": ("Hugging Face", huggingface),
+    "7": ("Gist", gist), "8": ("Cloudflare", cloudflare), "9": ("Hugging Face", huggingface), "10": ("Repo token", repo_token),
 }
 
 
