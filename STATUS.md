@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-19 | 🔍 Evening Synthesis (Intercept) (AI Tool Retrieval and Agent Scaling) |
+| **Broadcaster** | Operational | 2026-11-20 | 🔍 Night Reflection (Intercept) (Gemini API Tool Retrieval) |
 Pass your combined input, and mix three question types in one call:
 Yes/no (noul): Check if an invoice PDF has a PO number or a call includes consent.Multiple choice (choice): Route calls, documents, or prompts across queues, tools, and models.Rubric rating (score): Rate audio delivery, video events, or document quality against ordered levels.) |
  Fable 5.2
