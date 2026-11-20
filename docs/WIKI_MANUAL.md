@@ -18,12 +18,20 @@ BluBot applies dependency locking, request validation, and secret redaction to p
 ### Dependency Locking (`uv`)
 To prevent supply-chain attacks via unvetted transitive dependencies, BluBot generates a Python 3.13 lockfile with **`uv`**.
 - `requirements.in`: The source file where you list high-level libraries.
-- `requirements.txt`: The generated lockfile containing resolved versions.
+- `requirements.txt`: The generated lockfile containing resolved versions and SHA-256 hashes (`--generate-hashes`), so `pip` rejects any package that does not match.
 
 **How to update dependencies:**
 1. Add the new library to `requirements.in`.
-2. Run: `uv pip compile requirements.in --python-version 3.13 --output-file requirements.txt`.
+2. Run: `uv pip compile requirements.in --python-version 3.13 --generate-hashes --no-annotate --output-file requirements.txt`.
 3. Commit both files.
+
+### CI Secrets & Workflow Hardening
+- **Secrets are environment-scoped.** All credentials are GitHub *environment* secrets in a `production` environment whose deployment branches are restricted to `main`. Repository-level secrets are not used. Without this, anyone able to push a branch could run a `workflow_dispatch` workflow from it and exfiltrate every secret.
+- **Every secret-reading job declares `environment: production`** (`post_pipeline`, `linkedin_weekly`, `weekly_config_update`, `sync_status`, and the `pages` build job). A job that omits it receives no environment secrets, and a job on a non-`main` branch that asks for it is refused. `src/tests/test_workflow_environments.py` enforces this in CI. `GITHUB_TOKEN` is exempt because GitHub issues it per run.
+- **Pinned actions.** All `uses:` references are full commit SHAs with a `# vN` comment. Update a pin by resolving the new tag's SHA (`gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`).
+- **No tokens in URLs.** `post_pipeline.yml` authenticates `git clone`/`push` with a masked `http.extraheader` set through `GIT_CONFIG_*` environment variables, so the token is not written to `.git/config` or a remote URL.
+- **Least privilege.** `test.yml` has `contents: read`; the `pages.yml` build job has `contents: read` and `pages: read` (the deploy job keeps `pages: write` and `id-token: write`); `release.yml` passes values through `env:` rather than `${{ }}` inside `run:`.
+- **Rotating secrets.** Replace a value in the `production` environment, then revoke the old credential at its provider. `REPO_TOKEN` must be a fine-grained, single-repository token (Contents and Pull requests read/write) with an expiry date; an expired token silently breaks `weekly_config_update` and `sync_status`. If a secrets manager such as Infisical syncs into GitHub, sync to the `production` *environment*, not to repository secrets.
 
 ### SSRF Protection
 The bot implements a **IP Pinner** and **Public IP Validator** in `src/utils.py`. It refuses to fetch metadata or images from local or internal network addresses, thwarting potential exploits in ephemeral cloud runners.
@@ -145,6 +153,8 @@ The current registry contains **45 RSS feeds plus two API sources** across 8 tie
 ## ⚙️ Page 6: Technical Configuration
 
 ### Environment Secrets
+Add these as secrets of the GitHub `production` environment (branch-restricted to `main`), not as repository secrets. See *Security & Supply Chain → CI Secrets & Workflow Hardening*.
+
 | Variable | Description |
 | :--- | :--- |
 | `GEMINI_KEY` | Google AI Studio Key (also used for Active Model Discovery) |
@@ -666,9 +676,11 @@ When `is_dry_run=True`, the briefing engine bypasses Gemini API calls entirely a
 
 | Workflow | Trigger | Purpose |
 | :--- | :--- | :--- |
-| `daily_post.yml` | Cron 06:17, 12:17, 18:17 UTC Mon–Fri; manual | Runs `bot.py`; commits `STATUS.md` to the `automated/state` branch. Serialized by the `bsky-persistence-state` concurrency group |
-| `sync_status.yml` | After a successful Daily AI News Post | Copies `STATUS.md` from `automated/state` to `main` via the GitHub Contents API (uses `REPO_TOKEN`) |
-| `pages.yml` | After Daily AI News Post; manual | Builds and deploys the GitHub Pages archive and RSS feed |
+| `daily_post.yml` | Cron 06:17, 12:17, 18:17 UTC Mon–Fri; manual | Calls `post_pipeline.yml` (runs `bot.py`; commits `STATUS.md` to the `automated/state` branch; dispatches `pages.yml` after a real post). Serialized by the `bsky-persistence-state` concurrency group |
+| `breaking_news.yml` | Cron 09:47, 15:47, 21:47 UTC daily; manual | Calls `post_pipeline.yml` with `breaking_only: true`; posts only a strong, fresh story, otherwise exits quietly. Same concurrency group |
+| `post_pipeline.yml` | Called by the two above | Reusable pipeline; holds the secrets, cache, and state-commit logic once |
+| `sync_status.yml` | After a successful Daily AI News Post or Breaking News Post | Copies `STATUS.md` from `automated/state` to `main` via the GitHub Contents API (uses `REPO_TOKEN`) |
+| `pages.yml` | Dispatched by `post_pipeline.yml` after a real post; manual | Builds and deploys the GitHub Pages archive and RSS feed |
 | `weekly_config_update.yml` | Cron Friday 02:00 UTC | Refreshes momentum products and keywords; opens/updates the `automated/config-update` PR |
 | `test.yml` | Pull requests to `main` | Runs `pytest src/tests/` on Python 3.13 |
 | `codeql.yml` | Push/PR to `main`; cron Monday 02:30 UTC | CodeQL analysis |

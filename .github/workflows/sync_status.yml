@@ -2,12 +2,13 @@ name: Sync STATUS.md to main
 
 on:
   workflow_run:
-    workflows: ["Daily AI News Post"]
+    workflows: ["Daily AI News Post", "Breaking News Post"]
     types: [completed]
 
 jobs:
   sync-status:
     runs-on: ubuntu-latest
+    environment: production
     # Only run if the bot completed successfully
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
@@ -15,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout automated/state
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: automated/state
           fetch-depth: 1

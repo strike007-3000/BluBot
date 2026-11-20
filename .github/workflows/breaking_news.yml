@@ -1,0 +1,21 @@
+name: Breaking News Post
+
+on:
+  schedule:
+    - cron: '47 9,15,21 * * *' # Breaking-news lane, every day, offset 3h from scheduled slots: posts only a strong, fresh story
+  workflow_dispatch: # Allows manual triggering
+
+# Ensure only one run updates the state branch at a time (shared with the other poster)
+concurrency:
+  group: bsky-persistence-state
+  cancel-in-progress: false
+
+jobs:
+  post:
+    permissions:
+      contents: write
+      actions: write # dispatch the Pages rebuild after a real post
+    uses: ./.github/workflows/post_pipeline.yml
+    secrets: inherit
+    with:
+      breaking_only: true

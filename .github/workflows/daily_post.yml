@@ -5,104 +5,17 @@ on:
     - cron: '17 6,12,18 * * 1-5' # Weekday experiment: 06:17, 12:17, and 18:17 UTC
   workflow_dispatch: # Allows manual triggering
 
-# Ensure only one run updates the state branch at a time
+# Ensure only one run updates the state branch at a time (shared with the other poster)
 concurrency:
   group: bsky-persistence-state
   cancel-in-progress: false
 
 jobs:
-  post-news:
-    runs-on: ubuntu-latest
+  post:
     permissions:
       contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.13'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Restore BlueSky session
-        uses: actions/cache/restore@v6
-        with:
-          path: |
-            bluesky_session.txt
-            pending_topic.json
-          key: bsky-session-${{ github.run_id }}
-          restore-keys: |
-            bsky-session-
-
-      - name: Run bot
-        env:
-          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
-          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
-          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
-          NVIDIA_KEY: ${{ secrets.NVIDIA_KEY }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
-          IMAGE_PROVIDER: cloudflare
-          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
-          MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
-          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
-          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
-          GIST_ID: ${{ secrets.GIST_ID }}
-          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_BSKY_COMMENT_REPLIES: ${{ vars.ENABLE_BSKY_COMMENT_REPLIES || 'true' }}
-          ENABLE_MASTODON_COMMENT_REPLIES: ${{ vars.ENABLE_MASTODON_COMMENT_REPLIES || 'false' }}
-          ENABLE_THREADS_COMMENT_REPLIES: ${{ vars.ENABLE_THREADS_COMMENT_REPLIES || 'false' }}
-          ENABLE_SOURCE_RECEIPTS_BSKY: ${{ vars.ENABLE_SOURCE_RECEIPTS_BSKY || 'false' }}
-          STORY_UPDATE_DETECTION_ENABLED: ${{ vars.STORY_UPDATE_DETECTION_ENABLED || 'false' }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_USER_ID }}
-          TELEGRAM_TIMEOUT_MINUTES: ${{ vars.TELEGRAM_TIMEOUT_MINUTES || secrets.TELEGRAM_TIMEOUT_MINUTES || '5' }}
-          ENABLE_TELEGRAM_APPROVAL: ${{ vars.ENABLE_TELEGRAM_APPROVAL || secrets.ENABLE_TELEGRAM_APPROVAL || 'true' }}
-          ENABLE_HASHTAGS_BSKY: ${{ vars.ENABLE_HASHTAGS_BSKY || secrets.ENABLE_HASHTAGS_BSKY || 'false' }}
-          ENABLE_HASHTAGS_MASTODON: ${{ vars.ENABLE_HASHTAGS_MASTODON || secrets.ENABLE_HASHTAGS_MASTODON || 'true' }}
-          ENABLE_HASHTAGS_THREADS: ${{ vars.ENABLE_HASHTAGS_THREADS || secrets.ENABLE_HASHTAGS_THREADS || 'true' }}
-          LOG_FORMAT: pretty
-        run: python bot.py
-
-      - name: Save BlueSky session
-        if: always()
-        uses: actions/cache/save@v6
-        with:
-          path: |
-            bluesky_session.txt
-            pending_topic.json
-          key: bsky-session-${{ github.run_id }}
-
-      - name: Commit STATUS.md to automated/state
-        if: success()
-        run: |
-          if [ -f STATUS.md ]; then
-            mkdir -p /tmp/state
-            cp STATUS.md /tmp/state/
-            git clone --depth 1 --branch automated/state https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git status-branch || {
-              mkdir status-branch
-              cd status-branch
-              git init
-              git checkout -b automated/state
-              git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-              cd ..
-            }
-            cd status-branch
-            git config user.name "GitHub Action Bot"
-            git config user.email "actions@github.com"
-            cp /tmp/state/STATUS.md .
-            git add STATUS.md
-            if ! git diff --cached --quiet; then
-              git commit -m "chore: update bot status [skip ci]"
-              git push origin automated/state
-            fi
-          fi
+      actions: write # dispatch the Pages rebuild after a real post
+    uses: ./.github/workflows/post_pipeline.yml
+    secrets: inherit
+    with:
+      breaking_only: false

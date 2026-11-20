@@ -15,7 +15,8 @@ BluBot is not just a bot; it's an **Impact-Aware Intelligence**. Our goal is to 
 ## ⚖️ "Signal Verification" for AI-Assisted Code
 We welcome the use of AI coding assistants (like Gemini, Claude, or GPT), but with a **hard requirement for manual verification**:
 - **Audit All Dependencies**: AI assistants may occasionally "hallucinate" package names or suggest insecure/deprecated versions. You MUST manually verify that every `import` and `requirement` is current and safe.
-- **Dependency Locking**: Add reviewed direct dependencies to `requirements.in`, then regenerate `requirements.txt` with the documented `uv` command. Never edit the generated lockfile by hand.
+- **Dependency Locking**: Add reviewed direct dependencies to `requirements.in`, then regenerate `requirements.txt` with the documented `uv` command. Never edit the generated lockfile by hand. The command includes `--generate-hashes`; keep it.
+- **Workflow Security**: Any workflow job that reads `secrets.*` (other than `GITHUB_TOKEN`) must declare `environment: production`; `src/tests/test_workflow_environments.py` fails otherwise. Pin new actions to a full commit SHA with a version comment, never put tokens in git URLs or interpolate `${{ }}` values into `run:` scripts (pass them via `env:`), and give each workflow the minimum `permissions:` it needs.
 - **Logic Sanity Checks**: Ensure AI-generated regex or parsing logic is ReDoS-safe and handles malformed data gracefully.
 
 ## 🚀 The PR Workflow

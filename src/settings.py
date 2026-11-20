@@ -26,6 +26,11 @@ class Settings:
     is_dry_run: bool = False
     is_ci: bool = False
     force_roundup: bool = False
+    # Breaking-news lane: a periodic run that posts only an unusually strong, fresh story.
+    breaking_only: bool = False
+    breaking_min_score: float = 40.0
+    breaking_max_age_hours: float = 6.0
+    breaking_cooldown_hours: float = 3.0
     github_event: str = "schedule"
     image_provider: str = "cloudflare"
     cloudflare_account_id: Optional[str] = None
@@ -109,6 +114,10 @@ class Settings:
             "is_dry_run": is_dry_run,
             "is_ci": is_ci,
             "force_roundup": os.getenv("FORCE_ROUNDUP", "false").lower() == "true",
+            "breaking_only": os.getenv("BREAKING_ONLY", "false").lower() == "true",
+            "breaking_min_score": float(os.getenv("BREAKING_MIN_SCORE", "40")),
+            "breaking_max_age_hours": float(os.getenv("BREAKING_MAX_AGE_HOURS", "6")),
+            "breaking_cooldown_hours": float(os.getenv("BREAKING_COOLDOWN_HOURS", "3")),
             "github_event": os.getenv("GITHUB_EVENT_NAME", "schedule"),
             "image_provider": image_provider,
             "cloudflare_account_id": os.getenv("CLOUDFLARE_ACCOUNT_ID"),
