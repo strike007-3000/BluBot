@@ -9,6 +9,7 @@ import hashlib
 import html
 import ipaddress
 import os
+import re
 import sys
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
@@ -201,6 +202,32 @@ def get_display_source_and_domain(entry: dict) -> Tuple[str, str]:
     if domain != "Unknown source":
         return domain, domain
     return "BluBot", "blubot"
+
+
+def display_title(entry: dict, max_len: int = 115) -> str:
+    """Display-only title cleanup; never mutates stored data."""
+    t = " ".join(str(entry.get("title") or "").split())
+    if not t:
+        return "Untitled"
+    t = re.sub(r"^[\w.\-]+/[0-9a-f]{7,40}:\s*", "", t)  # "trunk/<sha>: "
+    t = re.sub(r"\s*\(#\d+\)\s*$", "", t)
+    if not t:
+        return "Untitled"
+    t = re.sub(r"([a-z0-9][.!?])([A-Z])", r"\1 \2", t)  # "consent.Multiple"
+    t = t[0].upper() + t[1:] if t[0].islower() else t
+    if re.fullmatch(r"(?i)release\s+v?\d[\w.\-+]*", t):
+        try:
+            parts = urlparse(str(entry.get("url") or "")).path.strip("/").split("/")
+        except ValueError:
+            parts = []
+        host = extract_display_domain(entry.get("url") or "")
+        proj = parts[1] if _hostname_matches(host, "github.com") and len(parts) > 1 else get_display_source_and_domain(entry)[0]
+        if proj and proj.lower() not in t.lower():
+            t = f"{proj} {t}"
+    if len(t) > max_len:
+        cut = t[:max_len - 1].rsplit(" ", 1)[0].rstrip(" ,;:-–—")
+        t = (cut or t[:max_len - 1]) + "…"
+    return t
 
 
 def get_display_category(entry: dict) -> str:
@@ -482,7 +509,7 @@ def build_html(entries: list, metrics: Optional[Dict[str, Dict[str, int]]] = Non
     # Articles
     items_html = []
     for e in sorted_entries:
-        raw_title = str(e.get("title") or "Untitled")
+        raw_title = display_title(e)
         title = html.escape(raw_title)
         raw_url = str(e.get("url") or "")
         pub_at_iso = str(e.get("published_at") or "")
