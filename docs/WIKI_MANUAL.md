@@ -220,6 +220,13 @@ python scripts/diagnostic.py
 python scripts/diagnostic.py --mode engagement   # non-interactive; modes: scoring, dry-run, images, gist, gemini, drafts, hf, github, engagement, continuity
 ```
 
+### 🔑 Credential Checker
+Verify secrets (for example after Infisical pushes them to GitHub) without posting anything:
+```bash
+python scripts/check_tokens.py
+```
+Menu: 1 Bluesky, 2 Threads, 3 Mastodon, 4 Gemini, 5 NVIDIA, 6 Telegram, 7 Gist, 8 Cloudflare, 9 Hugging Face. Secrets are typed hidden; Enter reuses the matching env var. Mastodon also checks the base URL and the `write:statuses` scope; Threads checks the token matches `THREADS_USER_ID`; Telegram checks the bot can reach `TELEGRAM_USER_ID`.
+
 ### 🎨 Sage Console (Logging)
 As of **v3.8.5**, BluBot supports multiple logging formats:
 - **`LOG_FORMAT=pretty`** (Default for local): Colored, human-friendly text.

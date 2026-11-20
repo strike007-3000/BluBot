@@ -1,6 +1,8 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.42.2**: **Credential checker**.
+  - New `scripts/check_tokens.py`: interactive menu that tests Bluesky, Threads, Mastodon, Gemini, NVIDIA, Telegram, Gist, Cloudflare and Hugging Face credentials against each API without posting. Mastodon also verifies the base URL and `write:statuses` scope.
 - **v3.42.1**: **Off-topic post fix, bio limits, reply retry**.
   - Synthesis now sees only the lead story, so the post can no longer be about a different article than its link and image. Any platform draft sharing no word (3+ chars) with the lead story is rejected and rotate to the next model.
   - Bio updates trim the topic so the bio fits Bluesky (256 graphemes) and Mastodon (500 chars).
