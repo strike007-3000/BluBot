@@ -1431,3 +1431,8 @@ async def test_tag_toggle_commits_only_after_preview_updates(monkeypatch, mocker
     drafts = apply_tags(PlatformDrafts.from_single("Hello"), "simon_willison")
     final, _ = await send_draft_for_approval(drafts, tag_source_id="simon_willison")
     assert final.bluesky.endswith("cc @simonwillison.net") is expect_tag
+
+def test_markup_has_new_post_button():
+    from src.telegram_gateway import _build_telegram_markup as _markup
+    data = [b.callback_data for row in _markup(current_tab="bluesky", view_mode="tabs", remix_state="idle").inline_keyboard for b in row]
+    assert "newpost" in data
