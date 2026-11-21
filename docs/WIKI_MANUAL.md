@@ -279,7 +279,7 @@ BluBot maintains an automated `pytest` suite covering repository hygiene, exact 
 3. **Hardening (Redaction)**: The `SafeLogger` is tested against high-entropy string detection to ensure no API keys leak into production logs.
 4. **Transparency (Diagnostic Scoring)**: The curation engine attaches `_score_debug` metadata to every article, providing a granular breakdown (Source, Signal, Momentum, Watchlist, Penalty, Category Penalty, Decay) visible during dry-runs.
 5. **Story Clustering**: Validates title normalization, headline similarity, and cross-source consensus synergy bonus assignment.
-6. **Telegram Commands**: Validates `/topic`, `/curate`, `/news`, `/watch`, `/unwatch`, `/watches`, and `/brief` command parsing, `/news` URL splitting, input sanitization, and state persistence.
+6. **Telegram Commands**: Validates `/topic`, `/curate`, `/news`, `/watch`, `/unwatch`, `/watches`, `/brief`, and `/threads_refreshed` command parsing, `/news` URL splitting, input sanitization, and state persistence.
 7. **Topic Grounding**: Verifies RSS-grounded topic matching and curation pipeline bypasses.
 8. **Dry-Run Bypasses**: Ensures all external API calls (Gemini, social broadcasting, state persistence) are correctly bypassed in dry-run mode, including the `/brief` briefing synthesis.
 9. **Media Pipeline**: Validates OpenGraph scraping, image compression, alt-text generation, and platform-specific media rendering.
@@ -677,7 +677,29 @@ When `is_dry_run=True`, the briefing engine bypasses Gemini API calls entirely a
 
 ---
 
-## ⚙️ Page 25: CI/CD Workflows
+## 🏷️ Page 25: Threads Token Reminder & Source Tags (v3.43.0)
+
+### Threads token reminder
+Threads long-lived tokens last 60 days. Record each refresh and BluBot nudges you before the next expiry.
+
+| Command | Description |
+| :--- | :--- |
+| `/threads_refreshed [YYYY-MM-DD]` | Record the refresh date (defaults to today; future dates are rejected). Stored in the Gist file `threads_token.json`. Accepted from messages up to 24 hours old, unlike other commands (15 minutes). |
+
+From 5 days before expiry, each scheduled run sends one Telegram reminder per day (`last_reminded` prevents repeats) until a new date is recorded. Nothing is sent until the first date is recorded. The breaking lane does not send reminders. Refreshing is manual: `GET https://graph.threads.net/refresh_access_token?grant_type=th_refresh_token&access_token=<token>`, then update the secret.
+
+### Source tags (Bluesky and Mastodon)
+`src/tagging.py` holds `SOURCE_HANDLES`, a hand-verified map from source ID to account per platform. When the lead story's source is listed:
+- The Bluesky and Mastodon drafts end with `cc @handle` (Mastodon uses `@user@instance`). Threads is never tagged.
+- The Telegram review shows a `🏷 Source tag: ON/OFF` button that adds or removes the tag. Tags are applied only on the approval path, so breaking-lane posts are never tagged.
+- A tag is skipped when it would push the draft past the platform limit (Bluesky limit minus 10, Mastodon limit minus 15).
+- Bluesky: each `@handle` in the text resolves to a DID and becomes a real mention facet; if resolution fails it stays plain text and the post still goes out. Mastodon needs no extra handling.
+
+To add a source, confirm the account is genuinely the source's (for Bluesky, `app.bsky.actor.getProfile`; for Mastodon, webfinger) and add its ID from `SOURCE_REGISTRY`.
+
+---
+
+## ⚙️ Page 26: CI/CD Workflows
 
 | Workflow | Trigger | Purpose |
 | :--- | :--- | :--- |

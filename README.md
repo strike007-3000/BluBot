@@ -16,6 +16,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
     - **Output Repair**: Strips accidental markdown formatting, applies platform-specific hashtag policy, and repairs overlong output without splitting URLs.
     - **Model Discovery**: Lists the models available to the configured key and keeps only exact matches from the approved priority list; if discovery fails, the defaults remain available for runtime failover.
     - **Graceful Degradation**: If news volume is low or summarization fails, the bot intelligently degrades to "Mentor Fallback" mode.
+- **Source Tags (Bluesky & Mastodon)**: When the lead story's source has a hand-verified account in `src/tagging.py`, the Bluesky and Mastodon drafts end with `cc @handle` (Bluesky gets a real mention facet; unresolvable handles stay plain text). Tags exist only on the Telegram-approval path, where a `🏷 Source tag` button toggles them off, and are skipped when they would exceed the platform limit.
 - **Breaking-News Lane**: A daily run at 09:47, 15:47 and 21:47 UTC posts outside the three scheduled slots only when the top story scores 40+ and is under 6 hours old (3-hour cooldown after any post, at most one breaking post per rolling 24 hours); otherwise it exits before any Gemini call. Posts show a Breaking badge and filter on the archive page. Thresholds are env-tunable (`BREAKING_*`).
 - **Full-Article Grounding**: Synthesis receives only the lead story (the one whose link and image are posted) with its article body (6,000 chars, via the SSRF-safe 1 MB-capped fetcher), falling back to the RSS summary when a fetch fails. Any platform draft sharing no words with the lead story is rejected and rotate to the next model.
 - **🖼️ Unified Media Strategy Stage**:
@@ -131,7 +132,7 @@ Standard API Access (See [WIKI](docs/WIKI_MANUAL.md)).
 | `ENABLE_BSKY_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Bluesky (default: `true`) |
 | `ENABLE_MASTODON_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Mastodon (default: `false`) |
 | `ENABLE_THREADS_COMMENT_REPLIES` | No | (Optional) Enable/disable replying to comments on Threads (default: `false`) |
-| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token (supports commands: `/topic`, `/curate`, `/news`, `/watch`, `/unwatch`, `/watches`, `/brief`). See [Telegram Command Reference](#-telegram-command-reference) below. |
+| `TELEGRAM_BOT_TOKEN` | No | (Optional) Your Telegram Bot API Token (supports commands: `/topic`, `/curate`, `/news`, `/watch`, `/unwatch`, `/watches`, `/brief`, `/threads_refreshed`). See [Telegram Command Reference](#-telegram-command-reference) below. |
 | `TELEGRAM_USER_ID` | No | (Optional) Your numeric Telegram User ID (for authentication) |
 | `TELEGRAM_TIMEOUT_MINUTES` | No | (Optional) Telegram polling timeout in minutes (default: `5`) |
 | `ENABLE_TELEGRAM_APPROVAL` | No | (Optional) Toggle Telegram draft approval (default: `true`; has no effect without a bot token and user ID) |
@@ -204,6 +205,7 @@ BluBot implements a **Gist-Authoritative 3-Tier Persistence** system to reduce s
 | `/watch <keyword>` | Add a topic to your persistent watchlist (max 10). Watched topics receive a bounded `+3` to `+8` scoring boost during curation |
 | `/unwatch <keyword>` | Remove a topic from your watchlist |
 | `/watches` | List all active watchlist topics |
+| `/threads_refreshed [YYYY-MM-DD]` | Record the date you refreshed the Threads token (defaults to today). BluBot messages you once a day from 5 days before the 60-day expiry until you do |
 | `/brief <keyword>` | Generate a **7-day executive briefing** for a topic. Fetches all RSS articles from the past 7 days, clusters corroborated stories, and synthesizes a Gemini-powered analytical report delivered directly to Telegram with no platform character limits |
 
 > **Fail-closed approval:** posts from `/topic`, `/curate` and `/news` are never auto-published. If Telegram approval times out or errors, nothing is posted and the topic is re-queued in `pending_topic.json` (with its command kind) for the next run. Scheduled posts still auto-publish on timeout. The same applies if Gemini is unavailable for a `/news` request: it retries 3 times, then warns you on Telegram and re-queues instead of posting a generic fallback.

@@ -4,7 +4,7 @@ import httpx
 import re
 import json
 from html import escape
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional, Tuple, Any, List
 from telegram.request import HTTPXRequest
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
@@ -88,7 +88,7 @@ def validate_text_limits(text: str) -> Optional[str]:
 
     return None
 
-def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs", remix_state: str = "idle") -> InlineKeyboardMarkup:
+def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs", remix_state: str = "idle", tag_on: Optional[bool] = None) -> InlineKeyboardMarkup:
     """Constructs inline keyboard with platform tabs, view toggles, approval, and remix buttons."""
     if remix_state == "in_flight":
         # Disable action buttons while remix request is in flight
@@ -121,7 +121,10 @@ def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs"
         InlineKeyboardButton("🎨 Regenerate Image", callback_data="regenerate_image")
     ]
 
-    return InlineKeyboardMarkup([tab_row, control_row, action_row, regen_row])
+    rows = [tab_row, control_row]
+    if tag_on is not None:
+        rows.append([InlineKeyboardButton(f"🏷 Source tag: {'ON ✅' if tag_on else 'OFF'}", callback_data="tag:toggle")])
+    return InlineKeyboardMarkup(rows + [action_row, regen_row])
 
 def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: str = "tabs", decision: Optional[Any] = None) -> str:
     """Formats preview text ensuring strict compliance with Telegram caption / text budgets."""
@@ -231,7 +234,8 @@ async def send_draft_for_approval(
     text: Optional[str] = None,  # Backward-compatible keyword alias
     decision: Optional[Any] = None,
     receipt: str = "",
-    pending: Optional[dict] = None  # {"topic", "kind"} when the user supplied the topic: fail closed
+    pending: Optional[dict] = None,  # {"topic", "kind"} when the user supplied the topic: fail closed
+    tag_source_id: Optional[str] = None
 ) -> Tuple[Optional[Any], Optional[MediaAsset]]:
     """
     Sends generated post drafts and image to Telegram for approval.
@@ -241,6 +245,11 @@ async def send_draft_for_approval(
     from src.models import PlatformDrafts
     raw_input = drafts if drafts is not None else text
     current_drafts = raw_input if isinstance(raw_input, PlatformDrafts) else PlatformDrafts.from_single(str(raw_input or ""))
+
+    from src.tagging import tag_state, apply_tags, strip_tags
+
+    def _markup(**kw):
+        return _build_telegram_markup(tag_on=tag_state(current_drafts, tag_source_id), **kw)
 
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
@@ -260,7 +269,7 @@ async def send_draft_for_approval(
         active_prompt_id = None
         remix_target = "bluesky"  # "bluesky" | "threads" | "mastodon" | "all"
 
-        reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
+        reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
         preview_text = _format_preview_text(current_drafts, current_tab=current_tab, view_mode=view_mode, decision=decision)
 
         sent_message = None
@@ -345,10 +354,25 @@ async def send_draft_for_approval(
                             await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
                             return None, None
 
+                        elif action == "tag:toggle":
+                            was_on = tag_state(current_drafts, tag_source_id)
+                            if was_on is None:
+                                await query.answer("No source tag for this story.")
+                                continue
+                            current_drafts = (strip_tags if was_on else apply_tags)(current_drafts, tag_source_id)
+                            now_on = tag_state(current_drafts, tag_source_id)
+                            await _render_and_update_preview(
+                                bot=bot, chat_id=chat_id, sent_message=sent_message,
+                                drafts=current_drafts, current_tab=current_tab, view_mode=view_mode,
+                                reply_markup=_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state),
+                                image_bytes=image_bytes, decision=decision
+                            )
+                            await query.answer("Source tag ON" if now_on else ("No room for the tag." if not was_on else "Source tag OFF"))
+
                         elif action.startswith("tab:"):
                             tab_key = action.split(":")[1]
                             target_tab = "bluesky" if tab_key == "bsky" else ("threads" if tab_key == "threads" else "mastodon")
-                            reply_markup = _build_telegram_markup(current_tab=target_tab, view_mode="tabs", remix_state=remix_state)
+                            reply_markup = _markup(current_tab=target_tab, view_mode="tabs", remix_state=remix_state)
                             success = await _render_and_update_preview(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
                                 drafts=current_drafts, current_tab=target_tab, view_mode="tabs",
@@ -364,7 +388,7 @@ async def send_draft_for_approval(
 
                         elif action.startswith("view:"):
                             target_view = action.split(":")[1]
-                            reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=target_view, remix_state=remix_state)
+                            reply_markup = _markup(current_tab=current_tab, view_mode=target_view, remix_state=remix_state)
                             success = await _render_and_update_preview(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
                                 drafts=current_drafts, current_tab=current_tab, view_mode=target_view,
@@ -546,7 +570,7 @@ async def send_draft_for_approval(
                                     if remix_ok:
                                         candidate_drafts = current_drafts.with_update(target_p, remixed_text)
 
-                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
+                                reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
                                 update_ok = await _render_and_update_preview(
                                     bot=bot, chat_id=chat_id, sent_message=sent_message,
                                     drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,
@@ -568,7 +592,7 @@ async def send_draft_for_approval(
                             finally:
                                 remix_state = "idle"
                                 active_prompt_id = None
-                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
+                                reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
                                 try:
                                     await bot.edit_message_reply_markup(
                                         chat_id=chat_id, message_id=sent_message.message_id, reply_markup=reply_markup
@@ -589,7 +613,7 @@ async def send_draft_for_approval(
 
                             if is_edit and new_text:
                                 candidate_drafts = current_drafts.with_update(current_tab, new_text)
-                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
+                                reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
                                 update_ok = await _render_and_update_preview(
                                     bot=bot, chat_id=chat_id, sent_message=sent_message,
                                     drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,
@@ -621,10 +645,38 @@ async def send_draft_for_approval(
             await _abort_unapproved(settings.telegram_user_id, pending, f"Approval failed ({e}).")
         return current_drafts, media
 
+THREADS_TOKEN_STATE_FILE = "threads_token.json"
+THREADS_TOKEN_LIFETIME_DAYS = 60
+THREADS_TOKEN_WARN_DAYS = 5
+
+def threads_token_days_left(refreshed: date, today: date) -> int:
+    return (refreshed + timedelta(days=THREADS_TOKEN_LIFETIME_DAYS) - today).days
+
+async def send_threads_expiry_reminder() -> None:
+    """Telegram nudge (once a day) when the Threads token is within 5 days of expiry."""
+    if settings.is_dry_run or not settings.telegram_bot_token or not settings.telegram_user_id:
+        return
+    from src.utils import _load_gist_state, _save_gist_state
+    try:
+        state = await asyncio.to_thread(_load_gist_state, THREADS_TOKEN_STATE_FILE) or {}
+        today = datetime.now(timezone.utc).date()
+        left = threads_token_days_left(date.fromisoformat(state["refreshed"]), today)
+        if left > THREADS_TOKEN_WARN_DAYS or state.get("last_reminded") == today.isoformat():
+            return
+        when = f"in {left} day(s)" if left > 0 else "already (or today)"
+        text = (f"⏰ Threads token expires {when}. Refresh it, then send /threads_refreshed "
+                f"[YYYY-MM-DD] to reset this reminder.")
+        await _make_bot(settings.telegram_bot_token).send_message(chat_id=settings.telegram_user_id, text=text)
+        await asyncio.to_thread(_save_gist_state, THREADS_TOKEN_STATE_FILE, {**state, "last_reminded": today.isoformat()})
+    except (KeyError, ValueError):
+        return  # no date recorded yet: send /threads_refreshed once to enable
+    except Exception as e:
+        SafeLogger.warn(f"Telegram: Threads expiry reminder failed: {e}")
+
 def process_authorized_command(text: str) -> Optional[dict]:
     """
     Consolidated handler for authorized Telegram text commands.
-    Recognizes: /topic <t>, /curate <t>, /watch <t>, /unwatch <t>, /watches, /brief <t>.
+    Recognizes: /topic <t>, /curate <t>, /watch <t>, /unwatch <t>, /watches, /brief <t>, /threads_refreshed [date].
     Returns a result dictionary describing the command action or None if unhandled.
     """
     if not text:
@@ -693,6 +745,20 @@ def process_authorized_command(text: str) -> Optional[dict]:
         state["watch_topics"] = updated_watches
         save_seen_articles(state)
         return {"action": "unwatch_removed", "topic": raw_topic, "response": f"🗑️ Removed *{raw_topic}* from watchlist ({len(updated_watches)}/10 remaining)."}
+
+    elif cmd_text == "/threads_refreshed" or cmd_text.startswith("/threads_refreshed "):
+        arg = cmd_text.replace("/threads_refreshed", "", 1).strip()
+        try:
+            day = date.fromisoformat(arg) if arg else datetime.now(timezone.utc).date()
+        except ValueError:
+            return {"action": "threads_refreshed_invalid", "response": "⚠️ Usage: /threads_refreshed [YYYY-MM-DD] (defaults to today)"}
+        if day > datetime.now(timezone.utc).date():
+            return {"action": "threads_refreshed_invalid", "response": "⚠️ Refresh date cannot be in the future."}
+        from src.utils import _save_gist_state
+        if not _save_gist_state(THREADS_TOKEN_STATE_FILE, {"refreshed": day.isoformat()}):
+            return {"action": "threads_refreshed_failed", "response": "❌ Could not save the refresh date (Gist unavailable)."}
+        expiry = day + timedelta(days=THREADS_TOKEN_LIFETIME_DAYS)
+        return {"action": "threads_refreshed", "response": f"✅ Threads token refresh recorded: {day}. Reminder fires {THREADS_TOKEN_WARN_DAYS} days before expiry ({expiry})."}
 
     elif cmd_text == "/watches" or cmd_text.startswith("/watches "):
         from src.utils import load_seen_articles
@@ -771,7 +837,7 @@ async def check_for_telegram_topic() -> Tuple[Optional[str], Optional[str]]:
             if update.message and str(update.message.from_user.id) == str(chat_id):
                 msg = update.message
                 # Verify it was sent in the last 15 minutes
-                if msg.date and (now - msg.date.timestamp()) < 900:
+                if msg.date and ((now - msg.date.timestamp()) < 900 or (msg.text or "").startswith("/threads_refreshed")):
                     text = msg.text or ""
                     result = process_authorized_command(text)
                     if result:
