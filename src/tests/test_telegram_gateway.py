@@ -1339,3 +1339,18 @@ def test_score_receipt_lists_signals_and_links():
     out = format_score_receipt(art)
     assert "Score 63" in out and "Source +30" in out and "Momentum +18" in out and "corroborated by 1 source" in out
     assert 'href="https://a.com/x?a=1&amp;b=2"' in out and "https://w.com/y" in out
+
+
+def test_threads_token_days_left_and_command(monkeypatch):
+    from datetime import date
+    from src import telegram_gateway as tg
+
+    assert tg.threads_token_days_left(date(2026, 11, 18), date(2027, 1, 12)) == 5
+    assert tg.threads_token_days_left(date(2026, 11, 18), date(2027, 1, 18)) == -1
+
+    saved = {}
+    monkeypatch.setattr("src.utils._save_gist_state", lambda f, d: saved.update({f: d}) or True)
+    assert tg.process_authorized_command("/threads_refreshed 2026-11-18")["action"] == "threads_refreshed"
+    assert saved["threads_token.json"] == {"refreshed": "2026-11-18"}
+    assert tg.process_authorized_command("/threads_refreshed nope")["action"] == "threads_refreshed_invalid"
+    assert tg.process_authorized_command("/threads_refreshed 2999-01-01")["action"] == "threads_refreshed_invalid"

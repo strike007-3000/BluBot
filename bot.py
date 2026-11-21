@@ -42,7 +42,7 @@ from src.broadcaster import (
 )
 from src.telegram_gateway import (
     send_draft_for_approval, format_score_receipt, check_for_telegram_topic,
-    send_broadcast_platform_messages
+    send_broadcast_platform_messages, send_threads_expiry_reminder
 )
 from src.config import (
     STATUS_FILE_PATH, IMAGEN_MODEL,
@@ -1483,6 +1483,8 @@ async def main():
         breaking_lane = getattr(settings, "breaking_only", False) is True
         # The breaking lane never consumes Telegram topic requests; scheduled runs own those.
         res = None if breaking_lane else await check_for_telegram_topic()
+        if not breaking_lane:
+            await send_threads_expiry_reminder()
         if isinstance(res, tuple):
             cmd_type, telegram_topic = res
         else:
