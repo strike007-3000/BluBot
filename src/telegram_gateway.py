@@ -359,15 +359,24 @@ async def send_draft_for_approval(
                             if was_on is None:
                                 await query.answer("No source tag for this story.")
                                 continue
-                            current_drafts = (strip_tags if was_on else apply_tags)(current_drafts, tag_source_id)
-                            now_on = tag_state(current_drafts, tag_source_id)
-                            await _render_and_update_preview(
+                            candidate = (strip_tags if was_on else apply_tags)(current_drafts, tag_source_id)
+                            now_on = tag_state(candidate, tag_source_id)
+                            if now_on == was_on:
+                                await query.answer("No room for the tag.")
+                                continue
+                            success = await _render_and_update_preview(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
-                                drafts=current_drafts, current_tab=current_tab, view_mode=view_mode,
-                                reply_markup=_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state),
+                                drafts=candidate, current_tab=current_tab, view_mode=view_mode,
+                                reply_markup=_build_telegram_markup(
+                                    current_tab=current_tab, view_mode=view_mode, remix_state=remix_state, tag_on=now_on
+                                ),
                                 image_bytes=image_bytes, decision=decision
                             )
-                            await query.answer("Source tag ON" if now_on else ("No room for the tag." if not was_on else "Source tag OFF"))
+                            if success:
+                                current_drafts = candidate
+                                await query.answer("Source tag ON" if now_on else "Source tag OFF")
+                            else:
+                                await query.answer("Failed to update the preview; tag unchanged.", show_alert=True)
 
                         elif action.startswith("tab:"):
                             tab_key = action.split(":")[1]
