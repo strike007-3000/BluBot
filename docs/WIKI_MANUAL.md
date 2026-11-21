@@ -50,7 +50,7 @@ The registry (`SOURCE_REGISTRY` in `src/config.py`) holds **51 RSS feeds plus 4 
 | Practitioner | +20 | Simon Willison, Interconnects, Latent Space, One Useful Thing, Maarten Grootendorst, Sebastian Raschka, Jack Clark |
 | Open source | +18 (Claude Code releases +16) | Hugging Face Transformers, vLLM, Ollama, PyTorch, llama.cpp, Claude Code releases |
 | Infrastructure / business | +15 | Together AI, ServeTheHome, Semiconductor Engineering, Sequoia Capital, CB Insights |
-| Journalism | +12 | The Verge AI, Ars Technica AI, MIT Tech Review, IEEE Spectrum, The Decoder, Wired AI, VentureBeat AI, TechCrunch AI, 404 Media, Silicon Angle, The Sequence, MarktechPost, AI Accelerator Institute |
+| Journalism | +12 | The Verge AI, Ars Technica AI, MIT Tech Review, IEEE Spectrum, The Decoder, Wired AI, The New Stack AI, TechCrunch AI, 404 Media, Silicon Angle, The Sequence, MarktechPost, AI Accelerator Institute |
 | Academic | +10 | arXiv cs.LG, BAIR Blog, ML Mastery |
 | Policy & critical voices | +10 / +5 | AI Incident Database, EU AI Act Tracker (+10); AI Snake Oil, Gary Marcus, Algorithmic Bridge, Victoria Krakovna (+5) |
 

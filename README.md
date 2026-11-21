@@ -70,7 +70,7 @@ See [STATUS.md](STATUS.md) for live telemetry and broadcaster status.
         | **Practitioner** | `+20` | Simon Willison, Interconnects, Latent Space, One Useful Thing, Sebastian Raschka, Jack Clark, Maarten Grootendorst; Hacker News (API, `+15`, 50+ points) |
         | **Open Source** | `+18` (GitHub Fast-Rising: `+16`) | Hugging Face Transformers Releases, vLLM, Ollama, PyTorch, llama.cpp, Claude Code (`+16`), Hugging Face Trending (API), GitHub Fast-Rising Repositories (API) |
         | **Infrastructure/Business** | `+15` | Together AI, ServeTheHome, Semiconductor Engineering, Sequoia, CB Insights |
-        | **Journalism** | `+12` | Ars Technica, The Verge, Wired, MIT Tech Review, TechCrunch, VentureBeat, IEEE Spectrum, The Decoder, 404 Media, Silicon Angle, The Sequence, Marktechpost, AI Accelerator Institute |
+        | **Journalism** | `+12` | Ars Technica, The Verge, Wired, MIT Tech Review, TechCrunch, The New Stack, IEEE Spectrum, The Decoder, 404 Media, Silicon Angle, The Sequence, Marktechpost, AI Accelerator Institute |
         | **Academic** | `+10` | arXiv CS.LG, BAIR Blog, ML Mastery; Hugging Face Daily Papers (API, `+18`, 10+ upvotes) |
         | **Critical / Policy & Security** | `+5`–`+10` | AI Incident Database and EU AI Act Tracker (`+10`); AI Snake Oil, Gary Marcus, Algorithmic Bridge, Victoria Krakovna (`+5`) |
     - **Curation Boosts & Penalties**:

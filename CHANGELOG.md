@@ -3,6 +3,8 @@
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
 - **v3.44.1**: **Deferred replies, empty feeds**.
   - A mention that loses the engagement roll is no longer dropped: it stays unseen and is rolled again on later runs, so every mention is eventually answered with a natural delay.
+  - Feed fetches now send an honest `BluBot/3` User-Agent instead of a spoofed Chrome one: Jack Clark, The Sequence, Gary Marcus, Algorithmic Bridge and Victoria Krakovna returned 403 to the spoofed UA but serve BluBot normally.
+  - VentureBeat AI (HTTP 429 even with a plain UA) replaced by The New Stack AI.
   - A valid but empty feed (arXiv on weekends) no longer counts as a failure, so it is no longer penalized for 12h.
 - **v3.44.0**: **New Post button**.
   - Telegram drafts get a `🔄 New Post (skip story)` button: it adds the lead story's URL to the seen list and re-runs the pipeline for the next-best story (up to 3 times per run). Reject still just aborts and does not skip the story, so use New Post to get a different article.

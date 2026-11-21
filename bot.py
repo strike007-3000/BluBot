@@ -1471,7 +1471,8 @@ async def main(_retry: int = 0):
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        # Honest bot UA: a spoofed Chrome UA was 403'd by 5 feeds that serve BluBot fine.
+        "User-Agent": "BluBot/3 (+https://github.com/strike007-3000/BluBot)"
     }
     async with httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=30) as client:
         genai_client = genai.Client(api_key=settings.gemini_key)

@@ -142,7 +142,7 @@ SOURCE_REGISTRY = [
     {"id": "ieee_spectrum",       "name": "IEEE Spectrum AI",    "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "the_decoder",         "name": "The Decoder",         "url": "https://www.the-decoder.com/feed/",                                  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "wired_ai",            "name": "Wired AI",            "url": "https://www.wired.com/feed/tag/ai/latest/rss",                       "category": "journalism",     "quality": "journalism", "base_score": 12},
-    {"id": "venturebeat_ai",      "name": "VentureBeat AI",      "url": "https://venturebeat.com/category/ai/feed/",                          "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "the_new_stack_ai",    "name": "The New Stack AI",    "url": "https://thenewstack.io/category/ai/feed/",                            "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "techcrunch_ai",       "name": "TechCrunch AI",       "url": "https://techcrunch.com/category/artificial-intelligence/feed/",      "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "four_hundred_four",   "name": "404 Media",           "url": "https://404media.co/rss/",                                           "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "silicon_angle",       "name": "Silicon Angle AI",    "url": "https://siliconangle.com/category/ai/feed/",                         "category": "journalism",     "quality": "journalism", "base_score": 12},
