@@ -158,6 +158,7 @@ Before publishing, the bot sends the draft and image card to your chat as one au
 | `✨ Remix <platform>` / `✨ Remix All` | Reply with an instruction ("make it punchier"); Gemini rewrites the active tab (or all) with link-safe truncation |
 | `🏷 Source tag: ON/OFF` | Shown only when the source has a verified account (see [Source tags](#source-tags)) |
 | `✅ Approve` / `❌ Reject` | Publish / abort the run |
+| `🔄 New Post (skip story)` | Marks the lead story as seen and re-runs for the next-best story (max 3 per run); Reject does not skip the story |
 | `🎨 Regenerate Image` | New isometric prompt from the latest draft, fresh image from the provider chain, regenerated alt-text, preview media updated |
 
 Other behavior:
