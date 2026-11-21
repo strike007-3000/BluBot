@@ -88,7 +88,7 @@ def validate_text_limits(text: str) -> Optional[str]:
 
     return None
 
-def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs", remix_state: str = "idle") -> InlineKeyboardMarkup:
+def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs", remix_state: str = "idle", tag_on: Optional[bool] = None) -> InlineKeyboardMarkup:
     """Constructs inline keyboard with platform tabs, view toggles, approval, and remix buttons."""
     if remix_state == "in_flight":
         # Disable action buttons while remix request is in flight
@@ -121,7 +121,10 @@ def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs"
         InlineKeyboardButton("🎨 Regenerate Image", callback_data="regenerate_image")
     ]
 
-    return InlineKeyboardMarkup([tab_row, control_row, action_row, regen_row])
+    rows = [tab_row, control_row]
+    if tag_on is not None:
+        rows.append([InlineKeyboardButton(f"🏷 Source tag: {'ON ✅' if tag_on else 'OFF'}", callback_data="tag:toggle")])
+    return InlineKeyboardMarkup(rows + [action_row, regen_row])
 
 def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: str = "tabs", decision: Optional[Any] = None) -> str:
     """Formats preview text ensuring strict compliance with Telegram caption / text budgets."""
@@ -231,7 +234,8 @@ async def send_draft_for_approval(
     text: Optional[str] = None,  # Backward-compatible keyword alias
     decision: Optional[Any] = None,
     receipt: str = "",
-    pending: Optional[dict] = None  # {"topic", "kind"} when the user supplied the topic: fail closed
+    pending: Optional[dict] = None,  # {"topic", "kind"} when the user supplied the topic: fail closed
+    tag_source_id: Optional[str] = None
 ) -> Tuple[Optional[Any], Optional[MediaAsset]]:
     """
     Sends generated post drafts and image to Telegram for approval.
@@ -241,6 +245,11 @@ async def send_draft_for_approval(
     from src.models import PlatformDrafts
     raw_input = drafts if drafts is not None else text
     current_drafts = raw_input if isinstance(raw_input, PlatformDrafts) else PlatformDrafts.from_single(str(raw_input or ""))
+
+    from src.tagging import tag_state, apply_tags, strip_tags
+
+    def _markup(**kw):
+        return _build_telegram_markup(tag_on=tag_state(current_drafts, tag_source_id), **kw)
 
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
@@ -260,7 +269,7 @@ async def send_draft_for_approval(
         active_prompt_id = None
         remix_target = "bluesky"  # "bluesky" | "threads" | "mastodon" | "all"
 
-        reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
+        reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
         preview_text = _format_preview_text(current_drafts, current_tab=current_tab, view_mode=view_mode, decision=decision)
 
         sent_message = None
@@ -345,10 +354,25 @@ async def send_draft_for_approval(
                             await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
                             return None, None
 
+                        elif action == "tag:toggle":
+                            was_on = tag_state(current_drafts, tag_source_id)
+                            if was_on is None:
+                                await query.answer("No source tag for this story.")
+                                continue
+                            current_drafts = (strip_tags if was_on else apply_tags)(current_drafts, tag_source_id)
+                            now_on = tag_state(current_drafts, tag_source_id)
+                            await _render_and_update_preview(
+                                bot=bot, chat_id=chat_id, sent_message=sent_message,
+                                drafts=current_drafts, current_tab=current_tab, view_mode=view_mode,
+                                reply_markup=_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state),
+                                image_bytes=image_bytes, decision=decision
+                            )
+                            await query.answer("Source tag ON" if now_on else ("No room for the tag." if not was_on else "Source tag OFF"))
+
                         elif action.startswith("tab:"):
                             tab_key = action.split(":")[1]
                             target_tab = "bluesky" if tab_key == "bsky" else ("threads" if tab_key == "threads" else "mastodon")
-                            reply_markup = _build_telegram_markup(current_tab=target_tab, view_mode="tabs", remix_state=remix_state)
+                            reply_markup = _markup(current_tab=target_tab, view_mode="tabs", remix_state=remix_state)
                             success = await _render_and_update_preview(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
                                 drafts=current_drafts, current_tab=target_tab, view_mode="tabs",
@@ -364,7 +388,7 @@ async def send_draft_for_approval(
 
                         elif action.startswith("view:"):
                             target_view = action.split(":")[1]
-                            reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=target_view, remix_state=remix_state)
+                            reply_markup = _markup(current_tab=current_tab, view_mode=target_view, remix_state=remix_state)
                             success = await _render_and_update_preview(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
                                 drafts=current_drafts, current_tab=current_tab, view_mode=target_view,
@@ -546,7 +570,7 @@ async def send_draft_for_approval(
                                     if remix_ok:
                                         candidate_drafts = current_drafts.with_update(target_p, remixed_text)
 
-                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
+                                reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
                                 update_ok = await _render_and_update_preview(
                                     bot=bot, chat_id=chat_id, sent_message=sent_message,
                                     drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,
@@ -568,7 +592,7 @@ async def send_draft_for_approval(
                             finally:
                                 remix_state = "idle"
                                 active_prompt_id = None
-                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
+                                reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state="idle")
                                 try:
                                     await bot.edit_message_reply_markup(
                                         chat_id=chat_id, message_id=sent_message.message_id, reply_markup=reply_markup
@@ -589,7 +613,7 @@ async def send_draft_for_approval(
 
                             if is_edit and new_text:
                                 candidate_drafts = current_drafts.with_update(current_tab, new_text)
-                                reply_markup = _build_telegram_markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
+                                reply_markup = _markup(current_tab=current_tab, view_mode=view_mode, remix_state=remix_state)
                                 update_ok = await _render_and_update_preview(
                                     bot=bot, chat_id=chat_id, sent_message=sent_message,
                                     drafts=candidate_drafts, current_tab=current_tab, view_mode=view_mode,

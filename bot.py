@@ -40,6 +40,7 @@ from src.broadcaster import (
     update_social_profiles, fetch_bluesky_mentions, fetch_mastodon_mentions,
     fetch_threads_replies
 )
+from src.tagging import apply_tags
 from src.telegram_gateway import (
     send_draft_for_approval, format_score_receipt, check_for_telegram_topic,
     send_broadcast_platform_messages, send_threads_expiry_reminder
@@ -1658,7 +1659,11 @@ async def main():
         if settings.enable_telegram_approval and not settings.is_dry_run and not breaking_lane:
             from src.models import PlatformDrafts
             initial_drafts = synthesis.drafts or PlatformDrafts.from_single(synthesis.content)
+            tag_art = next((a for a in curation.top_articles if normalize_url(a.link) == normalize_url(synthesis.lead_link or "")), None)
+            tag_source_id = tag_art.source_id if tag_art else None
+            initial_drafts = apply_tags(initial_drafts, tag_source_id)
             final_drafts, final_media = await send_draft_for_approval(
+                tag_source_id=tag_source_id,
                 pending={"topic": raw_topic, "kind": cmd_type} if telegram_topic else None,
                 drafts=initial_drafts,
                 media=synthesis.media,
