@@ -134,6 +134,9 @@ def calculate_relevance_score(item, pub_date, now_utc, recent_topics=None, recen
     }
     return score
 
+BOT_USER_AGENT = "BluBot/3 (+https://github.com/strike007-3000/BluBot)"
+
+
 async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent_topics, recent_categories=None, watch_topics=None):
     """Fetches and parses a single RSS feed, returning (url, items, is_healthy, error_msg)."""
     try:
@@ -142,6 +145,9 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
 
         try:
             response = await client.get(url, timeout=10)
+            if response.status_code in (403, 429):
+                # Some feeds (Jack Clark, Victoria Krakovna, The New Stack) refuse the browser UA but serve a declared bot.
+                response = await client.get(url, timeout=10, headers={"User-Agent": BOT_USER_AGENT})
         except Exception as e:
             return url, [], False, f"Network error: {type(e).__name__}"
 

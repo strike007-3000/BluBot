@@ -146,7 +146,7 @@ SOURCE_REGISTRY = [
     {"id": "techcrunch_ai",       "name": "TechCrunch AI",       "url": "https://techcrunch.com/category/artificial-intelligence/feed/",      "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "four_hundred_four",   "name": "404 Media",           "url": "https://404media.co/rss/",                                           "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "silicon_angle",       "name": "Silicon Angle AI",    "url": "https://siliconangle.com/category/ai/feed/",                         "category": "journalism",     "quality": "journalism", "base_score": 12},
-    {"id": "the_sequence",        "name": "The Sequence",        "url": "https://thesequence.substack.com/feed",                              "category": "journalism",     "quality": "journalism", "base_score": 12},
+    {"id": "platformer",          "name": "Platformer",          "url": "https://www.platformer.news/rss/",                                   "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "marktechpost",        "name": "MarktechPost",        "url": "https://www.marktechpost.com/feed/",                                  "category": "journalism",     "quality": "journalism", "base_score": 12},
     {"id": "ai_accelerator_inst", "name": "AI Accelerator Inst", "url": "https://aiacceleratorinstitute.com/rss/",                            "category": "journalism",     "quality": "journalism", "base_score": 12},
 
@@ -157,8 +157,8 @@ SOURCE_REGISTRY = [
 
     # === Tier 8: Critical / Balancing Voices (base 5 — supporting context only) ===
     {"id": "ai_snake_oil",        "name": "AI Snake Oil",        "url": "https://www.aisnakeoil.com/feed",                                     "category": "critical",       "quality": "opinion",    "base_score": 5},
-    {"id": "gary_marcus",         "name": "Gary Marcus",         "url": "https://garymarcus.substack.com/feed",                               "category": "critical",       "quality": "opinion",    "base_score": 5},
-    {"id": "algorithmic_bridge",  "name": "Algorithmic Bridge",  "url": "https://thealgorithmicbridge.substack.com/feed",                      "category": "critical",       "quality": "opinion",    "base_score": 5},
+    {"id": "ai_now",              "name": "AI Now Institute",    "url": "https://ainowinstitute.org/feed",                                    "category": "critical",       "quality": "opinion",    "base_score": 5},
+    {"id": "understanding_ai",    "name": "Understanding AI",    "url": "https://www.understandingai.org/feed",                               "category": "critical",       "quality": "opinion",    "base_score": 5},
     {"id": "vkrakovna",           "name": "Victoria Krakovna",   "url": "https://vkrakovna.wordpress.com/feed/",                              "category": "critical",       "quality": "opinion",    "base_score": 5},
 ]
 
