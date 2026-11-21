@@ -774,3 +774,17 @@ def test_post_context_matches_thread_root():
     ledger = [{"title": "T", "summary": "S", "url": "https://u", "thread_roots": {"bluesky": {"uri": "at://r"}, "mastodon": {"id": "42"}}}]
     assert bot._post_context(ledger, "42").startswith("T — S")
     assert bot._post_context(ledger, "nope") == "" and bot._post_context(ledger, None) == ""
+
+
+def test_status_dashboard_topic_cannot_break_table(tmp_path, monkeypatch):
+    """Multi-line or pipe-bearing topics must stay on one table row."""
+    import bot
+
+    status = tmp_path / "STATUS.md"
+    status.write_text("| **Broadcaster** | x | x | x |\n")
+    monkeypatch.setattr(bot, "STATUS_FILE_PATH", str(status))
+    bot._update_status_dashboard_sync("Morning", "Line one\nA | B\n\nLine two")
+    out = status.read_text().splitlines()
+    assert len(out) == 1
+    assert out[0].count("|") == 6  # 5 cell borders + 1 escaped pipe
+    assert "\\|" in out[0]
