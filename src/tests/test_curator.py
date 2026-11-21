@@ -1733,3 +1733,14 @@ async def test_feed_403_retries_with_bot_user_agent(mocker):
     _, _, healthy, err = await fetch_single_feed(client, "https://x.test/rss", now, now, [], [])
     assert (healthy, err) == (True, None)
     assert client.get.call_args_list[1].kwargs["headers"]["User-Agent"] == BOT_USER_AGENT
+
+
+@pytest.mark.asyncio
+async def test_empty_html_response_is_a_failure(mocker):
+    from datetime import datetime, timezone
+    from src.curator import fetch_single_feed
+    client = mocker.MagicMock()
+    client.get = mocker.AsyncMock(return_value=mocker.MagicMock(status_code=200, content=b"<html><body>maintenance</body></html>"))
+    now = datetime.now(timezone.utc)
+    _, _, healthy, err = await fetch_single_feed(client, "https://x.test/rss", now, now, [], [])
+    assert (healthy, err) == (False, "Empty feed")

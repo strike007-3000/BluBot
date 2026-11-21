@@ -65,7 +65,7 @@ API entries (`kind: api`) are scored and clustered like feed items but are never
 | Hacker News | +15 | Algolia search for LLM/AI queries; needs 50+ points |
 
 ### Feed Vanguard (RSS health)
-Every run starts with a pre-flight scan (`VanguardManager._check_feed()`): fetch with a 15-second timeout, require HTTP `200`, then `feedparser.parse()`. A feed is unhealthy if it is empty or malformed with no entries. Failing feeds are soft-disabled with backoff instead of being deleted:
+Every run starts with a pre-flight scan (`VanguardManager._check_feed()`): fetch with a 15-second timeout, require HTTP `200`, then `feedparser.parse()`. A feed is unhealthy if it is malformed with no entries or is not RSS/Atom at all (empty body, HTML page). A valid feed with zero items (arXiv on weekends) is healthy. A 403/429 is retried once with a declared `BluBot/3` User-Agent before it counts as a failure. Failing feeds are soft-disabled with backoff instead of being deleted:
 
 | Failure | Result |
 | :--- | :--- |

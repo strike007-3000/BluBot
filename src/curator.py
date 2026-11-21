@@ -160,6 +160,8 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         if feed.bozo and not feed.entries:
             return url, [], False, "Parse error/Invalid RSS"
         if not feed.entries:
+            if not feed.version:  # 200 with an empty body or an HTML page is an outage, not an empty feed
+                return url, [], False, "Empty feed"
             return url, [], True, None  # valid but empty (e.g. arXiv on weekends) is not a failure
 
         items = []

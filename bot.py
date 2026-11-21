@@ -1339,6 +1339,20 @@ def _post_context(ledger: list, root_uri: Optional[str]) -> str:
             return f"{e.get('title', '')} — {e.get('summary', '')} ({e.get('url', '')})".strip()
     return ""
 
+def can_defer_reply(timestamp: str, now: datetime) -> bool:
+    """A lost roll may wait only if a later run will still see the mention (fetchers keep 24h).
+
+    Mention under 12h old + a weekday run within 12h (06/12/18 UTC, Mon-Fri) keeps it under 24h.
+    shortcut: assumes the daily_post.yml schedule and that the next run posts; update if the cron changes.
+    """
+    try:
+        age = now - datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return False
+    next_run_soon = now.weekday() < 4 or (now.weekday() == 4 and now.hour < 18)
+    return age.total_seconds() < 12 * 3600 and next_run_soon
+
+
 async def interaction_stage(bsky_client, http_client, session_context: dict) -> InteractionResult:
     """Handles social interactions (mentions/replies) with humanized engagement."""
     SafeLogger.info("Starting Interaction Stage (Mention Replies)...")
@@ -1369,7 +1383,7 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
         reply_prob = COMMENT_REPLY_PROB if is_reply else MENTION_REPLY_PROB
 
         # Probabilistic engagement (Humanization)
-        if random.random() > reply_prob:
+        if random.random() > reply_prob and can_defer_reply(mention.timestamp, datetime.now(timezone.utc)):
             # Deferred, not dropped: left unseen so a later run rolls again and replies with a natural delay.
             SafeLogger.info(f"Decision: Deferring reply to @{mention.author} on {mention.platform} to a later run (Engagement Roll).")
             continue
