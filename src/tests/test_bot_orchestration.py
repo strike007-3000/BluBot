@@ -474,6 +474,7 @@ async def test_new_post_retry_limit_stops_without_broadcast(mocker):
     await bot.main()
 
     assert send.call_count == 4  # first run + 3 retries
+    assert [c.kwargs["new_post_ok"] for c in send.call_args_list] == [True, True, True, False]
     broadcast.assert_not_called()
 
 @pytest.mark.asyncio
@@ -842,3 +843,12 @@ def test_status_dashboard_topic_cannot_break_table(tmp_path, monkeypatch):
     assert len(out) == 1
     assert out[0].replace("\\|", "").count("|") == 5  # only the 5 cell borders stay unescaped
     assert "\\|" in out[0]
+
+@pytest.mark.asyncio
+async def test_new_post_hidden_for_user_requested_topic(mocker):
+    import bot
+    drafts, _, _ = _new_post_setup(mocker)
+    mocker.patch("bot.check_for_telegram_topic", return_value=("topic", "Quantum"))
+    send = mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, return_value=(drafts, None))
+    await bot.main()
+    assert send.call_args.kwargs["new_post_ok"] is False

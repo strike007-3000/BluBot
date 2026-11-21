@@ -1673,6 +1673,7 @@ async def main(_retry: int = 0):
                     genai_client=genai_client,
                     topic=synthesis.topic,
                     decision=decision,
+                    new_post_ok=not telegram_topic and _retry < 3,
                     receipt=format_score_receipt(curation.top_articles[0]) if curation.top_articles else ""
                 )
             except NewPostRequested:
@@ -1681,8 +1682,7 @@ async def main(_retry: int = 0):
                     st = await asyncio.to_thread(load_seen_articles)
                     st.setdefault("links", []).append(lead)
                     await asyncio.to_thread(save_seen_articles, st, is_reservation=False)
-                if _retry >= 3:
-                    SafeLogger.info("New Post: retry limit reached. Aborting.")
+                if _retry >= 3:  # defensive: the button is hidden by then
                     return
                 return await main(_retry + 1)
             if final_drafts is None:

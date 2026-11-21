@@ -1436,3 +1436,8 @@ def test_markup_has_new_post_button():
     from src.telegram_gateway import _build_telegram_markup as _markup
     data = [b.callback_data for row in _markup(current_tab="bluesky", view_mode="tabs", remix_state="idle").inline_keyboard for b in row]
     assert "newpost" in data
+
+def test_markup_hides_new_post_when_disallowed():
+    from src.telegram_gateway import _build_telegram_markup
+    data = [b.callback_data for row in _build_telegram_markup(new_post_ok=False).inline_keyboard for b in row]
+    assert "newpost" not in data
