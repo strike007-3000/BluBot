@@ -59,8 +59,8 @@ def _update_status_dashboard_sync(session_name: str, topic: str):
     try:
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         icon = "🚀" if "Morning" in session_name else "🔍"
-        # Newlines or pipes in a topic would break the markdown table row.
-        topic = " ".join(str(topic).split()).replace("|", "\\|")[:120]
+        # Newlines, pipes or backslashes (which would cancel the pipe escape) would break the markdown table row.
+        topic = " ".join(str(topic).split()).replace("\\", "").replace("|", "\\|")[:120]
 
         # Initialize if missing
         if not os.path.exists(STATUS_FILE_PATH):

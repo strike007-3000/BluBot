@@ -1,6 +1,10 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.43.0**: **STATUS.md fix, Threads token reminder, source tags**.
+  - STATUS.md no longer breaks: the Broadcaster row collapses whitespace, strips backslashes, escapes `|` and caps the topic at 120 chars; stray lines removed from the file. The test suite now writes to a temp STATUS.md (autouse fixture) instead of the tracked one.
+  - New `/threads_refreshed [YYYY-MM-DD]` Telegram command records when you refreshed the Threads token (Gist file `threads_token.json`); from 5 days before the 60-day expiry, each scheduled run sends one Telegram reminder per day until a new date is recorded. Works on messages up to 24 hours old.
+  - New `src/tagging.py`: for hand-verified sources, the Bluesky and Mastodon drafts end with `cc @handle` on the Telegram-approval path, with a `🏷 Source tag` ON/OFF button. Bluesky posts get real mention facets (unresolvable handles stay plain text); tags are skipped when they would exceed the platform limit. Breaking-lane posts (no approval) are never tagged.
 - **v3.42.2**: **Credential checker**.
   - Removed the Pollinations image provider (an unauthenticated third party that received image prompts whenever Cloudflare failed). The chain is now Cloudflare, then Hugging Face; `IMAGE_PROVIDER=pollinations` falls back to the default chain, and `POLLINATIONS_API_URL`/`POLLINATIONS_API_KEY` are gone.
   - New `scripts/check_tokens.py`: interactive menu that tests Bluesky, Threads, Mastodon, Gemini, NVIDIA, Telegram, Gist, Cloudflare, Hugging Face and `REPO_TOKEN` credentials against each API without posting. Mastodon also verifies the base URL and `write:statuses` scope.

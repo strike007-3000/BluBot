@@ -783,8 +783,8 @@ def test_status_dashboard_topic_cannot_break_table(tmp_path, monkeypatch):
     status = tmp_path / "STATUS.md"
     status.write_text("| **Broadcaster** | x | x | x |\n")
     monkeypatch.setattr(bot, "STATUS_FILE_PATH", str(status))
-    bot._update_status_dashboard_sync("Morning", "Line one\nA | B\n\nLine two")
+    bot._update_status_dashboard_sync("Morning", "Line one\nA | B\n\nLine\\| two")
     out = status.read_text().splitlines()
     assert len(out) == 1
-    assert out[0].count("|") == 6  # 5 cell borders + 1 escaped pipe
+    assert out[0].replace("\\|", "").count("|") == 5  # only the 5 cell borders stay unescaped
     assert "\\|" in out[0]
