@@ -36,6 +36,10 @@ def save_pending_topic(topic: str, kind: str = "topic") -> None:
         json.dump({"topic": topic, "kind": kind, "timestamp": time.time()}, f)
 
 
+class NewPostRequested(Exception):
+    """User asked to drop this story and draft a different one."""
+
+
 async def _abort_unapproved(chat_id: Any, pending: Optional[dict], reason: str) -> None:
     """Fail closed for user-supplied topics: re-queue the topic, tell the user, never publish."""
     try:
@@ -88,7 +92,7 @@ def validate_text_limits(text: str) -> Optional[str]:
 
     return None
 
-def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs", remix_state: str = "idle", tag_on: Optional[bool] = None) -> InlineKeyboardMarkup:
+def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs", remix_state: str = "idle", tag_on: Optional[bool] = None, new_post_ok: bool = True) -> InlineKeyboardMarkup:
     """Constructs inline keyboard with platform tabs, view toggles, approval, and remix buttons."""
     if remix_state == "in_flight":
         # Disable action buttons while remix request is in flight
@@ -115,6 +119,7 @@ def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs"
         InlineKeyboardButton("✅ Approve", callback_data="approve"),
         InlineKeyboardButton("❌ Reject", callback_data="reject"),
     ]
+    action_row2 = [InlineKeyboardButton("🔄 New Post (skip story)", callback_data="newpost")] if new_post_ok else []
 
     # Row 4: Image Regen
     regen_row = [
@@ -124,7 +129,7 @@ def _build_telegram_markup(current_tab: str = "bluesky", view_mode: str = "tabs"
     rows = [tab_row, control_row]
     if tag_on is not None:
         rows.append([InlineKeyboardButton(f"🏷 Source tag: {'ON ✅' if tag_on else 'OFF'}", callback_data="tag:toggle")])
-    return InlineKeyboardMarkup(rows + [action_row, regen_row])
+    return InlineKeyboardMarkup(rows + [action_row] + ([action_row2] if action_row2 else []) + [regen_row])
 
 def _format_preview_text(drafts: Any, current_tab: str = "bluesky", view_mode: str = "tabs", decision: Optional[Any] = None) -> str:
     """Formats preview text ensuring strict compliance with Telegram caption / text budgets."""
@@ -235,7 +240,8 @@ async def send_draft_for_approval(
     decision: Optional[Any] = None,
     receipt: str = "",
     pending: Optional[dict] = None,  # {"topic", "kind"} when the user supplied the topic: fail closed
-    tag_source_id: Optional[str] = None
+    tag_source_id: Optional[str] = None,
+    new_post_ok: bool = True  # False when the story is user-requested (/topic, /news) or the retry budget is spent
 ) -> Tuple[Optional[Any], Optional[MediaAsset]]:
     """
     Sends generated post drafts and image to Telegram for approval.
@@ -249,7 +255,7 @@ async def send_draft_for_approval(
     from src.tagging import tag_state, apply_tags, strip_tags
 
     def _markup(**kw):
-        return _build_telegram_markup(tag_on=tag_state(current_drafts, tag_source_id), **kw)
+        return _build_telegram_markup(tag_on=tag_state(current_drafts, tag_source_id), new_post_ok=new_post_ok, **kw)
 
     if not settings.telegram_bot_token or not settings.telegram_user_id:
         SafeLogger.info("Telegram: Missing bot token or user ID. Skipping Telegram approval stage.")
@@ -354,6 +360,12 @@ async def send_draft_for_approval(
                             await bot.send_message(chat_id=chat_id, text="❌ Rejected. Run aborted.")
                             return None, None
 
+                        elif action == "newpost" and new_post_ok:
+                            SafeLogger.info("Telegram: User requested a new post (skip this story).")
+                            await query.answer("Skipping this story...")
+                            await bot.send_message(chat_id=chat_id, text="🔄 Skipping this story. Picking the next one...")
+                            raise NewPostRequested()
+
                         elif action == "tag:toggle":
                             was_on = tag_state(current_drafts, tag_source_id)
                             if was_on is None:
@@ -368,7 +380,7 @@ async def send_draft_for_approval(
                                 bot=bot, chat_id=chat_id, sent_message=sent_message,
                                 drafts=candidate, current_tab=current_tab, view_mode=view_mode,
                                 reply_markup=_build_telegram_markup(
-                                    current_tab=current_tab, view_mode=view_mode, remix_state=remix_state, tag_on=now_on
+                                    current_tab=current_tab, view_mode=view_mode, remix_state=remix_state, tag_on=now_on, new_post_ok=new_post_ok
                                 ),
                                 image_bytes=image_bytes, decision=decision
                             )
@@ -635,6 +647,8 @@ async def send_draft_for_approval(
                                 else:
                                     await bot.send_message(chat_id=chat_id, text="⚠️ Failed to update draft preview. Previous draft preserved.", reply_to_message_id=msg.message_id)
 
+            except NewPostRequested:
+                raise
             except Exception as e:
                 SafeLogger.warn(f"Telegram: Error checking updates: {e}")
 
@@ -646,7 +660,7 @@ async def send_draft_for_approval(
         await bot.send_message(chat_id=chat_id, text="🕒 Timeout expired. Automatically publishing draft.")
         return current_drafts, media
 
-    except ApprovalUnavailable:
+    except (ApprovalUnavailable, NewPostRequested):
         raise
     except Exception as e:
         SafeLogger.error(f"Telegram approval engine encountered an error: {e}")

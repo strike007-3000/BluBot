@@ -422,6 +422,61 @@ async def test_full_multiplatform_orchestration_flow(mocker):
     mock_settle.assert_called_once()
     mock_engagement.assert_called_once()
 
+def _new_post_setup(mocker):
+    import bot
+    from src.models import PlatformDrafts, SynthesisResult, Article, CurationResult
+    object.__setattr__(settings, "is_dry_run", False)
+    object.__setattr__(settings, "is_ci", False)
+    object.__setattr__(settings, "enable_telegram_approval", True)
+    object.__setattr__(settings, "github_event", "workflow_dispatch")
+    object.__setattr__(settings, "gemini_key", "test-key")
+    object.__setattr__(settings, "bsky_handle", "bot.bsky.social")
+    object.__setattr__(settings, "bsky_password", "test-password")
+    article = Article(title="Breakthrough", link="https://example.com/ai", summary="s", published="2026-09-07", source="arXiv", score=95)
+    curation = CurationResult(top_articles=[article], seen_links=[], recent_topics=[])
+    drafts = PlatformDrafts(bluesky="b", threads="t", mastodon="m #AI")
+    synthesis = SynthesisResult(content="b", drafts=drafts, lead_link=article.link, topic="AI")
+    mocker.patch("bot.check_for_telegram_topic", return_value=(None, None))
+    mocker.patch("bot.curation_stage", return_value=curation)
+    mocker.patch("bot.synthesis_stage", return_value=(synthesis, curation))
+    mocker.patch("bot.media_strategy_stage", return_value=None)
+    mocker.patch("bot.prune_gemini_model_priority_async", new_callable=AsyncMock)
+    mocker.patch("bot.load_seen_articles", return_value={"links": [], "published_posts": []})
+    save = mocker.patch("bot.save_seen_articles", return_value=(True, {}))
+    mocker.patch("bot.reserve_pending_stage", new_callable=AsyncMock, return_value=({"schema_version": 2, "revision": 2, "pending_stories": []}, article))
+    broadcast = mocker.patch("bot.broadcast_stage", new_callable=AsyncMock, return_value=([bot.BroadcastResult("Bluesky", True)], MagicMock()))
+    mocker.patch("bot.settle_persistence_stage", new_callable=AsyncMock, return_value={"published_posts": []})
+    mocker.patch("src.engagement.update_engagement_report", new_callable=AsyncMock)
+    mocker.patch("bot.interaction_stage", new_callable=AsyncMock)
+    return drafts, save, broadcast
+
+@pytest.mark.asyncio
+async def test_new_post_skips_story_and_reruns(mocker):
+    import bot
+    from src.telegram_gateway import NewPostRequested
+    drafts, save, broadcast = _new_post_setup(mocker)
+    send = mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, side_effect=[NewPostRequested(), (drafts, None)])
+
+    await bot.main()
+
+    assert send.call_count == 2
+    saved_state = save.call_args[0][0]
+    assert "https://example.com/ai" in saved_state["links"]
+    broadcast.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_new_post_retry_limit_stops_without_broadcast(mocker):
+    import bot
+    from src.telegram_gateway import NewPostRequested
+    _, _, broadcast = _new_post_setup(mocker)
+    send = mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, side_effect=NewPostRequested())
+
+    await bot.main()
+
+    assert send.call_count == 4  # first run + 3 retries
+    assert [c.kwargs["new_post_ok"] for c in send.call_args_list] == [True, True, True, False]
+    broadcast.assert_not_called()
+
 @pytest.mark.asyncio
 async def test_broadcast_messages_dispatched_when_approval_disabled_with_credentials(monkeypatch, mocker):
     """Verify post-broadcast notifications are dispatched if credentials exist, even when approval is disabled."""
@@ -788,3 +843,12 @@ def test_status_dashboard_topic_cannot_break_table(tmp_path, monkeypatch):
     assert len(out) == 1
     assert out[0].replace("\\|", "").count("|") == 5  # only the 5 cell borders stay unescaped
     assert "\\|" in out[0]
+
+@pytest.mark.asyncio
+async def test_new_post_hidden_for_user_requested_topic(mocker):
+    import bot
+    drafts, _, _ = _new_post_setup(mocker)
+    mocker.patch("bot.check_for_telegram_topic", return_value=("topic", "Quantum"))
+    send = mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, return_value=(drafts, None))
+    await bot.main()
+    assert send.call_args.kwargs["new_post_ok"] is False

@@ -1453,7 +1453,7 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
     await asyncio.to_thread(save_seen_interactions, seen_ids)
     return InteractionResult(processed_count=len(unseen), replied_ids=replied_ids, errors=errors)
 
-async def main():
+async def main(_retry: int = 0):
     if not settings.validate():
         return
 
@@ -1658,21 +1658,33 @@ async def main():
         # Breaking lane skips approval (speed); the final post is still pushed to Telegram in 3.6.
         if settings.enable_telegram_approval and not settings.is_dry_run and not breaking_lane:
             from src.models import PlatformDrafts
+            from src.telegram_gateway import NewPostRequested
             initial_drafts = synthesis.drafts or PlatformDrafts.from_single(synthesis.content)
             tag_art = next((a for a in curation.top_articles if normalize_url(a.link) == normalize_url(synthesis.lead_link or "")), None)
             tag_source_id = tag_art.source_id if tag_art else None
             initial_drafts = apply_tags(initial_drafts, tag_source_id)
-            final_drafts, final_media = await send_draft_for_approval(
-                tag_source_id=tag_source_id,
-                pending={"topic": raw_topic, "kind": cmd_type} if telegram_topic else None,
-                drafts=initial_drafts,
-                media=synthesis.media,
-                client=client,
-                genai_client=genai_client,
-                topic=synthesis.topic,
-                decision=decision,
-                receipt=format_score_receipt(curation.top_articles[0]) if curation.top_articles else ""
-            )
+            try:
+                final_drafts, final_media = await send_draft_for_approval(
+                    tag_source_id=tag_source_id,
+                    pending={"topic": raw_topic, "kind": cmd_type} if telegram_topic else None,
+                    drafts=initial_drafts,
+                    media=synthesis.media,
+                    client=client,
+                    genai_client=genai_client,
+                    topic=synthesis.topic,
+                    decision=decision,
+                    new_post_ok=not telegram_topic and _retry < 3,
+                    receipt=format_score_receipt(curation.top_articles[0]) if curation.top_articles else ""
+                )
+            except NewPostRequested:
+                lead = normalize_url(synthesis.lead_link or "")
+                if lead:
+                    st = await asyncio.to_thread(load_seen_articles)
+                    st.setdefault("links", []).append(lead)
+                    await asyncio.to_thread(save_seen_articles, st, is_reservation=False)
+                if _retry >= 3:  # defensive: the button is hidden by then
+                    return
+                return await main(_retry + 1)
             if final_drafts is None:
                 SafeLogger.info("Telegram: Draft rejected by user. Aborting execution.")
                 return

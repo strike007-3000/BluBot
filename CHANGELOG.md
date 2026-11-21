@@ -1,6 +1,8 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.44.0**: **New Post button**.
+  - Telegram drafts get a `🔄 New Post (skip story)` button: it adds the lead story's URL to the seen list and re-runs the pipeline for the next-best story (up to 3 times per run). Reject still just aborts and does not skip the story, so use New Post to get a different article.
 - **v3.43.0**: **STATUS.md fix, Threads token reminder, source tags**.
   - STATUS.md no longer breaks: the Broadcaster row collapses whitespace, strips backslashes, escapes `|` and caps the topic at 120 chars; stray lines removed from the file. The test suite now writes to a temp STATUS.md (autouse fixture) instead of the tracked one.
   - New `/threads_refreshed [YYYY-MM-DD]` Telegram command records when you refreshed the Threads token (Gist file `threads_token.json`); from 5 days before the 60-day expiry, each scheduled run sends one Telegram reminder per day until a new date is recorded. Works on messages up to 24 hours old.

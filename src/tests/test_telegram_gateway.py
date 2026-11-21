@@ -194,6 +194,49 @@ async def test_send_draft_for_approval_reject(monkeypatch, mocker):
     assert media is None
 
 @pytest.mark.asyncio
+async def test_send_draft_for_approval_new_post(monkeypatch, mocker):
+    mock_settings = Settings(
+        gemini_key="mock",
+        telegram_bot_token="123:abc",
+        telegram_user_id="98765",
+        telegram_timeout_minutes=1,
+        is_dry_run=False
+    )
+    monkeypatch.setattr("src.telegram_gateway.settings", mock_settings)
+    
+    mock_bot_instance = MagicMock()
+    mock_bot_instance.send_message = AsyncMock()
+    mocker.patch("src.telegram_gateway.Bot", return_value=mock_bot_instance)
+    
+    mock_update = MagicMock()
+    mock_update.update_id = 1000
+    mock_update.message = None
+    mock_update.callback_query = MagicMock()
+    mock_update.callback_query.from_user.id = "98765"
+    mock_update.callback_query.data = "newpost"
+    mock_update.callback_query.answer = AsyncMock()
+    mock_update.callback_query.message = MagicMock()
+    
+    sent_msg = MagicMock()
+    sent_msg.message_id = 999
+    mock_bot_instance.send_message.return_value = sent_msg
+    mock_update.callback_query.message.message_id = 999
+    
+    updates_queue = [
+        [],
+        [mock_update],
+    ]
+    async def mock_get_updates(*args, **kwargs):
+        if updates_queue:
+            return updates_queue.pop(0)
+        return []
+    mock_bot_instance.get_updates = AsyncMock(side_effect=mock_get_updates)
+    
+    from src.telegram_gateway import NewPostRequested
+    with pytest.raises(NewPostRequested):
+        await send_draft_for_approval("Original draft text")
+
+@pytest.mark.asyncio
 async def test_send_draft_for_approval_edit_by_reply(monkeypatch, mocker):
     mock_settings = Settings(
         gemini_key="mock",
@@ -1388,3 +1431,13 @@ async def test_tag_toggle_commits_only_after_preview_updates(monkeypatch, mocker
     drafts = apply_tags(PlatformDrafts.from_single("Hello"), "simon_willison")
     final, _ = await send_draft_for_approval(drafts, tag_source_id="simon_willison")
     assert final.bluesky.endswith("cc @simonwillison.net") is expect_tag
+
+def test_markup_has_new_post_button():
+    from src.telegram_gateway import _build_telegram_markup as _markup
+    data = [b.callback_data for row in _markup(current_tab="bluesky", view_mode="tabs", remix_state="idle").inline_keyboard for b in row]
+    assert "newpost" in data
+
+def test_markup_hides_new_post_when_disallowed():
+    from src.telegram_gateway import _build_telegram_markup
+    data = [b.callback_data for row in _build_telegram_markup(new_post_ok=False).inline_keyboard for b in row]
+    assert "newpost" not in data
