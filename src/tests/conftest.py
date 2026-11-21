@@ -71,3 +71,11 @@ def silent_logger():
          patch("src.logger.SafeLogger.error"), \
          patch("src.logger.SafeLogger.debug"):
         yield
+
+
+@pytest.fixture(autouse=True)
+def isolate_status_file(tmp_path, monkeypatch):
+    """bot.py writes STATUS.md; keep tests off the tracked repo file."""
+    import bot
+
+    monkeypatch.setattr(bot, "STATUS_FILE_PATH", str(tmp_path / "STATUS.md"))

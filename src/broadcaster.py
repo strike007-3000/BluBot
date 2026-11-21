@@ -21,6 +21,25 @@ def clean_hashtags_if_needed(text: str, enabled: bool) -> str:
         text = text.replace('#', '')
     return text.strip()
 
+_MENTION_RE = re.compile(r'(?<![\w@./])@((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})')
+
+async def _mention_facets(bsky_client, text: str) -> list:
+    """Bluesky mention facets for @handle tokens; unresolvable handles stay plain text."""
+    facets = []
+    for match in _MENTION_RE.finditer(text):
+        try:
+            did = (await bsky_client.resolve_handle(match.group(1))).did
+            facets.append(models.AppBskyRichtextFacet.Main(
+                features=[models.AppBskyRichtextFacet.Mention(did=did)],
+                index=models.AppBskyRichtextFacet.ByteSlice(
+                    byte_start=len(text[:match.start()].encode("utf-8")),
+                    byte_end=len(text[:match.end()].encode("utf-8")),
+                ),
+            ))
+        except Exception as e:
+            SafeLogger.warn(f"Bluesky mention skipped for @{match.group(1)}: {type(e).__name__}")
+    return facets
+
 def _link_facets(text: str) -> list:
     """Build Bluesky URL facets using UTF-8 byte offsets."""
     facets = []
@@ -103,6 +122,7 @@ async def post_to_bluesky(bsky_client, client_shared, text, link=None, media=Non
 
         # Calculate facets for the current chunk
         facets = _link_facets(current_text)
+        facets.extend(await _mention_facets(bsky_client, current_text))
         
         tag_regex = re.compile(r'#(\w+)')
         for match in tag_regex.finditer(current_text):

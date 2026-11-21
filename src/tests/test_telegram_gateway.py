@@ -1339,3 +1339,52 @@ def test_score_receipt_lists_signals_and_links():
     out = format_score_receipt(art)
     assert "Score 63" in out and "Source +30" in out and "Momentum +18" in out and "corroborated by 1 source" in out
     assert 'href="https://a.com/x?a=1&amp;b=2"' in out and "https://w.com/y" in out
+
+
+def test_threads_token_days_left_and_command(monkeypatch):
+    from datetime import date
+    from src import telegram_gateway as tg
+
+    assert tg.threads_token_days_left(date(2026, 11, 18), date(2027, 1, 12)) == 5
+    assert tg.threads_token_days_left(date(2026, 11, 18), date(2027, 1, 18)) == -1
+
+    saved = {}
+    monkeypatch.setattr("src.utils._save_gist_state", lambda f, d: saved.update({f: d}) or True)
+    assert tg.process_authorized_command("/threads_refreshed 2026-11-18")["action"] == "threads_refreshed"
+    assert saved["threads_token.json"] == {"refreshed": "2026-11-18"}
+    assert tg.process_authorized_command("/threads_refreshed nope")["action"] == "threads_refreshed_invalid"
+    assert tg.process_authorized_command("/threads_refreshed 2999-01-01")["action"] == "threads_refreshed_invalid"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("render_ok, expect_tag", [(True, False), (False, True)])
+async def test_tag_toggle_commits_only_after_preview_updates(monkeypatch, mocker, render_ok, expect_tag):
+    from src.models import PlatformDrafts
+    from src.tagging import apply_tags
+
+    monkeypatch.setattr("src.telegram_gateway.settings", Settings(
+        gemini_key="mock", telegram_bot_token="123:abc", telegram_user_id="98765",
+        telegram_timeout_minutes=1, is_dry_run=False))
+    bot = MagicMock()
+    sent = MagicMock()
+    sent.message_id = 999
+    bot.send_message = AsyncMock(return_value=sent)
+    mocker.patch("src.telegram_gateway.Bot", return_value=bot)
+    mocker.patch("src.telegram_gateway._render_and_update_preview", AsyncMock(return_value=render_ok))
+
+    def cb(data):
+        u = MagicMock()
+        u.update_id = 1
+        u.message = None
+        u.callback_query.from_user.id = "98765"
+        u.callback_query.data = data
+        u.callback_query.answer = AsyncMock()
+        u.callback_query.message.message_id = 999
+        return u
+
+    queue = [[], [cb("tag:toggle"), cb("approve")]]
+    bot.get_updates = AsyncMock(side_effect=lambda *a, **k: queue.pop(0) if queue else [])
+
+    drafts = apply_tags(PlatformDrafts.from_single("Hello"), "simon_willison")
+    final, _ = await send_draft_for_approval(drafts, tag_source_id="simon_willison")
+    assert final.bluesky.endswith("cc @simonwillison.net") is expect_tag
