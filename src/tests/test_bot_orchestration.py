@@ -852,3 +852,19 @@ async def test_new_post_hidden_for_user_requested_topic(mocker):
     send = mocker.patch("bot.send_draft_for_approval", new_callable=AsyncMock, return_value=(drafts, None))
     await bot.main()
     assert send.call_args.kwargs["new_post_ok"] is False
+
+
+@pytest.mark.asyncio
+async def test_lost_engagement_roll_defers_mention_to_next_run(mocker):
+    import bot
+    mention = InteractionNote(platform="bluesky", id="m-1", author="a.test", text="Hi", timestamp="2026-08-25T00:00:00Z", uri="at://did:example/post/1", cid="c1")
+    save = mocker.patch("bot.save_seen_interactions")
+    mocker.patch("bot.load_seen_interactions", return_value=[])
+    mocker.patch("bot.fetch_bluesky_mentions", new_callable=AsyncMock, return_value=[mention])
+    mocker.patch("bot.fetch_mastodon_mentions", new_callable=AsyncMock, return_value=[])
+    mocker.patch("random.random", return_value=0.99)  # loses the roll
+
+    result = await bot.interaction_stage(MagicMock(), AsyncMock(), {"session": "s", "day": "Monday"})
+
+    assert result.processed_count == 0 or result.replied_ids == []
+    assert "m-1" not in save.call_args[0][0]

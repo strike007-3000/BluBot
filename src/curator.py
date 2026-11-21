@@ -154,7 +154,7 @@ async def fetch_single_feed(client, url, start_time, now_utc, seen_links, recent
         if feed.bozo and not feed.entries:
             return url, [], False, "Parse error/Invalid RSS"
         if not feed.entries:
-            return url, [], False, "Empty feed"
+            return url, [], True, None  # valid but empty (e.g. arXiv on weekends) is not a failure
 
         items = []
         from src.utils import normalize_url

@@ -1707,3 +1707,16 @@ def test_delayed_older_count_cannot_reverse_story_progress():
 
     decision, _, _ = match_story_continuity(delayed, [parent], now_utc=now)
     assert decision == MatchDecision.NO_MATCH.value
+
+
+@pytest.mark.asyncio
+async def test_empty_valid_feed_is_not_a_failure(mocker):
+    from datetime import datetime, timezone
+    from src.curator import fetch_single_feed
+    xml = b'<?xml version="1.0"?><rss version="2.0"><channel><title>t</title></channel></rss>'
+    resp = mocker.MagicMock(status_code=200, content=xml)
+    client = mocker.MagicMock()
+    client.get = mocker.AsyncMock(return_value=resp)
+    now = datetime.now(timezone.utc)
+    url, items, healthy, err = await fetch_single_feed(client, "https://x.test/rss", now, now, [], [])
+    assert (items, healthy, err) == ([], True, None)

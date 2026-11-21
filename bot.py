@@ -1370,8 +1370,8 @@ async def interaction_stage(bsky_client, http_client, session_context: dict) -> 
 
         # Probabilistic engagement (Humanization)
         if random.random() > reply_prob:
-            SafeLogger.info(f"Decision: Skipping reply to @{mention.author} on {mention.platform} (Engagement Roll).")
-            seen_ids.append(mention.id)
+            # Deferred, not dropped: left unseen so a later run rolls again and replies with a natural delay.
+            SafeLogger.info(f"Decision: Deferring reply to @{mention.author} on {mention.platform} to a later run (Engagement Roll).")
             continue
 
         try:
