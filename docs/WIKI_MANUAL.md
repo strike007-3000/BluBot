@@ -50,9 +50,9 @@ The registry (`SOURCE_REGISTRY` in `src/config.py`) holds **51 RSS feeds plus 4 
 | Practitioner | +20 | Simon Willison, Interconnects, Latent Space, One Useful Thing, Maarten Grootendorst, Sebastian Raschka, Jack Clark |
 | Open source | +18 (Claude Code releases +16) | Hugging Face Transformers, vLLM, Ollama, PyTorch, llama.cpp, Claude Code releases |
 | Infrastructure / business | +15 | Together AI, ServeTheHome, Semiconductor Engineering, Sequoia Capital, CB Insights |
-| Journalism | +12 | The Verge AI, Ars Technica AI, MIT Tech Review, IEEE Spectrum, The Decoder, Wired AI, VentureBeat AI, TechCrunch AI, 404 Media, Silicon Angle, The Sequence, MarktechPost, AI Accelerator Institute |
+| Journalism | +12 | The Verge AI, Ars Technica AI, MIT Tech Review, IEEE Spectrum, The Decoder, Wired AI, The New Stack AI, TechCrunch AI, 404 Media, Silicon Angle, Platformer, MarktechPost, AI Accelerator Institute |
 | Academic | +10 | arXiv cs.LG, BAIR Blog, ML Mastery |
-| Policy & critical voices | +10 / +5 | AI Incident Database, EU AI Act Tracker (+10); AI Snake Oil, Gary Marcus, Algorithmic Bridge, Victoria Krakovna (+5) |
+| Policy & critical voices | +10 / +5 | AI Incident Database, EU AI Act Tracker (+10); AI Snake Oil, AI Now Institute, Understanding AI, Victoria Krakovna (+5) |
 
 ### API sources
 API entries (`kind: api`) are scored and clustered like feed items but are never passed to Feed Vanguard or the RSS audit tooling.
@@ -65,7 +65,7 @@ API entries (`kind: api`) are scored and clustered like feed items but are never
 | Hacker News | +15 | Algolia search for LLM/AI queries; needs 50+ points |
 
 ### Feed Vanguard (RSS health)
-Every run starts with a pre-flight scan (`VanguardManager._check_feed()`): fetch with a 15-second timeout, require HTTP `200`, then `feedparser.parse()`. A feed is unhealthy if it is empty or malformed with no entries. Failing feeds are soft-disabled with backoff instead of being deleted:
+Every run starts with a pre-flight scan (`VanguardManager._check_feed()`): fetch with a 15-second timeout, require HTTP `200`, then `feedparser.parse()`. A feed is unhealthy if it is malformed with no entries or is not RSS/Atom at all (empty body, HTML page). A valid feed with zero items (arXiv on weekends) is healthy. A 403/429 is retried once with a declared `BluBot/3` User-Agent before it counts as a failure. Failing feeds are soft-disabled with backoff instead of being deleted:
 
 | Failure | Result |
 | :--- | :--- |

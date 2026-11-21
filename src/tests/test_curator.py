@@ -1707,3 +1707,40 @@ def test_delayed_older_count_cannot_reverse_story_progress():
 
     decision, _, _ = match_story_continuity(delayed, [parent], now_utc=now)
     assert decision == MatchDecision.NO_MATCH.value
+
+
+@pytest.mark.asyncio
+async def test_empty_valid_feed_is_not_a_failure(mocker):
+    from datetime import datetime, timezone
+    from src.curator import fetch_single_feed
+    xml = b'<?xml version="1.0"?><rss version="2.0"><channel><title>t</title></channel></rss>'
+    resp = mocker.MagicMock(status_code=200, content=xml)
+    client = mocker.MagicMock()
+    client.get = mocker.AsyncMock(return_value=resp)
+    now = datetime.now(timezone.utc)
+    url, items, healthy, err = await fetch_single_feed(client, "https://x.test/rss", now, now, [], [])
+    assert (items, healthy, err) == ([], True, None)
+
+
+@pytest.mark.asyncio
+async def test_feed_403_retries_with_bot_user_agent(mocker):
+    from datetime import datetime, timezone
+    from src.curator import fetch_single_feed, BOT_USER_AGENT
+    xml = b'<?xml version="1.0"?><rss version="2.0"><channel><title>t</title></channel></rss>'
+    client = mocker.MagicMock()
+    client.get = mocker.AsyncMock(side_effect=[mocker.MagicMock(status_code=403), mocker.MagicMock(status_code=200, content=xml)])
+    now = datetime.now(timezone.utc)
+    _, _, healthy, err = await fetch_single_feed(client, "https://x.test/rss", now, now, [], [])
+    assert (healthy, err) == (True, None)
+    assert client.get.call_args_list[1].kwargs["headers"]["User-Agent"] == BOT_USER_AGENT
+
+
+@pytest.mark.asyncio
+async def test_empty_html_response_is_a_failure(mocker):
+    from datetime import datetime, timezone
+    from src.curator import fetch_single_feed
+    client = mocker.MagicMock()
+    client.get = mocker.AsyncMock(return_value=mocker.MagicMock(status_code=200, content=b"<html><body>maintenance</body></html>"))
+    now = datetime.now(timezone.utc)
+    _, _, healthy, err = await fetch_single_feed(client, "https://x.test/rss", now, now, [], [])
+    assert (healthy, err) == (False, "Empty feed")
