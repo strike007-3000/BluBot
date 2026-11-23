@@ -1772,7 +1772,6 @@ def test_select_breaking_picks_fresh_corroborated_over_stale_lead():
 
 def test_breaking_dispatch_is_not_manual_run():
     from src.settings import Settings
-    base = dict(Settings.__dataclass_fields__)  # noqa: F841
     s = Settings.__new__(Settings)
     object.__setattr__(s, "github_event", "workflow_dispatch")
     object.__setattr__(s, "breaking_only", True)
