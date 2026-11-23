@@ -1744,3 +1744,15 @@ async def test_empty_html_response_is_a_failure(mocker):
     now = datetime.now(timezone.utc)
     _, _, healthy, err = await fetch_single_feed(client, "https://x.test/rss", now, now, [], [])
     assert (healthy, err) == (False, "Empty feed")
+
+
+def test_select_breaking_logs_skip_reason(monkeypatch):
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+    from src import curator
+    now = datetime.now(timezone.utc)
+    msgs = []
+    monkeypatch.setattr(curator.SafeLogger, "info", lambda m: msgs.append(m))
+    art = SimpleNamespace(title="T", score=12.0, published=now.isoformat())
+    assert curator.select_breaking([art], [], now, 40, 6, 3) is None
+    assert any("score=12.0" in m for m in msgs)

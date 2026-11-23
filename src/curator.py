@@ -367,9 +367,13 @@ def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_ho
         except (KeyError, ValueError):
             continue
         if age_h < cooldown_hours or (entry.get("breaking") and age_h < 24):
+            SafeLogger.info(f"Breaking lane: cooldown active (last post {age_h:.1f}h ago).")
             return None
     if not articles:
+        SafeLogger.info("Breaking lane: no candidates.")
         return None
+    for a in articles[:5]:
+        SafeLogger.info(f"Breaking lane candidate: score={a.score:.1f} published={a.published} '{a.title}'")
     lead = articles[0]
     try:
         published = datetime.fromisoformat(str(lead.published).replace("Z", "+00:00"))
@@ -378,7 +382,10 @@ def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_ho
     except ValueError:
         return None
     fresh = (now - published).total_seconds() / 3600 <= max_age_hours
-    return lead if lead.score >= min_score and fresh else None
+    if not (lead.score >= min_score and fresh):
+        SafeLogger.info(f"Breaking lane: lead '{lead.title}' score={lead.score:.1f} (min {min_score}) fresh={fresh}.")
+        return None
+    return lead
 
 
 def _score_api_item(item, published_at, now_utc, recent_topics, recent_categories, watch_topics):
