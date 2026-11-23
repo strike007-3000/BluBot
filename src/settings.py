@@ -156,7 +156,8 @@ class Settings:
     @property
     def is_manual_run(self) -> bool:
         """Determines if the current execution needs manual-run editorial context."""
-        return self.github_event == "workflow_dispatch"
+        # breaking_only dispatches come from cron-job.org, not a human intercept
+        return self.github_event == "workflow_dispatch" and not self.breaking_only
 
     @property
     def is_scheduled_run(self) -> bool:
