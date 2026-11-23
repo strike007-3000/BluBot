@@ -13,7 +13,7 @@ def test_scheduled_workflow_cadence():
     weekly = (PROJECT_ROOT / ".github/workflows/weekly_config_update.yml").read_text()
 
     assert "cron: '17 6,12,18 * * 1-5'" in caller and "breaking_only: false" in caller
-    assert "cron: '47 9,15,21 * * *'" in breaking and "breaking_only: true" in breaking
+    assert "schedule:" not in breaking and "workflow_dispatch" in breaking and "breaking_only: true" in breaking  # cron-job.org triggers it
     assert "cron: '0 2 * * 5'" in weekly
     assert "ENABLE_SOURCE_RECEIPTS_BSKY: ${{ vars.ENABLE_SOURCE_RECEIPTS_BSKY || 'false' }}" in daily
     assert "[skip ci]" not in weekly

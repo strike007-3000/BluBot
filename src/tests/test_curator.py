@@ -1768,3 +1768,13 @@ def test_select_breaking_picks_fresh_corroborated_over_stale_lead():
     weak = N(title="weak", score=30.0, published=now.isoformat(), _score_debug={"cluster_size": 3, "supporting_sources": ["Same Pub", "Same Pub"]})
     assert select_breaking([stale, fresh], [], now, 40, 6, 3) is fresh
     assert select_breaking([stale, weak], [], now, 40, 6, 3) is None
+
+
+def test_breaking_dispatch_is_not_manual_run():
+    from src.settings import Settings
+    s = Settings.__new__(Settings)
+    object.__setattr__(s, "github_event", "workflow_dispatch")
+    object.__setattr__(s, "breaking_only", True)
+    assert s.is_manual_run is False
+    object.__setattr__(s, "breaking_only", False)
+    assert s.is_manual_run is True
