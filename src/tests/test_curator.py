@@ -1764,7 +1764,7 @@ def test_select_breaking_picks_fresh_corroborated_over_stale_lead():
     from src.curator import select_breaking
     now = datetime.now(timezone.utc)
     stale = N(title="old", score=32.4, published=(now - timedelta(hours=19)).isoformat(), _score_debug={})
-    fresh = N(title="Jensen back", score=30.0, published=now.isoformat(), _score_debug={"cluster_size": 5})
-    weak = N(title="weak", score=30.0, published=now.isoformat(), _score_debug={"cluster_size": 1})
+    fresh = N(title="Jensen back", score=30.0, published=now.isoformat(), _score_debug={"cluster_size": 5, "supporting_sources": ["Verge", "TechCrunch", "Verge"]})
+    weak = N(title="weak", score=30.0, published=now.isoformat(), _score_debug={"cluster_size": 3, "supporting_sources": ["Same Pub", "Same Pub"]})
     assert select_breaking([stale, fresh], [], now, 40, 6, 3) is fresh
     assert select_breaking([stale, weak], [], now, 40, 6, 3) is None

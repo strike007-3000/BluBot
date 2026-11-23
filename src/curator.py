@@ -387,7 +387,9 @@ def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_ho
             published = published.replace(tzinfo=timezone.utc)
         if (now - published).total_seconds() / 3600 > max_age_hours:
             continue
-        corroborated = ((getattr(art, "_score_debug", None) or {}).get("cluster_size") or 0) >= BREAKING_MIN_SOURCES
+        # distinct supporting source names + the lead; cluster_size counts articles, so one publisher could inflate it
+        dbg = getattr(art, "_score_debug", None) or {}
+        corroborated = len(set(dbg.get("supporting_sources") or [])) + 1 >= BREAKING_MIN_SOURCES
         if (art.score >= min_score or corroborated) and (best is None or art.score > best.score):
             best = art
     if best is None:
