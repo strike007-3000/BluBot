@@ -356,8 +356,11 @@ async def fetch_hf_trending(
         return []
 
 
+BREAKING_MIN_SOURCES = 3  # fresh story covered by this many sources counts as breaking regardless of score
+
+
 def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_hours):
-    """Return the lead article if it is strong and fresh enough to post outside a scheduled slot.
+    """Return the best fresh article that is strong (score) or widely corroborated (source count) to post outside a scheduled slot.
 
     Limits: nothing within `cooldown_hours` of any post, and at most one breaking post per rolling 24h.
     """
@@ -374,18 +377,24 @@ def select_breaking(articles, ledger, now, min_score, max_age_hours, cooldown_ho
         return None
     for a in articles[:5]:
         SafeLogger.info(f"Breaking lane candidate: score={a.score:.1f} published={a.published} '{a.title}'")
-    lead = articles[0]
-    try:
-        published = datetime.fromisoformat(str(lead.published).replace("Z", "+00:00"))
+    best = None
+    for art in articles:
+        try:
+            published = datetime.fromisoformat(str(art.published).replace("Z", "+00:00"))
+        except ValueError:
+            continue
         if published.tzinfo is None:
             published = published.replace(tzinfo=timezone.utc)
-    except ValueError:
-        return None
-    fresh = (now - published).total_seconds() / 3600 <= max_age_hours
-    if not (lead.score >= min_score and fresh):
-        SafeLogger.info(f"Breaking lane: lead '{lead.title}' score={lead.score:.1f} (min {min_score}) fresh={fresh}.")
-        return None
-    return lead
+        if (now - published).total_seconds() / 3600 > max_age_hours:
+            continue
+        # distinct supporting source names + the lead; cluster_size counts articles, so one publisher could inflate it
+        dbg = getattr(art, "_score_debug", None) or {}
+        corroborated = len(set(dbg.get("supporting_sources") or [])) + 1 >= BREAKING_MIN_SOURCES
+        if (art.score >= min_score or corroborated) and (best is None or art.score > best.score):
+            best = art
+    if best is None:
+        SafeLogger.info(f"Breaking lane: no fresh candidate with score>={min_score} or {BREAKING_MIN_SOURCES}+ sources.")
+    return best
 
 
 def _score_api_item(item, published_at, now_utc, recent_topics, recent_categories, watch_topics):

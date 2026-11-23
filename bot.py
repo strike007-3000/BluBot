@@ -166,7 +166,7 @@ async def curation_stage(client: httpx.AsyncClient, telegram_topic: Optional[str
         combined_seen_links,
         seen_data["recent_topics"],
         feed_list=active_feeds,
-        limit=None if telegram_topic else 8,
+        limit=None if (telegram_topic or settings.breaking_only) else 8,
         recent_categories=seen_data.get("recent_categories", []),
         watch_topics=seen_data.get("watch_topics", []),
         story_state=seen_data
@@ -1560,10 +1560,13 @@ async def main(_retry: int = 0):
         if breaking_lane:
             from src.curator import select_breaking
             ledger = (await asyncio.to_thread(load_seen_articles)).get("published_posts", [])
-            if not select_breaking(
+            pick = select_breaking(
                 curation.top_articles, ledger, now, settings.breaking_min_score,
                 settings.breaking_max_age_hours, settings.breaking_cooldown_hours,
-            ):
+            )
+            if pick:  # make the chosen story the lead so synthesis and the lead check below use it
+                curation.top_articles[:] = ([pick] + [a for a in curation.top_articles if a is not pick])[:8]
+            else:
                 SafeLogger.info("Breaking lane: no story clears the bar. Nothing posted.")
                 _mark_quiet_run()
                 return

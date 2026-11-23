@@ -1,6 +1,9 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.44.2**: **Breaking lane selection**.
+  - The lane no longer judges only the top-ranked story (often a stale high scorer). It scans all candidates and posts the best one under 6h old that scores 40+ or is covered by 3+ sources; that story becomes the lead.
+  - Logs now say why the lane skipped (cooldown, or no qualifying candidate) and list the top 5 candidates.
 - **v3.44.1**: **Deferred replies, empty feeds**.
   - A mention that loses the engagement roll is no longer dropped: it stays unseen and is rolled again on later runs, so every mention is eventually answered with a natural delay.
   - Feeds answering 403/429 are retried once with a declared `BluBot/3` User-Agent. Tested from GitHub Actions: this revives Jack Clark and Victoria Krakovna.
