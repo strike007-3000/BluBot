@@ -1560,10 +1560,13 @@ async def main(_retry: int = 0):
         if breaking_lane:
             from src.curator import select_breaking
             ledger = (await asyncio.to_thread(load_seen_articles)).get("published_posts", [])
-            if not select_breaking(
+            pick = select_breaking(
                 curation.top_articles, ledger, now, settings.breaking_min_score,
                 settings.breaking_max_age_hours, settings.breaking_cooldown_hours,
-            ):
+            )
+            if pick:  # make the chosen story the lead so synthesis and the lead check below use it
+                curation.top_articles.sort(key=lambda a: a is not pick)
+            else:
                 SafeLogger.info("Breaking lane: no story clears the bar. Nothing posted.")
                 _mark_quiet_run()
                 return
