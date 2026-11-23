@@ -1,6 +1,8 @@
 # Changelog
 
 All notable changes to BluBot. The current version is in [VERSION](VERSION).
+- **v3.44.3**: **External breaking-news trigger**.
+  - `breaking_news.yml` no longer has a GitHub `schedule:`; cron-job.org triggers it every 2 hours via the `workflow_dispatch` API. The daily post keeps GitHub's schedule.
 - **v3.44.2**: **Breaking lane selection**.
   - The lane no longer judges only the top-ranked story (often a stale high scorer). It scans all candidates and posts the best one under 6h old that scores 40+ or is covered by 3+ sources; that story becomes the lead.
   - Logs now say why the lane skipped (cooldown, or no qualifying candidate) and list the top 5 candidates.

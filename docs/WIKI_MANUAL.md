@@ -243,7 +243,7 @@ Threads long-lived tokens last 60 days. Send `/threads_refreshed [YYYY-MM-DD]` a
 Per-platform toggles (see the table in [Overview](#platform-targets-and-limits)). Standalone hashtags are deleted and inline ones lose their `#` (`#AI` → `AI`).
 
 ### Breaking-news lane
-`breaking_news.yml` runs daily at 09:47, 15:47, and 21:47 UTC with `BREAKING_ONLY=true`. It scans all candidates and posts the best story that is under 6 hours old and either scores ≥ 40 or is covered by 3+ sources (the chosen story becomes the lead), with a 3-hour cooldown after any post and at most one breaking post per rolling 24 hours (scheduled slots are unaffected). Otherwise it exits before synthesis (no Gemini calls, no Telegram prompt). A qualifying post skips Telegram approval (the final post is still pushed to Telegram) and is abandoned if synthesis picks a different lead than the one that qualified. The archive shows a Breaking badge and filter. Tunables: `BREAKING_MIN_SCORE`, `BREAKING_MAX_AGE_HOURS`, `BREAKING_COOLDOWN_HOURS`.
+`breaking_news.yml` is triggered every 2 hours by cron-job.org (a POST to the workflow's `dispatches` API; GitHub's own schedule was unreliable) with `BREAKING_ONLY=true`. It scans all candidates and posts the best story that is under 6 hours old and either scores ≥ 40 or is covered by 3+ sources (the chosen story becomes the lead), with a 3-hour cooldown after any post and at most one breaking post per rolling 24 hours (scheduled slots are unaffected). Otherwise it exits before synthesis (no Gemini calls, no Telegram prompt). A qualifying post skips Telegram approval (the final post is still pushed to Telegram) and is abandoned if synthesis picks a different lead than the one that qualified. The archive shows a Breaking badge and filter. Tunables: `BREAKING_MIN_SCORE`, `BREAKING_MAX_AGE_HOURS`, `BREAKING_COOLDOWN_HOURS`.
 
 ### Friday roundup
 Scheduled Friday evening runs (18:17 UTC) publish a weekly digest instead of a single story (also `--roundup` / `FORCE_ROUNDUP=true`).
@@ -379,7 +379,7 @@ The typed `Settings` singleton (`src/settings.py`) reads all of these; `DRY_RUN`
 | Workflow | Trigger | Purpose |
 | :--- | :--- | :--- |
 | `daily_post.yml` | Cron 06:17, 12:17, 18:17 UTC Mon–Fri; manual | Calls `post_pipeline.yml` (runs `bot.py`; commits `STATUS.md` to `automated/state`; dispatches `pages.yml` after a real post). Serialized by the `bsky-persistence-state` concurrency group |
-| `breaking_news.yml` | Cron 09:47, 15:47, 21:47 UTC daily; manual | Calls `post_pipeline.yml` with `breaking_only: true`; same concurrency group |
+| `breaking_news.yml` | External cron-job.org every 2h; manual | Calls `post_pipeline.yml` with `breaking_only: true`; same concurrency group |
 | `post_pipeline.yml` | Called by the two above | Reusable pipeline holding secrets, cache, and state-commit logic |
 | `linkedin_weekly.yml` | Cron Sunday 12:00 UTC; manual | Weekly LinkedIn draft (below); own `linkedin-weekly` concurrency group so a Telegram wait never blocks the daily state group |
 | `sync_status.yml` | After a successful Daily AI News Post or Breaking News Post | Copies `STATUS.md` from `automated/state` to `main` via the GitHub Contents API (uses `REPO_TOKEN`) |

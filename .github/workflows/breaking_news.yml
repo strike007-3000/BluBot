@@ -1,9 +1,7 @@
 name: Breaking News Post
 
 on:
-  schedule:
-    - cron: '47 9,15,21 * * *' # Breaking-news lane, every day, offset 3h from scheduled slots: posts only a strong, fresh story
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch: # Triggered every 2h by cron-job.org (GitHub's schedule was unreliable); also manual
 
 # Ensure only one run updates the state branch at a time (shared with the other poster)
 concurrency:
