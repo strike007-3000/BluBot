@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-23 | 🔍 Evening Synthesis (Jensen Huang reinstated as CEO of NVIDIA) |
+| **Broadcaster** | Operational | 2026-11-24 | 🔍 Night Reflection (GLM-5.4: Toward Generalized Coding with Our First Loop Transformer) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
