@@ -4,7 +4,7 @@ Live status updates from the AI news curation engine.
 
 | Component | Status | Last Run | Mode |
 |:---|:---|:---|:---|
-| **Broadcaster** | Operational | 2026-11-26 | 🔍 Night Reflection (b12751) |
+| **Broadcaster** | Operational | 2026-11-26 | 🔍 Afternoon Deep Dive (llama.cpp benchmark dashboard for AMD Ryzen and Radeon) |
 | **Signal Strength** | Elite (Natural) | -- | -- |
 
 <!-- ENGAGEMENT:START -->
