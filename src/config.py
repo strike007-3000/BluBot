@@ -181,32 +181,31 @@ BASE_TIER_2 = 15
 
 # --- Breakthrough Scoring Engine Constants ---
 HIGH_SIGNAL_KEYWORDS = [
+    "protein-design",
     "agentic",
-    "reasoning",
-    "moe",
-    "open-weight",
-    "open weight",
-    "inference-time scaling",
-    "benchmark",
+    "formal verification",
     "multimodal",
-    "fine-tuning",
-    "autonomous",
-    "token",
-    "retrieval",
-    "distillation"
+    "open weights",
+    "inference-time scaling",
+    "kv caching",
+    "state space models",
+    "code mode",
+    "reinforcement learning",
+    "test-time compute",
+    "synthetic enterprise data"
 ]
 
 MOMENTUM_PRODUCTS = [
+    "gpt-6",
     "gemini 4 neon",
     "genie 4",
     "claude fable 5.2",
     "claude mythos 5.2",
-    "mistral large 4 (le chonk)",
-    "gpt-6.2 astra",
-    "gpt-6.2 sol",
-    "nemotron 3.5 super vl",
-    "claude opus 4.6",
-    "claude sonnet 4.6"
+    "mistral large 4",
+    "gemma 4 12b",
+    "inkling 2 mini",
+    "qwen4 max",
+    "nemotron 3.5 super vl"
 ]
 
 # Weighting Matrix (retained/updated)
